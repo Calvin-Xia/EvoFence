@@ -18,7 +18,41 @@ function openCodeArgs({ model, agent }) {
   return args;
 }
 
-export function claudeCodeArgs({ model, agent }) {
+function usdToMicros(value, rounding = 'floor') {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget must be a finite, non-negative number.');
+  }
+  const match = value.toString().toLowerCase().match(/^(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/);
+  if (!match) throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget could not be represented as a decimal amount.');
+  const fraction = match[2] ?? '';
+  const digits = BigInt(`${match[1]}${fraction}`);
+  if (digits === 0n) return 0;
+  const shift = 6 - fraction.length + Number(match[3] ?? 0);
+  let micros;
+  if (shift >= 0) {
+    micros = digits * (10n ** BigInt(shift));
+  } else {
+    const divisor = 10n ** BigInt(-shift);
+    micros = digits / divisor;
+    if (rounding === 'ceil' && digits % divisor !== 0n) micros += 1n;
+  }
+  if (micros > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD amount exceeds EvoFence safe accounting range.');
+  }
+  return Number(micros);
+}
+
+function formatUsdBudget(value) {
+  const micros = usdToMicros(value);
+  if (micros < 1) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget must be at least $0.000001.');
+  }
+  const whole = Math.floor(micros / 1_000_000);
+  const fraction = String(micros % 1_000_000).padStart(6, '0').replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : String(whole);
+}
+
+export function claudeCodeArgs({ model, agent, maxBudgetUsd = null }) {
   const args = [
     '-p',
     '--output-format', 'stream-json',
@@ -28,6 +62,7 @@ export function claudeCodeArgs({ model, agent }) {
   ];
   if (model) args.push('--model', model);
   if (agent) args.push('--agent', agent);
+  if (maxBudgetUsd !== null) args.push('--max-budget-usd', formatUsdBudget(maxBudgetUsd));
   args.push(TASK_POINTER);
   return args;
 }
@@ -381,12 +416,14 @@ export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {
   };
 }
 
-export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
+export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, maxUsdRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
   let args;
   let env = {};
   if (name === 'codex') {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     args = codexArgs({ cwd, model });
   } else if (name === 'opencode') {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     if (!allowUnisolatedAgent) {
       throw new EvoFenceError('OPEN_CODE_SANDBOX_REQUIRED', 'OpenCode does not provide an OS security sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or launch OpenCode in a Docker/VM sandbox.');
     }
@@ -412,8 +449,9 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     if (!allowUnisolatedAgent) {
       throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
     }
-    args = claudeCodeArgs({ model, agent });
+    args = claudeCodeArgs({ model, agent, maxBudgetUsd: maxUsdRemaining });
   } else if (name === 'pi') {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     if (!allowUnisolatedAgent) {
       throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
     }
@@ -438,6 +476,8 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     } : {}),
   });
   let usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
+  const claudeBudgetReached = name === 'claude'
+    && parseJsonLines(result.stdout).events.some((event) => event?.type === 'result' && event.subtype === 'error_max_budget_usd');
   if (result.stop_reason === 'TOKEN_BUDGET_REACHED' || result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') {
     usage = { ...usage, ...usageMonitor.snapshot() };
     if (result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') usage.tokens_complete = false;
@@ -447,6 +487,7 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     adapter: name,
     model: model ?? null,
     budget_stop_reason: result.stop_reason,
+    cost_budget_reached: claudeBudgetReached,
     // Keep the legacy field, but never fill it with a partial or estimated count.
     estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
     reported_usage: usage,

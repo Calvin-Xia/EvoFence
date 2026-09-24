@@ -175,6 +175,9 @@ test('Claude Code launch uses non-interactive streaming auto permissions and req
     '--model', 'sonnet', '--agent', 'evofence-agent',
   ]);
   assert.match(args.at(-1), /\.evofence-task\.md/);
+  const budgetArgs = claudeCodeArgs({ model: 'sonnet', agent: 'evofence-agent', maxBudgetUsd: 0.1234567 });
+  assert.deepEqual(budgetArgs.slice(-3, -1), ['--max-budget-usd', '0.123456']);
+  assert.match(budgetArgs.at(-1), /\.evofence-task\.md/);
   await assert.rejects(runAgentAdapter({
     name: 'claude', command: 'must-not-launch', cwd: process.cwd(), timeoutMs: 1000, maxOutputBytes: 1000,
   }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
