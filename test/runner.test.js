@@ -5,9 +5,23 @@ import os from 'node:os';
 import path from 'node:path';
 import { Ledger, ledgerPath } from '../src/lib/ledger.js';
 import { initializeRepository } from '../src/lib/init.js';
-import { runEvolution } from '../src/lib/runner.js';
+import { checkFinalCandidate, runEvolution } from '../src/lib/runner.js';
 import { runProcess } from '../src/lib/process.js';
 import { setActiveGenerationRef } from '../src/lib/git.js';
+import { parseYamlText, validateContract } from '../src/lib/contract.js';
+
+test('final candidate validation honors approved capabilities and detects evidence mutations', async () => {
+  const template = await readFile(path.resolve(import.meta.dirname, '..', 'templates', 'contract.yaml'), 'utf8');
+  const parsed = validateContract(parseYamlText(template, 'contract.yaml'));
+  const contract = { ...parsed, capabilities: { ...parsed.capabilities, network: 'allow' } };
+  const proposal = { changed_surface: ['src/**'], requested_capabilities: ['network'] };
+  const claims = { files_changed: ['src/main.js'], capabilities_used: ['network'], missing_evidence: [] };
+
+  assert.deepEqual(checkFinalCandidate(contract, ['src/main.js'], proposal, claims, 'before', 'before'), { accepted: true });
+  assert.equal(checkFinalCandidate(contract, ['src/main.js'], { ...proposal, requested_capabilities: [] }, claims, 'before', 'before').code, 'CAPABILITY_VIOLATION');
+  assert.equal(checkFinalCandidate(contract, ['src/main.js'], proposal, claims, 'before', 'after').code, 'EVIDENCE_MODIFIED_CANDIDATE');
+  assert.equal(checkFinalCandidate(contract, ['tests/attack.test.js'], proposal, claims, 'before', 'before').code, 'POLICY_VIOLATION');
+});
 
 test('one evolution is evaluated, committed, pinned, and can be rolled back', async () => {
   const temporaryParent = await mkdtemp(path.join(os.tmpdir(), 'evofence-runner-'));

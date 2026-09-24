@@ -5,6 +5,8 @@ import { EvoFenceError, invariant } from './errors.js';
 import { runProcess } from './process.js';
 import { assertInside, sha256 } from './fs.js';
 
+const CANDIDATE_PATHSPEC = ['.', ':!.evofence-out', ':!.evofence-out/**', ':!.evofence-task.md'];
+
 export async function runGit(cwd, args, options = {}) {
   const result = await runProcess('git', args, { cwd, timeoutMs: options.timeoutMs ?? 30000, maxOutputBytes: options.maxOutputBytes ?? 10_000_000, env: options.env ?? {} });
   if (result.code !== 0) {
@@ -68,14 +70,21 @@ export async function changedPaths(root, baseSha) {
   return [...new Set(`${diff}\0${untracked}`.split('\0').filter(Boolean).map((name) => name.replaceAll('\\', '/')))];
 }
 
-export async function diffHash(root, baseSha) {
-  const diff = await runGit(root, ['diff', '--no-ext-diff', '--binary', baseSha], { maxOutputBytes: 50_000_000 });
-  const { createHash } = await import('node:crypto');
-  return createHash('sha256').update(diff).digest('hex');
+export async function diffHash(root, baseSha, targetSha = null) {
+  const args = ['diff', '--no-ext-diff', '--no-renames', '--binary', baseSha];
+  if (targetSha) {
+    args.push(targetSha);
+  } else {
+    const intent = await runProcess('git', ['add', '--intent-to-add', '--', ...CANDIDATE_PATHSPEC], { cwd: root, timeoutMs: 60000, maxOutputBytes: 100000 });
+    if (intent.code !== 0) throw new EvoFenceError('GIT_STAGE_FAILED', intent.stderr.trim() || 'Unable to include new candidate files in the diff hash.');
+    args.push('--', ...CANDIDATE_PATHSPEC);
+  }
+  const diff = await runGit(root, args, { maxOutputBytes: 50_000_000 });
+  return sha256(diff);
 }
 
 export async function commitCandidate(root, baseSha, generationId) {
-  const stage = await runProcess('git', ['add', '-A', '--', '.', ':!.evofence-out/**', ':!.evofence-task.md'], { cwd: root, timeoutMs: 60000, maxOutputBytes: 100000 });
+  const stage = await runProcess('git', ['add', '-A', '--', ...CANDIDATE_PATHSPEC], { cwd: root, timeoutMs: 60000, maxOutputBytes: 100000 });
   if (stage.code !== 0) throw new EvoFenceError('GIT_STAGE_FAILED', stage.stderr.trim());
   const staged = await runProcess('git', ['diff', '--cached', '--quiet'], { cwd: root, timeoutMs: 30000, maxOutputBytes: 100000 });
   if (staged.code === 0) throw new EvoFenceError('NO_CHANGE', 'Candidate contains no accepted project changes.');

@@ -140,9 +140,20 @@ function checkTaskFile(contract, actualPaths, proposal, claims) {
   const claimsPaths = [...new Set(claims.files_changed.map((name) => name.replaceAll('\\', '/')))].sort();
   const actual = [...actualPaths].sort();
   if (stableStringify(claimsPaths) !== stableStringify(actual)) return { accepted: false, code: 'CLAIMS_DIFF_MISMATCH', expected: actual, declared: claimsPaths };
-  const used = claims.capabilities_used.filter((item) => item !== 'filesystem:scoped_write' && item !== 'shell:evidence_commands_only');
+  const builtInCapabilities = new Set(['filesystem:scoped_write', 'shell:evidence_commands_only']);
+  const approvedCapabilities = new Set(proposal.requested_capabilities.map((item) => typeof item === 'string' ? item : item?.capability).filter((item) => typeof item === 'string'));
+  const used = claims.capabilities_used.filter((item) => !builtInCapabilities.has(item) && !approvedCapabilities.has(item));
   if (used.length) return { accepted: false, code: 'CAPABILITY_VIOLATION', capabilities_used: used };
   if (claims.missing_evidence.length) return { accepted: false, code: 'INSUFFICIENT_EVIDENCE', missing_evidence: claims.missing_evidence };
+  return { accepted: true };
+}
+
+export function checkFinalCandidate(contract, actualPaths, proposal, claims, beforeEvidenceHash, afterEvidenceHash) {
+  const fileCheck = checkTaskFile(contract, actualPaths, proposal, claims);
+  if (!fileCheck.accepted) return fileCheck;
+  if (beforeEvidenceHash !== afterEvidenceHash) {
+    return { accepted: false, code: 'EVIDENCE_MODIFIED_CANDIDATE', before_evidence_sha256: beforeEvidenceHash, after_evidence_sha256: afterEvidenceHash };
+  }
   return { accepted: true };
 }
 
@@ -447,10 +458,32 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
         continue;
       }
 
-      const risk = assessRisk(actualPaths, proposal, contract);
+      const candidateDiffBeforeEvidence = await diffHash(worktree, parentSha);
       const candidateEvidence = await collectEvidence({ root: worktree, artifactRoot: path.join(root, '.evofence'), contract, holdout, runId, iteration, deadlineAt, phase: 'candidate', onProgress });
       ledger.append('evidence.candidate', runId, { iteration, base_sha: parentSha, evidence: candidateEvidence });
       if (candidateEvidence.objective?.score === undefined) candidateEvidence.objective = null;
+
+      actualPaths = (await changedPaths(worktree, parentSha)).filter((filename) => !helperPath(filename));
+      const candidateDiffAfterEvidence = await diffHash(worktree, parentSha);
+      const finalFileCheck = checkFinalCandidate(contract, actualPaths, proposal, claims, candidateDiffBeforeEvidence, candidateDiffAfterEvidence);
+      if (!finalFileCheck.accepted) {
+        const decision = finalFileCheck.code === 'CAPABILITY_VIOLATION' ? 'ESCALATE'
+          : finalFileCheck.code === 'POLICY_VIOLATION' || finalFileCheck.code === 'EVIDENCE_MODIFIED_CANDIDATE' ? 'QUARANTINE'
+            : 'REJECT';
+        const failure = { ...finalFileCheck };
+        ledger.append('gate.decision', runId, { iteration, decision, failure, base_sha: parentSha });
+        outcome.iterations.push({ iteration, decision, failure });
+        if (decision === 'ESCALATE' || decision === 'QUARANTINE') outcome.status = decision;
+        failureCount += 1;
+        noImprovementCount += 1;
+        outcome.previous_failure_packet = publicFailurePacket(decision, failure);
+        await removeCandidate(root, worktree, runTempRoot);
+        worktree = null;
+        if (decision === 'ESCALATE' || decision === 'QUARANTINE' || failureCount >= contract.budgets.max_failed_candidates || noImprovementCount >= contract.budgets.max_consecutive_no_improvement) break;
+        continue;
+      }
+
+      const risk = assessRisk(actualPaths, proposal, contract);
       const candidateScore = candidateEvidence.objective?.score;
       const improvement = Number.isFinite(candidateScore)
         ? (contract.objective.direction === 'maximize' ? candidateScore - baselineScore : baselineScore - candidateScore)
@@ -494,8 +527,8 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       }
 
       const generationId = `g-${iterationId}`;
-      const finalDiffHash = await diffHash(worktree, parentSha);
       const acceptedSha = await commitCandidate(worktree, parentSha, generationId);
+      const finalDiffHash = await diffHash(worktree, parentSha, acceptedSha);
       await pinGeneration(root, generationId, acceptedSha);
       ledger.recordGeneration({ generation_id: generationId, run_id: runId, sha: acceptedSha, parent_sha: parentSha, created_at: new Date().toISOString() });
       const record = { generation_id: generationId, sha: acceptedSha, parent_sha: parentSha, diff_sha256: finalDiffHash, objective_score: candidateScore, improvement };

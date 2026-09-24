@@ -17,9 +17,11 @@ This is a research MVP. It does not provide formal verification, enterprise IAM,
 Requires Node.js 22.13 or newer.
 
 ```sh
-npm install --global evofence
+npm install --global --allow-scripts=better-sqlite3 evofence
 evofence init
 ```
+
+npm 11 and newer block dependency install scripts by default. This command explicitly allows only `better-sqlite3` to download or compile its SQLite binding. With older npm versions that run install scripts by default, use `npm install --global evofence`.
 
 `evofence init` creates `.evofence/` in the current Git repository. Review and commit `contract.yaml` and the prompt/schema files as appropriate. Machine-local state, the SQLite ledger, artifacts, and private holdout file are excluded from Git.
 
@@ -70,6 +72,8 @@ evofence run --adapter opencode --allow-unisolated-agent --goal goal.md
 ```
 
 For meaningful protection, launch the agent in a Docker container or VM that mounts only the candidate worktree and has no network, secrets, or host credentials. The flags above do not create such a boundary.
+
+EvoFence filters common credential-shaped environment names, including `*_TOKEN`, `*_SECRET`, `*_PASSWORD`, API/access/private-key variables, and authentication-helper variables, from child processes. This is defense in depth only: an agent with host file access may still reach credential files or authentication brokers.
 
 ## Inspect, export, and roll back
 

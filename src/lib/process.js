@@ -3,14 +3,23 @@ import { once } from 'node:events';
 import { EvoFenceError } from './errors.js';
 
 const DEFAULT_MAX_OUTPUT = 1_048_576;
+const SENSITIVE_ENV_NAME = /(?:^|[_-])(?:TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH|BEARER|COOKIE|SESSION)(?:$|[_-])|(?:^|[_-])(?:API|ACCESS|PRIVATE|CLIENT|SIGNING|ENCRYPTION)[_-]?KEY(?:$|[_-])|(?:ASKPASS|AUTH_SOCK|KUBECONFIG|DOCKER_CONFIG)$/i;
+
+function isSensitiveEnvironmentName(name) {
+  return SENSITIVE_ENV_NAME.test(name);
+}
 
 export function sanitizedEnvironment(extra = {}) {
   const env = {};
   for (const [name, value] of Object.entries(process.env)) {
-    if (/(?:API[_-]?KEY|ACCESS[_-]?TOKEN|AUTH[_-]?TOKEN|SECRET|PASSWORD|CREDENTIAL)/i.test(name)) continue;
+    if (isSensitiveEnvironmentName(name)) continue;
     env[name] = value;
   }
   for (const [name, value] of Object.entries(extra)) {
+    if (isSensitiveEnvironmentName(name)) {
+      delete env[name];
+      continue;
+    }
     if (value === undefined || value === null) delete env[name];
     else env[name] = String(value);
   }
@@ -50,32 +59,39 @@ export function runProcess(command, args, options = {}) {
       windowsHide: true,
       stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     });
-    let stdout = '';
-    let stderr = '';
+    const stdoutChunks = [];
+    const stderrChunks = [];
+    let stdoutStoredBytes = 0;
+    let stderrStoredBytes = 0;
     let stdoutBytes = 0;
     let stderrBytes = 0;
     let timedOut = false;
     let outputLimited = false;
     let settled = false;
-    const append = (target, chunk, stream) => {
-      const text = chunk.toString('utf8');
+    const append = (chunk, stream) => {
       if (stream === 'stdout') {
         stdoutBytes += chunk.length;
-        if (Buffer.byteLength(stdout) < maxOutputBytes) {
-          const room = maxOutputBytes - Buffer.byteLength(stdout);
-          stdout += Buffer.from(chunk).subarray(0, room).toString('utf8');
-        } else outputLimited = true;
-        onChunk?.(stream, text);
+        const room = Math.max(0, maxOutputBytes - stdoutStoredBytes);
+        if (room > 0) {
+          const kept = chunk.subarray(0, room);
+          stdoutChunks.push(Buffer.from(kept));
+          stdoutStoredBytes += kept.length;
+        }
+        if (chunk.length > room) outputLimited = true;
+        onChunk?.(stream, chunk.toString('utf8'));
       } else {
         stderrBytes += chunk.length;
-        if (Buffer.byteLength(stderr) < maxOutputBytes) {
-          const room = maxOutputBytes - Buffer.byteLength(stderr);
-          stderr += Buffer.from(chunk).subarray(0, room).toString('utf8');
-        } else outputLimited = true;
+        const room = Math.max(0, maxOutputBytes - stderrStoredBytes);
+        if (room > 0) {
+          const kept = chunk.subarray(0, room);
+          stderrChunks.push(Buffer.from(kept));
+          stderrStoredBytes += kept.length;
+        }
+        if (chunk.length > room) outputLimited = true;
       }
     };
-    child.stdout?.on('data', (chunk) => append(stdout, chunk, 'stdout'));
-    child.stderr?.on('data', (chunk) => append(stderr, chunk, 'stderr'));
+    child.stdout?.on('data', (chunk) => append(chunk, 'stdout'));
+    child.stderr?.on('data', (chunk) => append(chunk, 'stderr'));
     child.once('error', (error) => {
       if (settled) return;
       settled = true;
@@ -86,7 +102,18 @@ export function runProcess(command, args, options = {}) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve({ command, args, code, signal, timed_out: timedOut, output_limited: outputLimited, stdout, stderr, stdout_bytes: stdoutBytes, stderr_bytes: stderrBytes });
+      resolve({
+        command,
+        args,
+        code,
+        signal,
+        timed_out: timedOut,
+        output_limited: outputLimited,
+        stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+        stderr: Buffer.concat(stderrChunks).toString('utf8'),
+        stdout_bytes: stdoutBytes,
+        stderr_bytes: stderrBytes,
+      });
     });
     const timer = setTimeout(() => {
       timedOut = true;

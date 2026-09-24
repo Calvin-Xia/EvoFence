@@ -10,6 +10,14 @@ test('process runner captures bounded output and exit status', async () => {
   assert.equal(result.timed_out, false);
 });
 
+test('process runner marks a final chunk that crosses the output limit as truncated', async () => {
+  const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("x".repeat(2048))'], { timeoutMs: 5000, maxOutputBytes: 1024 });
+  assert.equal(result.code, 0);
+  assert.equal(result.stdout, 'x'.repeat(1024));
+  assert.equal(result.stdout_bytes, 2048);
+  assert.equal(result.output_limited, true);
+});
+
 test('process runner terminates a process that exceeds its time budget', async () => {
   const result = await runProcess(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { timeoutMs: 100 });
   assert.equal(result.timed_out, true);
@@ -17,15 +25,18 @@ test('process runner terminates a process that exceeds its time budget', async (
 });
 
 test('secret-like environment values are not passed to child processes', () => {
-  const old = process.env.EVOFENCE_TEST_API_KEY;
-  process.env.EVOFENCE_TEST_API_KEY = 'do-not-inherit';
+  const names = ['EVOFENCE_TEST_API_KEY', 'GITHUB_TOKEN', 'GH_TOKEN', 'CI_JOB_TOKEN', 'AWS_SESSION_TOKEN', 'GIT_ASKPASS', 'SSH_AUTH_SOCK'];
+  const old = new Map(names.map((name) => [name, process.env[name]]));
+  for (const name of names) process.env[name] = 'do-not-inherit';
   try {
-    const env = sanitizedEnvironment({ EVOFENCE_SAFE: 'yes' });
-    assert.equal(env.EVOFENCE_TEST_API_KEY, undefined);
+    const env = sanitizedEnvironment({ EVOFENCE_SAFE: 'yes', CI_JOB_TOKEN: 'override' });
+    for (const name of names) assert.equal(env[name], undefined, name);
     assert.equal(env.EVOFENCE_SAFE, 'yes');
   } finally {
-    if (old === undefined) delete process.env.EVOFENCE_TEST_API_KEY;
-    else process.env.EVOFENCE_TEST_API_KEY = old;
+    for (const [name, value] of old) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
   }
 });
 
