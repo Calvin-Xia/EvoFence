@@ -1,0 +1,22 @@
+{
+  "name": "evofence",
+  "version": "0.1.2-beta.1",
+  "description": "Inspect EvoFence's audit ledger and invoke evidence-gated evolution runs.",
+  "author": {
+    "name": "Calvin Xia",
+    "url": "https://github.com/Calvin-Xia"
+  },
+  "repository": "https://github.com/Calvin-Xia/EvoFence",
+  "license": "MIT",
+  "keywords": ["agent-safety", "coding", "evidence", "evolution"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "EvoFence",
+    "shortDescription": "Evidence-gated agent evolution",
+    "longDescription": "Inspect EvoFence's sanitized run history or invoke a contract-gated evolution run from the current repository.",
+    "developerName": "Calvin Xia",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/Calvin-Xia/EvoFence"
+  }
+}

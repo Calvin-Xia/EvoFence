@@ -23,6 +23,7 @@ Usage:
   evofence gate <proposal-id>
   evofence ledger show [run-id]
   evofence ledger verify
+  evofence ledger recent [limit]
   evofence ledger export [file]
   evofence rollback <generation-id>
   evofence experiment run <experiment.yaml>
@@ -152,15 +153,18 @@ async function commandGate(args) {
 
 async function commandLedger(args) {
   const [action, value, ...rest] = args;
-  if (!action || rest.length) throw new EvoFenceError('USAGE', 'Use: evofence ledger show [run-id], verify, or export [file]');
+  if (!action || rest.length) throw new EvoFenceError('USAGE', 'Use: evofence ledger show [run-id], verify, recent [limit], or export [file]');
   const root = await repositoryRoot(process.cwd());
-  const ledger = new Ledger(ledgerPath(root));
+  const ledger = new Ledger(ledgerPath(root), { readOnly: ['show', 'verify', 'recent'].includes(action) });
   try {
     if (action === 'show') printJson(ledger.events(value));
     else if (action === 'verify') {
       const result = ledger.verify();
       printJson(result);
       if (!result.valid) process.exitCode = 1;
+    } else if (action === 'recent') {
+      const limit = value === undefined ? 10 : Number(value);
+      printJson(ledger.recentRuns(limit));
     } else if (action === 'export') {
       const output = path.resolve(process.cwd(), value ?? `.evofence/experiment-${new Date().toISOString().slice(0, 10)}.json`);
       await writeFile(output, `${JSON.stringify(ledger.export(), null, 2)}\n`, { flag: 'wx', mode: 0o600 });

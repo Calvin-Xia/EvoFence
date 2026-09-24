@@ -14,7 +14,7 @@
 </p>
 
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="#install">Install</a> · <a href="#configure-the-contract">Configure</a> · <a href="#run-an-evolution-loop">Run</a> · <a href="#security-boundaries">Security</a> · <a href="#development">Development</a></p>
+<p><a href="#install">Install</a> · <a href="#configure-the-contract">Configure</a> · <a href="#run-an-evolution-loop">Run</a> · <a href="#agent-plugins-and-extensions">Agent plugins</a> · <a href="#security-boundaries">Security</a> · <a href="#development">Development</a></p>
 
 </div>
 
@@ -100,6 +100,7 @@ evofence proposal inspect <run-id>-i1
 evofence gate <run-id>-i1
 evofence ledger show <run-id>
 evofence ledger verify
+evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
@@ -107,6 +108,17 @@ evofence rollback <generation-id>
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
+
+### Agent plugins and extensions
+
+The repository includes native integrations for Codex, Claude Code, OpenCode, Pi, and DeepSeek Harness. Codex and Claude provide explicitly invoked run commands; OpenCode, Pi, and Cordis currently expose read-only ledger inspection. Every entry point that starts an evolution remains subject to the EvoFence CLI contract, budget, and evidence gates.
+
+- **Codex CLI and Codex desktop**: follow [`integrations/codex/README.md`](integrations/codex/README.md) to add the repository marketplace. Skills are `$evofence:inspect-ledger` and `$evofence:run-evolution`.
+- **Claude Code**: follow [`integrations/claude-code/README.md`](integrations/claude-code/README.md) to add the marketplace; commands are `/evofence:inspect-ledger` and `/evofence:run-evolution`.
+- **OpenCode**: [`integrations/opencode/README.md`](integrations/opencode/README.md) provides project-level read-only tools.
+- **Pi**: [`integrations/pi/README.md`](integrations/pi/README.md) provides a read-only extension.
+
+`inspect` verifies the ledger and reads sanitized summaries. `run` must be explicitly invoked by the user with an existing goal file; the plugins do not automatically relax boundaries such as `--allow-unisolated-agent` or `--allow-readable-holdout`. OpenCode, Pi, and Cordis read-only plugin entry points are separate from the `evofence run --adapter ...` CLI adapters.
 
 ### DeepSeek Harness Cordis plugin
 

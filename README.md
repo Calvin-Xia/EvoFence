@@ -14,7 +14,7 @@
 </p>
 
 <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-<p><a href="#安装">安装</a> · <a href="#配置演化契约">配置</a> · <a href="#运行演化循环">运行</a> · <a href="#安全边界">安全边界</a> · <a href="#开发">开发</a></p>
+<p><a href="#安装">安装</a> · <a href="#配置演化契约">配置</a> · <a href="#运行演化循环">运行</a> · <a href="#agent-插件与扩展">Agent 插件</a> · <a href="#安全边界">安全边界</a> · <a href="#开发">开发</a></p>
 
 </div>
 
@@ -98,6 +98,7 @@ evofence proposal inspect <run-id>-i1
 evofence gate <run-id>-i1
 evofence ledger show <run-id>
 evofence ledger verify
+evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
@@ -105,6 +106,17 @@ evofence rollback <generation-id>
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
+
+### Agent 插件与扩展
+
+仓库包含面向 Codex、Claude Code、OpenCode、Pi 与 DeepSeek Harness 的原生集成。Codex 和 Claude 插件提供显式触发的运行入口；OpenCode、Pi 和 Cordis 目前只读查看 ledger。所有会启动演化的入口仍由 EvoFence CLI 检查契约、预算和证据门禁。
+
+- **Codex CLI 与 Codex 桌面端**：按 [`integrations/codex/README.md`](integrations/codex/README.md) 添加仓库 marketplace。技能名为 `$evofence:inspect-ledger` 和 `$evofence:run-evolution`。
+- **Claude Code**：按 [`integrations/claude-code/README.md`](integrations/claude-code/README.md) 添加 marketplace；命令为 `/evofence:inspect-ledger` 与 `/evofence:run-evolution`。
+- **OpenCode**：[`integrations/opencode/README.md`](integrations/opencode/README.md) 提供项目级只读工具。
+- **Pi**：[`integrations/pi/README.md`](integrations/pi/README.md) 提供只读扩展。
+
+`inspect` 只验证 ledger 并读取脱敏摘要。`run` 必须由用户明确调用并提供已有目标文件；插件不会自动放宽 `--allow-unisolated-agent` 或 `--allow-readable-holdout` 等边界。OpenCode、Pi 和 Cordis 的只读插件入口与 `evofence run --adapter ...` CLI 适配器是两种独立集成。
 
 ### DeepSeek Harness Cordis 插件
 
