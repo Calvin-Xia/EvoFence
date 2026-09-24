@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createAdapterUsageMonitor, parseAdapterUsage } from '../src/lib/adapter.js';
+import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, runAgentAdapter } from '../src/lib/adapter.js';
 
 test('Codex usage sums completed turns without double-counting breakdown fields', () => {
   const stdout = [
@@ -138,6 +138,144 @@ test('OpenCode usage does not expose partial token or cost totals', () => {
   assert.equal(usage.tokens_complete, false);
   assert.equal(usage.reported_cost, null);
   assert.equal(usage.cost_complete, false);
+});
+
+test('Pi CLI usage completes on agent_end and includes message and compaction telemetry', () => {
+  const usage = {
+    input: 20,
+    output: 8,
+    cacheRead: 2,
+    cacheWrite: 1,
+    totalTokens: 31,
+    cost: { input: 0.001, output: 0.0005, cacheRead: 0, cacheWrite: 0, total: 0.0015 },
+  };
+  const stdout = [
+    { type: 'message_end', message: { role: 'assistant', usage } },
+    { type: 'compaction_end', result: { usage: { ...usage, totalTokens: 5, cost: { ...usage.cost, total: 0.0001 } } } },
+    { type: 'agent_end', messages: [] },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  assert.deepEqual(parseAdapterUsage('pi', stdout), {
+    tokens_total: 36,
+    tokens_complete: true,
+    token_source: 'pi-cli-session-events.usage.totalTokens',
+    reported_cost: 0.0016,
+    cost_complete: true,
+    cost_currency: 'USD',
+    cost_source: 'pi-cli-session-events.usage.cost.total (model-price estimate)',
+  });
+});
+
+test('Pi usage fails closed for retry attempts, missing agent_end, and truncated streams', () => {
+  const usage = {
+    input: 20, output: 8, cacheRead: 2, cacheWrite: 1, totalTokens: 31,
+    cost: { input: 0.001, output: 0.0005, cacheRead: 0, cacheWrite: 0, total: 0.0015 },
+  };
+  const assistant = { type: 'message_end', message: { role: 'assistant', usage } };
+  const retry = [assistant, { type: 'agent_end', willRetry: true }, { type: 'auto_retry_start' }, { type: 'agent_end' }]
+    .map((event) => JSON.stringify(event)).join('\n');
+  assert.equal(parseAdapterUsage('pi', retry).tokens_complete, false);
+
+  const noTerminal = parseAdapterUsage('pi', JSON.stringify(assistant));
+  assert.equal(noTerminal.tokens_total, null);
+  assert.equal(noTerminal.tokens_complete, false);
+
+  const truncated = parseAdapterUsage('pi', `${JSON.stringify(assistant)}\n${JSON.stringify({ type: 'agent_end' })}\nnot-json`, { outputLimited: true });
+  assert.equal(truncated.tokens_total, null);
+  assert.equal(truncated.tokens_complete, false);
+});
+
+test('Claude Code usage reads complete whole-tree token totals and CLI USD estimates', () => {
+  const stdout = [
+    { type: 'system', subtype: 'init', session_id: 'fixture' },
+    { type: 'assistant', message: { id: 'main-turn', usage: { input_tokens: 100, output_tokens: 1 } } },
+    {
+      type: 'result',
+      subtype: 'success',
+      result: 'done',
+      total_cost_usd: 0.025,
+      usage: { input_tokens: 100, output_tokens: 40 },
+      modelUsage: {
+        opus: { inputTokens: 100, outputTokens: 40, cacheReadInputTokens: 10, cacheCreationInputTokens: 5, costUSD: 0.02 },
+        haiku: { inputTokens: 20, outputTokens: 8, cacheReadInputTokens: 2, cacheCreationInputTokens: 1, costUSD: 0.005 },
+      },
+    },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  assert.deepEqual(parseAdapterUsage('claude', stdout), {
+    tokens_total: 186,
+    tokens_complete: true,
+    token_source: 'claude-cli-result.modelUsage',
+    reported_cost: 0.025,
+    cost_complete: true,
+    cost_currency: 'USD',
+    cost_source: 'claude-cli-result.total_cost_usd',
+  });
+});
+
+test('Claude Code requires whole-tree result telemetry and rejects incomplete results', () => {
+  const topLevelOnly = JSON.stringify({
+    type: 'result',
+    subtype: 'success',
+    usage: { input_tokens: 10, output_tokens: 5 },
+    total_cost_usd: 0.01,
+  });
+  const incomplete = parseAdapterUsage('claude', topLevelOnly);
+  assert.equal(incomplete.tokens_total, null);
+  assert.equal(incomplete.tokens_complete, false);
+  assert.equal(incomplete.reported_cost, 0.01);
+  assert.equal(incomplete.cost_complete, true);
+
+  const crashed = JSON.stringify({
+    type: 'result',
+    subtype: 'error_during_execution',
+    total_cost_usd: 0,
+    modelUsage: { opus: { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 } },
+  });
+  assert.equal(parseAdapterUsage('claude', crashed).tokens_complete, false);
+  assert.equal(parseAdapterUsage('claude', crashed).cost_complete, false);
+
+  const truncated = parseAdapterUsage('claude', JSON.stringify({
+    type: 'result', subtype: 'success', total_cost_usd: 0.01,
+    modelUsage: { opus: { inputTokens: 1, outputTokens: 1, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 } },
+  }), { outputLimited: true });
+  assert.equal(truncated.tokens_complete, false);
+  assert.equal(truncated.cost_complete, false);
+});
+
+test('Claude Code token monitor only evaluates its whole-tree final result', () => {
+  const monitor = createAdapterUsageMonitor('claude', 100);
+  assert.equal(monitor.push(`${JSON.stringify({ type: 'assistant', message: { usage: { input_tokens: 999 } } })}\n`), null);
+  const result = {
+    type: 'result',
+    subtype: 'success',
+    modelUsage: { opus: { inputTokens: 70, outputTokens: 20, cacheReadInputTokens: 5, cacheCreationInputTokens: 6 } },
+  };
+  assert.equal(monitor.push(`${JSON.stringify(result)}\n`), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: 101,
+    tokens_complete: true,
+    token_source: 'claude-cli-result.modelUsage',
+  });
+
+  const missing = createAdapterUsageMonitor('claude', 100);
+  assert.equal(missing.push(`${JSON.stringify({ type: 'result', subtype: 'success', usage: { input_tokens: 20, output_tokens: 10 } })}\n`), 'TOKEN_USAGE_UNAVAILABLE');
+});
+
+test('Claude Code launch uses non-interactive streaming auto permissions and requires explicit isolation acceptance', async () => {
+  const args = claudeCodeArgs({ model: 'sonnet', agent: 'evofence-agent' });
+  assert.deepEqual(args.slice(0, 12), [
+    '-p', '--output-format', 'stream-json', '--verbose',
+    '--permission-mode', 'auto', '--permission-prompts', 'none',
+    '--model', 'sonnet', '--agent', 'evofence-agent',
+  ]);
+  assert.match(args.at(-1), /\.evofence-task\.md/);
+  const budgetArgs = claudeCodeArgs({ model: 'sonnet', agent: 'evofence-agent', maxBudgetUsd: 0.1234567 });
+  assert.deepEqual(budgetArgs.slice(-3, -1), ['--max-budget-usd', '0.123456']);
+  assert.match(budgetArgs.at(-1), /\.evofence-task\.md/);
+  await assert.rejects(runAgentAdapter({
+    name: 'claude', command: 'must-not-launch', cwd: process.cwd(), timeoutMs: 1000, maxOutputBytes: 1000,
+  }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
 });
 
 test('OpenCode component totals stay unavailable when reasoning usage is absent', () => {

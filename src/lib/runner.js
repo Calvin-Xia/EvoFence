@@ -12,16 +12,19 @@ import { canTerminateProcessTree } from './process.js';
 import { changedPaths, changedPathsBetween, commitCandidate, createRunId, createWorktree, diffHash, headSha, pinGeneration, removeWorktree, repositoryRoot, restoreWorktreeMetadata, setActiveGenerationRef, worktreeMetadataMatches, worktreeMetadataSnapshot } from './git.js';
 
 const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and decision. Do not change protected files. Do not claim acceptance. Keep the patch atomic and reversible.`;
+const USD_MICROS = 1_000_000;
 
 async function loadConfig(root) {
   const config = await loadYamlFile(path.join(root, '.evofence', 'config.yaml'), root);
   invariant(config.version === 1, 'INVALID_CONFIG', 'config.version must be 1.');
-  for (const name of ['codex', 'opencode']) {
+  for (const name of ['codex', 'opencode', 'claude', 'pi']) {
     const item = config.adapters?.[name];
     if (item !== undefined) {
       invariant(item && typeof item === 'object', 'INVALID_CONFIG', `adapters.${name} must be an object.`);
       invariant(item.command === undefined || (typeof item.command === 'string' && item.command.trim()), 'INVALID_CONFIG', `adapters.${name}.command must be a non-empty string.`);
       invariant(item.model === undefined || item.model === null || typeof item.model === 'string', 'INVALID_CONFIG', `adapters.${name}.model must be a string or null.`);
+      invariant(item.agent === undefined || item.agent === null || typeof item.agent === 'string', 'INVALID_CONFIG', `adapters.${name}.agent must be a string or null.`);
+      if (name === 'pi') invariant(item.agent === undefined || item.agent === null, 'INVALID_CONFIG', 'adapters.pi.agent is unsupported by Pi CLI.');
     }
   }
   return config;
@@ -33,6 +36,34 @@ function parseNumericBudget(value, ceiling, name) {
   invariant(Number.isInteger(parsed) && parsed > 0, 'INVALID_BUDGET', `${name} must be a positive integer.`);
   invariant(parsed <= ceiling, 'BUDGET_ABOVE_POLICY', `${name} cannot exceed the contract limit (${ceiling}).`);
   return parsed;
+}
+
+function usdToMicros(value, rounding = 'floor') {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new EvoFenceError('INVALID_BUDGET', 'USD amounts must be finite and non-negative.');
+  }
+  const match = value.toString().toLowerCase().match(/^(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/);
+  if (!match) throw new EvoFenceError('INVALID_BUDGET', 'USD amount could not be represented as a decimal.');
+  const fraction = match[2] ?? '';
+  const digits = BigInt(`${match[1]}${fraction}`);
+  if (digits === 0n) return 0;
+  const shift = 6 - fraction.length + Number(match[3] ?? 0);
+  let micros;
+  if (shift >= 0) {
+    micros = digits * (10n ** BigInt(shift));
+  } else {
+    const divisor = 10n ** BigInt(-shift);
+    micros = digits / divisor;
+    if (rounding === 'ceil' && digits % divisor !== 0n) micros += 1n;
+  }
+  if (micros > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new EvoFenceError('INVALID_BUDGET', 'USD amount exceeds EvoFence safe accounting range.');
+  }
+  return Number(micros);
+}
+
+function usdFromMicros(value) {
+  return value / USD_MICROS;
 }
 
 function taskContents({ goal, iteration, baseSha, contract, previousFailure, phase }) {
@@ -93,7 +124,12 @@ function adapterEvent(result, adapter, phase, iteration) {
     output_limited: result.output_limited === true,
     duration_ms: result.duration_ms ?? null,
     estimated_tokens: result.estimated_tokens ?? null,
-    estimated_cost_usd: null,
+    estimated_cost_usd: result.reported_usage?.cost_complete === true
+      && result.reported_usage.cost_currency === 'USD'
+      && Number.isFinite(result.reported_usage.reported_cost)
+      && result.reported_usage.reported_cost >= 0
+      ? result.reported_usage.reported_cost
+      : null,
     reported_usage: result.reported_usage ?? null,
     stdout_sha256: sha256(result.stdout ?? ''),
     stderr_sha256: sha256(result.stderr ?? ''),
@@ -115,7 +151,7 @@ function helperPath(filename) {
   return filename === '.evofence-task.md' || filename === '.evofence-out' || filename.startsWith('.evofence-out/');
 }
 
-async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, allowUnisolatedOpenCode }) {
+async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, maxUsdRemaining, allowUnisolatedAgent }) {
   const entry = {
     name: adapter,
     command: adapterCommand(config, adapter),
@@ -125,7 +161,8 @@ async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemai
     timeoutMs,
     maxOutputBytes: 20_000_000,
     maxTokensRemaining,
-    allowUnisolatedOpenCode,
+    maxUsdRemaining,
+    allowUnisolatedAgent,
   };
   return runAgentAdapter(entry);
 }
@@ -221,6 +258,82 @@ function recordTokenUsage(result, { maxTokens, totalTokens, ledger, runId, phase
   return observedTotal;
 }
 
+function recordCostUsage(result, { maxUsdMicros, totalCostMicros, ledger, runId, phase, iteration }) {
+  const usage = result.reported_usage;
+  const reportedUsageComplete = usage?.cost_complete === true
+    && usage.cost_currency === 'USD'
+    && typeof usage.reported_cost === 'number'
+    && Number.isFinite(usage.reported_cost)
+    && usage.reported_cost >= 0;
+  let invocationCostMicros = null;
+  let usageComplete = reportedUsageComplete;
+  if (reportedUsageComplete) {
+    try {
+      invocationCostMicros = usdToMicros(usage.reported_cost, 'ceil');
+    } catch {
+      usageComplete = false;
+    }
+  }
+  const observedTotalMicros = invocationCostMicros === null ? null : totalCostMicros + invocationCostMicros;
+  const observedTotalSafe = Number.isSafeInteger(observedTotalMicros);
+  const estimatedTotal = observedTotalSafe ? usdFromMicros(observedTotalMicros) : null;
+  const details = {
+    metric: 'estimated_usd', phase, iteration,
+    limit_usd: usdFromMicros(maxUsdMicros),
+    previous_observed_usd: usdFromMicros(totalCostMicros),
+    invocation_estimate_usd: invocationCostMicros === null ? null : usdFromMicros(invocationCostMicros),
+    observed_total_usd: estimatedTotal,
+    observed_total_usd_micros: observedTotalSafe ? observedTotalMicros : null,
+    cost_source: usage?.cost_source ?? null,
+  };
+
+  if (result.tree_termination_failed) {
+    const failure = { ...details, cost_usage_unknown: true, reason: 'process_tree_termination_failed' };
+    ledger.append('budget.termination_failed', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'EvoFence could not confirm that the Claude process tree stopped. The candidate will not be evaluated or accepted.', failure);
+  }
+
+  if (result.timed_out) {
+    const failure = { ...details, cost_usage_unknown: !observedTotalSafe, reason: 'agent_timeout' };
+    ledger.append('budget.exhausted', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The wall-clock budget stopped Claude. The in-flight candidate will not be evaluated or accepted.', failure);
+  }
+
+  if (!usageComplete || !observedTotalSafe) {
+    const failure = {
+      ...details,
+      cost_usage_unknown: true,
+      reason: result.cost_budget_reached ? 'native_usd_cap_reached_usage_unavailable' : result.budget_stop_reason ?? 'usage_incomplete',
+    };
+    if (result.cost_budget_reached) {
+      ledger.append('budget.exhausted', runId, failure);
+      throw new EvoFenceError('RESOURCE_EXHAUSTED', 'Claude reached its native USD cap, but EvoFence could not verify the final cost estimate. The run stopped before candidate evaluation.', failure);
+    }
+    ledger.append('budget.cost_usage_unavailable', runId, failure);
+    throw new EvoFenceError('USD_USAGE_UNAVAILABLE', 'Claude did not provide a complete USD cost estimate. EvoFence stopped before continuing or evaluating the candidate.', failure);
+  }
+
+  const event = {
+    ...details,
+    invocation_estimate_usd: usdFromMicros(invocationCostMicros),
+    observed_total_usd: estimatedTotal,
+    limit_usd: usdFromMicros(maxUsdMicros),
+    native_cap_reached: result.cost_budget_reached === true,
+  };
+  ledger.append('budget.usd.observed', runId, event);
+
+  if (result.cost_budget_reached || observedTotalMicros >= maxUsdMicros) {
+    const failure = {
+      ...event,
+      reason: result.cost_budget_reached ? 'claude_native_usd_cap_reached' : 'run_usd_estimate_limit_reached',
+      over_limit_usd: usdFromMicros(Math.max(0, observedTotalMicros - maxUsdMicros)),
+    };
+    ledger.append('budget.exhausted', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', `The Claude USD cost estimate reached the run limit ($${estimatedTotal} / $${usdFromMicros(maxUsdMicros)}). The candidate will not continue to evaluation or acceptance.`, failure);
+  }
+  return observedTotalMicros;
+}
+
 export function checkFinalCandidate(contract, actualPaths, proposal, claims, beforeEvidenceHash, afterEvidenceHash) {
   const fileCheck = checkTaskFile(contract, actualPaths, proposal, claims);
   if (!fileCheck.accepted) return fileCheck;
@@ -243,20 +356,39 @@ async function removeCandidate(root, worktree, tempRoot) {
   });
 }
 
-export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, maxWallClockMs, allowUnisolatedOpenCode = false, allowReadableHoldout = false, onProgress = () => {}, adapterRunner = null }) {
+export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, maxWallClockMs, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode, allowReadableHoldout = false, onProgress = () => {}, adapterRunner = null }) {
   const root = await repositoryRoot(cwd);
   const contract = await loadContract(root);
   const config = await loadConfig(root);
   const holdout = await loadPrivateHoldout(root);
   requireEvidenceConfigured(contract);
   if (holdout.length > 0 && !allowReadableHoldout) {
-    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex and OpenCode adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
+    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex, OpenCode, Claude Code, and Pi adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
   }
+  let costLimitMicros = null;
   if (contract.budgets.max_usd !== null) {
-    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'USD budget enforcement is unavailable because adapters do not provide a consistent, complete USD cost source. Keep max_usd set to null.');
+    if (adapter !== 'claude') {
+      throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence. Set max_usd to null or use the Claude Code adapter.');
+    }
+    costLimitMicros = usdToMicros(contract.budgets.max_usd);
+    if (costLimitMicros < 1) {
+      throw new EvoFenceError('INVALID_BUDGET', 'budgets.max_usd must be at least $0.000001 for Claude Code USD budget enforcement.');
+    }
+  }
+  if (adapter === 'claude' && !allowUnisolatedAgent) {
+    throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+  }
+  if (adapter === 'pi' && !allowUnisolatedAgent) {
+    throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+  }
+  if (adapter === 'claude' && contract.budgets.max_tokens !== null) {
+    throw new EvoFenceError('UNSUPPORTED_CLAUDE_TOKEN_BUDGET', 'Claude Code reports complete whole-tree token usage only in its final result event. EvoFence cannot safely interrupt the run at the token threshold; set max_tokens to null or use Codex, OpenCode, or Pi for token-budgeted runs.');
   }
   if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
     throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
+  }
+  if (costLimitMicros !== null && !(await canTerminateProcessTree())) {
+    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET_PROCESS_CONTROL', 'This host cannot terminate a Claude process tree. EvoFence refused to start a USD-budgeted run.');
   }
   await ensurePrivateIgnored(root);
 
@@ -283,9 +415,22 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   let activeSha = activeGeneration?.sha ?? await headSha(root);
   let baselineScore = null;
   let observedTokens = 0;
+  let observedCostMicros = 0;
+  let costTotalUnknown = false;
   const tokenLimit = contract.budgets.max_tokens;
-  const outcome = { run_id: runId, status: 'RUNNING', adapter, base_sha: activeSha, iterations: [], active_generation: null, token_usage_total: tokenLimit === null ? null : observedTokens };
+  const outcome = {
+    run_id: runId, status: 'RUNNING', adapter, base_sha: activeSha, iterations: [], active_generation: null,
+    token_usage_total: tokenLimit === null ? null : observedTokens,
+    cost_estimate_total_usd: costLimitMicros === null ? null : usdFromMicros(observedCostMicros),
+  };
   let worktree = null;
+
+  const runCostFields = () => ({
+    cost_budget_usd: contract.budgets.max_usd,
+    cost_estimate_total_usd: costLimitMicros === null || costTotalUnknown ? null : usdFromMicros(observedCostMicros),
+    cost_estimate_complete: costLimitMicros === null ? null : !costTotalUnknown,
+    ...(costTotalUnknown ? { cost_estimate_observed_before_failure_usd: usdFromMicros(observedCostMicros) } : {}),
+  });
 
   const runBudgetedAdapter = async ({ iteration, phase, ...options }) => {
     const remainingTokens = tokenLimit === null ? null : tokenLimit - observedTokens;
@@ -294,8 +439,22 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       ledger.append('budget.exhausted', runId, failure);
       throw new EvoFenceError('RESOURCE_EXHAUSTED', `The token usage threshold was reached (${observedTokens}/${tokenLimit}).`, failure);
     }
-    const result = await invokeAdapter({ ...options, adapter, config, phase, iteration, maxTokensRemaining: remainingTokens }, adapterRunner);
+    const remainingUsdMicros = costLimitMicros === null ? null : costLimitMicros - observedCostMicros;
+    if (remainingUsdMicros !== null && remainingUsdMicros < 1) {
+      const failure = { metric: 'estimated_usd', phase, iteration, limit_usd: usdFromMicros(costLimitMicros), observed_total_usd: usdFromMicros(observedCostMicros) };
+      ledger.append('budget.exhausted', runId, failure);
+      throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The Claude USD estimate limit was reached before another adapter invocation.', failure);
+    }
+    const result = await invokeAdapter({
+      ...options, adapter, config, phase, iteration,
+      maxTokensRemaining: remainingTokens,
+      maxUsdRemaining: remainingUsdMicros === null ? null : usdFromMicros(remainingUsdMicros),
+    }, adapterRunner);
     ledger.append('adapter.finished', runId, adapterEvent(result, adapter, phase, iteration));
+    if (costLimitMicros !== null) {
+      observedCostMicros = recordCostUsage(result, { maxUsdMicros: costLimitMicros, totalCostMicros: observedCostMicros, ledger, runId, phase, iteration });
+      outcome.cost_estimate_total_usd = usdFromMicros(observedCostMicros);
+    }
     observedTokens = recordTokenUsage(result, { maxTokens: tokenLimit, totalTokens: observedTokens, ledger, runId, phase, iteration });
     outcome.token_usage_total = tokenLimit === null ? null : observedTokens;
     return result;
@@ -325,6 +484,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       private_holdout_host_readable: holdout.length > 0,
       token_budget: tokenLimit,
       cost_budget_usd: contract.budgets.max_usd,
+      cost_budget_source: costLimitMicros === null ? null : 'claude-cli --max-budget-usd; result.total_cost_usd estimate',
     });
     onProgress({ type: 'run.started', run_id: runId, base_sha: activeSha, iterations: limitIterations });
 
@@ -340,7 +500,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       outcome.decision = decision;
       outcome.failure = details;
       outcome.duration_ms = Date.now() - runStartedAt;
-      ledger.append('run.finished', runId, { status: outcome.status, decision, duration_ms: outcome.duration_ms });
+      ledger.append('run.finished', runId, { status: outcome.status, decision, duration_ms: outcome.duration_ms, ...runCostFields() });
       return outcome;
     }
     baselineScore = baselineEvidence.objective.objective?.score ?? baselineEvidence.objective.score;
@@ -350,7 +510,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       outcome.failure = { reason: 'BASELINE_OBJECTIVE_INVALID' };
       ledger.append('gate.decision', runId, { decision: 'QUARANTINE', reason: 'BASELINE_OBJECTIVE_INVALID' });
       outcome.duration_ms = Date.now() - runStartedAt;
-      ledger.append('run.finished', runId, { status: outcome.status, decision: 'QUARANTINE', duration_ms: outcome.duration_ms });
+      ledger.append('run.finished', runId, { status: outcome.status, decision: 'QUARANTINE', duration_ms: outcome.duration_ms, ...runCostFields() });
       return outcome;
     }
     await removeCandidate(root, worktree, runTempRoot);
@@ -375,7 +535,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       ledger.append('prompt.prepared', runId, { iteration, phase: 'proposal', task_sha256: sha256(proposalTask) });
 
       onProgress({ type: 'candidate.proposal.start', iteration, adapter });
-      const proposalResult = await runBudgetedAdapter({ iteration, phase: 'proposal', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
+      const proposalResult = await runBudgetedAdapter({ iteration, phase: 'proposal', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedAgent });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
@@ -460,7 +620,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       await writeFile(taskFile, implementationTask, { flag: 'w' });
       ledger.append('prompt.prepared', runId, { iteration, phase: 'implementation', task_sha256: sha256(implementationTask) });
       onProgress({ type: 'candidate.implementation.start', iteration, adapter });
-      const implementationResult = await runBudgetedAdapter({ iteration, phase: 'implementation', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
+      const implementationResult = await runBudgetedAdapter({ iteration, phase: 'implementation', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedAgent });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
@@ -669,18 +829,23 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
     if (outcome.status === 'RUNNING') outcome.status = outcome.iterations.some((item) => item.decision === 'ACCEPT') ? 'ACCEPTED' : 'PLATEAU';
     outcome.duration_ms = Date.now() - runStartedAt;
     outcome.active_generation = ledger.activeGeneration();
-    ledger.append('run.finished', runId, { status: outcome.status, iterations: outcome.iterations.length, active_generation: outcome.active_generation?.generation_id ?? null, duration_ms: outcome.duration_ms, token_usage_total: tokenLimit === null ? null : observedTokens });
+    ledger.append('run.finished', runId, { status: outcome.status, iterations: outcome.iterations.length, active_generation: outcome.active_generation?.generation_id ?? null, duration_ms: outcome.duration_ms, token_usage_total: tokenLimit === null ? null : observedTokens, ...runCostFields() });
     return outcome;
   } catch (error) {
-    outcome.status = ['RESOURCE_EXHAUSTED', 'TOKEN_USAGE_UNAVAILABLE', 'PROCESS_TREE_TERMINATION_FAILED'].includes(error.code) ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
+    outcome.status = ['RESOURCE_EXHAUSTED', 'TOKEN_USAGE_UNAVAILABLE', 'USD_USAGE_UNAVAILABLE', 'PROCESS_TREE_TERMINATION_FAILED'].includes(error.code) ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
     outcome.failure = { code: error.code ?? 'UNKNOWN', message: error.message };
     if (Number.isSafeInteger(error.details?.observed_total)) {
       observedTokens = error.details.observed_total;
       outcome.token_usage_total = observedTokens;
     }
+    if (Number.isSafeInteger(error.details?.observed_total_usd_micros)) {
+      observedCostMicros = error.details.observed_total_usd_micros;
+    }
+    if (error.details?.cost_usage_unknown === true) costTotalUnknown = true;
+    outcome.cost_estimate_total_usd = costLimitMicros === null || costTotalUnknown ? null : usdFromMicros(observedCostMicros);
     const tokenTotalUnknown = ['agent_timeout', 'process_tree_termination_failed'].includes(error.details?.reason)
       && !Number.isSafeInteger(error.details?.observed_total);
-    ledger.append('run.failed', runId, { ...outcome.failure, token_usage_total: tokenLimit === null || tokenTotalUnknown ? null : observedTokens, token_budget: tokenLimit });
+    ledger.append('run.failed', runId, { ...outcome.failure, token_usage_total: tokenLimit === null || tokenTotalUnknown ? null : observedTokens, token_budget: tokenLimit, ...runCostFields() });
     throw error;
   } finally {
     if (worktree) await removeCandidate(root, worktree, runTempRoot).catch(() => {});

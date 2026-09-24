@@ -1,0 +1,3 @@
+- insert:
+    - id: evofence-tools
+      name: '@local/evofence-deepseek-harness'

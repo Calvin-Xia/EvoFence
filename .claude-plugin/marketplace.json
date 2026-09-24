@@ -1,0 +1,21 @@
+{
+  "name": "evofence",
+  "owner": {
+    "name": "Calvin Xia",
+    "url": "https://github.com/Calvin-Xia"
+  },
+  "metadata": {
+    "description": "EvoFence agent integrations",
+    "version": "0.1.2-beta.1"
+  },
+  "plugins": [
+    {
+      "name": "evofence",
+      "source": "./integrations/claude-code",
+      "description": "Inspect EvoFence's audit ledger and invoke evidence-gated evolution runs.",
+      "version": "0.1.2-beta.1",
+      "category": "Productivity",
+      "tags": ["agent-safety", "coding", "evidence"]
+    }
+  ]
+}

@@ -14,7 +14,7 @@
 </p>
 
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="#install">Install</a> · <a href="#configure-the-contract">Configure</a> · <a href="#run-an-evolution-loop">Run</a> · <a href="#security-boundaries">Security</a> · <a href="#development">Development</a></p>
+<p><a href="#install">Install</a> · <a href="#configure-the-contract">Configure</a> · <a href="#run-an-evolution-loop">Run</a> · <a href="#agent-plugins-and-extensions">Agent plugins</a> · <a href="#security-boundaries">Security</a> · <a href="#development">Development</a></p>
 
 </div>
 
@@ -81,10 +81,12 @@ Each iteration creates a detached worktree from the current accepted generation,
 
 ## Security boundaries
 
-Codex runs with its `workspace-write` sandbox, which restricts writes but not reads from the host file system ([Codex sandbox policy](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)). OpenCode does not provide operating-system isolation; its permission rules are only a UX control ([OpenCode security model](https://github.com/anomalyco/opencode/blob/dev/SECURITY.md)). The OpenCode adapter is disabled unless you explicitly pass `--allow-unisolated-agent`:
+Codex runs with its `workspace-write` sandbox, which restricts writes but not reads from the host file system ([Codex sandbox policy](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)). EvoFence does not place OpenCode, Claude Code, or Pi in an OS sandbox. Claude Code's headless permission flags do not restrict process access to host files, and headless mode can load configuration that runs hooks, MCP servers, or plugins ([Claude Code headless mode](https://code.claude.com/docs/en/headless)). The Pi adapter uses JSONL mode and disables persistent sessions, project trust, discovered extensions, skills, prompt templates, themes, and `AGENTS.md`/`CLAUDE.md` discovery ([Pi CLI](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/cli.md)); these flags reduce project resource loading but do not restrict shell access to host files ([Pi security](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/security.md)). OpenCode, Claude Code, and Pi require `--allow-unisolated-agent`:
 
 ```sh
 evofence run --adapter opencode --allow-unisolated-agent --goal goal.md
+evofence run --adapter claude --allow-unisolated-agent --goal goal.md
+evofence run --adapter pi --allow-unisolated-agent --goal goal.md
 ```
 
 For meaningful protection, launch the agent in a Docker container or VM that mounts only the candidate worktree and has no network, secrets, or host credentials. The flags above do not create such a boundary.
@@ -98,6 +100,7 @@ evofence proposal inspect <run-id>-i1
 evofence gate <run-id>-i1
 evofence ledger show <run-id>
 evofence ledger verify
+evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
@@ -105,6 +108,29 @@ evofence rollback <generation-id>
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
+
+### Agent plugins and extensions
+
+The repository includes native integrations for Codex, Claude Code, OpenCode, Pi, and DeepSeek Harness. Codex and Claude provide explicitly invoked run commands; OpenCode, Pi, and Cordis currently expose read-only ledger inspection. Every entry point that starts an evolution remains subject to the EvoFence CLI contract, budget, and evidence gates.
+
+- **Codex CLI and Codex desktop**: follow [`integrations/codex/README.md`](integrations/codex/README.md) to add the repository marketplace. Skills are `$evofence:inspect-ledger` and `$evofence:run-evolution`.
+- **Claude Code**: follow [`integrations/claude-code/README.md`](integrations/claude-code/README.md) to add the marketplace; commands are `/evofence:inspect-ledger` and `/evofence:run-evolution`.
+- **OpenCode**: [`integrations/opencode/README.md`](integrations/opencode/README.md) provides project-level read-only tools.
+- **Pi**: [`integrations/pi/README.md`](integrations/pi/README.md) provides a read-only extension.
+
+`inspect` verifies the ledger and reads sanitized summaries. `run` must be explicitly invoked by the user with an existing goal file; the plugins do not automatically relax boundaries such as `--allow-unisolated-agent` or `--allow-readable-holdout`. OpenCode, Pi, and Cordis read-only plugin entry points are separate from the `evofence run --adapter ...` CLI adapters.
+
+### DeepSeek Harness Cordis plugin
+
+This repository includes a local Cordis bundle for read-only inspection of EvoFence ledger integrity and recent run summaries. It does not start an evolution run, execute contract commands, accept candidates, or change Git state. Launch Harness from the EvoFence repository root:
+
+```sh
+dsh plugin --profile web add ./integrations/deepseek-harness
+dsh --profile web --dump-config
+dsh --profile web
+```
+
+The bundle registers `evofence_verify_ledger` and `evofence_recent_runs`. Summaries omit prompts, evaluator commands, source text, and check output. The Cordis API is still pre-stable; see the official [tool tutorial](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/tool) and [bundle guide](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/publish).
 
 Experiment manifest example:
 
@@ -132,9 +158,9 @@ The ledger is a local SQLite database with append-only triggers and a SHA-256 ha
 
 ## Current limits
 
-- `max_iterations`, `max_wall_clock_ms`, failed-candidate count, and consecutive no-improvement count are enforced. `max_tokens` sums completed Codex turns and OpenCode steps. When usage reaches or exceeds the threshold, EvoFence terminates the agent process tree and stops before evaluating or accepting the current candidate. The CLIs report usage only after a model turn/step completes; the crossing turn is already complete and another request may already be in flight, so actual usage can exceed the threshold. This is not a strict pre-request token cap. Missing, incomplete, or truncated usage fails closed and stops the run. On Windows, EvoFence first probes whether the host can terminate an entire process tree; if the permission is unavailable, it refuses to start a token-budgeted run. `max_usd` remains unavailable because the adapters do not expose one consistent, complete USD cost source; a non-null value makes `run` stop before launching an agent. OpenCode's reported cost is preserved without inferring a currency and is not a final bill.
-- Hidden evaluation currently runs owner-provided private commands. The built-in adapters do not satisfy the PRD's strong “agent cannot read holdout source” requirement on a shared host; use a separately isolated worker for that guarantee. Generated metamorphic tests, an API daemon, Herdr/Pi adapters, authority learning, and longitudinal drift analysis are future work.
-- Agent CLI versions and user configuration can change behavior. Keep Codex/OpenCode up to date and inspect exported evidence before relying on a result.
+- `max_iterations`, `max_wall_clock_ms`, failed-candidate count, and consecutive no-improvement count are enforced. When `max_tokens` is set, EvoFence sums completed Codex turns, OpenCode steps, and Pi assistant messages, including Pi-reported nested tool-model and compaction usage. When usage reaches or exceeds the threshold, EvoFence terminates the agent process tree and stops before evaluating or accepting the current candidate. CLIs report usage at completed message/turn/step boundaries, so the crossing response has already completed and actual usage can exceed the threshold; this is not a strict pre-request token cap. Claude Code exposes complete whole-tree token usage only in its final result event, so EvoFence refuses to start Claude runs when `max_tokens` is configured. Pi retries without attached usage fail closed when a token budget is active. Missing, incomplete, or truncated usage stops a budgeted run. On Windows, EvoFence first probes whether the host can terminate an entire process tree; if the permission is unavailable, it refuses to start a budgeted run. Claude Code v2.1.246+ reports per-model whole-tree tokens and CLI cost estimates; Pi records USD cost estimates from its model pricing data. `max_usd` currently supports Claude Code only: EvoFence passes the remaining run-wide budget to each CLI invocation via `--max-budget-usd` and accumulates complete `result.total_cost_usd` estimates. It stops without evaluating the candidate when the cap is reached, usage is missing/truncated, the process times out, or process-tree termination cannot be confirmed. The response crossing the cap may put the estimate over the limit; this is not the provider's final bill. A non-null `max_usd` with Codex, OpenCode, or Pi is rejected before launch. OpenCode's reported cost is preserved without inferring a currency and is not a final bill.
+- Hidden evaluation currently runs owner-provided private commands. The built-in adapters do not satisfy the PRD's strong “agent cannot read holdout source” requirement on a shared host; use a separately isolated worker for that guarantee. Generated metamorphic tests, an API daemon, Herdr adapter, authority learning, and longitudinal drift analysis are future work.
+- Agent CLI versions and user configuration can change behavior. The Claude Code adapter requires v2.1.259+ for prompt-free headless operation. Keep all CLIs up to date and inspect exported evidence before relying on a result.
 - Worktree isolation protects the primary checkout from candidate edits. It is not a substitute for an OS sandbox, especially for an agent that can run arbitrary shell commands.
 
 ## Development

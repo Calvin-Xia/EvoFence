@@ -17,9 +17,14 @@ function eventHash(event) {
 }
 
 export class Ledger {
-  constructor(filename) {
+  constructor(filename, { readOnly = false } = {}) {
     this.filename = path.resolve(filename);
-    this.db = new Database(this.filename, { timeout: 5000 });
+    this.readOnly = readOnly;
+    this.db = new Database(this.filename, readOnly
+      ? { readonly: true, fileMustExist: true, timeout: 5000 }
+      : { timeout: 5000 });
+    if (readOnly) return;
+
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('synchronous = FULL');
@@ -92,10 +97,12 @@ export class Ledger {
   }
 
   append(eventType, runId, payload) {
+    if (this.readOnly) throw new EvoFenceError('LEDGER_READ_ONLY', 'Cannot append events through a read-only ledger.');
     return this.insertEventTx(eventType, runId ?? null, payload);
   }
 
   recordGeneration(generation) {
+    if (this.readOnly) throw new EvoFenceError('LEDGER_READ_ONLY', 'Cannot record generations through a read-only ledger.');
     const entry = {
       generation_id: generation.generation_id,
       run_id: generation.run_id,
@@ -108,6 +115,7 @@ export class Ledger {
   }
 
   rollback(generationId) {
+    if (this.readOnly) throw new EvoFenceError('LEDGER_READ_ONLY', 'Cannot roll back generations through a read-only ledger.');
     return this.rollbackTx(generationId);
   }
 
@@ -130,6 +138,73 @@ export class Ledger {
       ? this.db.prepare('SELECT * FROM events WHERE run_id = ? ORDER BY seq').all(runId)
       : this.db.prepare('SELECT * FROM events ORDER BY seq').all();
     return rows.map((row) => ({ ...row, payload: JSON.parse(row.payload_json) }));
+  }
+
+  recentRuns(limit = 10) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 20) {
+      throw new EvoFenceError('INVALID_RUN_LIMIT', 'Run summary limit must be an integer between 1 and 20.');
+    }
+
+    const runs = this.db.prepare(`
+      SELECT run_id, created_at, payload_json
+      FROM events
+      WHERE event_type = 'run.started' AND run_id IS NOT NULL
+      ORDER BY seq DESC
+      LIMIT ?
+    `).all(limit);
+    const runEvents = this.db.prepare(`
+      SELECT seq, event_type, payload_json
+      FROM events
+      WHERE run_id = ?
+      ORDER BY seq
+    `);
+
+    return runs.map((run) => {
+      const started = JSON.parse(run.payload_json);
+      const summary = {
+        run_id: run.run_id,
+        started_at: run.created_at,
+        adapter: typeof started.adapter === 'string' ? started.adapter : 'unknown',
+        status: 'INCOMPLETE',
+        accepted_candidates: 0,
+        rejected_candidates: 0,
+        iterations: 0,
+      };
+      const observedIterations = new Set();
+      const rejectedIterations = new Set();
+      let hasAuthoritativeIterations = false;
+
+      for (const event of runEvents.all(run.run_id)) {
+        const payload = JSON.parse(event.payload_json);
+        if (Number.isInteger(payload.iteration) && payload.iteration > 0) observedIterations.add(payload.iteration);
+
+        if (
+          event.event_type === 'candidate.rejected'
+          || (event.event_type === 'gate.decision' && payload.decision === 'REJECT')
+        ) {
+          const iterationKey = Number.isInteger(payload.iteration) && payload.iteration > 0
+            ? `iteration:${payload.iteration}`
+            : `event:${event.seq}`;
+          rejectedIterations.add(iterationKey);
+        }
+
+        if (event.event_type === 'candidate.accepted') summary.accepted_candidates += 1;
+        else if (event.event_type === 'run.finished') {
+          summary.status = typeof payload.status === 'string' ? payload.status : 'FINISHED';
+          if (Number.isInteger(payload.iterations) && payload.iterations >= 0) {
+            summary.iterations = payload.iterations;
+            hasAuthoritativeIterations = true;
+          }
+          if (Number.isFinite(payload.duration_ms) && payload.duration_ms >= 0) summary.duration_ms = payload.duration_ms;
+        } else if (event.event_type === 'run.failed') {
+          summary.status = 'FAILED';
+        }
+      }
+
+      summary.rejected_candidates = rejectedIterations.size;
+      if (!hasAuthoritativeIterations) summary.iterations = observedIterations.size ? Math.max(...observedIterations) : 0;
+      return summary;
+    });
   }
 
   verify() {

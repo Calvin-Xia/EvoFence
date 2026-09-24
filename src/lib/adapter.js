@@ -18,12 +18,132 @@ function openCodeArgs({ model, agent }) {
   return args;
 }
 
+function usdToMicros(value, rounding = 'floor') {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget must be a finite, non-negative number.');
+  }
+  const match = value.toString().toLowerCase().match(/^(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/);
+  if (!match) throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget could not be represented as a decimal amount.');
+  const fraction = match[2] ?? '';
+  const digits = BigInt(`${match[1]}${fraction}`);
+  if (digits === 0n) return 0;
+  const shift = 6 - fraction.length + Number(match[3] ?? 0);
+  let micros;
+  if (shift >= 0) {
+    micros = digits * (10n ** BigInt(shift));
+  } else {
+    const divisor = 10n ** BigInt(-shift);
+    micros = digits / divisor;
+    if (rounding === 'ceil' && digits % divisor !== 0n) micros += 1n;
+  }
+  if (micros > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD amount exceeds EvoFence safe accounting range.');
+  }
+  return Number(micros);
+}
+
+function formatUsdBudget(value) {
+  const micros = usdToMicros(value);
+  if (micros < 1) {
+    throw new EvoFenceError('INVALID_BUDGET', 'Claude USD budget must be at least $0.000001.');
+  }
+  const whole = Math.floor(micros / 1_000_000);
+  const fraction = String(micros % 1_000_000).padStart(6, '0').replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : String(whole);
+}
+
+export function claudeCodeArgs({ model, agent, maxBudgetUsd = null }) {
+  const args = [
+    '-p',
+    '--output-format', 'stream-json',
+    '--verbose',
+    '--permission-mode', 'auto',
+    '--permission-prompts', 'none',
+  ];
+  if (model) args.push('--model', model);
+  if (agent) args.push('--agent', agent);
+  if (maxBudgetUsd !== null) args.push('--max-budget-usd', formatUsdBudget(maxBudgetUsd));
+  args.push(TASK_POINTER);
+  return args;
+}
+
+function piArgs({ model }) {
+  const args = [
+    '--mode', 'json',
+    '--no-session',
+    '--no-approve',
+    '--no-extensions',
+    '--no-skills',
+    '--no-prompt-templates',
+    '--no-themes',
+    '--no-context-files',
+  ];
+  if (model) args.push('--model', model);
+  args.push(TASK_POINTER);
+  return args;
+}
+
 function nonNegativeNumber(value) {
   return Number.isFinite(value) && value >= 0;
 }
 
 function nonNegativeInteger(value) {
   return Number.isSafeInteger(value) && value >= 0;
+}
+
+function claudeModelTokenCount(modelUsage) {
+  if (!modelUsage || typeof modelUsage !== 'object' || Array.isArray(modelUsage)) return null;
+  const models = Object.values(modelUsage);
+  if (!models.length) return null;
+  let total = 0;
+  for (const usage of models) {
+    const fields = [usage?.inputTokens, usage?.outputTokens, usage?.cacheReadInputTokens, usage?.cacheCreationInputTokens];
+    if (!fields.every(nonNegativeInteger)) return null;
+    total += fields.reduce((sum, value) => sum + value, 0);
+    if (!Number.isSafeInteger(total)) return null;
+  }
+  return total;
+}
+
+function piUsageMetrics(usage) {
+  if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return null;
+  const tokenFields = [usage.input, usage.output, usage.cacheRead, usage.cacheWrite, usage.totalTokens];
+  if (!tokenFields.every(nonNegativeInteger)) return null;
+  const cost = usage.cost;
+  const costFields = [cost?.input, cost?.output, cost?.cacheRead, cost?.cacheWrite, cost?.total];
+  return {
+    tokens: usage.totalTokens,
+    cost: costFields.every(nonNegativeNumber) ? cost.total : null,
+  };
+}
+
+function piEventUsage(event) {
+  if (event?.type === 'message_end') {
+    const message = event.message;
+    if (message?.role === 'assistant') {
+      const metrics = piUsageMetrics(message.usage);
+      return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+    }
+    if (message?.role === 'toolResult' && message.usage !== undefined) {
+      const metrics = piUsageMetrics(message.usage);
+      return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+    }
+  }
+  if (event?.type === 'compaction_end') {
+    const metrics = piUsageMetrics(event.result?.usage);
+    return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+  }
+  if (event?.type === 'auto_retry_start' || event?.type === 'summarization_retry_scheduled') {
+    // Pi does not attach usage to failed attempts, so a hard budget cannot account for them.
+    return { relevant: true, tokens: null, cost: null };
+  }
+  if (event?.type === 'agent_end' && event.willRetry === true) {
+    return { relevant: true, tokens: null, cost: null };
+  }
+  if (event?.type === 'message_update' && event.assistantMessageEvent?.type === 'error') {
+    return { relevant: true, tokens: null, cost: null };
+  }
+  return { relevant: false, tokens: null, cost: null };
 }
 
 function parseJsonLines(stdout) {
@@ -41,6 +161,7 @@ function parseJsonLines(stdout) {
 }
 
 function eventTokenCount(adapter, event) {
+  if (adapter === 'pi') return piEventUsage(event);
   if (adapter === 'codex' && event?.type === 'turn.completed') {
     const usage = event.usage;
     if (!nonNegativeInteger(usage?.input_tokens) || !nonNegativeInteger(usage?.output_tokens)) return { relevant: true, tokens: null };
@@ -62,11 +183,15 @@ function eventTokenCount(adapter, event) {
     }
     return { relevant: true, tokens: null };
   }
+  if (adapter === 'claude' && event?.type === 'result') {
+    if (event.subtype === 'error_during_execution') return { relevant: true, tokens: null };
+    return { relevant: true, tokens: claudeModelTokenCount(event.modelUsage) };
+  }
   return { relevant: false, tokens: null };
 }
 
 export function createAdapterUsageMonitor(adapter, maxTokens) {
-  if (!['codex', 'opencode'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
+  if (!['codex', 'opencode', 'claude', 'pi'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
   if (!Number.isSafeInteger(maxTokens) || maxTokens < 1) throw new EvoFenceError('INVALID_BUDGET', 'The remaining token budget must be a positive safe integer.');
 
   let pending = '';
@@ -141,7 +266,9 @@ export function createAdapterUsageMonitor(adapter, maxTokens) {
       return {
         tokens_total: tokensComplete ? total : null,
         tokens_complete: tokensComplete,
-        token_source: eventCount ? (adapter === 'codex' ? 'codex-cli-turn.completed' : 'opencode-cli-step_finish') : null,
+        token_source: eventCount
+          ? ({ codex: 'codex-cli-turn.completed', opencode: 'opencode-cli-step_finish', claude: 'claude-cli-result.modelUsage', pi: 'pi-cli-session-events' })[adapter]
+          : null,
       };
     },
   };
@@ -228,11 +355,79 @@ function openCodeUsage(events, outputLimited) {
   };
 }
 
+function claudeUsage(events, outputLimited) {
+  const results = events.filter((event) => event?.type === 'result');
+  if (results.length !== 1) {
+    return incompleteUsage(results.length ? 'claude-cli-result.modelUsage' : null, results.length ? 'claude-cli-result.total_cost_usd' : null);
+  }
+
+  const result = results[0];
+  const modelTokenCount = claudeModelTokenCount(result.modelUsage);
+  const failedAfterCrash = result.subtype === 'error_during_execution';
+  const tokensComplete = modelTokenCount !== null && !outputLimited && !failedAfterCrash;
+  const costComplete = nonNegativeNumber(result.total_cost_usd) && !outputLimited && !failedAfterCrash;
+  return {
+    tokens_total: tokensComplete ? modelTokenCount : null,
+    tokens_complete: tokensComplete,
+    token_source: 'claude-cli-result.modelUsage',
+    reported_cost: costComplete ? result.total_cost_usd : null,
+    cost_complete: costComplete,
+    cost_currency: costComplete ? 'USD' : null,
+    cost_source: 'claude-cli-result.total_cost_usd',
+  };
+}
+
+function piUsage(events, outputLimited) {
+  let assistantCount = 0;
+  let agentEndCount = 0;
+  let usageCount = 0;
+  let tokenTotal = 0;
+  let tokensComplete = true;
+  let costTotal = 0;
+  let costCount = 0;
+  let costComplete = true;
+
+  for (const event of events) {
+    // Pi's JSON CLI stream completes an invocation with agent_end; agent_settled is an RPC lifecycle event.
+    if (event?.type === 'agent_end' && event.willRetry !== true) agentEndCount += 1;
+    if (event?.type === 'message_end' && event.message?.role === 'assistant') assistantCount += 1;
+    const parsed = piEventUsage(event);
+    if (!parsed.relevant) continue;
+    usageCount += 1;
+    if (parsed.tokens === null) tokensComplete = false;
+    else {
+      tokenTotal += parsed.tokens;
+      if (!Number.isSafeInteger(tokenTotal)) tokensComplete = false;
+    }
+    if (parsed.cost === null) costComplete = false;
+    else {
+      costTotal += parsed.cost;
+      costCount += 1;
+      if (!Number.isFinite(costTotal)) costComplete = false;
+    }
+  }
+
+  const completeTokens = assistantCount > 0 && agentEndCount === 1 && usageCount > 0
+    && tokensComplete && Number.isSafeInteger(tokenTotal) && !outputLimited;
+  const completeCost = completeTokens && costComplete && costCount === usageCount && !outputLimited;
+  return {
+    tokens_total: completeTokens ? tokenTotal : null,
+    tokens_complete: completeTokens,
+    token_source: assistantCount ? 'pi-cli-session-events.usage.totalTokens' : null,
+    reported_cost: completeCost ? costTotal : null,
+    cost_complete: completeCost,
+    cost_currency: completeCost ? 'USD' : null,
+    cost_source: costCount ? 'pi-cli-session-events.usage.cost.total (model-price estimate)' : null,
+  };
+}
+
 export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {}) {
   const parsed = parseJsonLines(stdout);
   let usage;
   if (adapter === 'codex') usage = codexUsage(parsed.events, outputLimited);
   else if (adapter === 'opencode') usage = openCodeUsage(parsed.events, outputLimited);
+  else if (adapter === 'claude') usage = claudeUsage(parsed.events, outputLimited);
+  else if (adapter === 'pi') usage = piUsage(parsed.events, outputLimited);
   else return incompleteUsage();
   if (parsed.complete) return usage;
   return {
@@ -244,13 +439,15 @@ export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {
   };
 }
 
-export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, allowUnisolatedOpenCode = false }) {
+export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, maxUsdRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
   let args;
   let env = {};
   if (name === 'codex') {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     args = codexArgs({ cwd, model });
   } else if (name === 'opencode') {
-    if (!allowUnisolatedOpenCode) {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
+    if (!allowUnisolatedAgent) {
       throw new EvoFenceError('OPEN_CODE_SANDBOX_REQUIRED', 'OpenCode does not provide an OS security sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or launch OpenCode in a Docker/VM sandbox.');
     }
     args = openCodeArgs({ model, agent });
@@ -271,6 +468,20 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
         },
       }),
     };
+  } else if (name === 'claude') {
+    if (!allowUnisolatedAgent) {
+      throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+    }
+    args = claudeCodeArgs({ model, agent, maxBudgetUsd: maxUsdRemaining });
+  } else if (name === 'pi') {
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
+    if (!allowUnisolatedAgent) {
+      throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+    }
+    if (agent) {
+      throw new EvoFenceError('UNSUPPORTED_ADAPTER_OPTION', 'Pi does not expose a built-in --agent selector. Remove adapters.pi.agent from .evofence/config.yaml.');
+    }
+    args = piArgs({ model });
   } else {
     throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${name}`);
   }
@@ -290,6 +501,8 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
   const monitorStopReason = usageMonitor?.finish() ?? null;
   const budgetStopReason = result.stop_reason ?? monitorStopReason;
   let usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
+  const claudeBudgetReached = name === 'claude'
+    && parseJsonLines(result.stdout).events.some((event) => event?.type === 'result' && event.subtype === 'error_max_budget_usd');
   if (budgetStopReason === 'TOKEN_BUDGET_REACHED' || budgetStopReason === 'TOKEN_USAGE_UNAVAILABLE') {
     usage = { ...usage, ...usageMonitor.snapshot() };
   }
@@ -302,6 +515,7 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     adapter: name,
     model: model ?? null,
     budget_stop_reason: budgetStopReason,
+    cost_budget_reached: claudeBudgetReached,
     // Keep the legacy field, but never fill it with a partial or estimated count.
     estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
     reported_usage: usage,

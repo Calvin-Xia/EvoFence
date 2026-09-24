@@ -41,6 +41,8 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     assert.equal((await runProcess('git', ['commit', '--quiet', '-m', 'fixture baseline'], { cwd: root })).code, 0);
     await initializeRepository(root);
     assert.equal((await initializeRepository(root)).existing, true);
+    const adapterConfig = await readFile(path.join(root, '.evofence', 'config.yaml'), 'utf8');
+    assert.match(adapterConfig, /claude:\s+command: claude/);
     const contract = [
       'contract_version: 1', 'objective:', '  name: score', '  command: "node score.js"', '  direction: maximize', '  min_delta: 0.1',
       'hard_invariants:', '  - id: score-file-valid', '    command: "node check.js"', 'allowed_evolution_surface:', '  - "**/*"',
@@ -149,6 +151,19 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     const contractFile = path.join(root, '.evofence', 'contract.yaml');
     const savedContract = await readFile(contractFile, 'utf8');
     await writeFile(contractFile, savedContract.replace('max_tokens: null', 'max_tokens: 100'));
+    let claudeBudgetCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapter: 'claude',
+      allowUnisolatedAgent: true,
+      adapterRunner: async () => {
+        claudeBudgetCalls += 1;
+        throw new Error('Claude must not launch with an unsupported token budget.');
+      },
+    }), { code: 'UNSUPPORTED_CLAUDE_TOKEN_BUDGET' });
+    assert.equal(claudeBudgetCalls, 0);
+
     if (await canTerminateProcessTree()) {
       let budgetedCalls = 0;
       await assert.rejects(runEvolution({
@@ -192,8 +207,109 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     }
     await writeFile(contractFile, savedContract);
 
+    let unisolatedClaudeCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapter: 'claude',
+      adapterRunner: async () => {
+        unisolatedClaudeCalls += 1;
+        throw new Error('Claude must not launch without explicit isolation acceptance.');
+      },
+    }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
+    assert.equal(unisolatedClaudeCalls, 0);
+
     await writeFile(contractFile, savedContract.replace('max_usd: null', 'max_usd: 1'));
     await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_COST_BUDGET' });
+
+    if (await canTerminateProcessTree()) {
+      const claudeUsdCaps = [];
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapter: 'claude',
+        allowUnisolatedAgent: true,
+        iterations: 1,
+        adapterRunner: async ({ worktree, phase, maxUsdRemaining }) => {
+          claudeUsdCaps.push({ phase, maxUsdRemaining });
+          if (phase === 'proposal') {
+            const task = await readFile(path.join(worktree, '.evofence-task.md'), 'utf8');
+            const iteration = Number(task.match(/^Iteration: (\d+)$/m)?.[1]);
+            const baseSha = task.match(/^Base generation: ([0-9a-f]{40,64})$/m)?.[1];
+            await writeFile(path.join(worktree, '.evofence-out', 'proposal.json'), JSON.stringify({
+              iteration, base_sha: baseSha, hypothesis: 'Improve the objective with a focused change.',
+              problem_evidence: ['The current value can improve.'], proposed_change: 'Update the feature value.',
+              changed_surface: ['feature.txt'],
+              expected_effect: { primary_metric: 'score', direction: 'increase', minimum_practical_effect: '0.1' },
+              possible_regressions: ['The parser could reject the value.'], requested_capabilities: [],
+              falsification_plan: ['Run the configured invariant.'], rollback_plan: 'Restore the parent generation.',
+            }));
+          }
+          return {
+            code: 0, timed_out: false, stdout: '', stderr: '',
+            cost_budget_reached: phase === 'implementation',
+            reported_usage: {
+              tokens_total: null, tokens_complete: false,
+              reported_cost: phase === 'proposal' ? 0.6 : 0.41,
+              cost_complete: true, cost_currency: 'USD', cost_source: 'fixture',
+            },
+          };
+        },
+      }), { code: 'RESOURCE_EXHAUSTED' });
+      assert.deepEqual(claudeUsdCaps, [
+        { phase: 'proposal', maxUsdRemaining: 1 },
+        { phase: 'implementation', maxUsdRemaining: 0.4 },
+      ]);
+
+      let usdFailureRunId;
+      const costLedger = new Ledger(ledgerPath(root));
+      try {
+        const events = costLedger.events();
+        const failed = events.findLast((item) => item.event_type === 'run.failed' && item.payload.cost_budget_usd === 1);
+        assert.ok(failed);
+        usdFailureRunId = failed.run_id;
+        assert.equal(failed.payload.code, 'RESOURCE_EXHAUSTED');
+        assert.equal(failed.payload.cost_estimate_total_usd, 1.01);
+        assert.equal(failed.payload.cost_estimate_complete, true);
+        assert.equal(events.some((item) => item.run_id === usdFailureRunId && item.event_type === 'candidate.accepted'), false);
+        assert.equal(events.some((item) => item.run_id === usdFailureRunId && item.event_type === 'gate.decision'), false);
+        const exhausted = events.find((item) => item.run_id === usdFailureRunId && item.event_type === 'budget.exhausted');
+        assert.equal(exhausted.payload.observed_total_usd, 1.01);
+        assert.equal(costLedger.verify().valid, true);
+      } finally { costLedger.close(); }
+
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapter: 'claude',
+        allowUnisolatedAgent: true,
+        adapterRunner: async () => ({ code: 0, timed_out: false, stdout: '', stderr: '' }),
+      }), { code: 'USD_USAGE_UNAVAILABLE' });
+      const unavailableCostLedger = new Ledger(ledgerPath(root));
+      try {
+        const events = unavailableCostLedger.events();
+        const failed = events.findLast((item) => item.event_type === 'run.failed' && item.payload.code === 'USD_USAGE_UNAVAILABLE');
+        assert.ok(failed);
+        assert.equal(failed.payload.cost_estimate_total_usd, null);
+        assert.equal(failed.payload.cost_estimate_complete, false);
+        assert.equal(events.some((item) => item.run_id === failed.run_id && item.event_type === 'budget.cost_usage_unavailable'), true);
+        assert.equal(events.some((item) => item.run_id === failed.run_id && item.event_type === 'gate.decision'), false);
+        assert.equal(unavailableCostLedger.verify().valid, true);
+      } finally { unavailableCostLedger.close(); }
+    } else {
+      let costBudgetCalls = 0;
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapter: 'claude',
+        allowUnisolatedAgent: true,
+        adapterRunner: async () => {
+          costBudgetCalls += 1;
+          throw new Error('Claude must not launch when process-tree termination is unavailable.');
+        },
+      }), { code: 'UNSUPPORTED_COST_BUDGET_PROCESS_CONTROL' });
+      assert.equal(costBudgetCalls, 0);
+    }
     await writeFile(contractFile, savedContract);
 
     let terminationFailureCalls = 0;

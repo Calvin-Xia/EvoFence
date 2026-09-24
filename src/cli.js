@@ -17,19 +17,20 @@ const HELP = `EvoFence ${packageJson.version} — evidence-carrying evolution co
 
 Usage:
   evofence init
-  evofence run --adapter codex|opencode --goal <file> [--iterations N] [--max-wall-clock-ms N]
+  evofence run --adapter codex|opencode|claude|pi --goal <file> [--iterations N] [--max-wall-clock-ms N]
   evofence proposal inspect <proposal-id>
   evofence evidence run <candidate-directory>
   evofence gate <proposal-id>
   evofence ledger show [run-id]
   evofence ledger verify
+  evofence ledger recent [limit]
   evofence ledger export [file]
   evofence rollback <generation-id>
   evofence experiment run <experiment.yaml>
   evofence experiment export [file]
 
 Options:
-  --allow-unisolated-agent  Required for OpenCode; its permission layer is not an OS sandbox.
+  --allow-unisolated-agent  Required for OpenCode, Claude Code, and Pi; CLI controls are not an OS sandbox.
   --allow-readable-holdout  Required to run private checks when host read isolation is unavailable.
   --json                    Print run results as JSON.
   --help                    Show this help.
@@ -94,7 +95,7 @@ async function commandRun(args) {
     adapter: options.adapter ?? 'codex',
     iterations: options.iterations === undefined ? undefined : Number(options.iterations),
     maxWallClockMs: options.max_wall_clock_ms === undefined ? undefined : Number(options.max_wall_clock_ms),
-    allowUnisolatedOpenCode: options.allow_unisolated_agent === true,
+    allowUnisolatedAgent: options.allow_unisolated_agent === true,
     allowReadableHoldout: options.allow_readable_holdout === true,
     onProgress: options.json ? undefined : progress,
   });
@@ -152,15 +153,18 @@ async function commandGate(args) {
 
 async function commandLedger(args) {
   const [action, value, ...rest] = args;
-  if (!action || rest.length) throw new EvoFenceError('USAGE', 'Use: evofence ledger show [run-id], verify, or export [file]');
+  if (!action || rest.length) throw new EvoFenceError('USAGE', 'Use: evofence ledger show [run-id], verify, recent [limit], or export [file]');
   const root = await repositoryRoot(process.cwd());
-  const ledger = new Ledger(ledgerPath(root));
+  const ledger = new Ledger(ledgerPath(root), { readOnly: ['show', 'verify', 'recent'].includes(action) });
   try {
     if (action === 'show') printJson(ledger.events(value));
     else if (action === 'verify') {
       const result = ledger.verify();
       printJson(result);
       if (!result.valid) process.exitCode = 1;
+    } else if (action === 'recent') {
+      const limit = value === undefined ? 10 : Number(value);
+      printJson(ledger.recentRuns(limit));
     } else if (action === 'export') {
       const output = path.resolve(process.cwd(), value ?? `.evofence/experiment-${new Date().toISOString().slice(0, 10)}.json`);
       await writeFile(output, `${JSON.stringify(ledger.export(), null, 2)}\n`, { flag: 'wx', mode: 0o600 });
@@ -199,7 +203,7 @@ async function commandExperiment(args) {
     adapter: manifest.adapter ?? 'codex',
     iterations: manifest.iterations,
     maxWallClockMs: manifest.max_wall_clock_ms,
-    allowUnisolatedOpenCode: manifest.allow_unisolated_agent === true,
+    allowUnisolatedAgent: manifest.allow_unisolated_agent === true,
     allowReadableHoldout: manifest.allow_readable_holdout === true,
     onProgress: progress,
   });
