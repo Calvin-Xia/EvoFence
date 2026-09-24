@@ -17,7 +17,7 @@ const HELP = `EvoFence ${packageJson.version} — evidence-carrying evolution co
 
 Usage:
   evofence init
-  evofence run --adapter codex|opencode --goal <file> [--iterations N] [--max-wall-clock-ms N]
+  evofence run --adapter codex|opencode|claude --goal <file> [--iterations N] [--max-wall-clock-ms N]
   evofence proposal inspect <proposal-id>
   evofence evidence run <candidate-directory>
   evofence gate <proposal-id>
@@ -29,7 +29,7 @@ Usage:
   evofence experiment export [file]
 
 Options:
-  --allow-unisolated-agent  Required for OpenCode; its permission layer is not an OS sandbox.
+  --allow-unisolated-agent  Required for OpenCode and Claude Code; permission modes are not an OS sandbox.
   --allow-readable-holdout  Required to run private checks when host read isolation is unavailable.
   --json                    Print run results as JSON.
   --help                    Show this help.
@@ -94,7 +94,7 @@ async function commandRun(args) {
     adapter: options.adapter ?? 'codex',
     iterations: options.iterations === undefined ? undefined : Number(options.iterations),
     maxWallClockMs: options.max_wall_clock_ms === undefined ? undefined : Number(options.max_wall_clock_ms),
-    allowUnisolatedOpenCode: options.allow_unisolated_agent === true,
+    allowUnisolatedAgent: options.allow_unisolated_agent === true,
     allowReadableHoldout: options.allow_readable_holdout === true,
     onProgress: options.json ? undefined : progress,
   });
@@ -199,7 +199,7 @@ async function commandExperiment(args) {
     adapter: manifest.adapter ?? 'codex',
     iterations: manifest.iterations,
     maxWallClockMs: manifest.max_wall_clock_ms,
-    allowUnisolatedOpenCode: manifest.allow_unisolated_agent === true,
+    allowUnisolatedAgent: manifest.allow_unisolated_agent === true,
     allowReadableHoldout: manifest.allow_readable_holdout === true,
     onProgress: progress,
   });

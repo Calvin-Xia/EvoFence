@@ -79,10 +79,11 @@ evofence run --adapter codex --goal goal.md --iterations 20
 
 ## 安全边界
 
-Codex 使用 `workspace-write` 沙箱，该沙箱限制写入，但不限制读取主机文件系统（参见 [Codex 沙箱策略](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)）。OpenCode 不提供操作系统级隔离，其权限规则只是交互层控制（参见 [OpenCode 安全模型](https://github.com/anomalyco/opencode/blob/dev/SECURITY.md)）。除非显式传入 `--allow-unisolated-agent`，否则不会启用 OpenCode 适配器：
+Codex 使用 `workspace-write` 沙箱，该沙箱限制写入，但不限制读取主机文件系统（参见 [Codex 沙箱策略](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)）。OpenCode 和 Claude Code CLI 不会由 EvoFence 放进操作系统沙箱。Claude Code 使用 `-p` JSONL 输出、`auto` 权限模式和禁用交互式权限提示；这仍是工具授权策略，不能限制进程访问主机文件。Claude Code 非交互模式会读取其可用的用户/项目配置，可能运行 hooks、MCP servers 或 plugins（参见 [Claude Code 非交互运行](https://code.claude.com/docs/en/headless)）。这些适配器都需要显式传入 `--allow-unisolated-agent`：
 
 ```sh
 evofence run --adapter opencode --allow-unisolated-agent --goal goal.md
+evofence run --adapter claude --allow-unisolated-agent --goal goal.md
 ```
 
 如需有效隔离，请在 Docker 容器或虚拟机中运行智能体，只挂载候选 worktree，并且不提供网络、密钥或主机凭证。上面的标志本身不会创建这样的隔离边界。
@@ -134,9 +135,9 @@ ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希�
 
 ## 已知限制
 
-- 会强制执行 `max_iterations`、`max_wall_clock_ms`、失败候选数和连续无改进次数上限。`max_tokens` 按 Codex 完成的 turn 和 OpenCode 完成的 step 统计；达到或超过阈值时终止 agent 进程树，并停止评估和接受当前候选。CLI 只在模型 turn/step 完成后报告用量，跨线 turn 已经完成，下一次请求也可能已启动，因此实际用量可能超过阈值；这不是请求前的严格 token 上限。用量流缺失、字段不完整或被截断时会 fail closed，停止运行。Windows 会先探测系统能否终止整个进程树；若权限不足，预算运行会在启动智能体前拒绝执行。`max_usd` 仍不可用，因为适配器没有一致且完整的美元成本来源；只要它不是 `null`，`run` 就会在启动智能体前停止。OpenCode 的 cost 保留 CLI 报告值，不推断币种，也不代表最终账单。
+- 会强制执行 `max_iterations`、`max_wall_clock_ms`、失败候选数和连续无改进次数上限。`max_tokens` 按 Codex 完成的 turn 和 OpenCode 完成的 step 统计；达到或超过阈值时终止 agent 进程树，并停止评估和接受当前候选。CLI 只在模型 turn/step 完成后报告用量，跨线 turn 已经完成，下一次请求也可能已启动，因此实际用量可能超过阈值；这不是请求前的严格 token 上限。Claude Code 的完整 whole-tree token 数只在任务结束的 result 事件中提供，因此设置 `max_tokens` 时会在启动 agent 前拒绝 Claude 运行。用量流缺失、字段不完整或被截断时会 fail closed，停止运行。Windows 会先探测系统能否终止整个进程树；若权限不足，预算运行会在启动智能体前拒绝执行。Claude Code v2.1.246+ 会记录完整的按模型 token 和 CLI 报告的美元成本估算；实际账单请以 Anthropic 控制台为准。`max_usd` 尚未接入 EvoFence 的跨阶段预算。OpenCode 的 cost 保留 CLI 报告值，不推断币种，也不代表最终账单。
 - 隐藏评估目前运行项目所有者提供的私有命令。内置适配器无法在共享主机上满足 PRD 中“智能体读不到 holdout 源码”的强隔离要求；该保证需要单独隔离的执行器。生成式变形测试、API daemon、Herdr/Pi 适配器、权威学习和长期漂移分析仍属于后续工作。
-- 智能体 CLI 版本和用户配置会影响运行行为。请保持 Codex/OpenCode 为较新版本，并在依赖结果前检查导出的证据。
+- 智能体 CLI 版本和用户配置会影响运行行为。Claude Code 适配要求 v2.1.259+（无提示运行参数）；请保持各 CLI 为较新版本，并在依赖结果前检查导出的证据。
 - Worktree 隔离可以保护主工作树免受候选直接修改，但不能替代操作系统沙箱，尤其是面对可运行任意 shell 命令的智能体时。
 
 ## 开发

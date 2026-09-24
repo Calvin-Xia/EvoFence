@@ -15,6 +15,10 @@ adapters:
     command: opencode
     model: null
     agent: null
+  claude:
+    command: claude
+    model: null
+    agent: null
 `;
 
 const schemaFiles = {

@@ -18,12 +18,40 @@ function openCodeArgs({ model, agent }) {
   return args;
 }
 
+export function claudeCodeArgs({ model, agent }) {
+  const args = [
+    '-p',
+    '--output-format', 'stream-json',
+    '--verbose',
+    '--permission-mode', 'auto',
+    '--permission-prompts', 'none',
+  ];
+  if (model) args.push('--model', model);
+  if (agent) args.push('--agent', agent);
+  args.push(TASK_POINTER);
+  return args;
+}
+
 function nonNegativeNumber(value) {
   return Number.isFinite(value) && value >= 0;
 }
 
 function nonNegativeInteger(value) {
   return Number.isSafeInteger(value) && value >= 0;
+}
+
+function claudeModelTokenCount(modelUsage) {
+  if (!modelUsage || typeof modelUsage !== 'object' || Array.isArray(modelUsage)) return null;
+  const models = Object.values(modelUsage);
+  if (!models.length) return null;
+  let total = 0;
+  for (const usage of models) {
+    const fields = [usage?.inputTokens, usage?.outputTokens, usage?.cacheReadInputTokens, usage?.cacheCreationInputTokens];
+    if (!fields.every(nonNegativeInteger)) return null;
+    total += fields.reduce((sum, value) => sum + value, 0);
+    if (!Number.isSafeInteger(total)) return null;
+  }
+  return total;
 }
 
 function parseJsonLines(stdout) {
@@ -61,11 +89,15 @@ function eventTokenCount(adapter, event) {
     }
     return { relevant: true, tokens: null };
   }
+  if (adapter === 'claude' && event?.type === 'result') {
+    if (event.subtype === 'error_during_execution') return { relevant: true, tokens: null };
+    return { relevant: true, tokens: claudeModelTokenCount(event.modelUsage) };
+  }
   return { relevant: false, tokens: null };
 }
 
 export function createAdapterUsageMonitor(adapter, maxTokens) {
-  if (!['codex', 'opencode'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
+  if (!['codex', 'opencode', 'claude'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
   if (!Number.isSafeInteger(maxTokens) || maxTokens < 1) throw new EvoFenceError('INVALID_BUDGET', 'The remaining token budget must be a positive safe integer.');
 
   let pending = '';
@@ -119,7 +151,9 @@ export function createAdapterUsageMonitor(adapter, maxTokens) {
       return {
         tokens_total: tokensComplete ? total : null,
         tokens_complete: tokensComplete,
-        token_source: eventCount ? (adapter === 'codex' ? 'codex-cli-turn.completed' : 'opencode-cli-step_finish') : null,
+        token_source: eventCount
+          ? ({ codex: 'codex-cli-turn.completed', opencode: 'opencode-cli-step_finish', claude: 'claude-cli-result.modelUsage' })[adapter]
+          : null,
       };
     },
   };
@@ -206,11 +240,34 @@ function openCodeUsage(events, outputLimited) {
   };
 }
 
+function claudeUsage(events, outputLimited) {
+  const results = events.filter((event) => event?.type === 'result');
+  if (results.length !== 1) {
+    return incompleteUsage(results.length ? 'claude-cli-result.modelUsage' : null, results.length ? 'claude-cli-result.total_cost_usd' : null);
+  }
+
+  const result = results[0];
+  const modelTokenCount = claudeModelTokenCount(result.modelUsage);
+  const failedAfterCrash = result.subtype === 'error_during_execution';
+  const tokensComplete = modelTokenCount !== null && !outputLimited && !failedAfterCrash;
+  const costComplete = nonNegativeNumber(result.total_cost_usd) && !outputLimited && !failedAfterCrash;
+  return {
+    tokens_total: tokensComplete ? modelTokenCount : null,
+    tokens_complete: tokensComplete,
+    token_source: 'claude-cli-result.modelUsage',
+    reported_cost: costComplete ? result.total_cost_usd : null,
+    cost_complete: costComplete,
+    cost_currency: costComplete ? 'USD' : null,
+    cost_source: 'claude-cli-result.total_cost_usd',
+  };
+}
+
 export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {}) {
   const parsed = parseJsonLines(stdout);
   let usage;
   if (adapter === 'codex') usage = codexUsage(parsed.events, outputLimited);
   else if (adapter === 'opencode') usage = openCodeUsage(parsed.events, outputLimited);
+  else if (adapter === 'claude') usage = claudeUsage(parsed.events, outputLimited);
   else return incompleteUsage();
   if (parsed.complete) return usage;
   return {
@@ -222,13 +279,13 @@ export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {
   };
 }
 
-export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, allowUnisolatedOpenCode = false }) {
+export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
   let args;
   let env = {};
   if (name === 'codex') {
     args = codexArgs({ cwd, model });
   } else if (name === 'opencode') {
-    if (!allowUnisolatedOpenCode) {
+    if (!allowUnisolatedAgent) {
       throw new EvoFenceError('OPEN_CODE_SANDBOX_REQUIRED', 'OpenCode does not provide an OS security sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or launch OpenCode in a Docker/VM sandbox.');
     }
     args = openCodeArgs({ model, agent });
@@ -249,6 +306,11 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
         },
       }),
     };
+  } else if (name === 'claude') {
+    if (!allowUnisolatedAgent) {
+      throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+    }
+    args = claudeCodeArgs({ model, agent });
   } else {
     throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${name}`);
   }

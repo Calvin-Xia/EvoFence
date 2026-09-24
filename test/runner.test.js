@@ -41,6 +41,8 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     assert.equal((await runProcess('git', ['commit', '--quiet', '-m', 'fixture baseline'], { cwd: root })).code, 0);
     await initializeRepository(root);
     assert.equal((await initializeRepository(root)).existing, true);
+    const adapterConfig = await readFile(path.join(root, '.evofence', 'config.yaml'), 'utf8');
+    assert.match(adapterConfig, /claude:\s+command: claude/);
     const contract = [
       'contract_version: 1', 'objective:', '  name: score', '  command: "node score.js"', '  direction: maximize', '  min_delta: 0.1',
       'hard_invariants:', '  - id: score-file-valid', '    command: "node check.js"', 'allowed_evolution_surface:', '  - "**/*"',
@@ -149,6 +151,19 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     const contractFile = path.join(root, '.evofence', 'contract.yaml');
     const savedContract = await readFile(contractFile, 'utf8');
     await writeFile(contractFile, savedContract.replace('max_tokens: null', 'max_tokens: 100'));
+    let claudeBudgetCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapter: 'claude',
+      allowUnisolatedAgent: true,
+      adapterRunner: async () => {
+        claudeBudgetCalls += 1;
+        throw new Error('Claude must not launch with an unsupported token budget.');
+      },
+    }), { code: 'UNSUPPORTED_CLAUDE_TOKEN_BUDGET' });
+    assert.equal(claudeBudgetCalls, 0);
+
     if (await canTerminateProcessTree()) {
       let budgetedCalls = 0;
       await assert.rejects(runEvolution({
@@ -191,6 +206,18 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
       assert.equal(budgetedCalls, 0);
     }
     await writeFile(contractFile, savedContract);
+
+    let unisolatedClaudeCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapter: 'claude',
+      adapterRunner: async () => {
+        unisolatedClaudeCalls += 1;
+        throw new Error('Claude must not launch without explicit isolation acceptance.');
+      },
+    }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
+    assert.equal(unisolatedClaudeCalls, 0);
 
     await writeFile(contractFile, savedContract.replace('max_usd: null', 'max_usd: 1'));
     await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_COST_BUDGET' });

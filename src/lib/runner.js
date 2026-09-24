@@ -16,12 +16,13 @@ const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and d
 async function loadConfig(root) {
   const config = await loadYamlFile(path.join(root, '.evofence', 'config.yaml'), root);
   invariant(config.version === 1, 'INVALID_CONFIG', 'config.version must be 1.');
-  for (const name of ['codex', 'opencode']) {
+  for (const name of ['codex', 'opencode', 'claude']) {
     const item = config.adapters?.[name];
     if (item !== undefined) {
       invariant(item && typeof item === 'object', 'INVALID_CONFIG', `adapters.${name} must be an object.`);
       invariant(item.command === undefined || (typeof item.command === 'string' && item.command.trim()), 'INVALID_CONFIG', `adapters.${name}.command must be a non-empty string.`);
       invariant(item.model === undefined || item.model === null || typeof item.model === 'string', 'INVALID_CONFIG', `adapters.${name}.model must be a string or null.`);
+      invariant(item.agent === undefined || item.agent === null || typeof item.agent === 'string', 'INVALID_CONFIG', `adapters.${name}.agent must be a string or null.`);
     }
   }
   return config;
@@ -115,7 +116,7 @@ function helperPath(filename) {
   return filename === '.evofence-task.md' || filename === '.evofence-out' || filename.startsWith('.evofence-out/');
 }
 
-async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, allowUnisolatedOpenCode }) {
+async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, allowUnisolatedAgent }) {
   const entry = {
     name: adapter,
     command: adapterCommand(config, adapter),
@@ -125,7 +126,7 @@ async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemai
     timeoutMs,
     maxOutputBytes: 20_000_000,
     maxTokensRemaining,
-    allowUnisolatedOpenCode,
+    allowUnisolatedAgent,
   };
   return runAgentAdapter(entry);
 }
@@ -243,17 +244,23 @@ async function removeCandidate(root, worktree, tempRoot) {
   });
 }
 
-export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, maxWallClockMs, allowUnisolatedOpenCode = false, allowReadableHoldout = false, onProgress = () => {}, adapterRunner = null }) {
+export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, maxWallClockMs, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode, allowReadableHoldout = false, onProgress = () => {}, adapterRunner = null }) {
   const root = await repositoryRoot(cwd);
   const contract = await loadContract(root);
   const config = await loadConfig(root);
   const holdout = await loadPrivateHoldout(root);
   requireEvidenceConfigured(contract);
   if (holdout.length > 0 && !allowReadableHoldout) {
-    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex and OpenCode adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
+    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex, OpenCode, and Claude Code adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
   }
   if (contract.budgets.max_usd !== null) {
     throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'USD budget enforcement is unavailable because adapters do not provide a consistent, complete USD cost source. Keep max_usd set to null.');
+  }
+  if (adapter === 'claude' && !allowUnisolatedAgent) {
+    throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+  }
+  if (adapter === 'claude' && contract.budgets.max_tokens !== null) {
+    throw new EvoFenceError('UNSUPPORTED_CLAUDE_TOKEN_BUDGET', 'Claude Code reports complete whole-tree token usage only in its final result event. EvoFence cannot safely interrupt the run at the token threshold; set max_tokens to null or use Codex/OpenCode for token-budgeted runs.');
   }
   if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
     throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
@@ -375,7 +382,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       ledger.append('prompt.prepared', runId, { iteration, phase: 'proposal', task_sha256: sha256(proposalTask) });
 
       onProgress({ type: 'candidate.proposal.start', iteration, adapter });
-      const proposalResult = await runBudgetedAdapter({ iteration, phase: 'proposal', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
+      const proposalResult = await runBudgetedAdapter({ iteration, phase: 'proposal', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedAgent });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
@@ -460,7 +467,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       await writeFile(taskFile, implementationTask, { flag: 'w' });
       ledger.append('prompt.prepared', runId, { iteration, phase: 'implementation', task_sha256: sha256(implementationTask) });
       onProgress({ type: 'candidate.implementation.start', iteration, adapter });
-      const implementationResult = await runBudgetedAdapter({ iteration, phase: 'implementation', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
+      const implementationResult = await runBudgetedAdapter({ iteration, phase: 'implementation', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedAgent });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
