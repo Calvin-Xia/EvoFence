@@ -50,6 +50,42 @@ test('Codex token monitor triggers at a completed-turn boundary and reports its 
   });
 });
 
+test('token monitor keeps consuming events after the first budget stop', () => {
+  const monitor = createAdapterUsageMonitor('codex', 100);
+  const events = [
+    { type: 'turn.completed', usage: { input_tokens: 60, output_tokens: 40 } },
+    { type: 'turn.completed', usage: { input_tokens: 4, output_tokens: 5 } },
+  ];
+  assert.equal(monitor.push(`${events.map((event) => JSON.stringify(event)).join('\n')}\n`), 'TOKEN_BUDGET_REACHED');
+  assert.equal(monitor.push(`${JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 1, output_tokens: 2 } })}\n`), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: 112,
+    tokens_complete: true,
+    token_source: 'codex-cli-turn.completed',
+  });
+});
+
+test('malformed telemetry after a budget stop keeps the first reason and invalidates totals', () => {
+  const monitor = createAdapterUsageMonitor('codex', 100);
+  assert.equal(monitor.push(`${JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 60, output_tokens: 40 } })}\nnot-json\n`), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: null,
+    tokens_complete: false,
+    token_source: 'codex-cli-turn.completed',
+  });
+});
+
+test('token monitor flushes a final JSON event without a trailing newline', () => {
+  const monitor = createAdapterUsageMonitor('codex', 100);
+  assert.equal(monitor.push(JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 60, output_tokens: 40 } })), null);
+  assert.equal(monitor.finish(), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: 100,
+    tokens_complete: true,
+    token_source: 'codex-cli-turn.completed',
+  });
+});
+
 test('usage monitor stops on malformed or missing completed-turn usage', () => {
   const malformed = createAdapterUsageMonitor('codex', 100);
   assert.equal(malformed.push('not-json\n'), 'TOKEN_USAGE_UNAVAILABLE');
@@ -60,6 +96,20 @@ test('usage monitor stops on malformed or missing completed-turn usage', () => {
   assert.equal(missing.snapshot().tokens_total, null);
 });
 
+test('OpenCode token monitor includes reasoning in component totals', () => {
+  const monitor = createAdapterUsageMonitor('opencode', 100);
+  const event = {
+    type: 'step_finish',
+    part: { tokens: { input: 20, output: 30, reasoning: 60, cache: { read: 0, write: 0 } } },
+  };
+  assert.equal(monitor.push(`${JSON.stringify(event)}\n`), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: 110,
+    tokens_complete: true,
+    token_source: 'opencode-cli-step_finish',
+  });
+});
+
 test('OpenCode usage sums completed steps and preserves its reported cost without claiming a currency', () => {
   const stdout = [
     { type: 'step_finish', part: { tokens: { total: 12 }, cost: 0.001 } },
@@ -68,7 +118,7 @@ test('OpenCode usage sums completed steps and preserves its reported cost withou
   ].map((event) => JSON.stringify(event)).join('\n');
 
   const usage = parseAdapterUsage('opencode', stdout);
-  assert.equal(usage.tokens_total, 30);
+  assert.equal(usage.tokens_total, 32);
   assert.equal(usage.tokens_complete, true);
   assert.equal(usage.token_source, 'opencode-cli-step_finish');
   assert.ok(Math.abs(usage.reported_cost - 0.003) < Number.EPSILON * 8);
@@ -226,4 +276,14 @@ test('Claude Code launch uses non-interactive streaming auto permissions and req
   await assert.rejects(runAgentAdapter({
     name: 'claude', command: 'must-not-launch', cwd: process.cwd(), timeoutMs: 1000, maxOutputBytes: 1000,
   }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
+});
+
+test('OpenCode component totals stay unavailable when reasoning usage is absent', () => {
+  const stdout = JSON.stringify({
+    type: 'step_finish',
+    part: { tokens: { input: 10, output: 5, cache: { read: 2, write: 1 } } },
+  });
+  const usage = parseAdapterUsage('opencode', stdout);
+  assert.equal(usage.tokens_total, null);
+  assert.equal(usage.tokens_complete, false);
 });
