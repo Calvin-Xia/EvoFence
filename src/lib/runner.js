@@ -8,7 +8,7 @@ import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkPr
 import { collectEvidence } from './evidence.js';
 import { assertInside, ensureDirectory, readJsonInside, sha256, stableStringify, writeNewFile } from './fs.js';
 import { EvoFenceError, invariant } from './errors.js';
-import { changedPaths, commitCandidate, createRunId, createWorktree, diffHash, headSha, pinGeneration, removeWorktree, repositoryRoot, restoreWorktreeMetadata, setActiveGenerationRef, worktreeMetadataMatches, worktreeMetadataSnapshot } from './git.js';
+import { changedPaths, changedPathsBetween, commitCandidate, createRunId, createWorktree, diffHash, headSha, pinGeneration, removeWorktree, repositoryRoot, restoreWorktreeMetadata, setActiveGenerationRef, worktreeMetadataMatches, worktreeMetadataSnapshot } from './git.js';
 
 const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and decision. Do not change protected files. Do not claim acceptance. Keep the patch atomic and reversible.`;
 
@@ -527,8 +527,40 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       }
 
       const generationId = `g-${iterationId}`;
+      const preCommitPaths = (await changedPaths(worktree, parentSha)).filter((filename) => !helperPath(filename));
+      const preCommitDiffHash = await diffHash(worktree, parentSha);
+      const preCommitCheck = checkFinalCandidate(contract, preCommitPaths, proposal, claims, candidateDiffAfterEvidence, preCommitDiffHash);
+      if (!preCommitCheck.accepted) {
+        const failure = { reason: 'PRECOMMIT_VALIDATION_FAILED', ...preCommitCheck };
+        ledger.append('gate.decision', runId, { iteration, decision: 'QUARANTINE', failure, base_sha: parentSha });
+        outcome.iterations.push({ iteration, decision: 'QUARANTINE', failure });
+        outcome.status = 'QUARANTINE';
+        outcome.previous_failure_packet = publicFailurePacket('QUARANTINE', failure);
+        await removeCandidate(root, worktree, runTempRoot);
+        worktree = null;
+        break;
+      }
+
       const acceptedSha = await commitCandidate(worktree, parentSha, generationId);
       const finalDiffHash = await diffHash(worktree, parentSha, acceptedSha);
+      const committedPaths = (await changedPathsBetween(worktree, parentSha, acceptedSha)).filter((filename) => !helperPath(filename));
+      const committedFileCheck = checkTaskFile(contract, committedPaths, proposal, claims);
+      if (!committedFileCheck.accepted || finalDiffHash !== preCommitDiffHash) {
+        const failure = {
+          reason: 'COMMITTED_CANDIDATE_MISMATCH',
+          ...(committedFileCheck.accepted ? {} : committedFileCheck),
+          pre_commit_diff_sha256: preCommitDiffHash,
+          committed_diff_sha256: finalDiffHash,
+        };
+        ledger.append('gate.decision', runId, { iteration, decision: 'QUARANTINE', failure, base_sha: parentSha });
+        outcome.iterations.push({ iteration, decision: 'QUARANTINE', failure });
+        outcome.status = 'QUARANTINE';
+        outcome.previous_failure_packet = publicFailurePacket('QUARANTINE', failure);
+        await removeCandidate(root, worktree, runTempRoot);
+        worktree = null;
+        break;
+      }
+
       await pinGeneration(root, generationId, acceptedSha);
       ledger.recordGeneration({ generation_id: generationId, run_id: runId, sha: acceptedSha, parent_sha: parentSha, created_at: new Date().toISOString() });
       const record = { generation_id: generationId, sha: acceptedSha, parent_sha: parentSha, diff_sha256: finalDiffHash, objective_score: candidateScore, improvement };

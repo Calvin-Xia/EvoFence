@@ -70,6 +70,11 @@ export async function changedPaths(root, baseSha) {
   return [...new Set(`${diff}\0${untracked}`.split('\0').filter(Boolean).map((name) => name.replaceAll('\\', '/')))];
 }
 
+export async function changedPathsBetween(root, baseSha, targetSha) {
+  const diff = await runGit(root, ['diff', '--no-ext-diff', '--no-renames', '--name-only', '-z', baseSha, targetSha]);
+  return [...new Set(diff.split('\0').filter(Boolean).map((name) => name.replaceAll('\\', '/')))];
+}
+
 export async function diffHash(root, baseSha, targetSha = null) {
   const args = ['diff', '--no-ext-diff', '--no-renames', '--binary', baseSha];
   if (targetSha) {
