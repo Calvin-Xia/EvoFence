@@ -90,6 +90,51 @@ test('OpenCode usage does not expose partial token or cost totals', () => {
   assert.equal(usage.cost_complete, false);
 });
 
+test('Pi CLI usage completes on agent_end and includes message and compaction telemetry', () => {
+  const usage = {
+    input: 20,
+    output: 8,
+    cacheRead: 2,
+    cacheWrite: 1,
+    totalTokens: 31,
+    cost: { input: 0.001, output: 0.0005, cacheRead: 0, cacheWrite: 0, total: 0.0015 },
+  };
+  const stdout = [
+    { type: 'message_end', message: { role: 'assistant', usage } },
+    { type: 'compaction_end', result: { usage: { ...usage, totalTokens: 5, cost: { ...usage.cost, total: 0.0001 } } } },
+    { type: 'agent_end', messages: [] },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  assert.deepEqual(parseAdapterUsage('pi', stdout), {
+    tokens_total: 36,
+    tokens_complete: true,
+    token_source: 'pi-cli-session-events.usage.totalTokens',
+    reported_cost: 0.0016,
+    cost_complete: true,
+    cost_currency: 'USD',
+    cost_source: 'pi-cli-session-events.usage.cost.total (model-price estimate)',
+  });
+});
+
+test('Pi usage fails closed for retry attempts, missing agent_end, and truncated streams', () => {
+  const usage = {
+    input: 20, output: 8, cacheRead: 2, cacheWrite: 1, totalTokens: 31,
+    cost: { input: 0.001, output: 0.0005, cacheRead: 0, cacheWrite: 0, total: 0.0015 },
+  };
+  const assistant = { type: 'message_end', message: { role: 'assistant', usage } };
+  const retry = [assistant, { type: 'agent_end', willRetry: true }, { type: 'auto_retry_start' }, { type: 'agent_end' }]
+    .map((event) => JSON.stringify(event)).join('\n');
+  assert.equal(parseAdapterUsage('pi', retry).tokens_complete, false);
+
+  const noTerminal = parseAdapterUsage('pi', JSON.stringify(assistant));
+  assert.equal(noTerminal.tokens_total, null);
+  assert.equal(noTerminal.tokens_complete, false);
+
+  const truncated = parseAdapterUsage('pi', `${JSON.stringify(assistant)}\n${JSON.stringify({ type: 'agent_end' })}\nnot-json`, { outputLimited: true });
+  assert.equal(truncated.tokens_total, null);
+  assert.equal(truncated.tokens_complete, false);
+});
+
 test('Claude Code usage reads complete whole-tree token totals and CLI USD estimates', () => {
   const stdout = [
     { type: 'system', subtype: 'init', session_id: 'fixture' },

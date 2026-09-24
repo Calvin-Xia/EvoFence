@@ -357,7 +357,7 @@ function claudeUsage(events, outputLimited) {
 
 function piUsage(events, outputLimited) {
   let assistantCount = 0;
-  let settledCount = 0;
+  let agentEndCount = 0;
   let usageCount = 0;
   let tokenTotal = 0;
   let tokensComplete = true;
@@ -366,7 +366,8 @@ function piUsage(events, outputLimited) {
   let costComplete = true;
 
   for (const event of events) {
-    if (event?.type === 'agent_settled') settledCount += 1;
+    // Pi's JSON CLI stream completes an invocation with agent_end; agent_settled is an RPC lifecycle event.
+    if (event?.type === 'agent_end' && event.willRetry !== true) agentEndCount += 1;
     if (event?.type === 'message_end' && event.message?.role === 'assistant') assistantCount += 1;
     const parsed = piEventUsage(event);
     if (!parsed.relevant) continue;
@@ -384,7 +385,7 @@ function piUsage(events, outputLimited) {
     }
   }
 
-  const completeTokens = assistantCount > 0 && settledCount === 1 && usageCount > 0
+  const completeTokens = assistantCount > 0 && agentEndCount === 1 && usageCount > 0
     && tokensComplete && Number.isSafeInteger(tokenTotal) && !outputLimited;
   const completeCost = completeTokens && costComplete && costCount === usageCount && !outputLimited;
   return {

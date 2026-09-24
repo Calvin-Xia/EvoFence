@@ -12,10 +12,17 @@ test('Codex and Claude marketplaces point to complete, namespaced plugins', asyn
   const codexPlugin = codexMarketplace.plugins[0];
   assert.equal(codexPlugin.name, 'evofence');
   assert.equal(codexPlugin.source.path, './integrations/codex');
+  const portableCodexManifest = await readJson('integrations/codex/plugin.json');
+  assert.equal(portableCodexManifest.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
+  assert.equal(portableCodexManifest.name, 'evofence');
+  const portablePrompts = portableCodexManifest.extensions['com.openai'].interface.defaultPrompt;
+  assert.ok(portablePrompts.length > 0 && portablePrompts.length <= 3);
+  assert.ok(portablePrompts.every((prompt) => prompt.length <= 128));
   await exists('integrations/codex/.codex-plugin/plugin.json');
   const codexManifest = await readJson('integrations/codex/.codex-plugin/plugin.json');
   assert.equal(codexManifest.name, 'evofence');
   assert.equal(codexManifest.skills, './skills/');
+  assert.deepEqual(codexManifest.interface.defaultPrompt, portablePrompts);
   for (const name of ['inspect-ledger', 'run-evolution']) {
     const skill = await readFile(path.join(root, 'integrations/codex/skills', name, 'SKILL.md'), 'utf8');
     assert.match(skill, new RegExp(`^name: ${name}$`, 'm'));

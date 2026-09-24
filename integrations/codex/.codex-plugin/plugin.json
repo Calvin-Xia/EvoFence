@@ -17,6 +17,10 @@
     "developerName": "Calvin Xia",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],
-    "websiteURL": "https://github.com/Calvin-Xia/EvoFence"
+    "websiteURL": "https://github.com/Calvin-Xia/EvoFence",
+    "defaultPrompt": [
+      "Verify EvoFence's ledger and summarize recent runs safely.",
+      "Run EvoFence for the existing goal file I specify."
+    ]
   }
 }
