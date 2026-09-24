@@ -7,3 +7,4 @@ node_modules/
 .npm-cache/
 coverage/
 *.tgz
+docs/deep-research-report.md
