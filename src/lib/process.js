@@ -26,17 +26,63 @@ export function sanitizedEnvironment(extra = {}) {
   return env;
 }
 
-async function killTree(child) {
-  if (!child.pid || child.exitCode !== null) return;
+async function taskkillProcessTree(pid) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (success) => {
+      if (settled) return;
+      settled = true;
+      resolve(success);
+    };
+    const killer = spawn('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    killer.once('error', () => finish(false));
+    killer.once('close', (code) => finish(code === 0));
+  });
+}
+
+async function killTree(child, { force = false } = {}) {
+  if (!child.pid) return true;
   if (process.platform === 'win32') {
-    await new Promise((resolve) => {
-      const killer = spawn('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
-      killer.once('error', resolve);
-      killer.once('close', resolve);
-    });
-  } else {
-    try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
+    if (child.exitCode !== null && !force) return true;
+    const killed = await taskkillProcessTree(child.pid);
+    if (!killed && child.exitCode === null) child.kill('SIGKILL');
+    return killed;
   }
+  if (child.exitCode !== null && !force) return true;
+  try {
+    process.kill(-child.pid, 'SIGKILL');
+    return true;
+  } catch (error) {
+    if (error.code === 'ESRCH') return true;
+    child.kill('SIGKILL');
+    return false;
+  }
+}
+
+async function closesWithin(closePromise, timeoutMs) {
+  let timer;
+  const result = await Promise.race([
+    closePromise.then(() => true),
+    new Promise((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); timer.unref?.(); }),
+  ]);
+  if (timer) clearTimeout(timer);
+  return result;
+}
+
+export async function canTerminateProcessTree() {
+  if (process.platform !== 'win32') return true;
+  const probe = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { stdio: 'ignore', windowsHide: true });
+  const started = await new Promise((resolve) => {
+    probe.once('spawn', () => resolve(true));
+    probe.once('error', () => resolve(false));
+  });
+  if (!started) return false;
+  const closePromise = new Promise((resolve) => probe.once('close', resolve));
+  const killed = await taskkillProcessTree(probe.pid);
+  if (killed && await closesWithin(closePromise, 1000)) return true;
+  probe.kill('SIGKILL');
+  await closesWithin(closePromise, 1000);
+  return false;
 }
 
 export function runProcess(command, args, options = {}) {
@@ -48,6 +94,7 @@ export function runProcess(command, args, options = {}) {
     input,
     shell = false,
     onChunk,
+    stopGraceMs = 250,
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -67,7 +114,35 @@ export function runProcess(command, args, options = {}) {
     let stderrBytes = 0;
     let timedOut = false;
     let outputLimited = false;
+    let stopReason = null;
+    let callbackError = null;
+    let treeTerminationFailed = false;
+    let treeKillPromise = null;
+    let forceKillTimer = null;
     let settled = false;
+    const requestStop = (reason, graceMs = stopGraceMs) => {
+      if (stopReason) return;
+      stopReason = reason;
+      if (graceMs === 0 && process.platform === 'win32') {
+        treeKillPromise = killTree(child, { force: true }).then((success) => {
+          treeTerminationFailed = !success;
+        });
+        return;
+      }
+      child.kill('SIGTERM');
+      if (graceMs === 0) {
+        treeKillPromise = killTree(child, { force: true }).then((success) => {
+          treeTerminationFailed = !success;
+        });
+        return;
+      }
+      forceKillTimer = setTimeout(() => {
+        treeKillPromise = killTree(child).then((success) => {
+          treeTerminationFailed = !success;
+        });
+      }, Math.max(0, graceMs));
+      forceKillTimer.unref?.();
+    };
     const append = (chunk, stream) => {
       if (stream === 'stdout') {
         stdoutBytes += chunk.length;
@@ -78,7 +153,13 @@ export function runProcess(command, args, options = {}) {
           stdoutStoredBytes += kept.length;
         }
         if (chunk.length > room) outputLimited = true;
-        onChunk?.(stream, chunk.toString('utf8'));
+        try {
+          const requestedStop = onChunk?.(stream, chunk.toString('utf8'));
+          if (typeof requestedStop === 'string' && requestedStop) requestStop(requestedStop);
+        } catch (error) {
+          callbackError = error;
+          requestStop('OUTPUT_CALLBACK_ERROR');
+        }
       } else {
         stderrBytes += chunk.length;
         const room = Math.max(0, maxOutputBytes - stderrStoredBytes);
@@ -96,29 +177,46 @@ export function runProcess(command, args, options = {}) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (forceKillTimer) clearTimeout(forceKillTimer);
       reject(new EvoFenceError('PROCESS_START_FAILED', `Could not start ${command}: ${error.message}`, { command, code: error.code }));
     });
     child.once('close', (code, signal) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve({
-        command,
-        args,
-        code,
-        signal,
-        timed_out: timedOut,
-        output_limited: outputLimited,
-        stdout: Buffer.concat(stdoutChunks).toString('utf8'),
-        stderr: Buffer.concat(stderrChunks).toString('utf8'),
-        stdout_bytes: stdoutBytes,
-        stderr_bytes: stderrBytes,
-      });
+      if (forceKillTimer && stopReason) {
+        clearTimeout(forceKillTimer);
+        forceKillTimer = null;
+        if (!treeKillPromise) {
+          treeKillPromise = killTree(child, { force: true }).then((success) => {
+            treeTerminationFailed = !success;
+          });
+        }
+      } else if (forceKillTimer) {
+        clearTimeout(forceKillTimer);
+      }
+      void (async () => {
+        if (treeKillPromise) await treeKillPromise;
+        resolve({
+          command,
+          args,
+          code,
+          signal,
+          timed_out: timedOut,
+          stop_reason: stopReason,
+          tree_termination_failed: treeTerminationFailed,
+          output_error: callbackError?.message ?? null,
+          output_limited: outputLimited,
+          stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+          stderr: Buffer.concat(stderrChunks).toString('utf8'),
+          stdout_bytes: stdoutBytes,
+          stderr_bytes: stderrBytes,
+        });
+      })();
     });
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill('SIGTERM');
-      setTimeout(() => void killTree(child), 1500).unref();
+      requestStop('TIMEOUT', 1500);
     }, Math.max(1, timeoutMs));
     timer.unref?.();
     if (input !== undefined) child.stdin.end(input);

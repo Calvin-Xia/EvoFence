@@ -6,7 +6,7 @@ import path from 'node:path';
 import { Ledger, ledgerPath } from '../src/lib/ledger.js';
 import { initializeRepository } from '../src/lib/init.js';
 import { checkFinalCandidate, runEvolution } from '../src/lib/runner.js';
-import { runProcess } from '../src/lib/process.js';
+import { canTerminateProcessTree, runProcess } from '../src/lib/process.js';
 import { setActiveGenerationRef } from '../src/lib/git.js';
 import { parseYamlText, validateContract } from '../src/lib/contract.js';
 
@@ -83,7 +83,10 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
             files_changed: ['feature.txt'], capabilities_used: [], suggested_gate_checks: [],
           }));
         }
-        return { code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: null };
+        return {
+          code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: 42,
+          reported_usage: { tokens_total: 42, tokens_complete: true, token_source: 'fixture', reported_cost: null, cost_complete: false, cost_currency: null, cost_source: null },
+        };
       },
     });
     assert.equal(resultRun.status, 'ACCEPTED');
@@ -96,6 +99,8 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     try {
       assert.equal(ledger.verify().valid, true);
       assert.equal(ledger.generations().length, 21);
+      const firstAdapterEvent = ledger.events().find((item) => item.event_type === 'adapter.finished');
+      assert.equal(firstAdapterEvent.payload.reported_usage.tokens_total, 42);
       const baseline = ledger.generations()[0];
       ledger.rollback(baseline.generation_id);
       await setActiveGenerationRef(root, baseline.sha);
@@ -144,8 +149,73 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     const contractFile = path.join(root, '.evofence', 'contract.yaml');
     const savedContract = await readFile(contractFile, 'utf8');
     await writeFile(contractFile, savedContract.replace('max_tokens: null', 'max_tokens: 100'));
-    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_BUDGET' });
+    if (await canTerminateProcessTree()) {
+      let budgetedCalls = 0;
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapterRunner: async ({ phase }) => {
+          budgetedCalls += 1;
+          assert.equal(phase, 'proposal');
+          return { code: 0, timed_out: false, stdout: '', stderr: '', reported_usage: { tokens_total: 115, tokens_complete: true } };
+        },
+      }), { code: 'RESOURCE_EXHAUSTED' });
+      assert.equal(budgetedCalls, 1);
+
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapterRunner: async () => ({ code: 0, timed_out: false, stdout: '', stderr: '', reported_usage: { tokens_total: null, tokens_complete: false } }),
+      }), { code: 'TOKEN_USAGE_UNAVAILABLE' });
+      const budgetLedger = new Ledger(ledgerPath(root));
+      try {
+        const events = budgetLedger.events();
+        const exhausted = events.findLast((item) => item.event_type === 'budget.exhausted');
+        const exhaustedRun = events.find((item) => item.event_type === 'run.failed' && item.run_id === exhausted.run_id);
+        const unavailable = events.findLast((item) => item.event_type === 'budget.usage_unavailable');
+        assert.equal(exhausted.payload.observed_total, 115);
+        assert.equal(exhaustedRun.payload.token_usage_total, 115);
+        assert.equal(unavailable.payload.reason, 'usage_incomplete');
+        assert.equal(budgetLedger.verify().valid, true);
+      } finally { budgetLedger.close(); }
+    } else {
+      let budgetedCalls = 0;
+      await assert.rejects(runEvolution({
+        cwd: root,
+        goal: 'no-op',
+        adapterRunner: async () => {
+          budgetedCalls += 1;
+          throw new Error('should not launch');
+        },
+      }), { code: 'UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL' });
+      assert.equal(budgetedCalls, 0);
+    }
     await writeFile(contractFile, savedContract);
+
+    await writeFile(contractFile, savedContract.replace('max_usd: null', 'max_usd: 1'));
+    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_COST_BUDGET' });
+    await writeFile(contractFile, savedContract);
+
+    let terminationFailureCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      iterations: 1,
+      adapterRunner: async () => {
+        terminationFailureCalls += 1;
+        return { code: 0, timed_out: false, tree_termination_failed: true, stdout: '', stderr: '' };
+      },
+    }), { code: 'RESOURCE_EXHAUSTED' });
+    assert.equal(terminationFailureCalls, 1);
+    const terminationLedger = new Ledger(ledgerPath(root));
+    try {
+      const events = terminationLedger.events();
+      const failure = events.findLast((item) => item.event_type === 'process.tree_termination_failed');
+      assert.ok(failure);
+      assert.equal(events.some((item) => item.run_id === failure.run_id && item.event_type === 'gate.decision'), false);
+      assert.equal(terminationLedger.verify().valid, true);
+    } finally { terminationLedger.close(); }
+
     const holdoutFile = path.join(root, '.evofence', 'private', 'holdout.yaml');
     const savedHoldout = await readFile(holdoutFile, 'utf8');
     await writeFile(holdoutFile, "regressions:\n  - id: hidden-1\n    command: \"node -e 'process.exit(0)'\"\n");

@@ -56,9 +56,8 @@ export function validateContract(contract) {
   for (const key of ['max_iterations', 'max_wall_clock_ms', 'max_failed_candidates', 'max_consecutive_no_improvement']) {
     invariant(Number.isInteger(contract.budgets[key]) && contract.budgets[key] >= 1, 'INVALID_CONTRACT', `budgets.${key} must be a positive integer.`);
   }
-  for (const key of ['max_tokens', 'max_usd']) {
-    invariant(contract.budgets[key] === null || (Number.isFinite(contract.budgets[key]) && contract.budgets[key] > 0), 'INVALID_CONTRACT', `budgets.${key} must be null or a positive number.`);
-  }
+  invariant(contract.budgets.max_tokens === null || (Number.isSafeInteger(contract.budgets.max_tokens) && contract.budgets.max_tokens > 0), 'INVALID_CONTRACT', 'budgets.max_tokens must be null or a positive safe integer.');
+  invariant(contract.budgets.max_usd === null || (Number.isFinite(contract.budgets.max_usd) && contract.budgets.max_usd > 0), 'INVALID_CONTRACT', 'budgets.max_usd must be null or a positive number.');
   return contract;
 }
 

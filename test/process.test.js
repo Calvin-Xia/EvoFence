@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import process from 'node:process';
-import { finalNumericLine, runProcess, sanitizedEnvironment } from '../src/lib/process.js';
+import { canTerminateProcessTree, finalNumericLine, runProcess, sanitizedEnvironment } from '../src/lib/process.js';
 
 test('process runner captures bounded output and exit status', async () => {
   const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("hello\\n")'], { timeoutMs: 5000 });
@@ -22,6 +22,22 @@ test('process runner terminates a process that exceeds its time budget', async (
   const result = await runProcess(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { timeoutMs: 100 });
   assert.equal(result.timed_out, true);
   assert.notEqual(result.code, 0);
+});
+
+test('process runner stops when a streamed output callback reports a budget trigger', async () => {
+  const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("budget-hit\\n"); setTimeout(() => {}, 5000)'], {
+    timeoutMs: 5000,
+    stopGraceMs: 0,
+    onChunk: (_stream, chunk) => chunk.includes('budget-hit') ? 'TOKEN_BUDGET_REACHED' : undefined,
+  });
+  assert.equal(result.stop_reason, 'TOKEN_BUDGET_REACHED');
+  assert.equal(typeof result.tree_termination_failed, 'boolean');
+  assert.equal(result.timed_out, false);
+  assert.notEqual(result.code, 0);
+});
+
+test('process-tree termination capability probe is bounded and returns a boolean', async () => {
+  assert.equal(typeof await canTerminateProcessTree(), 'boolean');
 });
 
 test('secret-like environment values are not passed to child processes', () => {

@@ -8,6 +8,7 @@ import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkPr
 import { collectEvidence } from './evidence.js';
 import { assertInside, ensureDirectory, readJsonInside, sha256, stableStringify, writeNewFile } from './fs.js';
 import { EvoFenceError, invariant } from './errors.js';
+import { canTerminateProcessTree } from './process.js';
 import { changedPaths, changedPathsBetween, commitCandidate, createRunId, createWorktree, diffHash, headSha, pinGeneration, removeWorktree, repositoryRoot, restoreWorktreeMetadata, setActiveGenerationRef, worktreeMetadataMatches, worktreeMetadataSnapshot } from './git.js';
 
 const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and decision. Do not change protected files. Do not claim acceptance. Keep the patch atomic and reversible.`;
@@ -88,10 +89,12 @@ function adapterEvent(result, adapter, phase, iteration) {
     exit_code: result.code ?? null,
     signal: result.signal ?? null,
     timed_out: result.timed_out === true,
+    tree_termination_failed: result.tree_termination_failed === true,
     output_limited: result.output_limited === true,
     duration_ms: result.duration_ms ?? null,
     estimated_tokens: result.estimated_tokens ?? null,
     estimated_cost_usd: null,
+    reported_usage: result.reported_usage ?? null,
     stdout_sha256: sha256(result.stdout ?? ''),
     stderr_sha256: sha256(result.stderr ?? ''),
   };
@@ -112,7 +115,7 @@ function helperPath(filename) {
   return filename === '.evofence-task.md' || filename === '.evofence-out' || filename.startsWith('.evofence-out/');
 }
 
-async function runAdapter({ adapter, config, worktree, timeoutMs, allowUnisolatedOpenCode }) {
+async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, allowUnisolatedOpenCode }) {
   const entry = {
     name: adapter,
     command: adapterCommand(config, adapter),
@@ -121,6 +124,7 @@ async function runAdapter({ adapter, config, worktree, timeoutMs, allowUnisolate
     cwd: worktree,
     timeoutMs,
     maxOutputBytes: 20_000_000,
+    maxTokensRemaining,
     allowUnisolatedOpenCode,
   };
   return runAgentAdapter(entry);
@@ -146,6 +150,75 @@ function checkTaskFile(contract, actualPaths, proposal, claims) {
   if (used.length) return { accepted: false, code: 'CAPABILITY_VIOLATION', capabilities_used: used };
   if (claims.missing_evidence.length) return { accepted: false, code: 'INSUFFICIENT_EVIDENCE', missing_evidence: claims.missing_evidence };
   return { accepted: true };
+}
+
+function recordTokenUsage(result, { maxTokens, totalTokens, ledger, runId, phase, iteration }) {
+  if (result.tree_termination_failed) {
+    const usage = result.reported_usage;
+    const invocationTokens = usage?.tokens_complete === true && Number.isSafeInteger(usage.tokens_total)
+      ? usage.tokens_total
+      : null;
+    const observedTotal = maxTokens !== null && invocationTokens !== null
+      ? totalTokens + usage.tokens_total
+      : null;
+    const failure = {
+      metric: maxTokens === null ? 'process_tree' : 'tokens', phase, iteration, limit: maxTokens,
+      previous_observed_total: maxTokens === null ? null : totalTokens,
+      invocation_tokens: invocationTokens,
+      observed_total: Number.isSafeInteger(observedTotal) ? observedTotal : null,
+      reason: 'process_tree_termination_failed',
+    };
+    ledger.append(maxTokens === null ? 'process.tree_termination_failed' : 'budget.termination_failed', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'EvoFence could not confirm that the agent process tree stopped. The candidate will not be evaluated or accepted.', failure);
+  }
+  if (maxTokens === null) return totalTokens;
+  if (result.timed_out) {
+    const usage = result.reported_usage;
+    const invocationTokens = usage?.tokens_complete === true && Number.isSafeInteger(usage.tokens_total)
+      ? usage.tokens_total
+      : null;
+    const observedTotal = invocationTokens !== null ? totalTokens + invocationTokens : null;
+    const failure = {
+      metric: 'wall_clock', phase, iteration, reason: 'agent_timeout',
+      previous_observed_total: totalTokens,
+      invocation_tokens: invocationTokens,
+      observed_total: Number.isSafeInteger(observedTotal) ? observedTotal : null,
+    };
+    ledger.append('budget.exhausted', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The wall-clock budget stopped the agent. The in-flight candidate will not be evaluated or accepted.', failure);
+  }
+  const usage = result.reported_usage;
+  if (!usage || usage.tokens_complete !== true || !Number.isSafeInteger(usage.tokens_total) || usage.tokens_total < 0) {
+    const failure = { metric: 'tokens', phase, iteration, limit: maxTokens, reason: result.budget_stop_reason ?? 'usage_incomplete' };
+    ledger.append('budget.usage_unavailable', runId, failure);
+    throw new EvoFenceError('TOKEN_USAGE_UNAVAILABLE', 'The adapter did not provide complete token usage. EvoFence stopped before continuing or evaluating the candidate.', failure);
+  }
+
+  const observedTotal = totalTokens + usage.tokens_total;
+  if (!Number.isSafeInteger(observedTotal)) {
+    const failure = { metric: 'tokens', phase, iteration, limit: maxTokens, reason: 'usage_total_out_of_range' };
+    ledger.append('budget.usage_unavailable', runId, failure);
+    throw new EvoFenceError('TOKEN_USAGE_UNAVAILABLE', 'The cumulative token count exceeded the safe integer range.', failure);
+  }
+  const event = {
+    metric: 'tokens', phase, iteration,
+    invocation_tokens: usage.tokens_total,
+    observed_total: observedTotal,
+    limit: maxTokens,
+    stop_reason: result.budget_stop_reason ?? null,
+  };
+  ledger.append('budget.tokens.observed', runId, event);
+
+  if (result.budget_stop_reason === 'TOKEN_BUDGET_REACHED' || observedTotal >= maxTokens) {
+    ledger.append('budget.exhausted', runId, { ...event, over_limit_tokens: Math.max(0, observedTotal - maxTokens) });
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', `The token usage threshold was reached (${observedTotal}/${maxTokens}). The candidate will not continue to evaluation or acceptance.`, event);
+  }
+  if (result.budget_stop_reason) {
+    const failure = { ...event, reason: result.budget_stop_reason };
+    ledger.append('budget.usage_unavailable', runId, failure);
+    throw new EvoFenceError('TOKEN_USAGE_UNAVAILABLE', 'The adapter stopped before it could provide complete token usage.', failure);
+  }
+  return observedTotal;
 }
 
 export function checkFinalCandidate(contract, actualPaths, proposal, claims, beforeEvidenceHash, afterEvidenceHash) {
@@ -179,8 +252,11 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   if (holdout.length > 0 && !allowReadableHoldout) {
     throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex and OpenCode adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
   }
-  if (contract.budgets.max_tokens !== null || contract.budgets.max_usd !== null) {
-    throw new EvoFenceError('UNSUPPORTED_BUDGET', 'This release enforces iteration, wall-clock, failed-candidate, and no-improvement budgets. Token and USD budgets are not yet enforced; keep max_tokens and max_usd set to null.');
+  if (contract.budgets.max_usd !== null) {
+    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'USD budget enforcement is unavailable because adapters do not provide a consistent, complete USD cost source. Keep max_usd set to null.');
+  }
+  if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
+    throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
   }
   await ensurePrivateIgnored(root);
 
@@ -206,8 +282,24 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   let activeGeneration = ledger.activeGeneration();
   let activeSha = activeGeneration?.sha ?? await headSha(root);
   let baselineScore = null;
-  const outcome = { run_id: runId, status: 'RUNNING', adapter, base_sha: activeSha, iterations: [], active_generation: null };
+  let observedTokens = 0;
+  const tokenLimit = contract.budgets.max_tokens;
+  const outcome = { run_id: runId, status: 'RUNNING', adapter, base_sha: activeSha, iterations: [], active_generation: null, token_usage_total: tokenLimit === null ? null : observedTokens };
   let worktree = null;
+
+  const runBudgetedAdapter = async ({ iteration, phase, ...options }) => {
+    const remainingTokens = tokenLimit === null ? null : tokenLimit - observedTokens;
+    if (remainingTokens !== null && remainingTokens < 1) {
+      const failure = { metric: 'tokens', phase, iteration, limit: tokenLimit, observed_total: observedTokens };
+      ledger.append('budget.exhausted', runId, failure);
+      throw new EvoFenceError('RESOURCE_EXHAUSTED', `The token usage threshold was reached (${observedTokens}/${tokenLimit}).`, failure);
+    }
+    const result = await invokeAdapter({ ...options, adapter, config, phase, iteration, maxTokensRemaining: remainingTokens }, adapterRunner);
+    ledger.append('adapter.finished', runId, adapterEvent(result, adapter, phase, iteration));
+    observedTokens = recordTokenUsage(result, { maxTokens: tokenLimit, totalTokens: observedTokens, ledger, runId, phase, iteration });
+    outcome.token_usage_total = tokenLimit === null ? null : observedTokens;
+    return result;
+  };
 
   try {
     if (!activeGeneration) {
@@ -231,8 +323,8 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       holdout_sha256: initialHashes.holdout,
       private_regression_count: holdout.length,
       private_holdout_host_readable: holdout.length > 0,
-      token_budget: null,
-      cost_budget_usd: null,
+      token_budget: tokenLimit,
+      cost_budget_usd: contract.budgets.max_usd,
     });
     onProgress({ type: 'run.started', run_id: runId, base_sha: activeSha, iterations: limitIterations });
 
@@ -283,8 +375,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       ledger.append('prompt.prepared', runId, { iteration, phase: 'proposal', task_sha256: sha256(proposalTask) });
 
       onProgress({ type: 'candidate.proposal.start', iteration, adapter });
-      const proposalResult = await invokeAdapter({ adapter, config, worktree, phase: 'proposal', timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode }, adapterRunner);
-      ledger.append('adapter.finished', runId, adapterEvent(proposalResult, adapter, 'proposal', iteration));
+      const proposalResult = await runBudgetedAdapter({ iteration, phase: 'proposal', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
@@ -369,8 +460,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
       await writeFile(taskFile, implementationTask, { flag: 'w' });
       ledger.append('prompt.prepared', runId, { iteration, phase: 'implementation', task_sha256: sha256(implementationTask) });
       onProgress({ type: 'candidate.implementation.start', iteration, adapter });
-      const implementationResult = await invokeAdapter({ adapter, config, worktree, phase: 'implementation', timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode }, adapterRunner);
-      ledger.append('adapter.finished', runId, adapterEvent(implementationResult, adapter, 'implementation', iteration));
+      const implementationResult = await runBudgetedAdapter({ iteration, phase: 'implementation', worktree, timeoutMs: Math.max(1, deadlineAt - Date.now()), contract, allowUnisolatedOpenCode });
       if (!await worktreeMetadataMatches(worktree, gitMetadata)) {
         await restoreWorktreeMetadata(worktree, gitMetadata);
         const failure = { reason: 'WORKTREE_METADATA_CHANGED' };
@@ -579,12 +669,18 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
     if (outcome.status === 'RUNNING') outcome.status = outcome.iterations.some((item) => item.decision === 'ACCEPT') ? 'ACCEPTED' : 'PLATEAU';
     outcome.duration_ms = Date.now() - runStartedAt;
     outcome.active_generation = ledger.activeGeneration();
-    ledger.append('run.finished', runId, { status: outcome.status, iterations: outcome.iterations.length, active_generation: outcome.active_generation?.generation_id ?? null, duration_ms: outcome.duration_ms });
+    ledger.append('run.finished', runId, { status: outcome.status, iterations: outcome.iterations.length, active_generation: outcome.active_generation?.generation_id ?? null, duration_ms: outcome.duration_ms, token_usage_total: tokenLimit === null ? null : observedTokens });
     return outcome;
   } catch (error) {
-    outcome.status = error.code === 'RESOURCE_EXHAUSTED' ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
+    outcome.status = ['RESOURCE_EXHAUSTED', 'TOKEN_USAGE_UNAVAILABLE', 'PROCESS_TREE_TERMINATION_FAILED'].includes(error.code) ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
     outcome.failure = { code: error.code ?? 'UNKNOWN', message: error.message };
-    ledger.append('run.failed', runId, outcome.failure);
+    if (Number.isSafeInteger(error.details?.observed_total)) {
+      observedTokens = error.details.observed_total;
+      outcome.token_usage_total = observedTokens;
+    }
+    const tokenTotalUnknown = ['agent_timeout', 'process_tree_termination_failed'].includes(error.details?.reason)
+      && !Number.isSafeInteger(error.details?.observed_total);
+    ledger.append('run.failed', runId, { ...outcome.failure, token_usage_total: tokenLimit === null || tokenTotalUnknown ? null : observedTokens, token_budget: tokenLimit });
     throw error;
   } finally {
     if (worktree) await removeCandidate(root, worktree, runTempRoot).catch(() => {});
