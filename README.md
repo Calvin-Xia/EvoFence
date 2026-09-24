@@ -148,3 +148,9 @@ npm pack --dry-run
 ```
 
 研究报告源文件 `docs/deep-research-report.md` 不会包含在 npm 包中。
+
+## 发布
+
+首次发布前，在 npm 包 `evofence` 的 **Settings → Trusted Publishers** 中添加 GitHub Actions 发布者：Owner 填 `Calvin-Xia`，Repository 填 `EvoFence`，Workflow 填 `publish.yml`，Environment 留空。无需创建或保存 `NPM_TOKEN`；发布工作流通过 GitHub OIDC 认证。
+
+每次发布前，更新 `package.json` 中的版本和 `CHANGELOG.md`，合并到 `main` 后创建对应的 GitHub Release，标签使用 `v<版本号>`。正式版本如 `v0.2.0` 会发布到 npm `latest`；预发布版本如 `v0.2.0-beta.1` 需在 GitHub Release 中标记为 prerelease，并发布到 npm `beta`。工作流会检查标签、包版本和 prerelease 标记是否一致，并在发布前运行测试。
