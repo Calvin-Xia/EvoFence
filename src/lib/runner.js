@@ -8,6 +8,7 @@ import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkPr
 import { collectEvidence } from './evidence.js';
 import { assertInside, ensureDirectory, readJsonInside, sha256, stableStringify, writeNewFile } from './fs.js';
 import { EvoFenceError, invariant } from './errors.js';
+import { canTerminateProcessTree } from './process.js';
 import { changedPaths, changedPathsBetween, commitCandidate, createRunId, createWorktree, diffHash, headSha, pinGeneration, removeWorktree, repositoryRoot, restoreWorktreeMetadata, setActiveGenerationRef, worktreeMetadataMatches, worktreeMetadataSnapshot } from './git.js';
 
 const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and decision. Do not change protected files. Do not claim acceptance. Keep the patch atomic and reversible.`;
@@ -88,6 +89,7 @@ function adapterEvent(result, adapter, phase, iteration) {
     exit_code: result.code ?? null,
     signal: result.signal ?? null,
     timed_out: result.timed_out === true,
+    tree_termination_failed: result.tree_termination_failed === true,
     output_limited: result.output_limited === true,
     duration_ms: result.duration_ms ?? null,
     estimated_tokens: result.estimated_tokens ?? null,
@@ -151,9 +153,37 @@ function checkTaskFile(contract, actualPaths, proposal, claims) {
 }
 
 function recordTokenUsage(result, { maxTokens, totalTokens, ledger, runId, phase, iteration }) {
+  if (result.tree_termination_failed) {
+    const usage = result.reported_usage;
+    const invocationTokens = usage?.tokens_complete === true && Number.isSafeInteger(usage.tokens_total)
+      ? usage.tokens_total
+      : null;
+    const observedTotal = maxTokens !== null && invocationTokens !== null
+      ? totalTokens + usage.tokens_total
+      : null;
+    const failure = {
+      metric: maxTokens === null ? 'process_tree' : 'tokens', phase, iteration, limit: maxTokens,
+      previous_observed_total: maxTokens === null ? null : totalTokens,
+      invocation_tokens: invocationTokens,
+      observed_total: Number.isSafeInteger(observedTotal) ? observedTotal : null,
+      reason: 'process_tree_termination_failed',
+    };
+    ledger.append(maxTokens === null ? 'process.tree_termination_failed' : 'budget.termination_failed', runId, failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'EvoFence could not confirm that the agent process tree stopped. The candidate will not be evaluated or accepted.', failure);
+  }
   if (maxTokens === null) return totalTokens;
   if (result.timed_out) {
-    const failure = { metric: 'wall_clock', phase, iteration, reason: 'agent_timeout', observed_tokens: totalTokens };
+    const usage = result.reported_usage;
+    const invocationTokens = usage?.tokens_complete === true && Number.isSafeInteger(usage.tokens_total)
+      ? usage.tokens_total
+      : null;
+    const observedTotal = invocationTokens !== null ? totalTokens + invocationTokens : null;
+    const failure = {
+      metric: 'wall_clock', phase, iteration, reason: 'agent_timeout',
+      previous_observed_total: totalTokens,
+      invocation_tokens: invocationTokens,
+      observed_total: Number.isSafeInteger(observedTotal) ? observedTotal : null,
+    };
     ledger.append('budget.exhausted', runId, failure);
     throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The wall-clock budget stopped the agent. The in-flight candidate will not be evaluated or accepted.', failure);
   }
@@ -224,6 +254,9 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   }
   if (contract.budgets.max_usd !== null) {
     throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'USD budget enforcement is unavailable because adapters do not provide a consistent, complete USD cost source. Keep max_usd set to null.');
+  }
+  if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
+    throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
   }
   await ensurePrivateIgnored(root);
 
@@ -639,13 +672,15 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
     ledger.append('run.finished', runId, { status: outcome.status, iterations: outcome.iterations.length, active_generation: outcome.active_generation?.generation_id ?? null, duration_ms: outcome.duration_ms, token_usage_total: tokenLimit === null ? null : observedTokens });
     return outcome;
   } catch (error) {
-    outcome.status = ['RESOURCE_EXHAUSTED', 'TOKEN_USAGE_UNAVAILABLE'].includes(error.code) ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
+    outcome.status = ['RESOURCE_EXHAUSTED', 'TOKEN_USAGE_UNAVAILABLE', 'PROCESS_TREE_TERMINATION_FAILED'].includes(error.code) ? 'RESOURCE_EXHAUSTED' : 'HARNESS_ERROR';
     outcome.failure = { code: error.code ?? 'UNKNOWN', message: error.message };
     if (Number.isSafeInteger(error.details?.observed_total)) {
       observedTokens = error.details.observed_total;
       outcome.token_usage_total = observedTokens;
     }
-    ledger.append('run.failed', runId, { ...outcome.failure, token_usage_total: tokenLimit === null ? null : observedTokens, token_budget: tokenLimit });
+    const tokenTotalUnknown = ['agent_timeout', 'process_tree_termination_failed'].includes(error.details?.reason)
+      && !Number.isSafeInteger(error.details?.observed_total);
+    ledger.append('run.failed', runId, { ...outcome.failure, token_usage_total: tokenLimit === null || tokenTotalUnknown ? null : observedTokens, token_budget: tokenLimit });
     throw error;
   } finally {
     if (worktree) await removeCandidate(root, worktree, runTempRoot).catch(() => {});
