@@ -1,6 +1,6 @@
 {
   "name": "evofence",
-  "version": "0.1.2-beta.1",
+  "version": "0.2.0",
   "description": "Evidence-carrying evolution gate for autonomous coding agents",
   "license": "MIT",
   "type": "module",
