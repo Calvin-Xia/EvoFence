@@ -62,3 +62,32 @@ test('ledger CLI recent returns sanitized run summaries and read-only commands d
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('recent run summaries count rejected iterations once and infer failed run iteration counts', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-summary-'));
+  const ledger = new Ledger(path.join(directory, 'ledger.sqlite'));
+  try {
+    ledger.append('run.started', 'run-failed', { adapter: 'pi' });
+    ledger.append('candidate.accepted', 'run-failed', { iteration: 1 });
+    ledger.append('candidate.rejected', 'run-failed', { iteration: 2 });
+    ledger.append('gate.decision', 'run-failed', { iteration: 2, decision: 'REJECT' });
+    ledger.append('prompt.prepared', 'run-failed', { iteration: 3, phase: 'proposal' });
+    ledger.append('run.failed', 'run-failed', { reason: 'budget_exhausted' });
+
+    ledger.append('run.started', 'run-finished', { adapter: 'codex' });
+    ledger.append('candidate.rejected', 'run-finished', { iteration: 1 });
+    ledger.append('gate.decision', 'run-finished', { iteration: 1, decision: 'REJECT' });
+    ledger.append('run.finished', 'run-finished', { status: 'PLATEAU', iterations: 1 });
+
+    const summaries = ledger.recentRuns(10);
+    assert.deepEqual(summaries.map(({ run_id, status, accepted_candidates, rejected_candidates, iterations }) => ({
+      run_id, status, accepted_candidates, rejected_candidates, iterations,
+    })), [
+      { run_id: 'run-finished', status: 'PLATEAU', accepted_candidates: 0, rejected_candidates: 1, iterations: 1 },
+      { run_id: 'run-failed', status: 'FAILED', accepted_candidates: 1, rejected_candidates: 1, iterations: 3 },
+    ]);
+  } finally {
+    ledger.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});

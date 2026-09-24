@@ -152,10 +152,10 @@ export class Ledger {
       ORDER BY seq DESC
       LIMIT ?
     `).all(limit);
-    const relatedEvents = this.db.prepare(`
-      SELECT event_type, payload_json
+    const runEvents = this.db.prepare(`
+      SELECT seq, event_type, payload_json
       FROM events
-      WHERE run_id = ? AND event_type IN ('run.finished', 'run.failed', 'candidate.accepted', 'candidate.rejected', 'gate.decision')
+      WHERE run_id = ?
       ORDER BY seq
     `);
 
@@ -171,23 +171,38 @@ export class Ledger {
         iterations: 0,
       };
       const observedIterations = new Set();
+      const rejectedIterations = new Set();
+      let hasAuthoritativeIterations = false;
 
-      for (const event of relatedEvents.all(run.run_id)) {
+      for (const event of runEvents.all(run.run_id)) {
         const payload = JSON.parse(event.payload_json);
         if (Number.isInteger(payload.iteration) && payload.iteration > 0) observedIterations.add(payload.iteration);
 
+        if (
+          event.event_type === 'candidate.rejected'
+          || (event.event_type === 'gate.decision' && payload.decision === 'REJECT')
+        ) {
+          const iterationKey = Number.isInteger(payload.iteration) && payload.iteration > 0
+            ? `iteration:${payload.iteration}`
+            : `event:${event.seq}`;
+          rejectedIterations.add(iterationKey);
+        }
+
         if (event.event_type === 'candidate.accepted') summary.accepted_candidates += 1;
-        else if (event.event_type === 'candidate.rejected') summary.rejected_candidates += 1;
         else if (event.event_type === 'run.finished') {
           summary.status = typeof payload.status === 'string' ? payload.status : 'FINISHED';
-          if (Number.isInteger(payload.iterations) && payload.iterations >= 0) summary.iterations = payload.iterations;
+          if (Number.isInteger(payload.iterations) && payload.iterations >= 0) {
+            summary.iterations = payload.iterations;
+            hasAuthoritativeIterations = true;
+          }
           if (Number.isFinite(payload.duration_ms) && payload.duration_ms >= 0) summary.duration_ms = payload.duration_ms;
         } else if (event.event_type === 'run.failed') {
           summary.status = 'FAILED';
         }
       }
 
-      if (summary.status === 'INCOMPLETE') summary.iterations = observedIterations.size ? Math.max(...observedIterations) : 0;
+      summary.rejected_candidates = rejectedIterations.size;
+      if (!hasAuthoritativeIterations) summary.iterations = observedIterations.size ? Math.max(...observedIterations) : 0;
       return summary;
     });
   }
