@@ -106,6 +106,18 @@ evofence rollback <generation-id>
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
 
+### DeepSeek Harness Cordis 插件
+
+仓库提供一个本地 Cordis bundle，可让 DeepSeek Harness 只读查询 EvoFence ledger 完整性和最近运行摘要。它不会启动演化、执行契约命令、接受候选或修改 Git 状态。使用前请在 EvoFence 仓库根目录运行 Harness：
+
+```sh
+dsh plugin --profile web add ./integrations/deepseek-harness
+dsh --profile web --dump-config
+dsh --profile web
+```
+
+当前包含 `evofence_verify_ledger` 与 `evofence_recent_runs` 两个工具；摘要会省略提示词、评估命令、源码和检查输出。Harness 的 Cordis API 仍处于预览阶段，详见其[工具开发文档](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/tool)和[插件打包说明](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/publish)。
+
 实验清单示例：
 
 ```yaml

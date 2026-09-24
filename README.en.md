@@ -108,6 +108,18 @@ Rollback changes EvoFence's active-generation pointer and Git ref. It does not r
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
 
+### DeepSeek Harness Cordis plugin
+
+This repository includes a local Cordis bundle for read-only inspection of EvoFence ledger integrity and recent run summaries. It does not start an evolution run, execute contract commands, accept candidates, or change Git state. Launch Harness from the EvoFence repository root:
+
+```sh
+dsh plugin --profile web add ./integrations/deepseek-harness
+dsh --profile web --dump-config
+dsh --profile web
+```
+
+The bundle registers `evofence_verify_ledger` and `evofence_recent_runs`. Summaries omit prompts, evaluator commands, source text, and check output. The Cordis API is still pre-stable; see the official [tool tutorial](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/tool) and [bundle guide](https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/publish).
+
 Experiment manifest example:
 
 ```yaml
