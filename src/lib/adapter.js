@@ -53,10 +53,11 @@ function eventTokenCount(adapter, event) {
     if (
       nonNegativeInteger(tokens?.input)
       && nonNegativeInteger(tokens?.output)
+      && nonNegativeInteger(tokens?.reasoning)
       && nonNegativeInteger(tokens?.cache?.read)
       && nonNegativeInteger(tokens?.cache?.write)
     ) {
-      const total = tokens.input + tokens.output + tokens.cache.read + tokens.cache.write;
+      const total = tokens.input + tokens.output + tokens.reasoning + tokens.cache.read + tokens.cache.write;
       return { relevant: true, tokens: Number.isSafeInteger(total) ? total : null };
     }
     return { relevant: true, tokens: null };
@@ -73,44 +74,65 @@ export function createAdapterUsageMonitor(adapter, maxTokens) {
   let total = 0;
   let complete = true;
   let stopReason = null;
+  let discardingOversizedLine = false;
+
+  const requestStop = (reason) => {
+    if (!stopReason) stopReason = reason;
+  };
 
   const consumeLine = (line) => {
-    if (!line.trim()) return null;
+    if (!line.trim()) return;
     let event;
     try {
       event = JSON.parse(line);
     } catch {
       complete = false;
-      return 'TOKEN_USAGE_UNAVAILABLE';
+      requestStop('TOKEN_USAGE_UNAVAILABLE');
+      return;
     }
     const parsed = eventTokenCount(adapter, event);
-    if (!parsed.relevant) return null;
+    if (!parsed.relevant) return;
     eventCount += 1;
     if (parsed.tokens === null) {
       complete = false;
-      return 'TOKEN_USAGE_UNAVAILABLE';
+      requestStop('TOKEN_USAGE_UNAVAILABLE');
+      return;
     }
     total += parsed.tokens;
     if (!Number.isSafeInteger(total)) {
       complete = false;
-      return 'TOKEN_USAGE_UNAVAILABLE';
+      requestStop('TOKEN_USAGE_UNAVAILABLE');
+      return;
     }
-    return total >= maxTokens ? 'TOKEN_BUDGET_REACHED' : null;
+    if (total >= maxTokens) requestStop('TOKEN_BUDGET_REACHED');
   };
 
   return {
     push(chunk) {
-      if (stopReason) return stopReason;
-      pending += chunk;
-      const lines = pending.split(/\r?\n/);
-      pending = lines.pop() ?? '';
-      for (const line of lines) {
-        stopReason = consumeLine(line);
-        if (stopReason) return stopReason;
+      let input = pending + String(chunk);
+      pending = '';
+      if (discardingOversizedLine) {
+        const lineEnd = input.indexOf('\n');
+        if (lineEnd === -1) return stopReason;
+        input = input.slice(lineEnd + 1);
+        discardingOversizedLine = false;
       }
+      const lines = input.split(/\r?\n/);
+      pending = lines.pop() ?? '';
+      for (const line of lines) consumeLine(line);
       if (pending.length > 1_048_576) {
         complete = false;
-        stopReason = 'TOKEN_USAGE_UNAVAILABLE';
+        requestStop('TOKEN_USAGE_UNAVAILABLE');
+        pending = '';
+        discardingOversizedLine = true;
+      }
+      return stopReason;
+    },
+    finish() {
+      if (pending) {
+        if (discardingOversizedLine) complete = false;
+        else consumeLine(pending);
+        pending = '';
       }
       return stopReason;
     },
@@ -265,16 +287,21 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
       stopGraceMs: 0,
     } : {}),
   });
+  const monitorStopReason = usageMonitor?.finish() ?? null;
+  const budgetStopReason = result.stop_reason ?? monitorStopReason;
   let usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
-  if (result.stop_reason === 'TOKEN_BUDGET_REACHED' || result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') {
+  if (budgetStopReason === 'TOKEN_BUDGET_REACHED' || budgetStopReason === 'TOKEN_USAGE_UNAVAILABLE') {
     usage = { ...usage, ...usageMonitor.snapshot() };
-    if (result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') usage.tokens_complete = false;
+  }
+  if (budgetStopReason === 'TOKEN_USAGE_UNAVAILABLE' || result.output_limited) {
+    usage.tokens_total = null;
+    usage.tokens_complete = false;
   }
   return {
     ...result,
     adapter: name,
     model: model ?? null,
-    budget_stop_reason: result.stop_reason,
+    budget_stop_reason: budgetStopReason,
     // Keep the legacy field, but never fill it with a partial or estimated count.
     estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
     reported_usage: usage,
