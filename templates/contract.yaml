@@ -1,0 +1,58 @@
+# EvoFence root policy. Keep this file outside the agent's writable candidate.
+contract_version: 1
+
+objective:
+  name: project_improvement
+  # Must print one finite numeric score as its final output line.
+  command: ""
+  direction: maximize
+  min_delta: 0.01
+
+hard_invariants: []
+
+# Empty means all paths are considered, subject to protected_paths below.
+allowed_evolution_surface:
+  - "**/*"
+
+protected_paths:
+  - ".evofence/**"
+  - ".git/**"
+  - "test/**"
+  - "tests/**"
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "package.json"
+  - "package-lock.json"
+  - "pnpm-lock.yaml"
+  - "yarn.lock"
+  - "bun.lock*"
+  - ".github/workflows/**"
+
+capabilities:
+  authority_ceiling: A2
+  network: deny
+  dependency_install: deny
+  credentials: deny
+  external_api: deny
+  shell:
+    mode: evidence_commands_only
+
+evidence:
+  public_commands: []
+  per_command_timeout_ms: 120000
+  max_output_bytes: 1048576
+
+acceptance:
+  require_proposal: true
+  require_claims: true
+  require_objective_improvement: true
+  require_rollback_point: true
+  hidden_regression_tolerance: 0
+
+budgets:
+  max_iterations: 20
+  max_wall_clock_ms: 3600000
+  max_failed_candidates: 5
+  max_consecutive_no_improvement: 3
+  max_tokens: null
+  max_usd: null

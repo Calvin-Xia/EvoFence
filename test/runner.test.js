@@ -1,0 +1,162 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { Ledger, ledgerPath } from '../src/lib/ledger.js';
+import { initializeRepository } from '../src/lib/init.js';
+import { checkFinalCandidate, runEvolution } from '../src/lib/runner.js';
+import { runProcess } from '../src/lib/process.js';
+import { setActiveGenerationRef } from '../src/lib/git.js';
+import { parseYamlText, validateContract } from '../src/lib/contract.js';
+
+test('final candidate validation honors approved capabilities and detects evidence mutations', async () => {
+  const template = await readFile(path.resolve(import.meta.dirname, '..', 'templates', 'contract.yaml'), 'utf8');
+  const parsed = validateContract(parseYamlText(template, 'contract.yaml'));
+  const contract = { ...parsed, capabilities: { ...parsed.capabilities, network: 'allow' } };
+  const proposal = { changed_surface: ['src/**'], requested_capabilities: ['network'] };
+  const claims = { files_changed: ['src/main.js'], capabilities_used: ['network'], missing_evidence: [] };
+
+  assert.deepEqual(checkFinalCandidate(contract, ['src/main.js'], proposal, claims, 'before', 'before'), { accepted: true });
+  assert.equal(checkFinalCandidate(contract, ['src/main.js'], { ...proposal, requested_capabilities: [] }, claims, 'before', 'before').code, 'CAPABILITY_VIOLATION');
+  assert.equal(checkFinalCandidate(contract, ['src/main.js'], proposal, claims, 'before', 'after').code, 'EVIDENCE_MODIFIED_CANDIDATE');
+  assert.equal(checkFinalCandidate(contract, ['tests/attack.test.js'], proposal, claims, 'before', 'before').code, 'POLICY_VIOLATION');
+});
+
+test('one evolution is evaluated, committed, pinned, and can be rolled back', async () => {
+  const temporaryParent = await mkdtemp(path.join(os.tmpdir(), 'evofence-runner-'));
+  const root = path.join(temporaryParent, 'project');
+  await mkdir(root, { recursive: true });
+  try {
+    await writeFile(path.join(root, 'feature.txt'), '0\n');
+    await writeFile(path.join(root, 'score.js'), "import { readFileSync } from 'node:fs'; process.stdout.write(`${Number(readFileSync('feature.txt', 'utf8'))}\\n`);\n");
+    await writeFile(path.join(root, 'check.js'), "import { readFileSync } from 'node:fs'; if (!Number.isFinite(Number(readFileSync('feature.txt', 'utf8')))) process.exit(1);\n");
+    let result = await runProcess('git', ['init', '--quiet', '--initial-branch=main'], { cwd: root, timeoutMs: 10000 });
+    assert.equal(result.code, 0, result.stderr);
+    for (const [key, value] of [['user.name', 'Fixture'], ['user.email', 'fixture@example.invalid']]) {
+      result = await runProcess('git', ['config', key, value], { cwd: root, timeoutMs: 10000 });
+      assert.equal(result.code, 0, result.stderr);
+    }
+    assert.equal((await runProcess('git', ['add', '-A'], { cwd: root })).code, 0);
+    assert.equal((await runProcess('git', ['commit', '--quiet', '-m', 'fixture baseline'], { cwd: root })).code, 0);
+    await initializeRepository(root);
+    assert.equal((await initializeRepository(root)).existing, true);
+    const contract = [
+      'contract_version: 1', 'objective:', '  name: score', '  command: "node score.js"', '  direction: maximize', '  min_delta: 0.1',
+      'hard_invariants:', '  - id: score-file-valid', '    command: "node check.js"', 'allowed_evolution_surface:', '  - "**/*"',
+      'protected_paths:', '  - ".evofence/**"', '  - "tests/**"', '  - "**/*.test.*"', '  - "package.json"', 'capabilities:',
+      '  authority_ceiling: A2', '  network: deny', '  dependency_install: deny', '  credentials: deny', '  external_api: deny',
+      '  shell:', '    mode: evidence_commands_only', 'evidence:', '  public_commands: []', '  per_command_timeout_ms: 5000',
+      '  max_output_bytes: 8192', 'acceptance:', '  require_proposal: true', '  require_claims: true',
+      '  require_objective_improvement: true', '  require_rollback_point: true', '  hidden_regression_tolerance: 0', 'budgets:',
+      '  max_iterations: 20', '  max_wall_clock_ms: 120000', '  max_failed_candidates: 5', '  max_consecutive_no_improvement: 3',
+      '  max_tokens: null', '  max_usd: null', '',
+    ].join('\n');
+    await writeFile(path.join(root, '.evofence', 'contract.yaml'), contract);
+
+    const resultRun = await runEvolution({
+      cwd: root,
+      goal: 'Increase the score by changing feature.txt.',
+      adapter: 'codex',
+      iterations: 20,
+      onProgress: () => {},
+      adapterRunner: async ({ worktree, phase }) => {
+        const output = path.join(worktree, '.evofence-out');
+        if (phase === 'proposal') {
+          const task = await readFile(path.join(worktree, '.evofence-task.md'), 'utf8');
+          const iteration = Number(task.match(/^Iteration: (\d+)$/m)?.[1]);
+          const baseSha = task.match(/^Base generation: ([0-9a-f]{40,64})$/m)?.[1];
+          await writeFile(path.join(output, 'proposal.json'), JSON.stringify({
+            iteration, base_sha: baseSha, hypothesis: 'A higher score value helps.',
+            problem_evidence: ['The baseline score is zero.'], proposed_change: 'Set the score to one.',
+            changed_surface: ['feature.txt'],
+            expected_effect: { primary_metric: 'score', direction: 'increase', minimum_practical_effect: '0.1' },
+            possible_regressions: ['The parser may reject the value.'], requested_capabilities: [],
+            falsification_plan: ['Run the invariant and score command.'], rollback_plan: 'Restore the parent generation.',
+          }));
+        } else {
+          const task = await readFile(path.join(worktree, '.evofence-task.md'), 'utf8');
+          const iteration = Number(task.match(/^Iteration: (\d+)$/m)?.[1]);
+          await writeFile(path.join(worktree, 'feature.txt'), `${iteration}\n`);
+          await writeFile(path.join(output, 'claims.json'), JSON.stringify({
+            status: 'CANDIDATE_READY', claims: [], tests_executed: [], known_failures: [], missing_evidence: [],
+            files_changed: ['feature.txt'], capabilities_used: [], suggested_gate_checks: [],
+          }));
+        }
+        return { code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: null };
+      },
+    });
+    assert.equal(resultRun.status, 'ACCEPTED');
+    assert.equal(resultRun.iterations.length, 20);
+    assert.ok(resultRun.iterations.every((item) => item.decision === 'ACCEPT'));
+    assert.equal(resultRun.active_generation.sha, resultRun.iterations.at(-1).sha);
+    assert.equal(resultRun.iterations[0].improvement, 1);
+
+    const ledger = new Ledger(ledgerPath(root));
+    try {
+      assert.equal(ledger.verify().valid, true);
+      assert.equal(ledger.generations().length, 21);
+      const baseline = ledger.generations()[0];
+      ledger.rollback(baseline.generation_id);
+      await setActiveGenerationRef(root, baseline.sha);
+      assert.equal(ledger.activeGeneration().generation_id, baseline.generation_id);
+      assert.equal(ledger.verify().valid, true);
+    } finally { ledger.close(); }
+
+    const protectedChange = await runEvolution({
+      cwd: root,
+      goal: 'Weaken the tests to improve the score.',
+      adapter: 'codex',
+      iterations: 1,
+      onProgress: () => {},
+      adapterRunner: async ({ worktree, phase }) => {
+        const output = path.join(worktree, '.evofence-out');
+        if (phase === 'proposal') {
+          const task = await readFile(path.join(worktree, '.evofence-task.md'), 'utf8');
+          const iteration = Number(task.match(/^Iteration: (\d+)$/m)?.[1]);
+          const baseSha = task.match(/^Base generation: ([0-9a-f]{40,64})$/m)?.[1];
+          await writeFile(path.join(output, 'proposal.json'), JSON.stringify({
+            iteration, base_sha: baseSha, hypothesis: 'Skipping a regression test raises the score.',
+            problem_evidence: ['The test takes time.'], proposed_change: 'Change a protected test.', changed_surface: ['tests/test_score.js'],
+            expected_effect: { primary_metric: 'score', direction: 'increase', minimum_practical_effect: '0.1' },
+            possible_regressions: ['The test could stop checking behavior.'], requested_capabilities: [],
+            falsification_plan: ['Inspect the modified test.'], rollback_plan: 'Restore the parent generation.',
+          }));
+        } else {
+          await mkdir(path.join(worktree, 'tests'), { recursive: true });
+          await writeFile(path.join(worktree, 'tests', 'test_score.js'), 'process.exit(0);\n');
+          await writeFile(path.join(output, 'claims.json'), JSON.stringify({
+            status: 'CANDIDATE_READY', claims: [], tests_executed: [], known_failures: [], missing_evidence: [],
+            files_changed: ['tests/test_score.js'], capabilities_used: [], suggested_gate_checks: [],
+          }));
+        }
+        return { code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: null };
+      },
+    });
+    assert.equal(protectedChange.status, 'QUARANTINE');
+    assert.equal(protectedChange.iterations[0].decision, 'QUARANTINE');
+    const finalLedger = new Ledger(ledgerPath(root));
+    try {
+      assert.equal(finalLedger.activeGeneration().generation_id, 'g0-'.concat(resultRun.base_sha.slice(0, 12)));
+      assert.equal(finalLedger.verify().valid, true);
+    } finally { finalLedger.close(); }
+
+    const contractFile = path.join(root, '.evofence', 'contract.yaml');
+    const savedContract = await readFile(contractFile, 'utf8');
+    await writeFile(contractFile, savedContract.replace('max_tokens: null', 'max_tokens: 100'));
+    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_BUDGET' });
+    await writeFile(contractFile, savedContract);
+    const holdoutFile = path.join(root, '.evofence', 'private', 'holdout.yaml');
+    const savedHoldout = await readFile(holdoutFile, 'utf8');
+    await writeFile(holdoutFile, "regressions:\n  - id: hidden-1\n    command: \"node -e 'process.exit(0)'\"\n");
+    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'PRIVATE_ORACLE_READABLE' });
+    await writeFile(holdoutFile, savedHoldout);
+
+    const trees = await runProcess('git', ['worktree', 'list', '--porcelain'], { cwd: root });
+    assert.equal(trees.stdout.split(/\r?\n/).filter((line) => line.startsWith('worktree ')).length, 1);
+  } finally {
+    const resolvedTemp = path.resolve(temporaryParent);
+    assert.ok(resolvedTemp.startsWith(path.resolve(os.tmpdir())));
+    await rm(resolvedTemp, { recursive: true, force: true });
+  }
+});
