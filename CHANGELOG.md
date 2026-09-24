@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2-beta.1
+
+- Expand CI coverage to Windows, record complete adapter usage, and make release metadata checks directly testable.
+
 ## 0.1.1
 
 - Strip common token, API/access/private-key, secret, password, credential, and authentication-helper environment variables from child processes.

@@ -83,7 +83,10 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
             files_changed: ['feature.txt'], capabilities_used: [], suggested_gate_checks: [],
           }));
         }
-        return { code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: null };
+        return {
+          code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: 42,
+          reported_usage: { tokens_total: 42, tokens_complete: true, token_source: 'fixture', reported_cost: null, cost_complete: false, cost_currency: null, cost_source: null },
+        };
       },
     });
     assert.equal(resultRun.status, 'ACCEPTED');
@@ -96,6 +99,8 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     try {
       assert.equal(ledger.verify().valid, true);
       assert.equal(ledger.generations().length, 21);
+      const firstAdapterEvent = ledger.events().find((item) => item.event_type === 'adapter.finished');
+      assert.equal(firstAdapterEvent.payload.reported_usage.tokens_total, 42);
       const baseline = ledger.generations()[0];
       ledger.rollback(baseline.generation_id);
       await setActiveGenerationRef(root, baseline.sha);

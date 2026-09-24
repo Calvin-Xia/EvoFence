@@ -134,7 +134,7 @@ ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希�
 
 ## 已知限制
 
-- 会强制执行 `max_iterations`、`max_wall_clock_ms`、失败候选数和连续无改进次数上限。Token 和美元预算尚未实现；只要其中任一值不是 `null`，`run` 就会在启动智能体前停止。
+- 会强制执行 `max_iterations`、`max_wall_clock_ms`、失败候选数和连续无改进次数上限。Token 和美元预算尚未实现；只要其中任一值不是 `null`，`run` 就会在启动智能体前停止。Codex/OpenCode 的完整结构化用量会记录在 ledger 的 `reported_usage` 中；流缺失、字段不完整或被截断时不会记录部分总数。OpenCode 的 cost 保留 CLI 报告值，不推断币种，也不代表最终账单。
 - 隐藏评估目前运行项目所有者提供的私有命令。内置适配器无法在共享主机上满足 PRD 中“智能体读不到 holdout 源码”的强隔离要求；该保证需要单独隔离的执行器。生成式变形测试、API daemon、Herdr/Pi 适配器、权威学习和长期漂移分析仍属于后续工作。
 - 智能体 CLI 版本和用户配置会影响运行行为。请保持 Codex/OpenCode 为较新版本，并在依赖结果前检查导出的证据。
 - Worktree 隔离可以保护主工作树免受候选直接修改，但不能替代操作系统沙箱，尤其是面对可运行任意 shell 命令的智能体时。

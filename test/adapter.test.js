@@ -1,0 +1,66 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parseAdapterUsage } from '../src/lib/adapter.js';
+
+test('Codex usage sums completed turns without double-counting breakdown fields', () => {
+  const stdout = [
+    { type: 'thread.started', thread_id: 'fixture' },
+    { type: 'turn.completed', usage: { input_tokens: 100, cached_input_tokens: 20, output_tokens: 10, reasoning_output_tokens: 5 } },
+    { type: 'turn.completed', usage: { input_tokens: 50, cached_input_tokens: 0, output_tokens: 8, reasoning_output_tokens: 3 } },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  assert.deepEqual(parseAdapterUsage('codex', stdout), {
+    tokens_total: 168,
+    tokens_complete: true,
+    token_source: 'codex-cli-turn.completed',
+    reported_cost: null,
+    cost_complete: false,
+    cost_currency: null,
+    cost_source: null,
+  });
+});
+
+test('Codex usage stays unavailable when a completed turn omits usage or output is truncated', () => {
+  const missingUsage = JSON.stringify({ type: 'turn.completed' });
+  assert.equal(parseAdapterUsage('codex', missingUsage).tokens_total, null);
+  assert.equal(parseAdapterUsage('codex', missingUsage).tokens_complete, false);
+
+  const completeTurn = JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 3, output_tokens: 4 } });
+  const truncated = parseAdapterUsage('codex', completeTurn, { outputLimited: true });
+  assert.equal(truncated.tokens_total, null);
+  assert.equal(truncated.tokens_complete, false);
+
+  const malformed = parseAdapterUsage('codex', `${completeTurn}\nnot-json`);
+  assert.equal(malformed.tokens_total, null);
+  assert.equal(malformed.tokens_complete, false);
+});
+
+test('OpenCode usage sums completed steps and preserves its reported cost without claiming a currency', () => {
+  const stdout = [
+    { type: 'step_finish', part: { tokens: { total: 12 }, cost: 0.001 } },
+    { type: 'text', part: { tokens: { total: 900 }, cost: 9 } },
+    { type: 'step_finish', part: { tokens: { input: 10, output: 4, reasoning: 2, cache: { read: 3, write: 1 } }, cost: 0.002 } },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  const usage = parseAdapterUsage('opencode', stdout);
+  assert.equal(usage.tokens_total, 30);
+  assert.equal(usage.tokens_complete, true);
+  assert.equal(usage.token_source, 'opencode-cli-step_finish');
+  assert.ok(Math.abs(usage.reported_cost - 0.003) < Number.EPSILON * 8);
+  assert.equal(usage.cost_complete, true);
+  assert.equal(usage.cost_currency, null);
+  assert.equal(usage.cost_source, 'opencode-cli-step_finish');
+});
+
+test('OpenCode usage does not expose partial token or cost totals', () => {
+  const stdout = [
+    { type: 'step_finish', part: { tokens: { total: 10 }, cost: 0.01 } },
+    { type: 'step_finish', part: { tokens: { input: 4, output: 2 } } },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  const usage = parseAdapterUsage('opencode', stdout);
+  assert.equal(usage.tokens_total, null);
+  assert.equal(usage.tokens_complete, false);
+  assert.equal(usage.reported_cost, null);
+  assert.equal(usage.cost_complete, false);
+});

@@ -92,6 +92,7 @@ function adapterEvent(result, adapter, phase, iteration) {
     duration_ms: result.duration_ms ?? null,
     estimated_tokens: result.estimated_tokens ?? null,
     estimated_cost_usd: null,
+    reported_usage: result.reported_usage ?? null,
     stdout_sha256: sha256(result.stdout ?? ''),
     stderr_sha256: sha256(result.stderr ?? ''),
   };

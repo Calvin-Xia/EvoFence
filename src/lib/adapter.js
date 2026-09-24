@@ -18,37 +18,129 @@ function openCodeArgs({ model, agent }) {
   return args;
 }
 
-function estimatedTokens(adapter, stdout) {
-  let total = 0;
-  let observed = false;
+function nonNegativeNumber(value) {
+  return Number.isFinite(value) && value >= 0;
+}
+
+function parseJsonLines(stdout) {
+  const events = [];
+  let complete = true;
   for (const line of stdout.split(/\r?\n/)) {
+    if (!line.trim()) continue;
     try {
-      const event = JSON.parse(line);
-      const candidates = [
-        event?.info?.total_token_usage?.total_tokens,
-        event?.payload?.info?.total_token_usage?.total_tokens,
-        event?.total_token_usage?.total_tokens,
-        event?.part?.tokens?.total,
-        event?.tokens?.total,
-      ].filter((value) => Number.isFinite(value) && value >= 0);
-      if (candidates.length) {
-        observed = true;
-        const current = Math.max(...candidates);
-        total = adapter === 'codex' ? Math.max(total, current) : total + current;
-      }
-      const ioTokens = [event?.part?.tokens, event?.tokens, event?.metadata?.tokens]
-        .filter((value) => value && typeof value === 'object')
-        .map((tokens) => Number(tokens.input ?? 0) + Number(tokens.output ?? 0) + Number(tokens.reasoning ?? 0))
-        .filter((value) => Number.isFinite(value) && value > 0);
-      if (ioTokens.length) {
-        observed = true;
-        total += ioTokens[0];
-      }
+      events.push(JSON.parse(line));
     } catch {
-      // Informational non-JSON output is intentionally ignored.
+      complete = false;
     }
   }
-  return observed ? Math.round(total) : null;
+  return { events, complete };
+}
+
+function incompleteUsage(tokenSource = null, costSource = null) {
+  return {
+    tokens_total: null,
+    tokens_complete: false,
+    token_source: tokenSource,
+    reported_cost: null,
+    cost_complete: false,
+    cost_currency: null,
+    cost_source: costSource,
+  };
+}
+
+function codexUsage(events, outputLimited) {
+  let turnCount = 0;
+  let total = 0;
+  let complete = true;
+
+  for (const event of events) {
+    if (event?.type !== 'turn.completed') continue;
+    turnCount += 1;
+    const usage = event.usage;
+    if (!nonNegativeNumber(usage?.input_tokens) || !nonNegativeNumber(usage?.output_tokens)) {
+      complete = false;
+      continue;
+    }
+    // cached_input_tokens and reasoning_output_tokens are breakdowns of input/output.
+    total += usage.input_tokens + usage.output_tokens;
+  }
+
+  const tokensComplete = turnCount > 0 && complete && !outputLimited;
+  return {
+    tokens_total: tokensComplete ? total : null,
+    tokens_complete: tokensComplete,
+    token_source: turnCount ? 'codex-cli-turn.completed' : null,
+    reported_cost: null,
+    cost_complete: false,
+    cost_currency: null,
+    cost_source: null,
+  };
+}
+
+function openCodeUsage(events, outputLimited) {
+  let stepCount = 0;
+  let tokenTotal = 0;
+  let tokensComplete = true;
+  let costTotal = 0;
+  let costCount = 0;
+  let costComplete = true;
+
+  for (const event of events) {
+    if (event?.type !== 'step_finish') continue;
+    stepCount += 1;
+    const part = event.part;
+    const tokens = part?.tokens ?? event.tokens;
+    let stepTokens = null;
+    if (nonNegativeNumber(tokens?.total)) {
+      stepTokens = tokens.total;
+    } else if (
+      nonNegativeNumber(tokens?.input)
+      && nonNegativeNumber(tokens?.output)
+      && nonNegativeNumber(tokens?.cache?.read)
+      && nonNegativeNumber(tokens?.cache?.write)
+    ) {
+      // reasoning is a breakdown of output; cache read/write are separate token buckets.
+      stepTokens = tokens.input + tokens.output + tokens.cache.read + tokens.cache.write;
+    }
+    if (stepTokens === null) tokensComplete = false;
+    else tokenTotal += stepTokens;
+
+    const cost = part?.cost ?? event.cost;
+    if (nonNegativeNumber(cost)) {
+      costTotal += cost;
+      costCount += 1;
+    } else {
+      costComplete = false;
+    }
+  }
+
+  const completeTokens = stepCount > 0 && tokensComplete && !outputLimited;
+  const completeCost = stepCount > 0 && costComplete && costCount === stepCount && !outputLimited;
+  return {
+    tokens_total: completeTokens ? tokenTotal : null,
+    tokens_complete: completeTokens,
+    token_source: stepCount ? 'opencode-cli-step_finish' : null,
+    reported_cost: completeCost ? costTotal : null,
+    cost_complete: completeCost,
+    cost_currency: null,
+    cost_source: costCount ? 'opencode-cli-step_finish' : null,
+  };
+}
+
+export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {}) {
+  const parsed = parseJsonLines(stdout);
+  let usage;
+  if (adapter === 'codex') usage = codexUsage(parsed.events, outputLimited);
+  else if (adapter === 'opencode') usage = openCodeUsage(parsed.events, outputLimited);
+  else return incompleteUsage();
+  if (parsed.complete) return usage;
+  return {
+    ...usage,
+    tokens_total: null,
+    tokens_complete: false,
+    reported_cost: null,
+    cost_complete: false,
+  };
 }
 
 export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, allowUnisolatedOpenCode = false }) {
@@ -83,8 +175,15 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
   }
 
   const result = await runProcess(command, args, { cwd, timeoutMs, maxOutputBytes, env, shell: platform() === 'win32' });
-  const tokens = estimatedTokens(name, result.stdout);
-  return { ...result, adapter: name, model: model ?? null, estimated_tokens: tokens };
+  const usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
+  return {
+    ...result,
+    adapter: name,
+    model: model ?? null,
+    // Keep the legacy field, but never fill it with a partial or estimated count.
+    estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
+    reported_usage: usage,
+  };
 }
 
 export function adapterCommand(config, name) {
