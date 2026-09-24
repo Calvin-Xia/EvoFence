@@ -1,0 +1,9 @@
+.evofence/ledger.sqlite*
+.evofence/artifacts/
+.evofence/private/
+.evofence/out/
+.evofence/active-run.json
+node_modules/
+.npm-cache/
+coverage/
+*.tgz

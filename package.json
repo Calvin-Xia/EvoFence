@@ -1,0 +1,47 @@
+{
+  "name": "evofence",
+  "version": "0.1.0",
+  "description": "Evidence-carrying evolution gate for autonomous coding agents",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "bin": {
+    "evofence": "src/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/",
+    "templates/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/cli.js && node --check src/index.js && node --test"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "yaml": "^2.8.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Calvin-Xia/EvoFence.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Calvin-Xia/EvoFence/issues"
+  },
+  "homepage": "https://github.com/Calvin-Xia/EvoFence#readme",
+  "keywords": [
+    "coding-agent",
+    "agent-safety",
+    "evolution",
+    "evidence",
+    "control-plane",
+    "cli"
+  ]
+}

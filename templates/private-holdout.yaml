@@ -1,0 +1,3 @@
+# Keep private regression commands outside Git and do not paste their source
+# or expected values into agent prompts.
+regressions: []
