@@ -17,7 +17,7 @@ const HELP = `EvoFence ${packageJson.version} — evidence-carrying evolution co
 
 Usage:
   evofence init
-  evofence run --adapter codex|opencode|claude --goal <file> [--iterations N] [--max-wall-clock-ms N]
+  evofence run --adapter codex|opencode|claude|pi --goal <file> [--iterations N] [--max-wall-clock-ms N]
   evofence proposal inspect <proposal-id>
   evofence evidence run <candidate-directory>
   evofence gate <proposal-id>
@@ -29,7 +29,7 @@ Usage:
   evofence experiment export [file]
 
 Options:
-  --allow-unisolated-agent  Required for OpenCode and Claude Code; permission modes are not an OS sandbox.
+  --allow-unisolated-agent  Required for OpenCode, Claude Code, and Pi; CLI controls are not an OS sandbox.
   --allow-readable-holdout  Required to run private checks when host read isolation is unavailable.
   --json                    Print run results as JSON.
   --help                    Show this help.

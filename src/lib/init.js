@@ -19,6 +19,9 @@ adapters:
     command: claude
     model: null
     agent: null
+  pi:
+    command: pi
+    model: null
 `;
 
 const schemaFiles = {

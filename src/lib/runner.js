@@ -16,13 +16,14 @@ const BUILTIN_TASK_RULES = `The control plane owns the contract, evidence, and d
 async function loadConfig(root) {
   const config = await loadYamlFile(path.join(root, '.evofence', 'config.yaml'), root);
   invariant(config.version === 1, 'INVALID_CONFIG', 'config.version must be 1.');
-  for (const name of ['codex', 'opencode', 'claude']) {
+  for (const name of ['codex', 'opencode', 'claude', 'pi']) {
     const item = config.adapters?.[name];
     if (item !== undefined) {
       invariant(item && typeof item === 'object', 'INVALID_CONFIG', `adapters.${name} must be an object.`);
       invariant(item.command === undefined || (typeof item.command === 'string' && item.command.trim()), 'INVALID_CONFIG', `adapters.${name}.command must be a non-empty string.`);
       invariant(item.model === undefined || item.model === null || typeof item.model === 'string', 'INVALID_CONFIG', `adapters.${name}.model must be a string or null.`);
       invariant(item.agent === undefined || item.agent === null || typeof item.agent === 'string', 'INVALID_CONFIG', `adapters.${name}.agent must be a string or null.`);
+      if (name === 'pi') invariant(item.agent === undefined || item.agent === null, 'INVALID_CONFIG', 'adapters.pi.agent is unsupported by Pi CLI.');
     }
   }
   return config;
@@ -251,7 +252,7 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   const holdout = await loadPrivateHoldout(root);
   requireEvidenceConfigured(contract);
   if (holdout.length > 0 && !allowReadableHoldout) {
-    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex, OpenCode, and Claude Code adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
+    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex, OpenCode, Claude Code, and Pi adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
   }
   if (contract.budgets.max_usd !== null) {
     throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'USD budget enforcement is unavailable because adapters do not provide a consistent, complete USD cost source. Keep max_usd set to null.');
@@ -259,8 +260,11 @@ export async function runEvolution({ cwd, goal, adapter = 'codex', iterations, m
   if (adapter === 'claude' && !allowUnisolatedAgent) {
     throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
   }
+  if (adapter === 'pi' && !allowUnisolatedAgent) {
+    throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+  }
   if (adapter === 'claude' && contract.budgets.max_tokens !== null) {
-    throw new EvoFenceError('UNSUPPORTED_CLAUDE_TOKEN_BUDGET', 'Claude Code reports complete whole-tree token usage only in its final result event. EvoFence cannot safely interrupt the run at the token threshold; set max_tokens to null or use Codex/OpenCode for token-budgeted runs.');
+    throw new EvoFenceError('UNSUPPORTED_CLAUDE_TOKEN_BUDGET', 'Claude Code reports complete whole-tree token usage only in its final result event. EvoFence cannot safely interrupt the run at the token threshold; set max_tokens to null or use Codex, OpenCode, or Pi for token-budgeted runs.');
   }
   if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
     throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');

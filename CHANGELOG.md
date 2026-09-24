@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add a Claude Code CLI adapter with whole-tree token and reported USD usage telemetry. Require explicit opt-in for its unsandboxed CLI execution, and reject Claude runs when `max_tokens` is configured because its complete totals arrive only with the final result.
+- Add a Pi CLI adapter with JSONL token/cost telemetry and completed-message token-budget enforcement. Disable project extensions and instructions for EvoFence runs, and require explicit opt-in for unsandboxed execution.
 
 ## 0.1.2-beta.1
 

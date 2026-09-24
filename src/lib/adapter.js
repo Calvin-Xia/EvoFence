@@ -32,6 +32,22 @@ export function claudeCodeArgs({ model, agent }) {
   return args;
 }
 
+function piArgs({ model }) {
+  const args = [
+    '--mode', 'json',
+    '--no-session',
+    '--no-approve',
+    '--no-extensions',
+    '--no-skills',
+    '--no-prompt-templates',
+    '--no-themes',
+    '--no-context-files',
+  ];
+  if (model) args.push('--model', model);
+  args.push(TASK_POINTER);
+  return args;
+}
+
 function nonNegativeNumber(value) {
   return Number.isFinite(value) && value >= 0;
 }
@@ -54,6 +70,47 @@ function claudeModelTokenCount(modelUsage) {
   return total;
 }
 
+function piUsageMetrics(usage) {
+  if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return null;
+  const tokenFields = [usage.input, usage.output, usage.cacheRead, usage.cacheWrite, usage.totalTokens];
+  if (!tokenFields.every(nonNegativeInteger)) return null;
+  const cost = usage.cost;
+  const costFields = [cost?.input, cost?.output, cost?.cacheRead, cost?.cacheWrite, cost?.total];
+  return {
+    tokens: usage.totalTokens,
+    cost: costFields.every(nonNegativeNumber) ? cost.total : null,
+  };
+}
+
+function piEventUsage(event) {
+  if (event?.type === 'message_end') {
+    const message = event.message;
+    if (message?.role === 'assistant') {
+      const metrics = piUsageMetrics(message.usage);
+      return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+    }
+    if (message?.role === 'toolResult' && message.usage !== undefined) {
+      const metrics = piUsageMetrics(message.usage);
+      return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+    }
+  }
+  if (event?.type === 'compaction_end') {
+    const metrics = piUsageMetrics(event.result?.usage);
+    return { relevant: true, tokens: metrics?.tokens ?? null, cost: metrics?.cost ?? null };
+  }
+  if (event?.type === 'auto_retry_start' || event?.type === 'summarization_retry_scheduled') {
+    // Pi does not attach usage to failed attempts, so a hard budget cannot account for them.
+    return { relevant: true, tokens: null, cost: null };
+  }
+  if (event?.type === 'agent_end' && event.willRetry === true) {
+    return { relevant: true, tokens: null, cost: null };
+  }
+  if (event?.type === 'message_update' && event.assistantMessageEvent?.type === 'error') {
+    return { relevant: true, tokens: null, cost: null };
+  }
+  return { relevant: false, tokens: null, cost: null };
+}
+
 function parseJsonLines(stdout) {
   const events = [];
   let complete = true;
@@ -69,6 +126,7 @@ function parseJsonLines(stdout) {
 }
 
 function eventTokenCount(adapter, event) {
+  if (adapter === 'pi') return piEventUsage(event);
   if (adapter === 'codex' && event?.type === 'turn.completed') {
     const usage = event.usage;
     if (!nonNegativeInteger(usage?.input_tokens) || !nonNegativeInteger(usage?.output_tokens)) return { relevant: true, tokens: null };
@@ -97,7 +155,7 @@ function eventTokenCount(adapter, event) {
 }
 
 export function createAdapterUsageMonitor(adapter, maxTokens) {
-  if (!['codex', 'opencode', 'claude'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
+  if (!['codex', 'opencode', 'claude', 'pi'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
   if (!Number.isSafeInteger(maxTokens) || maxTokens < 1) throw new EvoFenceError('INVALID_BUDGET', 'The remaining token budget must be a positive safe integer.');
 
   let pending = '';
@@ -152,7 +210,7 @@ export function createAdapterUsageMonitor(adapter, maxTokens) {
         tokens_total: tokensComplete ? total : null,
         tokens_complete: tokensComplete,
         token_source: eventCount
-          ? ({ codex: 'codex-cli-turn.completed', opencode: 'opencode-cli-step_finish', claude: 'claude-cli-result.modelUsage' })[adapter]
+          ? ({ codex: 'codex-cli-turn.completed', opencode: 'opencode-cli-step_finish', claude: 'claude-cli-result.modelUsage', pi: 'pi-cli-session-events' })[adapter]
           : null,
       };
     },
@@ -262,12 +320,56 @@ function claudeUsage(events, outputLimited) {
   };
 }
 
+function piUsage(events, outputLimited) {
+  let assistantCount = 0;
+  let settledCount = 0;
+  let usageCount = 0;
+  let tokenTotal = 0;
+  let tokensComplete = true;
+  let costTotal = 0;
+  let costCount = 0;
+  let costComplete = true;
+
+  for (const event of events) {
+    if (event?.type === 'agent_settled') settledCount += 1;
+    if (event?.type === 'message_end' && event.message?.role === 'assistant') assistantCount += 1;
+    const parsed = piEventUsage(event);
+    if (!parsed.relevant) continue;
+    usageCount += 1;
+    if (parsed.tokens === null) tokensComplete = false;
+    else {
+      tokenTotal += parsed.tokens;
+      if (!Number.isSafeInteger(tokenTotal)) tokensComplete = false;
+    }
+    if (parsed.cost === null) costComplete = false;
+    else {
+      costTotal += parsed.cost;
+      costCount += 1;
+      if (!Number.isFinite(costTotal)) costComplete = false;
+    }
+  }
+
+  const completeTokens = assistantCount > 0 && settledCount === 1 && usageCount > 0
+    && tokensComplete && Number.isSafeInteger(tokenTotal) && !outputLimited;
+  const completeCost = completeTokens && costComplete && costCount === usageCount && !outputLimited;
+  return {
+    tokens_total: completeTokens ? tokenTotal : null,
+    tokens_complete: completeTokens,
+    token_source: assistantCount ? 'pi-cli-session-events.usage.totalTokens' : null,
+    reported_cost: completeCost ? costTotal : null,
+    cost_complete: completeCost,
+    cost_currency: completeCost ? 'USD' : null,
+    cost_source: costCount ? 'pi-cli-session-events.usage.cost.total (model-price estimate)' : null,
+  };
+}
+
 export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {}) {
   const parsed = parseJsonLines(stdout);
   let usage;
   if (adapter === 'codex') usage = codexUsage(parsed.events, outputLimited);
   else if (adapter === 'opencode') usage = openCodeUsage(parsed.events, outputLimited);
   else if (adapter === 'claude') usage = claudeUsage(parsed.events, outputLimited);
+  else if (adapter === 'pi') usage = piUsage(parsed.events, outputLimited);
   else return incompleteUsage();
   if (parsed.complete) return usage;
   return {
@@ -311,6 +413,14 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
       throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
     }
     args = claudeCodeArgs({ model, agent });
+  } else if (name === 'pi') {
+    if (!allowUnisolatedAgent) {
+      throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
+    }
+    if (agent) {
+      throw new EvoFenceError('UNSUPPORTED_ADAPTER_OPTION', 'Pi does not expose a built-in --agent selector. Remove adapters.pi.agent from .evofence/config.yaml.');
+    }
+    args = piArgs({ model });
   } else {
     throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${name}`);
   }
