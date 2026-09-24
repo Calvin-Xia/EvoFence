@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseAdapterUsage } from '../src/lib/adapter.js';
+import { createAdapterUsageMonitor, parseAdapterUsage } from '../src/lib/adapter.js';
 
 test('Codex usage sums completed turns without double-counting breakdown fields', () => {
   const stdout = [
@@ -33,6 +33,31 @@ test('Codex usage stays unavailable when a completed turn omits usage or output 
   const malformed = parseAdapterUsage('codex', `${completeTurn}\nnot-json`);
   assert.equal(malformed.tokens_total, null);
   assert.equal(malformed.tokens_complete, false);
+});
+
+test('Codex token monitor triggers at a completed-turn boundary and reports its overshoot', () => {
+  const monitor = createAdapterUsageMonitor('codex', 100);
+  assert.equal(monitor.push(`${JSON.stringify({ type: 'turn.started' })}\n`), null);
+  assert.equal(monitor.push(`${JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 30, output_tokens: 20 } })}\n`), null);
+  assert.equal(monitor.push([
+    { type: 'turn.completed', usage: { input_tokens: 40, output_tokens: 25 } },
+    { type: 'turn.started' },
+  ].map((event) => JSON.stringify(event)).join('\n') + '\n'), 'TOKEN_BUDGET_REACHED');
+  assert.deepEqual(monitor.snapshot(), {
+    tokens_total: 115,
+    tokens_complete: true,
+    token_source: 'codex-cli-turn.completed',
+  });
+});
+
+test('usage monitor stops on malformed or missing completed-turn usage', () => {
+  const malformed = createAdapterUsageMonitor('codex', 100);
+  assert.equal(malformed.push('not-json\n'), 'TOKEN_USAGE_UNAVAILABLE');
+  assert.equal(malformed.snapshot().tokens_complete, false);
+
+  const missing = createAdapterUsageMonitor('opencode', 100);
+  assert.equal(missing.push(`${JSON.stringify({ type: 'step_finish', part: {} })}\n`), 'TOKEN_USAGE_UNAVAILABLE');
+  assert.equal(missing.snapshot().tokens_total, null);
 });
 
 test('OpenCode usage sums completed steps and preserves its reported cost without claiming a currency', () => {

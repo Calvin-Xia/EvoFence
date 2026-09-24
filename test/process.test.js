@@ -24,6 +24,17 @@ test('process runner terminates a process that exceeds its time budget', async (
   assert.notEqual(result.code, 0);
 });
 
+test('process runner stops when a streamed output callback reports a budget trigger', async () => {
+  const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("budget-hit\\n"); setTimeout(() => {}, 5000)'], {
+    timeoutMs: 5000,
+    stopGraceMs: 0,
+    onChunk: (_stream, chunk) => chunk.includes('budget-hit') ? 'TOKEN_BUDGET_REACHED' : undefined,
+  });
+  assert.equal(result.stop_reason, 'TOKEN_BUDGET_REACHED');
+  assert.equal(result.timed_out, false);
+  assert.notEqual(result.code, 0);
+});
+
 test('secret-like environment values are not passed to child processes', () => {
   const names = ['EVOFENCE_TEST_API_KEY', 'GITHUB_TOKEN', 'GH_TOKEN', 'CI_JOB_TOKEN', 'AWS_SESSION_TOKEN', 'GIT_ASKPASS', 'SSH_AUTH_SOCK'];
   const old = new Map(names.map((name) => [name, process.env[name]]));

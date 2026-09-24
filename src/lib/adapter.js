@@ -22,6 +22,10 @@ function nonNegativeNumber(value) {
   return Number.isFinite(value) && value >= 0;
 }
 
+function nonNegativeInteger(value) {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
 function parseJsonLines(stdout) {
   const events = [];
   let complete = true;
@@ -34,6 +38,91 @@ function parseJsonLines(stdout) {
     }
   }
   return { events, complete };
+}
+
+function eventTokenCount(adapter, event) {
+  if (adapter === 'codex' && event?.type === 'turn.completed') {
+    const usage = event.usage;
+    if (!nonNegativeInteger(usage?.input_tokens) || !nonNegativeInteger(usage?.output_tokens)) return { relevant: true, tokens: null };
+    const tokens = usage.input_tokens + usage.output_tokens;
+    return { relevant: true, tokens: Number.isSafeInteger(tokens) ? tokens : null };
+  }
+  if (adapter === 'opencode' && event?.type === 'step_finish') {
+    const tokens = event.part?.tokens ?? event.tokens;
+    if (nonNegativeInteger(tokens?.total)) return { relevant: true, tokens: tokens.total };
+    if (
+      nonNegativeInteger(tokens?.input)
+      && nonNegativeInteger(tokens?.output)
+      && nonNegativeInteger(tokens?.cache?.read)
+      && nonNegativeInteger(tokens?.cache?.write)
+    ) {
+      const total = tokens.input + tokens.output + tokens.cache.read + tokens.cache.write;
+      return { relevant: true, tokens: Number.isSafeInteger(total) ? total : null };
+    }
+    return { relevant: true, tokens: null };
+  }
+  return { relevant: false, tokens: null };
+}
+
+export function createAdapterUsageMonitor(adapter, maxTokens) {
+  if (!['codex', 'opencode'].includes(adapter)) throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
+  if (!Number.isSafeInteger(maxTokens) || maxTokens < 1) throw new EvoFenceError('INVALID_BUDGET', 'The remaining token budget must be a positive safe integer.');
+
+  let pending = '';
+  let eventCount = 0;
+  let total = 0;
+  let complete = true;
+  let stopReason = null;
+
+  const consumeLine = (line) => {
+    if (!line.trim()) return null;
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      complete = false;
+      return 'TOKEN_USAGE_UNAVAILABLE';
+    }
+    const parsed = eventTokenCount(adapter, event);
+    if (!parsed.relevant) return null;
+    eventCount += 1;
+    if (parsed.tokens === null) {
+      complete = false;
+      return 'TOKEN_USAGE_UNAVAILABLE';
+    }
+    total += parsed.tokens;
+    if (!Number.isSafeInteger(total)) {
+      complete = false;
+      return 'TOKEN_USAGE_UNAVAILABLE';
+    }
+    return total >= maxTokens ? 'TOKEN_BUDGET_REACHED' : null;
+  };
+
+  return {
+    push(chunk) {
+      if (stopReason) return stopReason;
+      pending += chunk;
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() ?? '';
+      for (const line of lines) {
+        stopReason = consumeLine(line);
+        if (stopReason) return stopReason;
+      }
+      if (pending.length > 1_048_576) {
+        complete = false;
+        stopReason = 'TOKEN_USAGE_UNAVAILABLE';
+      }
+      return stopReason;
+    },
+    snapshot() {
+      const tokensComplete = eventCount > 0 && complete;
+      return {
+        tokens_total: tokensComplete ? total : null,
+        tokens_complete: tokensComplete,
+        token_source: eventCount ? (adapter === 'codex' ? 'codex-cli-turn.completed' : 'opencode-cli-step_finish') : null,
+      };
+    },
+  };
 }
 
 function incompleteUsage(tokenSource = null, costSource = null) {
@@ -56,16 +145,16 @@ function codexUsage(events, outputLimited) {
   for (const event of events) {
     if (event?.type !== 'turn.completed') continue;
     turnCount += 1;
-    const usage = event.usage;
-    if (!nonNegativeNumber(usage?.input_tokens) || !nonNegativeNumber(usage?.output_tokens)) {
+    const parsed = eventTokenCount('codex', event);
+    if (parsed.tokens === null) {
       complete = false;
       continue;
     }
     // cached_input_tokens and reasoning_output_tokens are breakdowns of input/output.
-    total += usage.input_tokens + usage.output_tokens;
+    total += parsed.tokens;
   }
 
-  const tokensComplete = turnCount > 0 && complete && !outputLimited;
+  const tokensComplete = turnCount > 0 && complete && Number.isSafeInteger(total) && !outputLimited;
   return {
     tokens_total: tokensComplete ? total : null,
     tokens_complete: tokensComplete,
@@ -89,21 +178,11 @@ function openCodeUsage(events, outputLimited) {
     if (event?.type !== 'step_finish') continue;
     stepCount += 1;
     const part = event.part;
-    const tokens = part?.tokens ?? event.tokens;
-    let stepTokens = null;
-    if (nonNegativeNumber(tokens?.total)) {
-      stepTokens = tokens.total;
-    } else if (
-      nonNegativeNumber(tokens?.input)
-      && nonNegativeNumber(tokens?.output)
-      && nonNegativeNumber(tokens?.cache?.read)
-      && nonNegativeNumber(tokens?.cache?.write)
-    ) {
-      // reasoning is a breakdown of output; cache read/write are separate token buckets.
-      stepTokens = tokens.input + tokens.output + tokens.cache.read + tokens.cache.write;
-    }
+    const parsed = eventTokenCount('opencode', event);
+    const stepTokens = parsed.tokens;
     if (stepTokens === null) tokensComplete = false;
     else tokenTotal += stepTokens;
+    if (!Number.isSafeInteger(tokenTotal)) tokensComplete = false;
 
     const cost = part?.cost ?? event.cost;
     if (nonNegativeNumber(cost)) {
@@ -114,7 +193,7 @@ function openCodeUsage(events, outputLimited) {
     }
   }
 
-  const completeTokens = stepCount > 0 && tokensComplete && !outputLimited;
+  const completeTokens = stepCount > 0 && tokensComplete && Number.isSafeInteger(tokenTotal) && !outputLimited;
   const completeCost = stepCount > 0 && costComplete && costCount === stepCount && !outputLimited;
   return {
     tokens_total: completeTokens ? tokenTotal : null,
@@ -143,7 +222,7 @@ export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {
   };
 }
 
-export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, allowUnisolatedOpenCode = false }) {
+export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, allowUnisolatedOpenCode = false }) {
   let args;
   let env = {};
   if (name === 'codex') {
@@ -174,12 +253,28 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${name}`);
   }
 
-  const result = await runProcess(command, args, { cwd, timeoutMs, maxOutputBytes, env, shell: platform() === 'win32' });
-  const usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
+  const usageMonitor = maxTokensRemaining === null ? null : createAdapterUsageMonitor(name, maxTokensRemaining);
+  const result = await runProcess(command, args, {
+    cwd,
+    timeoutMs,
+    maxOutputBytes,
+    env,
+    shell: platform() === 'win32',
+    ...(usageMonitor ? {
+      onChunk: (stream, chunk) => stream === 'stdout' ? usageMonitor.push(chunk) : undefined,
+      stopGraceMs: 0,
+    } : {}),
+  });
+  let usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
+  if (result.stop_reason === 'TOKEN_BUDGET_REACHED' || result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') {
+    usage = { ...usage, ...usageMonitor.snapshot() };
+    if (result.stop_reason === 'TOKEN_USAGE_UNAVAILABLE') usage.tokens_complete = false;
+  }
   return {
     ...result,
     adapter: name,
     model: model ?? null,
+    budget_stop_reason: result.stop_reason,
     // Keep the legacy field, but never fill it with a partial or estimated count.
     estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
     reported_usage: usage,

@@ -2,7 +2,7 @@
 
 ## 0.1.2-beta.1
 
-- Expand CI coverage to Windows, record complete adapter usage, and make release metadata checks directly testable.
+- Expand CI coverage to Windows; record complete adapter usage; add a fail-closed, turn-boundary token-budget cutoff; and make release metadata checks directly testable.
 
 ## 0.1.1
 

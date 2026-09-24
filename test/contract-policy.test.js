@@ -13,6 +13,13 @@ test('the generated contract template validates and YAML duplicate keys are reje
   assert.throws(() => parseYamlText('value: 1\nvalue: 2\n', 'duplicate.yaml'), /Map keys must be unique/);
 });
 
+test('token budgets require positive safe integers', async () => {
+  const template = parseYamlText(await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8'));
+  assert.doesNotThrow(() => validateContract({ ...template, budgets: { ...template.budgets, max_tokens: 1 } }));
+  assert.throws(() => validateContract({ ...template, budgets: { ...template.budgets, max_tokens: 1.5 } }), /positive safe integer/);
+  assert.throws(() => validateContract({ ...template, budgets: { ...template.budgets, max_tokens: Number.MAX_SAFE_INTEGER + 1 } }), /positive safe integer/);
+});
+
 test('glob matching supports recursive and single-segment patterns', () => {
   assert.equal(matchesGlob('src/file.js', '**/*'), true);
   assert.equal(matchesGlob('src/nested/file.js', 'src/**/*.js'), true);

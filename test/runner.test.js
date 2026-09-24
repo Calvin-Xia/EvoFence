@@ -149,8 +149,40 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     const contractFile = path.join(root, '.evofence', 'contract.yaml');
     const savedContract = await readFile(contractFile, 'utf8');
     await writeFile(contractFile, savedContract.replace('max_tokens: null', 'max_tokens: 100'));
-    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_BUDGET' });
+    let budgetedCalls = 0;
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapterRunner: async ({ phase }) => {
+        budgetedCalls += 1;
+        assert.equal(phase, 'proposal');
+        return { code: 0, timed_out: false, stdout: '', stderr: '', reported_usage: { tokens_total: 115, tokens_complete: true } };
+      },
+    }), { code: 'RESOURCE_EXHAUSTED' });
+    assert.equal(budgetedCalls, 1);
+
+    await assert.rejects(runEvolution({
+      cwd: root,
+      goal: 'no-op',
+      adapterRunner: async () => ({ code: 0, timed_out: false, stdout: '', stderr: '', reported_usage: { tokens_total: null, tokens_complete: false } }),
+    }), { code: 'TOKEN_USAGE_UNAVAILABLE' });
+    const budgetLedger = new Ledger(ledgerPath(root));
+    try {
+      const events = budgetLedger.events();
+      const exhausted = events.findLast((item) => item.event_type === 'budget.exhausted');
+      const exhaustedRun = events.find((item) => item.event_type === 'run.failed' && item.run_id === exhausted.run_id);
+      const unavailable = events.findLast((item) => item.event_type === 'budget.usage_unavailable');
+      assert.equal(exhausted.payload.observed_total, 115);
+      assert.equal(exhaustedRun.payload.token_usage_total, 115);
+      assert.equal(unavailable.payload.reason, 'usage_incomplete');
+      assert.equal(budgetLedger.verify().valid, true);
+    } finally { budgetLedger.close(); }
     await writeFile(contractFile, savedContract);
+
+    await writeFile(contractFile, savedContract.replace('max_usd: null', 'max_usd: 1'));
+    await assert.rejects(runEvolution({ cwd: root, goal: 'no-op', adapterRunner: async () => { throw new Error('should not launch'); } }), { code: 'UNSUPPORTED_COST_BUDGET' });
+    await writeFile(contractFile, savedContract);
+
     const holdoutFile = path.join(root, '.evofence', 'private', 'holdout.yaml');
     const savedHoldout = await readFile(holdoutFile, 'utf8');
     await writeFile(holdoutFile, "regressions:\n  - id: hidden-1\n    command: \"node -e 'process.exit(0)'\"\n");
