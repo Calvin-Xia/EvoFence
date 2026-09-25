@@ -79,7 +79,7 @@ evofence run --adapter codex --goal goal.md --iterations 20
 
 ## 安全边界
 
-Codex 使用 `workspace-write` 沙箱，该沙箱限制写入，但不限制读取主机文件系统（参见 [Codex 沙箱策略](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)）。OpenCode、Claude Code CLI 和 Pi 都不会由 EvoFence 放进操作系统沙箱。Claude Code 的非交互权限参数不能限制进程访问主机文件；其 headless 模式还可能运行 hooks、MCP servers 或 plugins（参见 [Claude Code 非交互运行](https://code.claude.com/docs/en/headless)）。Pi 使用 JSONL 模式，并关闭持久会话、项目配置批准、扩展、skills、提示模板、主题和 `AGENTS.md`/`CLAUDE.md` 发现（参见 [Pi CLI](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/cli.md)）；这些参数减少项目资源加载，但不能限制 shell 对主机文件的访问（参见 [Pi 安全说明](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/security.md)）。OpenCode、Claude Code 和 Pi 需要显式传入 `--allow-unisolated-agent`：
+Codex 使用 `workspace-write` 沙箱，该沙箱限制写入，但不限制读取主机文件系统（参见 [Codex 沙箱策略](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)）。OpenCode、Claude Code CLI 和 Pi 都不会由 EvoFence 放进操作系统沙箱。Claude Code 的非交互权限参数不能限制进程访问主机文件；其 headless 模式还可能运行 hooks、MCP servers 或 plugins（参见 [Claude Code 非交互运行](https://code.claude.com/docs/en/headless)）。Pi 使用 JSONL 模式，并关闭持久会话、项目配置批准、自动发现的扩展、skills、提示模板、主题和 `AGENTS.md`/`CLAUDE.md` 发现；CLI 适配器只显式加载 EvoFence 自带的受限工具策略扩展（参见 [Pi CLI](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/cli.md)）。这些参数减少项目资源加载，但不能限制 shell 对主机文件的访问（参见 [Pi 安全说明](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/security.md)）。OpenCode、Claude Code 和 Pi 需要显式传入 `--allow-unisolated-agent`：
 
 ```sh
 evofence run --adapter opencode --allow-unisolated-agent --goal goal.md
@@ -114,7 +114,7 @@ evofence rollback <generation-id>
 - **Codex CLI 与 Codex 桌面端**：按 [`integrations/codex/README.md`](integrations/codex/README.md) 添加仓库 marketplace。技能名为 `$evofence:inspect-ledger` 和 `$evofence:run-evolution`。
 - **Claude Code**：按 [`integrations/claude-code/README.md`](integrations/claude-code/README.md) 添加 marketplace；命令为 `/evofence:inspect-ledger` 与 `/evofence:run-evolution`。
 - **OpenCode**：[`integrations/opencode/README.md`](integrations/opencode/README.md) 提供项目级只读工具。
-- **Pi**：[`integrations/pi/README.md`](integrations/pi/README.md) 提供只读扩展。
+- **Pi**：[`integrations/pi/README.md`](integrations/pi/README.md) 提供只读 ledger 扩展；CLI 适配器的 `evofence run --adapter pi` 还会加载阶段化工具策略：提案阶段仅选择当前已启用的只读工具，实施阶段保留当前工具集并根据调用反馈调整顺序。详见 [`docs/pi-tool-strategy.md`](docs/pi-tool-strategy.md)。
 
 `inspect` 只验证 ledger 并读取脱敏摘要。`run` 必须由用户明确调用并提供已有目标文件；插件不会自动放宽 `--allow-unisolated-agent` 或 `--allow-readable-holdout` 等边界。OpenCode、Pi 和 Cordis 的只读插件入口与 `evofence run --adapter ...` CLI 适配器是两种独立集成。
 

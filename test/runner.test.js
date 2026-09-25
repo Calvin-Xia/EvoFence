@@ -59,8 +59,9 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
     const resultRun = await runEvolution({
       cwd: root,
       goal: 'Increase the score by changing feature.txt.',
-      adapter: 'codex',
+      adapter: 'pi',
       iterations: 20,
+      allowUnisolatedAgent: true,
       onProgress: () => {},
       adapterRunner: async ({ worktree, phase }) => {
         const output = path.join(worktree, '.evofence-out');
@@ -87,6 +88,12 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
         }
         return {
           code: 0, timed_out: false, stdout: '', stderr: '', estimated_tokens: 42,
+          tool_strategy: {
+            schema_version: 1, status: 'active', phase, initial_tool_order: ['read'], final_tool_order: ['read'],
+            tool_order_updates: 0, tool_calls: 1, tool_results: 1, tool_errors: 0,
+            repeated_call_blocks: 0, controller_errors: 0, telemetry_truncated: false, agent_finished: true,
+            tools: [{ name: 'read', calls: 1, results: 1, errors: 0 }],
+          },
           reported_usage: { tokens_total: 42, tokens_complete: true, token_source: 'fixture', reported_cost: null, cost_complete: false, cost_currency: null, cost_source: null },
         };
       },
@@ -103,6 +110,8 @@ test('one evolution is evaluated, committed, pinned, and can be rolled back', as
       assert.equal(ledger.generations().length, 21);
       const firstAdapterEvent = ledger.events().find((item) => item.event_type === 'adapter.finished');
       assert.equal(firstAdapterEvent.payload.reported_usage.tokens_total, 42);
+      assert.equal(firstAdapterEvent.payload.tool_strategy.status, 'active');
+      assert.deepEqual(firstAdapterEvent.payload.tool_strategy.initial_tool_order, ['read']);
       const baseline = ledger.generations()[0];
       ledger.rollback(baseline.generation_id);
       await setActiveGenerationRef(root, baseline.sha);

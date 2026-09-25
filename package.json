@@ -16,6 +16,7 @@
   "files": [
     "src/",
     "templates/",
+    "docs/pi-tool-strategy.md",
     "README.md",
     "README.en.md",
     "LICENSE",

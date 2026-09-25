@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, runAgentAdapter } from '../src/lib/adapter.js';
+import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, piArgs, runAgentAdapter } from '../src/lib/adapter.js';
+
+test('Pi strategy loads one explicit EvoFence extension while keeping extension discovery disabled', () => {
+  const extensionPath = 'C:/evofence/src/lib/pi-tool-strategy-extension.js';
+  const args = piArgs({ model: 'xiaomi/mimo-v2.6-pro', extensionPath });
+
+  assert.equal(args.includes('--no-extensions'), true);
+  assert.deepEqual(args.slice(args.indexOf('--extension'), args.indexOf('--extension') + 2), ['--extension', extensionPath]);
+  assert.equal(args.at(-1), 'Read and follow .evofence-task.md. Complete the requested EvoFence phase and stop.');
+  assert.equal(args.filter((value) => value === '--extension').length, 1);
+});
 
 test('Codex usage sums completed turns without double-counting breakdown fields', () => {
   const stdout = [
