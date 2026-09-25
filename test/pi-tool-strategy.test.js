@@ -102,6 +102,32 @@ test('tool errors demote that tool, add recovery feedback, and block an identica
   });
 });
 
+test('successful recovery restores the phase-start order of unprioritized tools', async () => {
+  await withTelemetry(async ({ logPath }) => {
+    const originalTools = ['custom_a', 'custom_b', 'bash', 'read'];
+    const { pi, handlers, state } = fakePi(originalTools);
+    installPiToolStrategy(pi, { phase: 'implementation', logPath });
+    await handlers.get('before_agent_start')({ systemPromptOptions: { sections: {} } });
+    assert.deepEqual(state.activeTools, ['read', 'bash', 'custom_a', 'custom_b']);
+
+    await handlers.get('tool_result')({
+      toolName: 'custom_a',
+      input: { value: 'bad' },
+      content: [{ type: 'text', text: 'failed' }],
+      isError: true,
+    });
+    assert.deepEqual(state.activeTools, ['read', 'bash', 'custom_b', 'custom_a']);
+
+    await handlers.get('tool_result')({
+      toolName: 'custom_b',
+      input: { value: 'good' },
+      content: [{ type: 'text', text: 'succeeded' }],
+      isError: false,
+    });
+    assert.deepEqual(state.activeTools, ['read', 'bash', 'custom_a', 'custom_b']);
+  });
+});
+
 test('Pi proposal extension activates only read-only tools from Pi’s current tool set', async () => {
   await withTelemetry(async ({ logPath }) => {
     const originalTools = ['bash', 'write', 'edit', 'read', 'grep', 'find', 'ls'];

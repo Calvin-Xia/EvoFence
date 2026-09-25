@@ -68,6 +68,7 @@ export function createPiToolStrategy(phase) {
   const failedSignatures = new Set();
   const nudgedSignatures = new Set();
   const failedTools = new Set();
+  const baselineIndexes = new Map();
   const toolCounts = new Map();
   let toolCallCount = 0;
   let toolResultCount = 0;
@@ -84,6 +85,11 @@ export function createPiToolStrategy(phase) {
       if (new Set(activeTools).size !== activeTools.length) {
         throw new TypeError('Pi returned duplicate active tools.');
       }
+      // The first call happens at phase start with Pi's full active set. Keep those
+      // indexes stable so recovery restores the original order of unprioritized tools.
+      for (const name of activeTools) {
+        if (!baselineIndexes.has(name)) baselineIndexes.set(name, baselineIndexes.size);
+      }
       const allowedTools = PHASE_ALLOWED_TOOLS[stage];
       const selectedTools = allowedTools
         ? activeTools.filter((name) => allowedTools.has(name))
@@ -91,7 +97,6 @@ export function createPiToolStrategy(phase) {
       if (selectedTools.length === 0 && activeTools.length > 0) {
         throw new Error(`No currently active ${stage} tools are allowed by the strategy.`);
       }
-      const originalIndexes = new Map(activeTools.map((name, index) => [name, index]));
       return selectedTools.sort((left, right) => {
         const leftFailed = failedTools.has(left) ? 1 : 0;
         const rightFailed = failedTools.has(right) ? 1 : 0;
@@ -99,7 +104,7 @@ export function createPiToolStrategy(phase) {
         const leftPriority = priorities.get(left) ?? Number.MAX_SAFE_INTEGER;
         const rightPriority = priorities.get(right) ?? Number.MAX_SAFE_INTEGER;
         if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-        return originalIndexes.get(left) - originalIndexes.get(right);
+        return baselineIndexes.get(left) - baselineIndexes.get(right);
       });
     },
     onToolCall(event) {
