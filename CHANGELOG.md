@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `evofence report [file] [--json]`, an evolution report exporter backed by `src/lib/report.js`: it summarizes runs, accepted generations, objective delta, budget observations, and ledger integrity as Markdown or JSON.
+
 ## 0.2.1
 
 - Add a Pi CLI tool strategy that selects active read-only tools for proposal phases, orders tools by phase, and adapts within each phase to tool-call feedback without adding tools or permissions.
