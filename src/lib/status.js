@@ -42,7 +42,7 @@ export async function buildStatus({ root, ledger }) {
 export function formatStatus(status) {
   const lines = [`EvoFence status: ${status.root}`];
   lines.push(status.active_generation
-    ? `Active generation: ${status.active_generation.generation_id}`
+    ? `Active generation: ${status.active_generation.generation_id} (${status.active_generation.sha})`
     : 'Active generation: none');
   lines.push(`Ledger integrity: ${status.integrity?.valid ? 'ok' : 'FAILED'}`);
   const totals = status.totals ?? {};
