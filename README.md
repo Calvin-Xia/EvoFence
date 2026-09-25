@@ -94,6 +94,8 @@ EvoFence 会从子进程环境中过滤常见的凭证变量名，包括 `*_TOKE
 ## 检查、导出与回滚
 
 ```sh
+evofence status
+evofence status --json
 evofence proposal inspect <run-id>-i1
 evofence gate <run-id>-i1
 evofence ledger show <run-id>
@@ -102,6 +104,8 @@ evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
+
+`evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { initializeRepository } from './lib/init.js';
 import { loadContract, loadPrivateHoldout, parseYamlText } from './lib/contract.js';
 import { Ledger, ledgerPath } from './lib/ledger.js';
+import { buildStatus, formatStatus } from './lib/status.js';
 import { collectEvidence } from './lib/evidence.js';
 import { runEvolution } from './lib/runner.js';
 import { repositoryRoot, setActiveGenerationRef } from './lib/git.js';
@@ -28,6 +29,7 @@ Usage:
   evofence rollback <generation-id>
   evofence experiment run <experiment.yaml>
   evofence experiment export [file]
+  evofence status [--json]
 
 Options:
   --allow-unisolated-agent  Required for OpenCode, Claude Code, and Pi; CLI controls are not an OS sandbox.
@@ -173,6 +175,22 @@ async function commandLedger(args) {
   } finally { ledger.close(); }
 }
 
+async function commandStatus(args) {
+  const { options, positional } = parseOptions(args, ['json']);
+  if (positional.length || Object.keys(options).some((name) => name !== 'json')) {
+    throw new EvoFenceError('USAGE', 'Use: evofence status [--json]');
+  }
+  const root = await repositoryRoot(process.cwd());
+  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+  try {
+    const status = await buildStatus({ root, ledger });
+    if (options.json) printJson(status);
+    else process.stdout.write(`${formatStatus(status)}\n`);
+  } finally {
+    ledger.close();
+  }
+}
+
 async function commandRollback(args) {
   const [generationId, ...rest] = args;
   if (!generationId || rest.length) throw new EvoFenceError('USAGE', 'Use: evofence rollback <generation-id>');
@@ -229,6 +247,7 @@ async function main() {
   else if (command === 'ledger') await commandLedger(args);
   else if (command === 'rollback') await commandRollback(args);
   else if (command === 'experiment') await commandExperiment(args);
+  else if (command === 'status') await commandStatus(args);
   else throw new EvoFenceError('USAGE', `Unknown command: ${command}\nRun evofence --help for usage.`);
 }
 

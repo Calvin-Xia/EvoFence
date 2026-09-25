@@ -96,6 +96,8 @@ EvoFence filters common credential-shaped environment names, including `*_TOKEN`
 ## Inspect, export, and roll back
 
 ```sh
+evofence status
+evofence status --json
 evofence proposal inspect <run-id>-i1
 evofence gate <run-id>-i1
 evofence ledger show <run-id>
@@ -104,6 +106,8 @@ evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
+
+`evofence status` prints a one-screen operational overview: the active generation, ledger integrity, cumulative totals (runs, generations, accepted and rejected candidates), and the five most recent run summaries. Pass `--json` for the status object as pretty JSON. The status never embeds evidence command output content.
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
 
