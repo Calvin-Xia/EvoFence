@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `evofence status [--json]`, a one-screen operational overview backed by `src/lib/status.js`: active generation with sha, ledger integrity, four cumulative totals, and the five most recent runs.
+
 ## 0.2.1
 
 - Add a Pi CLI tool strategy that selects active read-only tools for proposal phases, orders tools by phase, and adapts within each phase to tool-call feedback without adding tools or permissions.
