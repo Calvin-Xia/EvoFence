@@ -175,6 +175,6 @@ The research source document `docs/deep-research-report.md` is not included in t
 
 ## Publishing
 
-Before the first release, add a GitHub Actions trusted publisher in the npm package `evofence` under **Settings → Trusted Publishers**. Set the owner to `Calvin-Xia`, repository to `EvoFence`, workflow file to `publish.yml`, and leave the environment unset. No `NPM_TOKEN` is needed; the workflow authenticates through GitHub OIDC.
+The npm package `evofence` uses GitHub Actions Trusted Publishing (OIDC). Its trusted publisher is configured for owner `Calvin-Xia`, repository `EvoFence`, workflow file `publish.yml`, with no GitHub Environment. No `NPM_TOKEN` is needed.
 
-For each release, update the version in `package.json` and `CHANGELOG.md`, merge the change to `main`, then create a GitHub Release with the matching `v<version>` tag. Stable versions such as `v0.2.0` publish to npm's `latest` tag. SemVer prereleases such as `v0.2.0-beta.1` must be marked as prereleases in GitHub and publish to npm's `beta` tag. The workflow checks that the tag, package version, and prerelease flag agree, then runs the test suite before publishing.
+For each release, update the versions in `package.json` and `package-lock.json` and update `CHANGELOG.md`. After the change is on `main`, create a GitHub Release with the matching `v<version>` tag. Stable versions such as `v0.2.1` publish to npm's `latest` tag. SemVer prereleases such as `v0.2.1-beta.1` must be marked as prereleases in GitHub and publish to npm's `beta` tag. `.github/workflows/publish.yml` verifies that the tag, package version, and prerelease flag agree, then runs the test suite before publishing.
