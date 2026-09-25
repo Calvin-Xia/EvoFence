@@ -381,7 +381,7 @@ test('CLI status --json prints the documented status as parseable JSON', async (
   const status = JSON.parse(result.stdout);
   assert.equal(typeof status.root, 'string');
   assert.equal(status.root.includes('\\'), false, 'root must use forward slashes in JSON output');
-  const canonicalRoot = realpathSync(fixture.root).replaceAll('\\', '/');
+  const canonicalRoot = realpathSync.native(fixture.root).replaceAll('\\', '/');
   assert.equal(status.root.toLowerCase(), canonicalRoot.toLowerCase());
   assert.equal(status.active_generation.generation_id, GEN3_ID);
   assert.equal(status.active_generation.sha, GEN3_SHA);
@@ -398,7 +398,7 @@ test('CLI status prints the formatted overview to stdout', async () => {
   const result = spawnCli(['status']);
 
   assert.equal(result.status, 0, result.stderr);
-  const canonicalRoot = realpathSync(fixture.root).replaceAll('\\', '/');
+  const canonicalRoot = realpathSync.native(fixture.root).replaceAll('\\', '/');
   assert.ok(result.stdout.includes(canonicalRoot), 'stdout must contain the root path');
   assert.ok(result.stdout.includes('Active generation:'), 'stdout must contain the active generation line');
   assert.ok(result.stdout.includes(GEN3_ID), 'stdout must contain the active generation id');
