@@ -1,6 +1,11 @@
+import { lstat, readFile, writeFile } from 'node:fs/promises';
 import { runProcess } from './process.js';
 import { EvoFenceError } from './errors.js';
 import { platform } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
+import { summarizePiToolStrategyTelemetry, unavailablePiToolStrategy } from './pi-tool-strategy.js';
 
 const TASK_POINTER = 'Read and follow .evofence-task.md. Complete the requested EvoFence phase and stop.';
 
@@ -67,7 +72,7 @@ export function claudeCodeArgs({ model, agent, maxBudgetUsd = null }) {
   return args;
 }
 
-function piArgs({ model }) {
+export function piArgs({ model, extensionPath = null }) {
   const args = [
     '--mode', 'json',
     '--no-session',
@@ -78,9 +83,36 @@ function piArgs({ model }) {
     '--no-themes',
     '--no-context-files',
   ];
+  if (extensionPath) args.push('--extension', extensionPath);
   if (model) args.push('--model', model);
   args.push(TASK_POINTER);
   return args;
+}
+
+async function createPiToolStrategyLog(cwd, phase) {
+  const stage = phase === 'proposal' ? 'proposal' : 'implementation';
+  const logPath = path.join(cwd, '.evofence-out', 'pi-tool-strategy-' + stage + '-' + randomUUID() + '.ndjson');
+  try {
+    await writeFile(logPath, '', { flag: 'wx', mode: 0o600 });
+    return { stage, logPath };
+  } catch {
+    return { stage, logPath: null };
+  }
+}
+
+async function readPiToolStrategySummary(logPath, phase) {
+  if (!logPath) return unavailablePiToolStrategy(phase);
+  try {
+    const info = await lstat(logPath);
+    if (!info.isFile() || info.isSymbolicLink()) return unavailablePiToolStrategy(phase);
+    if (info.size > 256 * 1024) {
+      return { ...unavailablePiToolStrategy(phase), telemetry_truncated: true };
+    }
+    const content = await readFile(logPath, 'utf8');
+    return summarizePiToolStrategyTelemetry(content, { phase });
+  } catch {
+    return unavailablePiToolStrategy(phase);
+  }
 }
 
 function nonNegativeNumber(value) {
@@ -439,9 +471,10 @@ export function parseAdapterUsage(adapter, stdout, { outputLimited = false } = {
   };
 }
 
-export async function runAgentAdapter({ name, command, model, agent, cwd, timeoutMs, maxOutputBytes, maxTokensRemaining = null, maxUsdRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
+export async function runAgentAdapter({ name, command, model, agent, cwd, phase = 'implementation', timeoutMs, maxOutputBytes, maxTokensRemaining = null, maxUsdRemaining = null, allowUnisolatedOpenCode = false, allowUnisolatedAgent = allowUnisolatedOpenCode }) {
   let args;
   let env = {};
+  let piToolStrategyLog = null;
   if (name === 'codex') {
     if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     args = codexArgs({ cwd, model });
@@ -481,7 +514,18 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     if (agent) {
       throw new EvoFenceError('UNSUPPORTED_ADAPTER_OPTION', 'Pi does not expose a built-in --agent selector. Remove adapters.pi.agent from .evofence/config.yaml.');
     }
-    args = piArgs({ model });
+    const strategy = await createPiToolStrategyLog(cwd, phase);
+    piToolStrategyLog = strategy.logPath;
+    if (piToolStrategyLog) {
+      const extensionPath = fileURLToPath(new URL('./pi-tool-strategy-extension.js', import.meta.url));
+      args = piArgs({ model, extensionPath });
+      env = {
+        EVOFENCE_PI_TOOL_STRATEGY_LOG: piToolStrategyLog,
+        EVOFENCE_PI_TOOL_STRATEGY_PHASE: strategy.stage,
+      };
+    } else {
+      args = piArgs({ model });
+    }
   } else {
     throw new EvoFenceError('UNKNOWN_ADAPTER', `Unsupported adapter: ${name}`);
   }
@@ -503,6 +547,9 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
   let usage = parseAdapterUsage(name, result.stdout, { outputLimited: result.output_limited });
   const claudeBudgetReached = name === 'claude'
     && parseJsonLines(result.stdout).events.some((event) => event?.type === 'result' && event.subtype === 'error_max_budget_usd');
+  const toolStrategy = name === 'pi'
+    ? await readPiToolStrategySummary(piToolStrategyLog, phase)
+    : null;
   if (budgetStopReason === 'TOKEN_BUDGET_REACHED' || budgetStopReason === 'TOKEN_USAGE_UNAVAILABLE') {
     usage = { ...usage, ...usageMonitor.snapshot() };
   }
@@ -519,6 +566,7 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, timeou
     // Keep the legacy field, but never fill it with a partial or estimated count.
     estimated_tokens: usage.tokens_complete ? usage.tokens_total : null,
     reported_usage: usage,
+    ...(name === 'pi' ? { tool_strategy: toolStrategy } : {}),
   };
 }
 

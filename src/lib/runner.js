@@ -131,6 +131,7 @@ function adapterEvent(result, adapter, phase, iteration) {
       ? result.reported_usage.reported_cost
       : null,
     reported_usage: result.reported_usage ?? null,
+    ...(adapter === 'pi' ? { tool_strategy: result.tool_strategy ?? null } : {}),
     stdout_sha256: sha256(result.stdout ?? ''),
     stderr_sha256: sha256(result.stderr ?? ''),
   };
@@ -151,13 +152,14 @@ function helperPath(filename) {
   return filename === '.evofence-task.md' || filename === '.evofence-out' || filename.startsWith('.evofence-out/');
 }
 
-async function runAdapter({ adapter, config, worktree, timeoutMs, maxTokensRemaining, maxUsdRemaining, allowUnisolatedAgent }) {
+async function runAdapter({ adapter, config, worktree, phase, timeoutMs, maxTokensRemaining, maxUsdRemaining, allowUnisolatedAgent }) {
   const entry = {
     name: adapter,
     command: adapterCommand(config, adapter),
     model: adapterModel(config, adapter),
     agent: adapterAgent(config, adapter),
     cwd: worktree,
+    phase,
     timeoutMs,
     maxOutputBytes: 20_000_000,
     maxTokensRemaining,
