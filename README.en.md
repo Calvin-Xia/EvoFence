@@ -103,9 +103,17 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence diff <generation-id> [--json]
 ```
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
+
+`evofence diff <generation-id>` prints the audit view for a generation: generation id, short sha and objective delta, the changed-path list, one evidence line per check (`id kind result`), then the unified diff for `parent_sha..sha` (capped at 200 KiB; `diff_truncated` is true when the cap cuts it). With `--json` the same report is printed as pretty JSON. `objective` and `evidence` appear only when the ledger links them to the generation, and evidence carries check ids, kinds and results only — never command text or captured output.
+
+```sh
+evofence diff g-run-20260101120000-abcd1234-i01
+evofence diff g-run-20260101120000-abcd1234-i01 --json
+```
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
 

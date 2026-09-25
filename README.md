@@ -101,9 +101,17 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence diff <generation-id> [--json]
 ```
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
+
+`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true）。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现，证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
+
+```sh
+evofence diff g-run-20260101120000-abcd1234-i01
+evofence diff g-run-20260101120000-abcd1234-i01 --json
+```
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
 

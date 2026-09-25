@@ -9,6 +9,7 @@ import { Ledger, ledgerPath } from './lib/ledger.js';
 import { collectEvidence } from './lib/evidence.js';
 import { runEvolution } from './lib/runner.js';
 import { repositoryRoot, setActiveGenerationRef } from './lib/git.js';
+import { generationDiff, formatGenerationDiff } from './lib/audit.js';
 import { EvoFenceError } from './lib/errors.js';
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -26,6 +27,7 @@ Usage:
   evofence ledger recent [limit]
   evofence ledger export [file]
   evofence rollback <generation-id>
+  evofence diff <generation-id> [--json]
   evofence experiment run <experiment.yaml>
   evofence experiment export [file]
 
@@ -187,6 +189,23 @@ async function commandRollback(args) {
   } finally { ledger.close(); }
 }
 
+async function commandDiff(args) {
+  const json = args.includes('--json');
+  const unexpected = args.filter((arg) => arg.startsWith('--') && arg !== '--json');
+  const positional = args.filter((arg) => !arg.startsWith('--'));
+  if (unexpected.length || positional.length !== 1) throw new EvoFenceError('USAGE', 'Use: evofence diff <generation-id> [--json]');
+  const root = await repositoryRoot(process.cwd());
+  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+  try {
+    const report = await generationDiff({ root, ledger, generationId: positional[0] });
+    if (json) printJson(report);
+    else {
+      const text = formatGenerationDiff(report);
+      process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+    }
+  } finally { ledger.close(); }
+}
+
 async function commandExperiment(args) {
   const [action, value, ...rest] = args;
   if (rest.length) throw new EvoFenceError('USAGE', 'Unexpected experiment arguments.');
@@ -228,6 +247,7 @@ async function main() {
   else if (command === 'gate') await commandGate(args);
   else if (command === 'ledger') await commandLedger(args);
   else if (command === 'rollback') await commandRollback(args);
+  else if (command === 'diff') await commandDiff(args);
   else if (command === 'experiment') await commandExperiment(args);
   else throw new EvoFenceError('USAGE', `Unknown command: ${command}\nRun evofence --help for usage.`);
 }
