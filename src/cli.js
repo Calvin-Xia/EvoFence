@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import { collectEvidence } from './lib/evidence.js';
 import { runEvolution } from './lib/runner.js';
 import { repositoryRoot, setActiveGenerationRef } from './lib/git.js';
 import { EvoFenceError } from './lib/errors.js';
+import { buildEvolutionReport, formatEvolutionReport } from './lib/report.js';
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -28,6 +29,7 @@ Usage:
   evofence rollback <generation-id>
   evofence experiment run <experiment.yaml>
   evofence experiment export [file]
+  evofence report [file] [--json]
 
 Options:
   --allow-unisolated-agent  Required for OpenCode, Claude Code, and Pi; CLI controls are not an OS sandbox.
@@ -187,6 +189,26 @@ async function commandRollback(args) {
   } finally { ledger.close(); }
 }
 
+async function commandReport(args) {
+  if (args.some((arg) => arg.startsWith('--') && arg !== '--json')) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
+  const { options, positional } = parseOptions(args, ['json']);
+  if (positional.length > 1) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
+  const root = await repositoryRoot(process.cwd());
+  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+  try {
+    const report = await buildEvolutionReport({ root, ledger });
+    const content = options.json ? `${JSON.stringify(report, null, 2)}\n` : formatEvolutionReport(report);
+    if (!positional.length) {
+      process.stdout.write(content);
+      return;
+    }
+    const output = path.resolve(process.cwd(), positional[0]);
+    await mkdir(path.dirname(output), { recursive: true });
+    await writeFile(output, content, { mode: 0o600 });
+    process.stdout.write(`Report written to ${path.relative(root, output).replaceAll('\\', '/')}\n`);
+  } finally { ledger.close(); }
+}
+
 async function commandExperiment(args) {
   const [action, value, ...rest] = args;
   if (rest.length) throw new EvoFenceError('USAGE', 'Unexpected experiment arguments.');
@@ -229,6 +251,7 @@ async function main() {
   else if (command === 'ledger') await commandLedger(args);
   else if (command === 'rollback') await commandRollback(args);
   else if (command === 'experiment') await commandExperiment(args);
+  else if (command === 'report') await commandReport(args);
   else throw new EvoFenceError('USAGE', `Unknown command: ${command}\nRun evofence --help for usage.`);
 }
 

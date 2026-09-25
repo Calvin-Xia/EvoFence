@@ -103,11 +103,21 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence report evolution-report.md
+evofence report evolution-report.json --json
 ```
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
+
+`evofence report [file] [--json]` summarizes the ledger into an evolution report: runs, accepted generations, objective score movement, observed token/USD usage, and ledger integrity. It prints Markdown by default, or machine-readable JSON with `--json`; when given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root. For example:
+
+```sh
+evofence report
+evofence report reports/evolution.md
+evofence report reports/evolution.json --json
+```
 
 ### Agent plugins and extensions
 

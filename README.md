@@ -101,11 +101,21 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence report evolution-report.md
+evofence report evolution-report.json --json
 ```
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
+
+`evofence report [file] [--json]` 会把 ledger 汇总为演化报告：运行记录、已接受的新一代、目标得分变化、已观测的 token/USD 用量和 ledger 完整性。默认输出 Markdown（`--json` 输出机器可读的 JSON，同时适合写入文件）；传入文件路径时会写入该文件并自动创建父目录，然后打印相对于仓库根目录的路径。例如：
+
+```sh
+evofence report
+evofence report reports/evolution.md
+evofence report reports/evolution.json --json
+```
 
 ### Agent 插件与扩展
 
