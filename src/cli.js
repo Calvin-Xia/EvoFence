@@ -206,7 +206,7 @@ async function commandReport(args) {
     const output = path.resolve(process.cwd(), positional[0]);
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, content, { mode: 0o600 });
-    process.stdout.write(`Report written to ${path.relative(realpathSync(root), realpathSync(output)).replaceAll('\\', '/')}\n`);
+    process.stdout.write(`Report written to ${path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/')}\n`);
   } finally { ledger.close(); }
 }
 
