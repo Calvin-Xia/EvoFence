@@ -45,12 +45,21 @@ function evidenceEventFor(events, accepted) {
     && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
 }
 
-function auditObjective(accepted, proposalEvent) {
+function runStartedEventFor(events, runId) {
+  if (typeof runId !== 'string' || !runId) return null;
+  return latestEvent(events, (event) => event.event_type === 'run.started' && event.run_id === runId);
+}
+
+function auditObjective(accepted, proposalEvent, runStartedEvent) {
   if (!accepted) return null;
+  const contractObjective = runStartedEvent?.payload?.contract_snapshot?.objective;
+  if (!contractObjective || typeof contractObjective !== 'object') return null;
   const expectedEffect = proposalEvent?.payload?.proposal?.expected_effect;
   return {
-    metric: typeof expectedEffect?.primary_metric === 'string' ? expectedEffect.primary_metric : null,
-    direction: typeof expectedEffect?.direction === 'string' ? expectedEffect.direction : null,
+    metric: typeof contractObjective.name === 'string'
+      ? contractObjective.name
+      : (typeof expectedEffect?.primary_metric === 'string' ? expectedEffect.primary_metric : null),
+    direction: typeof contractObjective.direction === 'string' ? contractObjective.direction : null,
     score: accepted.payload?.objective_score ?? null,
     improvement: accepted.payload?.improvement ?? null,
   };
@@ -78,6 +87,8 @@ export async function generationDiff({ root, ledger, generationId }) {
   const accepted = acceptedEvent(events, generationId);
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
+  const runStartedEvent = runStartedEventFor(events, generation.run_id)
+    ?? runStartedEventFor(events, accepted?.run_id ?? null);
 
   const [changedPaths, diffText, recordedDiffHash] = await Promise.all([
     changedPathsBetween(root, generation.parent_sha, generation.sha),
@@ -97,7 +108,7 @@ export async function generationDiff({ root, ledger, generationId }) {
     changed_paths: [...changedPaths].sort(),
     diff,
     diff_truncated,
-    objective: auditObjective(accepted, proposalEvent),
+    objective: auditObjective(accepted, proposalEvent, runStartedEvent),
     evidence: auditEvidence(evidenceEvent),
     proposal_id: proposalEvent?.payload?.proposal_id ?? null,
     accepted_at: generation.created_at ?? null,
