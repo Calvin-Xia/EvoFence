@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `evofence diff <generation-id> [--json]`, a generation audit view backed by `src/lib/audit.js`: it reports a generation's changed paths, unified diff (capped at 200 KiB), objective delta, and the gate evidence that accepted it, without embedding evidence output content.
+
 ## 0.2.1
 
 - Add a Pi CLI tool strategy that selects active read-only tools for proposal phases, orders tools by phase, and adapts within each phase to tool-call feedback without adding tools or permissions.
