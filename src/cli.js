@@ -185,8 +185,9 @@ async function pathExists(target) {
   }
 }
 
-// A missing events table means the ledger file carries no schema yet (for example a
-// zero-byte file left behind by an interrupted creation): treat it as an empty ledger.
+// A missing events table means the ledger carries no schema yet (for example a zero-byte
+// file left by an interrupted creation) or a damaged partial schema. Only a database with
+// no EvoFence schema at all is an empty ledger; a partial schema stays LEDGER_UNAVAILABLE.
 function isMissingEventsSchema(error) {
   return error?.code === 'SQLITE_ERROR' && /no such table: ['"]?events['"]?$/.test(String(error.message));
 }
@@ -211,7 +212,7 @@ async function commandStatus(args) {
     try {
       status = await buildStatus({ root, ledger });
     } catch (error) {
-      if (!isMissingEventsSchema(error)) {
+      if (!isMissingEventsSchema(error) || ledger.schemaTables().length > 0) {
         throw new EvoFenceError('LEDGER_UNAVAILABLE', `Cannot read the ledger at ${file}: ${error.message}`);
       }
       status = emptyStatus(root);

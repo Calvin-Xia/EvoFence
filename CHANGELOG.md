@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Add `evofence status [--json]`, a one-screen operational overview backed by `src/lib/status.js`: active generation with sha, ledger integrity, four cumulative totals, and the five most recent runs.
-- Create the ledger database during `evofence init`, and make `evofence status` tolerate degenerate ledgers: missing, zero-byte, or schema-less ledger files render as the documented empty state, malformed or non-object payloads keep the FAILED integrity presentation instead of crashing payload aggregation, and the command exits 1 when integrity fails or the ledger cannot be read.
+- Create the ledger database during `evofence init`, and make `evofence status` tolerate degenerate ledgers: missing, zero-byte, or schema-less ledger files render as the documented empty state while a partially missing schema is reported as an unreadable ledger, malformed or non-object payloads keep the FAILED integrity presentation instead of crashing payload aggregation, and the command exits 1 when integrity fails or the ledger cannot be read.
 
 ## 0.2.1
 

@@ -652,3 +652,60 @@ test('CLI status reports runs with non-object payloads on a healthy ledger', asy
     await rm(probe.directory, { recursive: true, force: true });
   }
 });
+
+test('CLI status reports a partially missing ledger schema as LEDGER_UNAVAILABLE instead of empty', async () => {
+  const probe = await makeProbeRepo('partial-schema');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
+    const ledger = new Ledger(ledgerFile);
+    try {
+      ledger.append('run.started', 'run-partial-1', { adapter: 'codex' });
+      ledger.recordGeneration({
+        generation_id: 'g-run-partial-1-i01',
+        run_id: 'run-partial-1',
+        sha: 'd4'.repeat(20),
+        parent_sha: 'c3'.repeat(20),
+      });
+    } finally {
+      ledger.close();
+    }
+    const damaged = new Ledger(ledgerFile);
+    try {
+      damaged.db.exec('DROP TABLE events');
+    } finally {
+      damaged.close();
+    }
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 1, `a damaged partial schema must not exit 0:\n${result.stdout}${result.stderr}`);
+    assert.ok(result.stderr.includes('[LEDGER_UNAVAILABLE]'), `a partial schema must stay LEDGER_UNAVAILABLE:\n${result.stderr}`);
+    assert.equal(result.stdout.includes('Ledger integrity:'), false, `a partial schema must not be presented as an empty ledger:\n${result.stdout}`);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status treats a ledger database without any EvoFence schema as empty', async () => {
+  const probe = await makeProbeRepo('foreign-schema');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
+    const ledger = new Ledger(ledgerFile);
+    try {
+      ledger.db.exec('DROP TABLE events; DROP TABLE generations; DROP TABLE state;');
+      ledger.db.exec('CREATE TABLE notes (x TEXT)');
+    } finally {
+      ledger.close();
+    }
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.includes('Ledger integrity: ok'), result.stdout);
+    assert.ok(result.stdout.includes('Totals: runs=0 generations=0 accepted_candidates=0 rejected_candidates=0'), result.stdout);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});

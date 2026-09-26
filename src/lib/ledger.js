@@ -209,6 +209,12 @@ export class Ledger {
     });
   }
 
+  schemaTables() {
+    return this.db.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('events', 'generations', 'state')",
+    ).all().map((row) => row.name);
+  }
+
   verify() {
     const rows = this.db.prepare('SELECT * FROM events ORDER BY seq').all();
     let previous = ZERO_HASH;
