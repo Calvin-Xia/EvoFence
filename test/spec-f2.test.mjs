@@ -863,6 +863,38 @@ test('buildEvolutionReport falls back to complete adapter telemetry when usage b
   assert.equal(report.budgets.usd_total, 0.8 + 2, 'unbudgeted adapter cost must be counted exactly once');
 });
 
+test('buildEvolutionReport counts complete invocations trailing behind the latest cumulative observation', async () => {
+  const ledgerFile = await scratchLedger('trailing-telemetry', (ledger) => {
+    ledger.append('run.started', 'run-f2-trailing', { adapter: 'claude', contract_snapshot: CONTRACT_SNAPSHOT, token_budget: 100000 });
+    ledger.append('adapter.finished', 'run-f2-trailing', {
+      adapter: 'claude', phase: 'implementation', iteration: 1,
+      reported_usage: { tokens_complete: true, tokens_total: 100, cost_complete: true, cost_currency: 'USD', reported_cost: 0.1 },
+    });
+    ledger.append('budget.tokens.observed', 'run-f2-trailing', {
+      metric: 'tokens', phase: 'implementation', iteration: 1, invocation_tokens: 100, observed_total: 100, limit: 100000, stop_reason: null,
+    });
+    // Second invocation completes with 50 tokens / $0.50; the USD cap trips inside
+    // recordCostUsage, which throws before recordTokenUsage can observe the tokens.
+    ledger.append('adapter.finished', 'run-f2-trailing', {
+      adapter: 'claude', phase: 'implementation', iteration: 2,
+      reported_usage: { tokens_complete: true, tokens_total: 50, cost_complete: true, cost_currency: 'USD', reported_cost: 0.5 },
+    });
+    ledger.append('budget.usd.observed', 'run-f2-trailing', {
+      metric: 'estimated_usd', phase: 'implementation', iteration: 2, observed_total_usd: 0.6, observed_total_usd_micros: 600000,
+    });
+    ledger.append('budget.exhausted', 'run-f2-trailing', {
+      metric: 'estimated_usd', reason: 'claude_native_usd_cap_reached', observed_total_usd: 0.6, observed_total_usd_micros: 600000,
+    });
+    ledger.append('run.failed', 'run-f2-trailing', {
+      code: 'RESOURCE_EXHAUSTED', token_usage_total: 100, cost_estimate_total_usd: 0.6,
+    });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.budgets.tokens_total, 150, 'the trailing invocation tokens must join the earlier cumulative observation');
+  assert.equal(report.budgets.usd_total, 0.6, 'the trailing invocation cost must not be dropped or double counted');
+});
+
 test('CLI report rejects state-alias symlink paths that resolve into .evofence', async (t) => {
   const alias = path.join(fixture.root, 'state-alias');
   try {

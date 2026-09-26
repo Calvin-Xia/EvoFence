@@ -4,17 +4,55 @@ function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-// Latest per-run cumulative totals. Events arrive in seq order and later entries overwrite
-// earlier ones, so failure/exhaustion events that carry the final totals win over any
-// earlier `budget.*.observed` snapshot of the same run.
-function latestCumulativeByRun(events, eventTypes, extract) {
-  const latest = new Map();
+// Per-run totals combine two sources: cumulative observations (which include every
+// preceding invocation, complete or not) and complete per-invocation telemetry. The
+// reported value is the best lower bound — the maximum, over every cumulative anchor,
+// of (anchor total + complete invocations recorded after that anchor), or the sum of
+// complete invocations when no anchor exists. This keeps budgeted runs exact, recovers
+// trailing invocations that never reached a cumulative observation (for example a
+// USD-exhausted invocation after an earlier token observation), and never double counts.
+function runTotals(events, eventTypes, cumulative, invocation) {
+  const anchorsByRun = new Map();
+  const invocationsByRun = new Map();
   for (const event of events) {
-    if (!eventTypes.includes(event.event_type)) continue;
-    const value = extract(event.payload ?? {});
-    if (value !== null) latest.set(event.run_id ?? '', value);
+    const runId = event.run_id ?? '';
+    const payload = event.payload ?? {};
+    if (eventTypes.includes(event.event_type)) {
+      const value = cumulative(payload);
+      if (value !== null) {
+        const anchors = anchorsByRun.get(runId) ?? [];
+        anchors.push({ seq: event.seq, value });
+        anchorsByRun.set(runId, anchors);
+      }
+      continue;
+    }
+    if (event.event_type === 'adapter.finished') {
+      const value = invocation(payload.reported_usage ?? {});
+      if (value === null) continue;
+      const invocations = invocationsByRun.get(runId) ?? [];
+      invocations.push({ seq: event.seq, value });
+      invocationsByRun.set(runId, invocations);
+    }
   }
-  return latest;
+
+  const totals = new Map();
+  for (const runId of new Set([...anchorsByRun.keys(), ...invocationsByRun.keys()])) {
+    const anchors = anchorsByRun.get(runId) ?? [];
+    const invocations = invocationsByRun.get(runId) ?? [];
+    let total = null;
+    if (!anchors.length) {
+      total = invocations.reduce((sum, item) => sum + item.value, 0);
+    } else {
+      for (const anchor of anchors) {
+        const estimate = anchor.value + invocations
+          .filter((item) => item.seq > anchor.seq)
+          .reduce((sum, item) => sum + item.value, 0);
+        if (total === null || estimate > total) total = estimate;
+      }
+    }
+    if (total !== null) totals.set(runId, total);
+  }
+  return totals;
 }
 
 const TOKEN_TOTAL_EVENTS = ['budget.tokens.observed', 'budget.exhausted', 'budget.termination_failed', 'run.failed', 'run.finished'];
@@ -33,20 +71,6 @@ function usdTotalMicros(payload) {
     if (finiteNumber(value) !== null && value >= 0) return Math.round(value * MICROS_PER_USD);
   }
   return null;
-}
-
-// Fallback for runs without any cumulative budget observation (usage budgets disabled):
-// complete per-invocation telemetry on `adapter.finished` is summed per run instead.
-function invocationTotalsByRun(events, extract) {
-  const totals = new Map();
-  for (const event of events) {
-    if (event.event_type !== 'adapter.finished') continue;
-    const value = extract(event.payload?.reported_usage ?? {});
-    if (value === null) continue;
-    const runId = event.run_id ?? '';
-    totals.set(runId, (totals.get(runId) ?? 0) + value);
-  }
-  return totals;
 }
 
 function invocationTokenTotal(usage) {
@@ -298,14 +322,8 @@ export async function buildEvolutionReport({ root, ledger }) {
   }
   const generations = buildGenerations(events, tableGenerations);
 
-  const tokenTotals = latestCumulativeByRun(events, TOKEN_TOTAL_EVENTS, tokenTotal);
-  for (const [runId, value] of invocationTotalsByRun(events, invocationTokenTotal)) {
-    if (!tokenTotals.has(runId)) tokenTotals.set(runId, value);
-  }
-  const usdTotals = latestCumulativeByRun(events, USD_TOTAL_EVENTS, usdTotalMicros);
-  for (const [runId, value] of invocationTotalsByRun(events, invocationUsdTotalMicros)) {
-    if (!usdTotals.has(runId)) usdTotals.set(runId, value);
-  }
+  const tokenTotals = runTotals(events, TOKEN_TOTAL_EVENTS, tokenTotal, invocationTokenTotal);
+  const usdTotals = runTotals(events, USD_TOTAL_EVENTS, usdTotalMicros, invocationUsdTotalMicros);
 
   const runs = summarizeRuns(events);
   return {
