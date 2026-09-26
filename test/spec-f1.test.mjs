@@ -296,6 +296,9 @@ async function buildAuditFixture({
   gateDecisionReject = false,
   evidenceFailedGate = false,
   evidenceLegacyDuplicate = false,
+  evidenceInvalidScore = false,
+  minDeltaAboveImprovement = false,
+  acceptedMissingScore = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -338,7 +341,7 @@ async function buildAuditFixture({
   await mkdir(path.dirname(ledgerFile), { recursive: true });
   const ledger = new Ledger(ledgerFile);
   const appendRunStarted = () => ledger.append('run.started', AUDIT_RUN_ID, {
-    contract_snapshot: { objective: { name: OBJECTIVE_METRIC, direction: 'maximize' } },
+    contract_snapshot: { objective: { name: OBJECTIVE_METRIC, direction: 'maximize', min_delta: minDeltaAboveImprovement ? 1.0 : 0.1 } },
   });
   const appendMainProposal = () => {
     ledger.append('proposal.created', AUDIT_RUN_ID, {
@@ -361,7 +364,7 @@ async function buildAuditFixture({
       iteration: mainIteration,
       evidence: {
         artifact: AUDIT_ARTIFACT,
-        objective: { score: OBJECTIVE_SCORE },
+        objective: { score: OBJECTIVE_SCORE, valid_score: !evidenceInvalidScore },
         all_public_passed: !evidenceFailedGate,
         all_private_within_tolerance: true,
         public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
@@ -372,7 +375,7 @@ async function buildAuditFixture({
         iteration: mainIteration,
         evidence: {
           artifact: AUDIT_ARTIFACT,
-          objective: { score: OBJECTIVE_SCORE },
+          objective: { score: OBJECTIVE_SCORE, valid_score: true },
           all_public_passed: true,
           all_private_within_tolerance: true,
           public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
@@ -384,7 +387,7 @@ async function buildAuditFixture({
         iteration: mainIteration,
         evidence: {
           artifact: AUDIT_FORGED_ARTIFACT,
-          objective: { score: OBJECTIVE_SCORE },
+          objective: { score: OBJECTIVE_SCORE, valid_score: true },
           all_public_passed: true,
           all_private_within_tolerance: true,
           public: [{ id: 'check-2', kind: 'public_check', result: 'PASS' }],
@@ -418,7 +421,7 @@ async function buildAuditFixture({
         iteration: 1,
         evidence: {
           artifact: AUDIT_PRIOR_ARTIFACT,
-          objective: { score: priorEvidenceScoreMismatch ? 0.4 : PRIOR_SCORE },
+          objective: { score: priorEvidenceScoreMismatch ? 0.4 : PRIOR_SCORE, valid_score: true },
           all_public_passed: true,
           all_private_within_tolerance: true,
           public: [{ id: 'check-0', kind: 'public_check', result: 'PASS' }],
@@ -474,8 +477,10 @@ async function buildAuditFixture({
       sha: acceptedShaMismatch ? parentSha : sha,
       parent_sha: parentSha,
       diff_sha256: recordedDiffHash,
-      objective_score: acceptedScoreMismatch ? 0.99 : OBJECTIVE_SCORE,
-      improvement: improvementMismatch ? 0.99 : (priorAccepted ? (OBJECTIVE_SCORE - PRIOR_SCORE) : OBJECTIVE_IMPROVEMENT),
+      ...(acceptedMissingScore ? {} : {
+        objective_score: acceptedScoreMismatch ? 0.99 : OBJECTIVE_SCORE,
+        improvement: improvementMismatch ? 0.99 : (priorAccepted ? (OBJECTIVE_SCORE - PRIOR_SCORE) : OBJECTIVE_IMPROVEMENT),
+      }),
     };
     if (!legacyAccepted) {
       acceptedPayload.proposal_sha256 = proposalDigestMismatch ? 'f'.repeat(64) : mainProposalDigest;
@@ -1211,6 +1216,51 @@ test('generationDiff rejects ambiguous legacy evidence links', async () => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
       assert.match(error.message, /matches 2 evidence\.candidate events for run .*; the evidence link is ambiguous/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects bound evidence with an invalid objective score', async () => {
+  const auditFixture = await buildAuditFixture({ evidenceInvalidScore: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /objective\.valid_score=false; the acceptance predicate requires a valid score/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an improvement below the contract min_delta', async () => {
+  const auditFixture = await buildAuditFixture({ minDeltaAboveImprovement: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /does not meet the contract min_delta/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an acceptance without a numeric score and improvement', async () => {
+  const auditFixture = await buildAuditFixture({ acceptedMissingScore: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /lacks a numeric objective_score\/improvement/);
       return true;
     });
   } finally {

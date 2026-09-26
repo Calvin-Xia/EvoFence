@@ -144,6 +144,9 @@ function verifyAcceptanceEvidence(accepted, evidenceEvent, generationId) {
   if (evidence && (evidence.all_public_passed !== true || evidence.all_private_within_tolerance !== true)) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${generationId} is bound to evidence that did not pass its gate (all_public_passed=${evidence.all_public_passed === true}, all_private_within_tolerance=${evidence.all_private_within_tolerance === true}).`);
   }
+  if (evidence && evidence.objective?.valid_score !== true) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${generationId} is bound to evidence with objective.valid_score=${evidence.objective?.valid_score === true}; the acceptance predicate requires a valid score.`);
+  }
   if (typeof accepted.payload?.objective_score === 'number') {
     const evidenceScore = evidence?.objective?.score;
     if (evidenceScore !== accepted.payload.objective_score) {
@@ -174,16 +177,22 @@ function improvementBaselineScore(events, accepted) {
 function verifyImprovementEvidence(events, accepted, runStartedEvent, generationId) {
   if (!accepted) return;
   const improvement = accepted.payload?.improvement;
-  if (typeof improvement !== 'number') return;
   const score = accepted.payload?.objective_score;
+  if (typeof improvement !== 'number' || typeof score !== 'number') {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${generationId} lacks a numeric objective_score/improvement; the acceptance predicate requires both.`);
+  }
   const direction = runStartedEvent?.payload?.contract_snapshot?.objective?.direction;
   const baselineScore = improvementBaselineScore(events, accepted);
-  if (typeof score !== 'number' || baselineScore === null || typeof direction !== 'string') {
+  if (baselineScore === null || typeof direction !== 'string') {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted improvement ${improvement} for generation ${generationId} cannot be derived from ledger evidence.`);
   }
   const expected = direction === 'maximize' ? score - baselineScore : baselineScore - score;
   if (expected !== improvement) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted improvement ${improvement} disagrees with ledger evidence (expected ${expected}) for generation ${generationId}.`);
+  }
+  const minDelta = runStartedEvent?.payload?.contract_snapshot?.objective?.min_delta;
+  if (typeof minDelta !== 'number' || !(improvement >= minDelta)) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted improvement ${improvement} for generation ${generationId} does not meet the contract min_delta ${minDelta === undefined ? 'missing' : minDelta}.`);
   }
 }
 
