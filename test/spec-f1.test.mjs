@@ -201,7 +201,11 @@ async function buildFixture() {
       cost_budget_usd: null,
       cost_budget_source: null,
     });
-    ledger.append('evidence.baseline', RUN_ID, { objective: { score: BASELINE_SCORE } });
+    ledger.append('evidence.baseline', RUN_ID, {
+      all_public_passed: true,
+      all_private_within_tolerance: true,
+      objective: { score: BASELINE_SCORE, valid_score: true },
+    });
     ledger.append('proposal.created', RUN_ID, {
       proposal_id: PROPOSAL_ID,
       iteration: 1,
@@ -235,6 +239,7 @@ async function buildFixture() {
       decision: 'ACCEPT',
       reason: 'ALL_REQUIRED_EVIDENCE_PASSED',
       evidence_ok: true,
+      improvement: OBJECTIVE_IMPROVEMENT,
       base_sha: parentSha,
     });
     acceptedAt = ledger.append('candidate.accepted', RUN_ID, {
@@ -299,6 +304,10 @@ async function buildAuditFixture({
   evidenceInvalidScore = false,
   minDeltaAboveImprovement = false,
   acceptedMissingScore = false,
+  baselineFailedGate = false,
+  baselineInvalidScore = false,
+  gateEvidenceOkFalse = false,
+  gateImprovementMismatch = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -337,6 +346,9 @@ async function buildAuditFixture({
   const mainIteration = priorAccepted ? 2 : 1;
   const mainProposal = { expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' } };
   const mainProposalDigest = proposalContentMismatch ? 'e'.repeat(64) : sha256(stableStringify(mainProposal));
+  const fixtureImprovement = acceptedMissingScore
+    ? undefined
+    : (improvementMismatch ? 0.99 : (priorAccepted ? (OBJECTIVE_SCORE - PRIOR_SCORE) : OBJECTIVE_IMPROVEMENT));
 
   await mkdir(path.dirname(ledgerFile), { recursive: true });
   const ledger = new Ledger(ledgerFile);
@@ -404,9 +416,17 @@ async function buildAuditFixture({
         });
       }
     }
-    ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: BASELINE_SCORE } });
+    ledger.append('evidence.baseline', AUDIT_RUN_ID, {
+      all_public_passed: !baselineFailedGate,
+      all_private_within_tolerance: true,
+      objective: { score: BASELINE_SCORE, valid_score: !baselineInvalidScore },
+    });
     if (evidenceBaselineDuplicate) {
-      ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: 0.9 } });
+      ledger.append('evidence.baseline', AUDIT_RUN_ID, {
+        all_public_passed: true,
+        all_private_within_tolerance: true,
+        objective: { score: 0.9, valid_score: true },
+      });
     }
     if (priorAccepted) {
       const priorProposal = { expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' }, hypothesis: 'the prior candidate' };
@@ -439,6 +459,7 @@ async function buildAuditFixture({
         decision: 'ACCEPT',
         reason: 'ALL_REQUIRED_EVIDENCE_PASSED',
         evidence_ok: true,
+        improvement: PRIOR_SCORE - BASELINE_SCORE,
         base_sha: parentSha,
       });
       ledger.append('candidate.accepted', AUDIT_RUN_ID, {
@@ -460,7 +481,8 @@ async function buildAuditFixture({
         iteration: mainIteration,
         decision: gateDecisionReject ? 'REJECT' : 'ACCEPT',
         reason: gateDecisionReject ? 'NO_PRACTICAL_IMPROVEMENT' : 'ALL_REQUIRED_EVIDENCE_PASSED',
-        evidence_ok: !gateDecisionReject,
+        evidence_ok: gateEvidenceOkFalse ? false : !gateDecisionReject,
+        ...(gateImprovementMismatch ? { improvement: 0.42 } : (fixtureImprovement === undefined ? {} : { improvement: fixtureImprovement })),
         base_sha: parentSha,
       });
     }
@@ -479,7 +501,7 @@ async function buildAuditFixture({
       diff_sha256: recordedDiffHash,
       ...(acceptedMissingScore ? {} : {
         objective_score: acceptedScoreMismatch ? 0.99 : OBJECTIVE_SCORE,
-        improvement: improvementMismatch ? 0.99 : (priorAccepted ? (OBJECTIVE_SCORE - PRIOR_SCORE) : OBJECTIVE_IMPROVEMENT),
+        improvement: fixtureImprovement,
       }),
     };
     if (!legacyAccepted) {
@@ -499,7 +521,11 @@ async function buildAuditFixture({
     if (proposalLate) appendMainProposal();
     if (runStartedLate) appendRunStarted();
     if (evidenceBaselineLate) {
-      ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: 0.9 } });
+      ledger.append('evidence.baseline', AUDIT_RUN_ID, {
+        all_public_passed: true,
+        all_private_within_tolerance: true,
+        objective: { score: 0.9, valid_score: true },
+      });
     }
   } finally {
     ledger.close();
@@ -1261,6 +1287,66 @@ test('generationDiff rejects an acceptance without a numeric score and improveme
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
       assert.match(error.message, /lacks a numeric objective_score\/improvement/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an improvement baseline that failed its gate', async () => {
+  const auditFixture = await buildAuditFixture({ baselineFailedGate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /evidence\.baseline .* did not pass its gate/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an improvement baseline with an invalid objective score', async () => {
+  const auditFixture = await buildAuditFixture({ baselineInvalidScore: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /evidence\.baseline .* objective\.valid_score=false/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an ACCEPT gate decision whose evidence_ok is not true', async () => {
+  const auditFixture = await buildAuditFixture({ gateEvidenceOkFalse: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /ACCEPT gate decision .* records evidence_ok=false/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a gate decision whose improvement disagrees with the acceptance', async () => {
+  const auditFixture = await buildAuditFixture({ gateImprovementMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /ACCEPT gate decision improvement 0\.42 disagrees with candidate\.accepted improvement 0\.25/);
       return true;
     });
   } finally {

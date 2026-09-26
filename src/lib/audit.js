@@ -136,6 +136,13 @@ function verifyGateDecision(events, accepted) {
   if (decisions.length !== 1 || passing.length !== 1) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${accepted.payload?.generation_id ?? 'unknown'} has ${decisions.length} gate.decision records (${passing.length} ACCEPT); a unique preceding ACCEPT gate decision is required.`);
   }
+  const gate = passing[0].payload ?? {};
+  if (gate.evidence_ok !== true) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `the ACCEPT gate decision for generation ${accepted.payload?.generation_id ?? 'unknown'} records evidence_ok=${gate.evidence_ok === true}; expected true.`);
+  }
+  if (gate.improvement !== accepted.payload?.improvement) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `the ACCEPT gate decision improvement ${gate.improvement} disagrees with candidate.accepted improvement ${accepted.payload?.improvement} for generation ${accepted.payload?.generation_id ?? 'unknown'}.`);
+  }
 }
 
 function verifyAcceptanceEvidence(accepted, evidenceEvent, generationId) {
@@ -170,7 +177,14 @@ function improvementBaselineScore(events, accepted) {
     throw new EvoFenceError('LEDGER_CORRUPT', `${baselines.length} evidence.baseline events precede the acceptance of generation ${accepted.payload?.generation_id ?? 'unknown'}; the baseline is ambiguous.`);
   }
   if (!baselines.length) return null;
-  const score = baselines[0].payload?.objective?.objective?.score ?? baselines[0].payload?.objective?.score;
+  const baseline = baselines[0].payload ?? {};
+  const baselineGateOk = baseline.all_public_passed === true
+    && baseline.all_private_within_tolerance === true
+    && baseline.objective?.valid_score === true;
+  if (!baselineGateOk) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `evidence.baseline for run ${accepted.run_id} did not pass its gate (all_public_passed=${baseline.all_public_passed === true}, all_private_within_tolerance=${baseline.all_private_within_tolerance === true}, objective.valid_score=${baseline.objective?.valid_score === true}); it cannot substantiate an improvement.`);
+  }
+  const score = baseline.objective?.objective?.score ?? baseline.objective?.score;
   return typeof score === 'number' ? score : null;
 }
 
