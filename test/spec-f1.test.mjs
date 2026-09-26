@@ -252,7 +252,7 @@ async function buildFixture() {
   return { directory, root, ledgerFile, parentSha, sha, recordedDiffHash, recordedChangedPaths, acceptedAt };
 }
 
-async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null, acceptedShaMismatch = false } = {}) {
+async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null, acceptedShaMismatch = false, acceptedForeignRun = false } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
   await mkdir(path.join(root, 'src'), { recursive: true });
@@ -305,7 +305,7 @@ async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = n
       parent_sha: parentSha,
       created_at: GENERATION_CREATED_AT,
     });
-    ledger.append('candidate.accepted', AUDIT_RUN_ID, {
+    ledger.append('candidate.accepted', acceptedForeignRun ? 'run-forged' : AUDIT_RUN_ID, {
       iteration: 1,
       generation_id: generationId,
       sha: acceptedShaMismatch ? parentSha : sha,
@@ -666,6 +666,21 @@ test('generationDiff rejects candidate.accepted evidence that disagrees with the
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
       assert.match(error.message, /candidate\.accepted evidence disagrees/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects candidate.accepted evidence recorded under a different run', async () => {
+  const auditFixture = await buildAuditFixture({ acceptedForeignRun: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /recorded under run run-forged/);
       return true;
     });
   } finally {

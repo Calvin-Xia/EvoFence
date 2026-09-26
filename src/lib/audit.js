@@ -52,7 +52,7 @@ function runStartedEventFor(events, runId) {
 
 const GENERATION_RECORD_KEYS = ['run_id', 'sha', 'parent_sha', 'created_at'];
 
-function verifyGenerationMetadata(events, generation, accepted) {
+function verifyGenerationMetadata(events, generation) {
   const record = latestEvent(events, (event) => event.event_type === 'generation.accepted'
     && event.payload?.generation_id === generation.generation_id)?.payload ?? null;
   if (!record) {
@@ -63,11 +63,12 @@ function verifyGenerationMetadata(events, generation, accepted) {
       throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} ${key} disagrees with its hash-chained generation.accepted record.`);
     }
   }
-  if (accepted) {
-    const payload = accepted.payload ?? {};
-    if (payload.generation_id !== generation.generation_id
-      || payload.sha !== generation.sha
-      || payload.parent_sha !== generation.parent_sha) {
+  for (const event of events) {
+    if (event.event_type !== 'candidate.accepted' || event.payload?.generation_id !== generation.generation_id) continue;
+    if (event.run_id !== generation.run_id) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence for generation ${generation.generation_id} is recorded under run ${event.run_id ?? 'null'} instead of ${generation.run_id ?? 'null'}.`);
+    }
+    if (event.payload.sha !== generation.sha || event.payload.parent_sha !== generation.parent_sha) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence disagrees with generation ${generation.generation_id} metadata.`);
     }
   }
@@ -112,7 +113,7 @@ export async function generationDiff({ root, ledger, generationId }) {
   if (!generation) throw new EvoFenceError('GENERATION_NOT_FOUND', `Generation not found: ${generationId}`);
   const events = ledger.events();
   const accepted = acceptedEvent(events, generationId);
-  verifyGenerationMetadata(events, generation, accepted);
+  verifyGenerationMetadata(events, generation);
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
   const runStartedEvent = runStartedEventFor(events, generation.run_id)
