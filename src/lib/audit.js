@@ -190,6 +190,9 @@ function improvementBaselineScore(events, accepted) {
   const previous = latestEvent(events, (event) => event.event_type === 'candidate.accepted'
     && event.run_id === accepted.run_id && event.seq < accepted.seq);
   if (previous) {
+    if (previous.payload?.sha !== accepted.payload?.parent_sha) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `prior acceptance sha ${previous.payload?.sha ?? 'missing'} disagrees with the accepted parent ${accepted.payload?.parent_sha} for generation ${accepted.payload?.generation_id ?? 'unknown'}; the improvement baseline is from another branch.`);
+    }
     verifyGateDecision(events, previous);
     verifyAcceptanceEvidence(previous, evidenceEventFor(events, previous), previous.payload?.generation_id ?? 'unknown');
     const score = previous.payload?.objective_score;

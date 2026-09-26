@@ -311,6 +311,7 @@ async function buildAuditFixture({
   gateImprovementMismatch = false,
   linkBaseShaTarget = null,
   proposalEmbedBaseMismatch = false,
+  priorDisconnected = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -324,7 +325,15 @@ async function buildAuditFixture({
   await writeFile(path.join(root, 'src/app.txt'), 'v1\n');
   runGit(root, ['add', '-A']);
   runGit(root, ['commit', '--quiet', '-m', 'baseline']);
-  const parentSha = runGit(root, ['rev-parse', 'HEAD']);
+  const baseSha = runGit(root, ['rev-parse', 'HEAD']);
+  let priorSha = null;
+  if (priorAccepted) {
+    await writeFile(path.join(root, 'src/app.txt'), 'v1\nmid\n');
+    runGit(root, ['add', '-A']);
+    runGit(root, ['commit', '--quiet', '-m', 'prior accept']);
+    priorSha = runGit(root, ['rev-parse', 'HEAD']);
+  }
+  const parentSha = priorSha ?? baseSha;
 
   await writeFile(path.join(root, 'src/app.txt'), bigDiff ? `${'x'.repeat(300 * 1024)}\n` : 'v2\n');
   if (gitattributesShift) {
@@ -437,18 +446,19 @@ async function buildAuditFixture({
       });
     }
     if (priorAccepted) {
-      const priorProposal = { base_sha: parentSha, expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' }, hypothesis: 'the prior candidate' };
+      const priorRecordedSha = priorDisconnected ? baseSha : priorSha;
+      const priorProposal = { base_sha: baseSha, expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' }, hypothesis: 'the prior candidate' };
       const priorProposalDigest = sha256(stableStringify(priorProposal));
       ledger.append('proposal.created', AUDIT_RUN_ID, {
         proposal_id: 'prop-audit-fixture-00',
         iteration: 1,
-        base_sha: parentSha,
+        base_sha: baseSha,
         proposal_sha256: priorProposalDigest,
         proposal: priorProposal,
       });
       ledger.append('evidence.candidate', AUDIT_RUN_ID, {
         iteration: 1,
-        base_sha: parentSha,
+        base_sha: baseSha,
         evidence: {
           artifact: AUDIT_PRIOR_ARTIFACT,
           objective: { score: priorEvidenceScoreMismatch ? 0.4 : PRIOR_SCORE, valid_score: true },
@@ -460,8 +470,8 @@ async function buildAuditFixture({
       ledger.recordGeneration({
         generation_id: 'g-audit-fixture-i00',
         run_id: AUDIT_RUN_ID,
-        sha,
-        parent_sha: parentSha,
+        sha: priorRecordedSha,
+        parent_sha: baseSha,
         created_at: GENERATION_CREATED_AT,
       });
       ledger.append('gate.decision', AUDIT_RUN_ID, {
@@ -470,13 +480,13 @@ async function buildAuditFixture({
         reason: 'ALL_REQUIRED_EVIDENCE_PASSED',
         evidence_ok: true,
         improvement: PRIOR_SCORE - BASELINE_SCORE,
-        base_sha: parentSha,
+        base_sha: baseSha,
       });
       ledger.append('candidate.accepted', AUDIT_RUN_ID, {
         iteration: 1,
         generation_id: 'g-audit-fixture-i00',
-        sha,
-        parent_sha: parentSha,
+        sha: priorRecordedSha,
+        parent_sha: baseSha,
         diff_sha256: recordedDiffHash,
         objective_score: PRIOR_SCORE,
         improvement: PRIOR_SCORE - BASELINE_SCORE,
@@ -1093,6 +1103,21 @@ test('generationDiff derives improvement from a validated prior acceptance', asy
     const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
     assert.equal(report.objective.score, OBJECTIVE_SCORE);
     assert.equal(report.objective.improvement, OBJECTIVE_SCORE - PRIOR_SCORE);
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an improvement baseline from a different branch', async () => {
+  const auditFixture = await buildAuditFixture({ priorAccepted: true, priorDisconnected: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /prior acceptance sha .* disagrees with the accepted parent .*; the improvement baseline is from another branch/);
+      return true;
+    });
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }
