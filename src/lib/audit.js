@@ -65,24 +65,40 @@ function runStartedEventFor(events, runId) {
 const GENERATION_RECORD_KEYS = ['run_id', 'sha', 'parent_sha', 'created_at'];
 
 function verifyGenerationMetadata(events, generation) {
-  const record = latestEvent(events, (event) => event.event_type === 'generation.accepted'
-    && event.payload?.generation_id === generation.generation_id)?.payload ?? null;
-  if (!record) {
+  const recordEvents = events.filter((event) => event.event_type === 'generation.accepted'
+    && event.payload?.generation_id === generation.generation_id);
+  if (!recordEvents.length) {
     throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} has no hash-chained generation.accepted record.`);
   }
+  if (recordEvents.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} has ${recordEvents.length} generation.accepted records; the association is ambiguous.`);
+  }
+  const record = recordEvents[0].payload;
   for (const key of GENERATION_RECORD_KEYS) {
     if (record[key] !== generation[key]) {
       throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} ${key} disagrees with its hash-chained generation.accepted record.`);
     }
   }
-  for (const event of events) {
-    if (event.event_type !== 'candidate.accepted' || event.payload?.generation_id !== generation.generation_id) continue;
+  const acceptedEvents = events.filter((event) => event.event_type === 'candidate.accepted'
+    && event.payload?.generation_id === generation.generation_id);
+  if (acceptedEvents.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} has ${acceptedEvents.length} candidate.accepted events; the acceptance record is ambiguous.`);
+  }
+  for (const event of acceptedEvents) {
     if (event.run_id !== generation.run_id) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence for generation ${generation.generation_id} is recorded under run ${event.run_id ?? 'null'} instead of ${generation.run_id ?? 'null'}.`);
     }
     if (event.payload.sha !== generation.sha || event.payload.parent_sha !== generation.parent_sha) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence disagrees with generation ${generation.generation_id} metadata.`);
     }
+  }
+}
+
+function verifyObjectiveEvidence(accepted, evidenceEvent, generationId) {
+  if (!accepted || typeof accepted.payload?.objective_score !== 'number') return;
+  const evidenceScore = evidenceEvent?.payload?.evidence?.objective?.score;
+  if (evidenceScore !== accepted.payload.objective_score) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted objective_score ${accepted.payload.objective_score} disagrees with bound evidence score ${evidenceScore === undefined ? 'missing' : evidenceScore} for generation ${generationId}.`);
   }
 }
 
@@ -128,6 +144,7 @@ export async function generationDiff({ root, ledger, generationId }) {
   verifyGenerationMetadata(events, generation);
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
+  verifyObjectiveEvidence(accepted, evidenceEvent, generationId);
   const runStartedEvent = runStartedEventFor(events, generation.run_id)
     ?? runStartedEventFor(events, accepted?.run_id ?? null);
 

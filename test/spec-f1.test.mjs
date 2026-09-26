@@ -264,6 +264,8 @@ async function buildAuditFixture({
   proposalDigestMismatch = false,
   legacyAccepted = false,
   gitattributesShift = false,
+  acceptedDuplicate = false,
+  acceptedScoreMismatch = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -315,6 +317,7 @@ async function buildAuditFixture({
       iteration: 1,
       evidence: {
         artifact: AUDIT_ARTIFACT,
+        objective: { score: OBJECTIVE_SCORE },
         all_public_passed: true,
         all_private_within_tolerance: true,
         public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
@@ -325,6 +328,7 @@ async function buildAuditFixture({
         iteration: 1,
         evidence: {
           artifact: AUDIT_ARTIFACT,
+          objective: { score: OBJECTIVE_SCORE },
           all_public_passed: true,
           all_private_within_tolerance: true,
           public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
@@ -344,7 +348,7 @@ async function buildAuditFixture({
       sha: acceptedShaMismatch ? parentSha : sha,
       parent_sha: parentSha,
       diff_sha256: recordedDiffHash,
-      objective_score: OBJECTIVE_SCORE,
+      objective_score: acceptedScoreMismatch ? 0.99 : OBJECTIVE_SCORE,
       improvement: OBJECTIVE_IMPROVEMENT,
     };
     if (!legacyAccepted) {
@@ -352,6 +356,14 @@ async function buildAuditFixture({
       acceptedPayload.evidence_artifact = evidenceArtifactMismatch ? AUDIT_FORGED_ARTIFACT : AUDIT_ARTIFACT;
     }
     ledger.append('candidate.accepted', acceptedForeignRun ? 'run-forged' : AUDIT_RUN_ID, acceptedPayload);
+    if (acceptedDuplicate) {
+      ledger.append('candidate.accepted', AUDIT_RUN_ID, {
+        ...acceptedPayload,
+        iteration: 2,
+        objective_score: 0.5,
+        improvement: 0.1,
+      });
+    }
   } finally {
     ledger.close();
   }
@@ -792,6 +804,36 @@ test('generationDiff pins diff attributes to the generation despite a divergent 
       `the diff must follow the generation tree attributes (binary marker):\n${report.diff}`,
     );
     assert.ok(!report.diff.includes('+BBBB'), 'the diff must not fall back to the primary checkout textual rendering');
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects ambiguous acceptance records for a generation', async () => {
+  const auditFixture = await buildAuditFixture({ acceptedDuplicate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /2 candidate\.accepted events; the acceptance record is ambiguous/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an acceptance score that disagrees with its bound evidence', async () => {
+  const auditFixture = await buildAuditFixture({ acceptedScoreMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /objective_score 0\.99 disagrees with bound evidence score 0\.75/);
+      return true;
+    });
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }
