@@ -6,11 +6,13 @@ function finiteNumber(value) {
 
 // Per-run totals combine two sources: cumulative observations (which include every
 // preceding invocation, complete or not) and complete per-invocation telemetry. The
-// reported value is the best lower bound — the maximum, over every cumulative anchor,
-// of (anchor total + complete invocations recorded after that anchor), or the sum of
-// complete invocations when no anchor exists. This keeps budgeted runs exact, recovers
-// trailing invocations that never reached a cumulative observation (for example a
-// USD-exhausted invocation after an earlier token observation), and never double counts.
+// reported value is the best lower bound — the maximum of the complete-invocation sum
+// and, over every cumulative anchor, of (anchor total + complete invocations recorded
+// after that anchor). The invocation sum floors stale terminal anchors that undercount
+// earlier invocations; anchored estimates recover usage from incomplete invocations;
+// trailing invocation sums recover telemetry that never reached an anchor. Nothing is
+// ever double counted because each candidate estimate counts every invocation at most
+// once.
 function runTotals(events, eventTypes, cumulative, invocation) {
   const anchorsByRun = new Map();
   const invocationsByRun = new Map();
@@ -39,16 +41,12 @@ function runTotals(events, eventTypes, cumulative, invocation) {
   for (const runId of new Set([...anchorsByRun.keys(), ...invocationsByRun.keys()])) {
     const anchors = anchorsByRun.get(runId) ?? [];
     const invocations = invocationsByRun.get(runId) ?? [];
-    let total = null;
-    if (!anchors.length) {
-      total = invocations.reduce((sum, item) => sum + item.value, 0);
-    } else {
-      for (const anchor of anchors) {
-        const estimate = anchor.value + invocations
-          .filter((item) => item.seq > anchor.seq)
-          .reduce((sum, item) => sum + item.value, 0);
-        if (total === null || estimate > total) total = estimate;
-      }
+    let total = invocations.length ? invocations.reduce((sum, item) => sum + item.value, 0) : null;
+    for (const anchor of anchors) {
+      const estimate = anchor.value + invocations
+        .filter((item) => item.seq > anchor.seq)
+        .reduce((sum, item) => sum + item.value, 0);
+      if (total === null || estimate > total) total = estimate;
     }
     if (total !== null) totals.set(runId, total);
   }

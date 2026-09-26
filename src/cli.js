@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { lstatSync, readlinkSync, realpathSync } from 'node:fs';
+import { lstatSync, readlinkSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -228,14 +228,56 @@ function canonicalizePath(target, display, depth = 0) {
   }
 }
 
+// A hard link aliases control-plane content without any path-level signal: compare the
+// existing destination's file identity (dev/ino) against state files instead of only
+// its canonical pathname. The nlink gate keeps the walk bounded to rare cases.
+function sharesIdentityWithState(stateDir, output) {
+  let outputStat;
+  try {
+    outputStat = statSync(output, { bigint: true });
+  } catch {
+    return false; // Nothing exists at the destination yet.
+  }
+  if (!outputStat.isFile() || outputStat.nlink <= 1n) return false;
+  const stack = [stateDir];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(full);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      try {
+        const candidate = statSync(full, { bigint: true });
+        if (candidate.dev === outputStat.dev && candidate.ino === outputStat.ino) return true;
+      } catch {
+        // Racy removal: treat as non-matching.
+      }
+    }
+  }
+  return false;
+}
+
 // The report output must never land on EvoFence control-plane state (`.evofence/**`):
 // an unconditional overwrite here would destroy the ledger or the contract.
 function assertReportOutputOutsideState(root, output, display) {
   const normalize = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
-  const state = normalize(canonicalizePath(path.join(realpathSync.native(root), '.evofence')));
+  const stateDir = path.join(realpathSync.native(root), '.evofence');
+  const state = normalize(canonicalizePath(stateDir, display));
   const target = normalize(canonicalizePath(output, display));
   if (isInsideDirectory(state, target)) {
     throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report over EvoFence state: ${display}`);
+  }
+  if (sharesIdentityWithState(stateDir, output)) {
+    throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report through a hard link to EvoFence state: ${display}`);
   }
 }
 

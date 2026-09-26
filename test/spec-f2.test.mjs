@@ -7,7 +7,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -976,6 +976,43 @@ test('CLI report fails closed on symlink chains that exceed the resolution cap',
   if (safeStart === null) return;
   const safeResult = spawnCli(['report', path.basename(safeStart)]);
   assert.doesNotMatch(safeResult.stderr, /\[PROTECTED_PATH\]/, 'a deep chain resolving outside state must stay writable');
+});
+
+test('buildEvolutionReport counts complete invocations preceding stale terminal totals', async () => {
+  const ledgerFile = await scratchLedger('stale-terminal', (ledger) => {
+    ledger.append('run.started', 'run-f2-staletotal', { adapter: 'claude', contract_snapshot: CONTRACT_SNAPSHOT, token_budget: 100000 });
+    ledger.append('adapter.finished', 'run-f2-staletotal', {
+      adapter: 'claude', phase: 'implementation', iteration: 1,
+      reported_usage: { tokens_complete: true, tokens_total: 50, cost_complete: true, cost_currency: 'USD', reported_cost: 0.1 },
+    });
+    // The USD cap trips inside recordCostUsage before recordTokenUsage can observe the
+    // tokens; run.failed keeps the stale initial token total of 0.
+    ledger.append('budget.usd.observed', 'run-f2-staletotal', {
+      metric: 'estimated_usd', phase: 'implementation', iteration: 1, observed_total_usd: 0.1, observed_total_usd_micros: 100000,
+    });
+    ledger.append('budget.exhausted', 'run-f2-staletotal', {
+      metric: 'estimated_usd', reason: 'claude_native_usd_cap_reached', observed_total_usd: 0.1, observed_total_usd_micros: 100000,
+    });
+    ledger.append('run.failed', 'run-f2-staletotal', {
+      code: 'RESOURCE_EXHAUSTED', token_usage_total: 0, cost_estimate_total_usd: 0.1,
+    });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.budgets.tokens_total, 50, 'a stale zero terminal total must not suppress the preceding complete invocation');
+  assert.equal(report.budgets.usd_total, 0.1);
+});
+
+test('CLI report rejects outputs hard-linked to control-plane state', async () => {
+  const stateFile = path.join(fixture.root, '.evofence', 'extra-state.json');
+  await writeFile(stateFile, '{"state":"must-not-be-clobbered"}');
+  const outLink = path.join(fixture.root, 'hardlink-out.json');
+  await link(stateFile, outLink);
+  const before = await readFile(stateFile, 'utf8');
+
+  const result = spawnCli(['report', 'hardlink-out.json']);
+  assert.match(result.stderr, /^\[PROTECTED_PATH\]/, result.stderr);
+  assert.equal(await readFile(stateFile, 'utf8'), before, 'the shared inode must not be truncated');
 });
 
 test('Ledger.readSnapshot returns integrity, events and generations from one transaction', async () => {
