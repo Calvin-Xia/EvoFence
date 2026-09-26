@@ -1,19 +1,38 @@
-import { loadContract } from './contract.js';
-
 const MICROS_PER_USD = 1_000_000;
 
 function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function latestObservedByRun(events, eventType, extract) {
+// Latest per-run cumulative totals. Events arrive in seq order and later entries overwrite
+// earlier ones, so failure/exhaustion events that carry the final totals win over any
+// earlier `budget.*.observed` snapshot of the same run.
+function latestCumulativeByRun(events, eventTypes, extract) {
   const latest = new Map();
   for (const event of events) {
-    if (event.event_type !== eventType) continue;
+    if (!eventTypes.includes(event.event_type)) continue;
     const value = extract(event.payload ?? {});
     if (value !== null) latest.set(event.run_id ?? '', value);
   }
   return latest;
+}
+
+const TOKEN_TOTAL_EVENTS = ['budget.tokens.observed', 'budget.exhausted', 'budget.termination_failed', 'run.failed', 'run.finished'];
+const USD_TOTAL_EVENTS = ['budget.usd.observed', 'budget.exhausted', 'budget.termination_failed', 'run.failed', 'run.finished'];
+
+function tokenTotal(payload) {
+  for (const value of [payload.observed_total, payload.token_usage_total]) {
+    if (Number.isSafeInteger(value) && value >= 0) return value;
+  }
+  return null;
+}
+
+function usdTotalMicros(payload) {
+  if (Number.isSafeInteger(payload.observed_total_usd_micros) && payload.observed_total_usd_micros >= 0) return payload.observed_total_usd_micros;
+  for (const value of [payload.observed_total_usd, payload.cost_estimate_total_usd]) {
+    if (finiteNumber(value) !== null && value >= 0) return Math.round(value * MICROS_PER_USD);
+  }
+  return null;
 }
 
 function summarizeRuns(events) {
@@ -60,6 +79,11 @@ function summarizeRuns(events) {
           summary.iterations = payload.iterations;
           hasAuthoritativeIterations = true;
         }
+      } else if (event.event_type === 'run.failed') {
+        // Failed and resource-exhausted runs must not read as interrupted runs
+        // (status stays INCOMPLETE only when no terminal run event exists).
+        summary.status = 'FAILED';
+        if (typeof payload.code === 'string') summary.failure_code = payload.code;
       }
     }
 
@@ -105,61 +129,122 @@ function buildGenerations(events, generations) {
   return [...records.values()];
 }
 
-function buildObjective(contract, generations) {
-  if (!generations.length) return null;
-  const scores = generations.map((generation) => generation.objective_score).filter((score) => score !== null);
-  const direction = contract?.objective?.direction === 'minimize' ? 'minimize' : contract?.objective?.direction === 'maximize' ? 'maximize' : null;
-  const firstScore = scores.length ? scores[0] : null;
-  const bestScore = scores.length
-    ? (direction === 'minimize' ? Math.min(...scores) : Math.max(...scores))
-    : null;
-  const delta = firstScore === null || bestScore === null
-    ? null
-    : direction === 'minimize' ? firstScore - bestScore : bestScore - firstScore;
+function objectiveSnapshot(event) {
+  const objective = event.payload?.contract_snapshot?.objective;
   return {
-    metric: typeof contract?.objective?.name === 'string' ? contract.objective.name : null,
-    direction,
+    metric: typeof objective?.name === 'string' && objective.name.trim() ? objective.name : null,
+    direction: objective?.direction === 'minimize' || objective?.direction === 'maximize' ? objective.direction : null,
+  };
+}
+
+function summarizeObjectiveGroup(group) {
+  const firstScore = group.scores[0];
+  const bestScore = group.direction === null ? null
+    : group.direction === 'minimize' ? Math.min(...group.scores) : Math.max(...group.scores);
+  return {
+    metric: group.metric,
+    direction: group.direction,
     first_score: firstScore,
     best_score: bestScore,
-    delta,
+    delta: bestScore === null ? null
+      : group.direction === 'minimize' ? firstScore - bestScore : bestScore - firstScore,
+  };
+}
+
+// Objective metadata comes from each run's `contract_snapshot`, never from the contract
+// currently on disk: labels and direction are historical facts of the run that produced
+// the score. Unknown direction stays null (best_score/delta stay null) — it is never
+// assumed to be maximize.
+function buildObjective(events, generations) {
+  const snapshotByRun = new Map();
+  for (const event of events) {
+    if (event.event_type === 'run.started' && event.run_id) snapshotByRun.set(event.run_id, objectiveSnapshot(event));
+  }
+
+  const groups = new Map();
+  for (const generation of generations) {
+    if (generation.objective_score === null) continue;
+    const snapshot = (generation.run_id && snapshotByRun.get(generation.run_id)) || { metric: null, direction: null };
+    const key = `${snapshot.metric ?? ''}::${snapshot.direction ?? ''}`;
+    if (!groups.has(key)) groups.set(key, { ...snapshot, scores: [] });
+    groups.get(key).scores.push(generation.objective_score);
+  }
+
+  const summaries = [...groups.values()].map(summarizeObjectiveGroup);
+  if (!summaries.length) return null;
+  if (summaries.length === 1) return summaries[0];
+  // Incompatible objectives (different metrics/directions, or missing snapshots): refuse
+  // to combine them into one best_score/delta and report per-group aggregates only.
+  return {
+    metric: null,
+    direction: null,
+    first_score: null,
+    best_score: null,
+    delta: null,
+    groups: summaries,
+  };
+}
+
+function emptyReport(generated_at, integrity) {
+  return {
+    schema_version: 1,
+    generated_at,
+    run_count: 0,
+    generation_count: 0,
+    runs: [],
+    generations: [],
+    objective: null,
+    budgets: { tokens_total: null, usd_total: null },
+    integrity,
   };
 }
 
 export async function buildEvolutionReport({ root, ledger }) {
-  const events = ledger.events();
-  const generations = buildGenerations(events, ledger.generations());
+  const generated_at = new Date().toISOString();
   const integrity = ledger.verify();
-
-  let contract = null;
-  try {
-    contract = await loadContract(root);
-  } catch {
-    contract = null;
+  if (!integrity.valid) {
+    return emptyReport(generated_at, {
+      valid: false,
+      failed_at_seq: integrity.sequence ?? null,
+      expected_previous_hash: integrity.expected_previous_hash ?? null,
+      observed_hash: integrity.observed_hash ?? null,
+    });
   }
 
-  const tokenTotals = latestObservedByRun(events, 'budget.tokens.observed', (payload) => (
-    Number.isSafeInteger(payload.observed_total) && payload.observed_total >= 0 ? payload.observed_total : null
-  ));
-  const usdTotals = latestObservedByRun(events, 'budget.usd.observed', (payload) => {
-    if (Number.isSafeInteger(payload.observed_total_usd_micros) && payload.observed_total_usd_micros >= 0) return payload.observed_total_usd_micros;
-    if (finiteNumber(payload.observed_total_usd) !== null && payload.observed_total_usd >= 0) return Math.round(payload.observed_total_usd * MICROS_PER_USD);
-    return null;
-  });
+  let events;
+  try {
+    events = ledger.events();
+  } catch {
+    // The hash chain matched but at least one payload is not valid JSON (for example a
+    // tampered ledger whose chain was recomputed). Refuse to summarize unreadable payloads.
+    return emptyReport(generated_at, {
+      valid: false,
+      failed_at_seq: null,
+      expected_previous_hash: null,
+      observed_hash: null,
+      parse_failed: true,
+    });
+  }
+
+  const generations = buildGenerations(events, ledger.generations());
+
+  const tokenTotals = latestCumulativeByRun(events, TOKEN_TOTAL_EVENTS, tokenTotal);
+  const usdTotals = latestCumulativeByRun(events, USD_TOTAL_EVENTS, usdTotalMicros);
 
   const runs = summarizeRuns(events);
   return {
     schema_version: 1,
-    generated_at: new Date().toISOString(),
+    generated_at,
     run_count: runs.length,
     generation_count: generations.length,
     runs,
     generations,
-    objective: buildObjective(contract, generations),
+    objective: buildObjective(events, generations),
     budgets: {
       tokens_total: tokenTotals.size ? [...tokenTotals.values()].reduce((total, value) => total + value, 0) : null,
       usd_total: usdTotals.size ? [...usdTotals.values()].reduce((total, value) => total + value, 0) / MICROS_PER_USD : null,
     },
-    integrity: { valid: integrity.valid === true },
+    integrity: { valid: true },
   };
 }
 
@@ -172,6 +257,12 @@ function formatDelta(value) {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function formatIntegrity(integrity) {
+  if (integrity?.valid) return 'valid';
+  if (integrity?.parse_failed) return 'INVALID (unparseable event payload)';
+  return `INVALID${Number.isInteger(integrity?.failed_at_seq) ? ` (failed at seq ${integrity.failed_at_seq})` : ''}`;
+}
+
 export function formatEvolutionReport(report) {
   const lines = [
     '# EvoFence Evolution Report',
@@ -181,18 +272,24 @@ export function formatEvolutionReport(report) {
     `- Objective delta: ${formatDelta(report.objective?.delta)}`,
     `- Tokens total: ${formatNumber(report.budgets?.tokens_total)}`,
     `- USD total: ${formatNumber(report.budgets?.usd_total)}`,
+    `- Ledger integrity: ${formatIntegrity(report.integrity)}`,
+  ];
+  for (const group of report.objective?.groups ?? []) {
+    lines.push(`- Objective ${group.metric ?? 'unknown'} (${group.direction ?? 'unknown direction'}): delta ${formatDelta(group.delta)}`);
+  }
+  lines.push(
     '',
     '## Generations',
     '',
     '| generation | sha | score | improvement |',
     '| --- | --- | --- | --- |',
-  ];
+  );
   for (const generation of report.generations ?? []) {
     lines.push(`| ${generation.generation_id} | ${generation.sha ?? 'n/a'} | ${formatNumber(generation.objective_score)} | ${formatDelta(generation.improvement)} |`);
   }
-  lines.push('', '## Runs', '', '| run | adapter | status | iterations | accepted | rejected |', '| --- | --- | --- | --- | --- | --- |');
+  lines.push('', '## Runs', '', '| run | adapter | status | failure_code | iterations | accepted | rejected |', '| --- | --- | --- | --- | --- | --- | --- |');
   for (const run of report.runs ?? []) {
-    lines.push(`| ${run.run_id} | ${run.adapter} | ${run.status} | ${run.iterations} | ${run.accepted_candidates} | ${run.rejected_candidates} |`);
+    lines.push(`| ${run.run_id} | ${run.adapter} | ${run.status} | ${run.failure_code ?? ''} | ${run.iterations} | ${run.accepted_candidates} | ${run.rejected_candidates} |`);
   }
   return `${lines.join('\n')}\n`;
 }

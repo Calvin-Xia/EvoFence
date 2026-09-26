@@ -302,6 +302,63 @@ function spawnCli(args) {
   });
 }
 
+// Scratch ledgers live inside the fixture directory and are removed by the after() hook.
+async function scratchLedger(name, writeEvents) {
+  const scratchRoot = path.join(fixture.directory, 'scratch');
+  await mkdir(scratchRoot, { recursive: true });
+  const ledgerFile = path.join(scratchRoot, `${name}.sqlite`);
+  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const ledger = new Ledger(ledgerFile);
+  try {
+    writeEvents(ledger);
+  } finally {
+    ledger.close();
+  }
+  return ledgerFile;
+}
+
+function scratchContractSnapshot(name, direction) {
+  return {
+    contract_version: 1,
+    objective: { name, command: 'node --version', direction, min_delta: 0.1 },
+  };
+}
+
+function acceptScratchGeneration(ledger, runId, iteration, generationId, score, improvement, createdAt) {
+  const sha = generationId.padEnd(40, 'f');
+  const parentSha = generationId.padEnd(40, 'e');
+  ledger.recordGeneration({ generation_id: generationId, run_id: runId, sha, parent_sha: parentSha, created_at: createdAt });
+  ledger.append('candidate.accepted', runId, {
+    iteration,
+    generation_id: generationId,
+    sha,
+    parent_sha: parentSha,
+    objective_score: score,
+    improvement,
+  });
+}
+
+// Mirrors Ledger's unkeyed eventHash so a scratch ledger can carry a forged (recomputed)
+// hash chain around a payload that is not valid JSON.
+async function forgeEventHashChain(ledger) {
+  const { sha256, stableStringify } = await repoImport('src/lib/fs.js');
+  ledger.db.exec('DROP TRIGGER IF EXISTS events_no_update');
+  const rows = ledger.db.prepare('SELECT * FROM events ORDER BY seq').all();
+  let previous = '0'.repeat(64);
+  for (const row of rows) {
+    const eventHash = sha256(stableStringify({
+      seq: row.seq,
+      created_at: row.created_at,
+      event_type: row.event_type,
+      run_id: row.run_id,
+      payload_json: row.payload_json,
+      previous_hash: previous,
+    }));
+    ledger.db.prepare('UPDATE events SET previous_hash = ?, event_hash = ? WHERE seq = ?').run(previous, eventHash, row.seq);
+    previous = eventHash;
+  }
+}
+
 test('buildEvolutionReport returns the documented report shape for a seeded ledger', async () => {
   const report = await callBuildEvolutionReport(fixture.ledgerFile);
 
@@ -552,4 +609,177 @@ test('CLI help lists the report command', () => {
     result.stdout.includes('report [file] [--json]'),
     `help text must document the report command:\n${result.stdout}`,
   );
+});
+
+test('buildEvolutionReport marks run.failed runs as FAILED and reports the failure code', async () => {
+  const ledgerFile = await scratchLedger('run-failed', (ledger) => {
+    ledger.append('run.started', 'run-f2-failed', { adapter: 'claude', contract_snapshot: CONTRACT_SNAPSHOT });
+    ledger.append('budget.exhausted', 'run-f2-failed', { metric: 'wall_clock', reason: 'agent_timeout', observed_total: 5000 });
+    ledger.append('run.failed', 'run-f2-failed', {
+      code: 'RESOURCE_EXHAUSTED',
+      message: 'The wall-clock budget stopped the agent.',
+      token_usage_total: 5000,
+    });
+    ledger.append('run.started', 'run-f2-interrupted', { adapter: 'pi', contract_snapshot: CONTRACT_SNAPSHOT });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  const failed = report.runs.find((run) => run.run_id === 'run-f2-failed');
+  assert.equal(failed.status, 'FAILED', 'run.failed must not be summarized as INCOMPLETE');
+  assert.equal(failed.failure_code, 'RESOURCE_EXHAUSTED');
+  assert.equal(
+    report.runs.find((run) => run.run_id === 'run-f2-interrupted').status,
+    'INCOMPLETE',
+    'runs without a terminal event stay INCOMPLETE',
+  );
+});
+
+test('buildEvolutionReport counts final cumulative totals from exhaustion and run-level events', async () => {
+  const ledgerFile = await scratchLedger('budget-exhausted', (ledger) => {
+    ledger.append('run.started', 'run-f2-timeout', { adapter: 'claude', contract_snapshot: CONTRACT_SNAPSHOT, token_budget: 100000 });
+    ledger.append('budget.tokens.observed', 'run-f2-timeout', {
+      metric: 'tokens', phase: 'implementation', iteration: 1,
+      invocation_tokens: 3000, observed_total: 3000, limit: 100000, stop_reason: null,
+    });
+    ledger.append('budget.usd.observed', 'run-f2-timeout', {
+      metric: 'estimated_usd', phase: 'implementation', iteration: 1,
+      observed_total_usd: 0.25, observed_total_usd_micros: 250000,
+    });
+    // Timeout with complete telemetry: the final cumulative totals land only in
+    // budget.exhausted (no further *.observed event is appended before the throw).
+    ledger.append('budget.exhausted', 'run-f2-timeout', {
+      metric: 'wall_clock', reason: 'agent_timeout', previous_observed_total: 3000,
+      invocation_tokens: 2000, observed_total: 5000,
+      observed_total_usd: 0.75, observed_total_usd_micros: 750000,
+    });
+    ledger.append('run.failed', 'run-f2-timeout', {
+      code: 'RESOURCE_EXHAUSTED', token_usage_total: 5000, cost_estimate_total_usd: 0.75,
+    });
+    // Run-level totals on run.finished/run.failed count even without budget.*.observed.
+    ledger.append('run.started', 'run-f2-runlevel', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
+    ledger.append('run.finished', 'run-f2-runlevel', {
+      status: 'PLATEAU', iterations: 1, token_usage_total: 42, cost_estimate_total_usd: 2,
+    });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.budgets.tokens_total, 5000 + 42, 'the timed-out invocation tokens must not be dropped');
+  assert.equal(report.budgets.usd_total, 0.75 + 2, 'the timed-out invocation USD must not be dropped');
+});
+
+test('buildEvolutionReport derives objective metadata from historical run contract snapshots', async () => {
+  const ledgerFile = await scratchLedger('objective-snapshots', (ledger) => {
+    ledger.append('run.started', 'run-f2-quality', { adapter: 'codex', contract_snapshot: scratchContractSnapshot('quality_score', 'maximize') });
+    acceptScratchGeneration(ledger, 'run-f2-quality', 1, 'g-q1', 0.25, 0.25, '2026-03-01T00:00:00.000Z');
+    acceptScratchGeneration(ledger, 'run-f2-quality', 2, 'g-q2', 0.75, 0.5, '2026-03-02T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-quality', { status: 'ACCEPTED', iterations: 2 });
+    ledger.append('run.started', 'run-f2-latency', { adapter: 'codex', contract_snapshot: scratchContractSnapshot('latency_ms', 'minimize') });
+    acceptScratchGeneration(ledger, 'run-f2-latency', 1, 'g-l1', 200, 10, '2026-03-03T00:00:00.000Z');
+    acceptScratchGeneration(ledger, 'run-f2-latency', 2, 'g-l2', 100, 100, '2026-03-04T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-latency', { status: 'ACCEPTED', iterations: 2 });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  // The contract currently on disk (fixture.root) says quality_score/maximize; the report
+  // must neither borrow those labels nor mix the two incompatible objectives.
+  assert.equal(report.objective.metric, null);
+  assert.equal(report.objective.direction, null);
+  assert.equal(report.objective.first_score, null);
+  assert.equal(report.objective.best_score, null);
+  assert.equal(report.objective.delta, null);
+  assert.equal(report.objective.groups.length, 2);
+  assert.deepEqual(
+    report.objective.groups.find((group) => group.metric === 'quality_score'),
+    { metric: 'quality_score', direction: 'maximize', first_score: 0.25, best_score: 0.75, delta: 0.5 },
+  );
+  assert.deepEqual(
+    report.objective.groups.find((group) => group.metric === 'latency_ms'),
+    { metric: 'latency_ms', direction: 'minimize', first_score: 200, best_score: 100, delta: 100 },
+  );
+});
+
+test('buildEvolutionReport aggregates a single objective group with that group\'s own direction', async () => {
+  const ledgerFile = await scratchLedger('objective-single', (ledger) => {
+    ledger.append('run.started', 'run-f2-minimize', { adapter: 'codex', contract_snapshot: scratchContractSnapshot('latency_ms', 'minimize') });
+    acceptScratchGeneration(ledger, 'run-f2-minimize', 1, 'g-m1', 200, 10, '2026-03-05T00:00:00.000Z');
+    acceptScratchGeneration(ledger, 'run-f2-minimize', 2, 'g-m2', 100, 100, '2026-03-06T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-minimize', { status: 'ACCEPTED', iterations: 2 });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.deepEqual(report.objective, {
+    metric: 'latency_ms',
+    direction: 'minimize',
+    first_score: 200,
+    best_score: 100,
+    delta: 100,
+  });
+});
+
+test('buildEvolutionReport leaves unknown objective direction null instead of defaulting to maximize', async () => {
+  const ledgerFile = await scratchLedger('objective-unknown', (ledger) => {
+    // Legacy run without a contract_snapshot in run.started.
+    ledger.append('run.started', 'run-f2-nosnap', { adapter: 'codex' });
+    acceptScratchGeneration(ledger, 'run-f2-nosnap', 1, 'g-n1', 0.25, 0.25, '2026-03-07T00:00:00.000Z');
+    acceptScratchGeneration(ledger, 'run-f2-nosnap', 2, 'g-n2', 0.75, 0.5, '2026-03-08T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-nosnap', { status: 'ACCEPTED', iterations: 2 });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.objective.metric, null);
+  assert.equal(report.objective.direction, null);
+  assert.equal(report.objective.first_score, 0.25);
+  assert.equal(report.objective.best_score, null, 'an unknown direction must not silently compute Math.max');
+  assert.equal(report.objective.delta, null);
+});
+
+test('buildEvolutionReport reports a broken hash chain instead of throwing on malformed payloads', async () => {
+  const ledgerFile = await scratchLedger('corrupt-chain', (ledger) => {
+    ledger.append('run.started', 'run-f2-corrupt', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
+    ledger.append('run.finished', 'run-f2-corrupt', { status: 'PLATEAU', iterations: 0 });
+    ledger.db.exec('DROP TRIGGER IF EXISTS events_no_update');
+    ledger.db.prepare("UPDATE events SET payload_json = '{oops malformed' WHERE seq = 2").run();
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.integrity.valid, false, 'malformed payloads must surface as integrity.valid: false, not an exception');
+  assert.equal(report.integrity.failed_at_seq, 2);
+  assert.equal(typeof report.integrity.expected_previous_hash, 'string');
+  assert.equal(typeof report.integrity.observed_hash, 'string');
+  assert.equal('parse_failed' in report.integrity, false);
+  assert.deepEqual(report.runs, []);
+  assert.deepEqual(report.generations, []);
+  assert.equal(report.objective, null);
+  assert.equal(report.budgets.tokens_total, null);
+  assert.equal(report.budgets.usd_total, null);
+});
+
+test('buildEvolutionReport refuses to summarize payloads behind a forged hash chain', async () => {
+  const ledgerFile = await scratchLedger('forged-chain', (ledger) => {
+    ledger.append('run.started', 'run-f2-forged', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
+    ledger.append('run.finished', 'run-f2-forged', { status: 'PLATEAU', iterations: 0 });
+  });
+  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const tamperer = new Ledger(ledgerFile);
+  try {
+    tamperer.db.exec('DROP TRIGGER IF EXISTS events_no_update');
+    tamperer.db.prepare("UPDATE events SET payload_json = '{oops malformed' WHERE seq = 2").run();
+    await forgeEventHashChain(tamperer);
+  } finally {
+    tamperer.close();
+  }
+
+  const proof = new Ledger(ledgerFile);
+  try {
+    assert.equal(proof.verify().valid, true, 'fixture proof: a recomputed chain passes verify()');
+  } finally {
+    proof.close();
+  }
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.integrity.valid, false, 'unreadable payloads must not be summarized');
+  assert.equal(report.integrity.parse_failed, true);
+  assert.deepEqual(report.runs, []);
+  assert.deepEqual(report.generations, []);
+  assert.equal(report.objective, null);
 });
