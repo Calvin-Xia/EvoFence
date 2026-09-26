@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { lstat, readFile, writeFile } from 'node:fs/promises';
+import { lstatSync, readlinkSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +11,9 @@ import { buildStatus, emptyStatus, formatStatus } from './lib/status.js';
 import { collectEvidence } from './lib/evidence.js';
 import { runEvolution } from './lib/runner.js';
 import { repositoryRoot, setActiveGenerationRef } from './lib/git.js';
+import { generationDiff, formatGenerationDiff } from './lib/audit.js';
 import { EvoFenceError } from './lib/errors.js';
+import { buildEvolutionReport, formatEvolutionReport } from './lib/report.js';
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -27,8 +30,10 @@ Usage:
   evofence ledger recent [limit]
   evofence ledger export [file]
   evofence rollback <generation-id>
+  evofence diff <generation-id> [--json]
   evofence experiment run <experiment.yaml>
   evofence experiment export [file]
+  evofence report [file] [--json]
   evofence status [--json]
 
 Options:
@@ -239,6 +244,135 @@ async function commandRollback(args) {
   } finally { ledger.close(); }
 }
 
+function isInsideDirectory(directory, target) {
+  const relative = path.relative(directory, target);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+// Canonicalize a path even when its tail does not exist yet: resolve the longest
+// existing ancestor via realpathSync.native (symlinks, junctions, 8.3 aliases) and
+// re-append the remaining components. Dangling links are followed through
+// lstat/readlink so a leaf link into state cannot masquerade as a plain file name;
+// symlink chains that exceed the depth cap fail closed instead of falling back to
+// lexical resolution.
+function canonicalizePath(target, display, depth = 0) {
+  const suffix = [];
+  let current = path.resolve(target);
+  for (;;) {
+    try {
+      return path.join(realpathSync.native(current), ...suffix);
+    } catch {
+      let link = null;
+      try {
+        if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
+      } catch {
+        // Missing component: treated as an ordinary suffix below.
+      }
+      if (link !== null) {
+        if (depth >= 32) {
+          throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report through an unresolvable symlink chain: ${display}`);
+        }
+        return path.join(canonicalizePath(path.resolve(path.dirname(current), link), display, depth + 1), ...suffix);
+      }
+      const parent = path.dirname(current);
+      if (parent === current) return path.join(current, ...suffix);
+      suffix.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
+// A hard link aliases control-plane content without any path-level signal: compare the
+// existing destination's file identity (dev/ino) against state files instead of only
+// its canonical pathname. The nlink gate keeps the walk bounded to rare cases.
+function sharesIdentityWithState(stateDir, output) {
+  let outputStat;
+  try {
+    outputStat = statSync(output, { bigint: true });
+  } catch {
+    return false; // Nothing exists at the destination yet.
+  }
+  if (!outputStat.isFile() || outputStat.nlink <= 1n) return false;
+  const stack = [stateDir];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(full);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      try {
+        const candidate = statSync(full, { bigint: true });
+        if (candidate.dev === outputStat.dev && candidate.ino === outputStat.ino) return true;
+      } catch {
+        // Racy removal: treat as non-matching.
+      }
+    }
+  }
+  return false;
+}
+
+// The report output must never land on EvoFence control-plane state (`.evofence/**`):
+// an unconditional overwrite here would destroy the ledger or the contract.
+function assertReportOutputOutsideState(root, output, display) {
+  const normalize = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
+  const stateDir = path.join(realpathSync.native(root), '.evofence');
+  const state = normalize(canonicalizePath(stateDir, display));
+  const target = normalize(canonicalizePath(output, display));
+  if (isInsideDirectory(state, target)) {
+    throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report over EvoFence state: ${display}`);
+  }
+  if (sharesIdentityWithState(stateDir, output)) {
+    throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report through a hard link to EvoFence state: ${display}`);
+  }
+}
+
+async function commandReport(args) {
+  if (args.some((arg) => arg.startsWith('--') && arg !== '--json')) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
+  const { options, positional } = parseOptions(args, ['json']);
+  if (positional.length > 1) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
+  const root = await repositoryRoot(process.cwd());
+  const output = positional.length ? path.resolve(process.cwd(), positional[0]) : null;
+  if (output !== null) assertReportOutputOutsideState(root, output, positional[0]);
+  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+  try {
+    const report = await buildEvolutionReport({ root, ledger });
+    const content = options.json ? `${JSON.stringify(report, null, 2)}\n` : formatEvolutionReport(report);
+    if (!positional.length) {
+      process.stdout.write(content);
+      return;
+    }
+    await mkdir(path.dirname(output), { recursive: true });
+    await writeFile(output, content, { mode: 0o600 });
+    process.stdout.write(`Report written to ${path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/')}\n`);
+  } finally { ledger.close(); }
+}
+
+async function commandDiff(args) {
+  const json = args.includes('--json');
+  const unexpected = args.filter((arg) => arg.startsWith('--') && arg !== '--json');
+  const positional = args.filter((arg) => !arg.startsWith('--'));
+  if (unexpected.length || positional.length !== 1) throw new EvoFenceError('USAGE', 'Use: evofence diff <generation-id> [--json]');
+  const root = await repositoryRoot(process.cwd());
+  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+  try {
+    const report = await generationDiff({ root, ledger, generationId: positional[0] });
+    if (json) printJson(report);
+    else {
+      const text = formatGenerationDiff(report);
+      process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+    }
+  } finally { ledger.close(); }
+}
+
 async function commandExperiment(args) {
   const [action, value, ...rest] = args;
   if (rest.length) throw new EvoFenceError('USAGE', 'Unexpected experiment arguments.');
@@ -280,7 +414,9 @@ async function main() {
   else if (command === 'gate') await commandGate(args);
   else if (command === 'ledger') await commandLedger(args);
   else if (command === 'rollback') await commandRollback(args);
+  else if (command === 'diff') await commandDiff(args);
   else if (command === 'experiment') await commandExperiment(args);
+  else if (command === 'report') await commandReport(args);
   else if (command === 'status') await commandStatus(args);
   else throw new EvoFenceError('USAGE', `Unknown command: ${command}\nRun evofence --help for usage.`);
 }

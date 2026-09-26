@@ -103,13 +103,31 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence report evolution-report.md
+evofence report evolution-report.json --json
+evofence diff <generation-id> [--json]
 ```
 
 `evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。尚无 ledger、ledger 文件为 0 字节或尚未建表时，`evofence status` 输出上述空状态。ledger 健康或为空时退出码为 0，完整性校验失败或 ledger 无法读取时退出码为 1。
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
+`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true，文本输出会显式标注截断）。输出前会先校验账本哈希链，并将 `generations` 行与哈希链上的 `generation.accepted` / `candidate.accepted` 记录交叉比对，链断裂或元数据不一致时以 `LEDGER_CORRUPT` 失败。展示的证据与提案绑定到验收记录的 `evidence_artifact` 与 `proposal_sha256`（验收需有唯一的前置 ACCEPT gate.decision 且绑定与基线证据通过其门（分数有效、增量达到契约 `min_delta`）；目标分数与增量绑定到重算的门证据，提案摘要会对其内容重算，增量基线取自已校验且与当前父提交成链的前置证据；验收之后追加的记录不会被当作其门证据、提案、基线或契约，重复、缺失或不可验证的链接视为歧义拒绝，且所有关联记录的 `base_sha` 必须等于已接受的父提交），链接断裂或有歧义时同样以 `LEDGER_CORRUPT` 失败（无这两个字段的历史验收记录保留 run/iteration 回退）。`diff_sha256` 由 Git 现场重算（口径为 `git diff --binary parent_sha..sha`，diff 属性钉在新一代的树上，主工作树的 `.gitattributes` 不会帩曲 diff 与哈希；属性钉住需要 Git 2.42 或更新版本，旧版 Git 会明确报错而不是静默跳过），与账本记录的 `diff_sha256_recorded` 比对，结果记入 `diff_sha256_matches`（账本无记录时为 `null`），不一致会在文本输出中标注。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现（没有 `candidate.accepted` 事件的新一代会标注 `not accepted`），证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
+
+```sh
+evofence diff g-run-20260101120000-abcd1234-i01
+evofence diff g-run-20260101120000-abcd1234-i01 --json
+```
+
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
+
+`evofence report [file] [--json]` 会把 ledger 汇总为演化报告：运行记录（`run.failed` 记为 FAILED 并带出失败码）、已接受的新一代、目标得分变化、已观测的 token/USD 用量和 ledger 哈希链校验结果。目标的指标名与优化方向取自每个 run 自己的 `contract_snapshot` 历史快照：跨目标不可比的代不会被合并（聚合字段输出 null，并按目标分组列出），方向未知时不会默认按 maximize 计算。完整性一栏报告哈希链校验结果与断链位置（`failed_at_seq`）；哈希链不带密钥，只能发现意外损坏或未重算哈希的修改，不能作为防篡改证明。报告还会把 generations 表与哈希链上的 `generation.accepted` 事件交叉校验，不一致时拒绝汇总（`generations_mismatch`）。默认输出 Markdown（`--json` 输出机器可读的 JSON，同时适合写入文件）；传入文件路径时会写入该文件并自动创建父目录，然后打印相对于仓库根目录的路径；输出路径不得落在 `.evofence/` 内，否则拒绝写入以保护控制面状态。例如：
+
+```sh
+evofence report
+evofence report reports/evolution.md
+evofence report reports/evolution.json --json
+```
 
 ### Agent 插件与扩展
 

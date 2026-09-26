@@ -228,6 +228,20 @@ export class Ledger {
     return { valid: true, events: rows.length, head: previous };
   }
 
+  // One read transaction so verification and the summaries observe the same ledger
+  // state even while an evolution run appends events from another process. Event
+  // payloads are not parsed when the chain is invalid.
+  readSnapshot() {
+    return this.db.transaction(() => {
+      const integrity = this.verify();
+      return {
+        integrity,
+        events: integrity.valid ? this.events() : [],
+        generations: this.generations(),
+      };
+    })();
+  }
+
   export() {
     const integrity = this.verify();
     return { schema_version: 1, integrity, active_generation: this.activeGeneration(), generations: this.generations(), events: this.events() };
