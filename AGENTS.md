@@ -6,7 +6,7 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
 
 ## Development
 
-- Requires Node.js 22.13 or newer and uses native ESM.
+- Requires Node.js 22.13 or newer and Git 2.42 or newer, and uses native ESM.
 - Install dependencies with `npm ci`; run the project gate with `npm run check`.
 - Keep generated state, local ledgers, private holdouts, and credentials out of Git.
 

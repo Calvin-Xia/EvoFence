@@ -105,9 +105,17 @@ evofence experiment export evidence.json
 evofence rollback <generation-id>
 evofence report evolution-report.md
 evofence report evolution-report.json --json
+evofence diff <generation-id> [--json]
 ```
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
+
+`evofence diff <generation-id>` prints the audit view for a generation: generation id, short sha and objective delta, the changed-path list, one evidence line per check (`id kind result`), then the unified diff for `parent_sha..sha` (capped at 200 KiB; `diff_truncated` is true when the cap cuts it and the text output marks the truncation). The command verifies the ledger hash chain first and cross-checks the `generations` row against its hash-chained `generation.accepted` / `candidate.accepted` records, failing with `LEDGER_CORRUPT` on a broken chain or disagreeing metadata. The displayed evidence and proposal are bound to the acceptance record's `evidence_artifact` and `proposal_sha256` links (a unique preceding ACCEPT gate decision and gate-passed bound and baseline evidence (valid score, improvement meeting the contract `min_delta`) are required; the objective score and improvement are bound to recomputed gate evidence, proposal digest claims are rehashed against their content, and the improvement baseline is derived from validated prior evidence chained to the accepted parent; records appended after the acceptance never count as its gate, proposal, baseline or contract, and duplicate, missing or unverifiable links are rejected as ambiguous, and every linked record must carry the accepted parent as its `base_sha`); a broken or ambiguous link fails with `LEDGER_CORRUPT` as well (acceptance records without those fields keep the run/iteration fallback). `diff_sha256` is recomputed from Git (`git diff --binary parent_sha..sha`) with diff attributes pinned to the generation's tree (`.gitattributes` in the primary checkout cannot skew the diff or the hash; Git 2.42 or newer is required for this pinning and older Git fails clearly instead of silently skipping it) and compared with the ledger's recorded `diff_sha256_recorded`; `diff_sha256_matches` records the verdict (`null` when the ledger has no recorded hash) and a mismatch is marked in the text output. With `--json` the same report is printed as pretty JSON. `objective` and `evidence` appear only when the ledger links them to the generation (a generation without a `candidate.accepted` event is labeled `not accepted`), and evidence carries check ids, kinds and results only — never command text or captured output.
+
+```sh
+evofence diff g-run-20260101120000-abcd1234-i01
+evofence diff g-run-20260101120000-abcd1234-i01 --json
+```
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
 
