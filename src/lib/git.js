@@ -15,6 +15,24 @@ export async function runGit(cwd, args, options = {}) {
   return result.stdout;
 }
 
+export function gitVersionAtLeast(versionOutput, major, minor) {
+  const match = /^git version (\d+)\.(\d+)/.exec(String(versionOutput).trim());
+  if (!match) return false;
+  const foundMajor = Number(match[1]);
+  const foundMinor = Number(match[2]);
+  return foundMajor > major || (foundMajor === major && foundMinor >= minor);
+}
+
+export function requireGitVersion(versionOutput, major, minor, feature) {
+  if (!gitVersionAtLeast(versionOutput, major, minor)) {
+    throw new EvoFenceError('GIT_VERSION_UNSUPPORTED', `Git ${major}.${minor} or newer is required for ${feature} (found "${String(versionOutput).trim()}").`);
+  }
+}
+
+export async function assertGitVersionAtLeast(root, major, minor, feature) {
+  requireGitVersion(await runGit(root, ['--version']), major, minor, feature);
+}
+
 export async function repositoryRoot(cwd) {
   const root = (await runGit(cwd, ['rev-parse', '--show-toplevel'])).trim();
   return path.resolve(root);

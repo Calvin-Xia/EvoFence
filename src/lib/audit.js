@@ -1,5 +1,5 @@
 import { EvoFenceError } from './errors.js';
-import { changedPathsBetween, diffHash, runGit } from './git.js';
+import { assertGitVersionAtLeast, changedPathsBetween, diffHash, runGit } from './git.js';
 
 const DIFF_CAP_BYTES = 200 * 1024;
 
@@ -133,6 +133,9 @@ export async function generationDiff({ root, ledger, generationId }) {
 
   // Pin diff attributes to the generation's tree so a divergent primary checkout
   // (e.g. different .gitattributes) cannot skew the diff or its recorded hash.
+  // GIT_ATTR_SOURCE needs Git 2.42+; on older Git it is silently ignored, so fail
+  // clearly instead of silently rendering the diff under the primary checkout's attributes.
+  await assertGitVersionAtLeast(root, 2, 42, 'attribute-pinned audit diffs');
   const attrEnv = { GIT_ATTR_SOURCE: generation.sha };
   const [changedPaths, diffText, computedDiffHash] = await Promise.all([
     changedPathsBetween(root, generation.parent_sha, generation.sha),
