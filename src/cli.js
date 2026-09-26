@@ -195,24 +195,31 @@ function isInsideDirectory(directory, target) {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
+// Canonicalize a path even when its tail does not exist yet: resolve the longest
+// existing ancestor via realpathSync.native (symlinks, junctions, 8.3 aliases) and
+// re-append the remaining components.
+function canonicalizePath(target) {
+  const suffix = [];
+  let current = path.resolve(target);
+  for (;;) {
+    try {
+      return path.join(realpathSync.native(current), ...suffix);
+    } catch {
+      const parent = path.dirname(current);
+      if (parent === current) return path.join(current, ...suffix);
+      suffix.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 // The report output must never land on EvoFence control-plane state (`.evofence/**`):
 // an unconditional overwrite here would destroy the ledger or the contract.
 function assertReportOutputOutsideState(root, output, display) {
-  const stateDir = path.join(realpathSync.native(root), '.evofence');
-  const candidates = new Set([output]);
-  try {
-    candidates.add(path.join(realpathSync.native(path.dirname(output)), path.basename(output)));
-  } catch {
-    // The output directory may not exist yet; the resolved-path check still applies.
-  }
-  try {
-    candidates.add(realpathSync.native(output));
-  } catch {
-    // The output file may not exist yet (or is not a symlink into state).
-  }
   const normalize = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
-  const state = normalize(stateDir);
-  if ([...candidates].some((candidate) => isInsideDirectory(state, normalize(path.resolve(candidate))))) {
+  const state = normalize(canonicalizePath(path.join(realpathSync.native(root), '.evofence')));
+  const target = normalize(canonicalizePath(output));
+  if (isInsideDirectory(state, target)) {
     throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report over EvoFence state: ${display}`);
   }
 }

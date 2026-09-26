@@ -6,7 +6,8 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -823,4 +824,124 @@ test('buildEvolutionReport refuses to summarize when the generations table contr
   assert.deepEqual(report.runs, []);
   assert.deepEqual(report.generations, []);
   assert.equal(report.objective, null);
+});
+
+test('buildEvolutionReport falls back to complete adapter telemetry when usage budgets are disabled', async () => {
+  const usage = (tokens, cost) => ({
+    tokens_complete: true,
+    tokens_total: tokens,
+    cost_complete: true,
+    cost_currency: 'USD',
+    reported_cost: cost,
+    cost_source: 'fixture',
+  });
+  const ledgerFile = await scratchLedger('unbudgeted-telemetry', (ledger) => {
+    // Unbudgeted run (shipped default: max_tokens/max_usd null): no budget.*.observed
+    // events and null run-level totals, but adapter.finished keeps complete usage.
+    ledger.append('run.started', 'run-f2-unbudgeted', { adapter: 'pi', contract_snapshot: CONTRACT_SNAPSHOT, token_budget: null });
+    ledger.append('adapter.finished', 'run-f2-unbudgeted', { adapter: 'pi', phase: 'implementation', iteration: 1, reported_usage: usage(300, 0.4) });
+    ledger.append('adapter.finished', 'run-f2-unbudgeted', { adapter: 'pi', phase: 'implementation', iteration: 2, reported_usage: usage(300, 0.4) });
+    ledger.append('run.finished', 'run-f2-unbudgeted', {
+      status: 'PLATEAU', iterations: 2, token_usage_total: null, cost_estimate_total_usd: null,
+    });
+    // Budgeted run: cumulative observations win and adapter sums must not double count.
+    ledger.append('run.started', 'run-f2-budgeted', { adapter: 'claude', contract_snapshot: CONTRACT_SNAPSHOT, token_budget: 100000 });
+    ledger.append('adapter.finished', 'run-f2-budgeted', { adapter: 'claude', phase: 'implementation', iteration: 1, reported_usage: usage(500, 1) });
+    ledger.append('budget.tokens.observed', 'run-f2-budgeted', {
+      metric: 'tokens', phase: 'implementation', iteration: 1, invocation_tokens: 500, observed_total: 3000, limit: 100000, stop_reason: null,
+    });
+    ledger.append('budget.usd.observed', 'run-f2-budgeted', {
+      metric: 'estimated_usd', phase: 'implementation', iteration: 1, observed_total_usd: 2, observed_total_usd_micros: 2000000,
+    });
+    ledger.append('run.finished', 'run-f2-budgeted', {
+      status: 'PLATEAU', iterations: 1, token_usage_total: 3000, cost_estimate_total_usd: 2,
+    });
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.budgets.tokens_total, 300 + 300 + 3000, 'unbudgeted adapter telemetry must be counted exactly once');
+  assert.equal(report.budgets.usd_total, 0.8 + 2, 'unbudgeted adapter cost must be counted exactly once');
+});
+
+test('CLI report rejects state-alias symlink paths that resolve into .evofence', async (t) => {
+  const alias = path.join(fixture.root, 'state-alias');
+  try {
+    await symlink(path.join(fixture.root, '.evofence'), alias, process.platform === 'win32' ? 'junction' : 'dir');
+  } catch {
+    t.skip('symlink/junction creation is unavailable in this environment');
+    return;
+  }
+
+  const result = spawnCli(['report', 'state-alias/new/report.json']);
+  assert.notEqual(result.status, 0, 'a path resolving into .evofence through an alias must be rejected');
+  assert.match(result.stderr, /^\[PROTECTED_PATH\]/, result.stderr);
+  assert.equal(
+    existsSync(path.join(fixture.root, '.evofence', 'new', 'report.json')),
+    false,
+    'no file may be created under .evofence via the alias',
+  );
+});
+
+test('Ledger.readSnapshot returns integrity, events and generations from one transaction', async () => {
+  const ledgerFile = await scratchLedger('read-snapshot', (ledger) => {
+    ledger.append('run.started', 'run-f2-snapshot', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
+    acceptScratchGeneration(ledger, 'run-f2-snapshot', 1, 'g-s1', 0.25, 0.25, '2026-03-10T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-snapshot', { status: 'ACCEPTED', iterations: 1 });
+  });
+
+  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const ledger = new Ledger(ledgerFile);
+  try {
+    const snapshot = ledger.readSnapshot();
+    assert.equal(snapshot.integrity.valid, true);
+    assert.ok(Array.isArray(snapshot.events) && snapshot.events.length > 0);
+    assert.equal(snapshot.generations.length, 1);
+    for (const row of snapshot.generations) {
+      assert.ok(
+        snapshot.events.some((event) => event.event_type === 'generation.accepted'
+          && event.payload?.generation_id === row.generation_id
+          && event.payload?.sha === row.sha),
+        'every table row must be attested by an event in the same snapshot',
+      );
+    }
+  } finally {
+    ledger.close();
+  }
+});
+
+test('buildEvolutionReport reads integrity, events and generations through one atomic snapshot', async () => {
+  const { buildEvolutionReport } = await repoImport('src/lib/report.js');
+  const refuse = (method) => () => {
+    throw new Error(`buildEvolutionReport must not call ${method}() directly; use one readSnapshot()`);
+  };
+  const stub = {
+    readSnapshot: () => ({
+      integrity: { valid: true },
+      events: [
+        {
+          seq: 1,
+          event_type: 'run.started',
+          run_id: 'run-f2-stub',
+          created_at: '2026-03-11T00:00:00.000Z',
+          payload: { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT },
+        },
+        {
+          seq: 2,
+          event_type: 'run.finished',
+          run_id: 'run-f2-stub',
+          created_at: '2026-03-11T00:00:01.000Z',
+          payload: { status: 'ACCEPTED', iterations: 1 },
+        },
+      ],
+      generations: [],
+    }),
+    verify: refuse('verify'),
+    events: refuse('events'),
+    generations: refuse('generations'),
+  };
+
+  const report = await buildEvolutionReport({ root: fixture.root, ledger: stub });
+  assert.equal(report.integrity.valid, true);
+  assert.equal(report.run_count, 1);
+  assert.equal(report.runs[0].status, 'ACCEPTED');
 });

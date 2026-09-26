@@ -35,6 +35,32 @@ function usdTotalMicros(payload) {
   return null;
 }
 
+// Fallback for runs without any cumulative budget observation (usage budgets disabled):
+// complete per-invocation telemetry on `adapter.finished` is summed per run instead.
+function invocationTotalsByRun(events, extract) {
+  const totals = new Map();
+  for (const event of events) {
+    if (event.event_type !== 'adapter.finished') continue;
+    const value = extract(event.payload?.reported_usage ?? {});
+    if (value === null) continue;
+    const runId = event.run_id ?? '';
+    totals.set(runId, (totals.get(runId) ?? 0) + value);
+  }
+  return totals;
+}
+
+function invocationTokenTotal(usage) {
+  return usage.tokens_complete === true && Number.isSafeInteger(usage.tokens_total) && usage.tokens_total >= 0
+    ? usage.tokens_total
+    : null;
+}
+
+function invocationUsdTotalMicros(usage) {
+  return usage.cost_complete === true && usage.cost_currency === 'USD' && Number.isFinite(usage.reported_cost) && usage.reported_cost >= 0
+    ? Math.round(usage.reported_cost * MICROS_PER_USD)
+    : null;
+}
+
 function summarizeRuns(events) {
   const eventsByRun = new Map();
   for (const event of events) {
@@ -232,20 +258,12 @@ function emptyReport(generated_at, integrity) {
 
 export async function buildEvolutionReport({ root, ledger }) {
   const generated_at = new Date().toISOString();
-  const integrity = ledger.verify();
-  if (!integrity.valid) {
-    return emptyReport(generated_at, {
-      valid: false,
-      failed_at_seq: integrity.sequence ?? null,
-      expected_previous_hash: integrity.expected_previous_hash ?? null,
-      observed_hash: integrity.observed_hash ?? null,
-    });
-  }
-
-  let events;
+  let snapshot;
   try {
-    events = ledger.events();
-  } catch {
+    // One transaction: verification and both reads see the same ledger state.
+    snapshot = ledger.readSnapshot();
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) throw error;
     // The hash chain matched but at least one payload is not valid JSON (for example a
     // tampered ledger whose chain was recomputed). Refuse to summarize unreadable payloads.
     return emptyReport(generated_at, {
@@ -257,7 +275,18 @@ export async function buildEvolutionReport({ root, ledger }) {
     });
   }
 
-  const tableGenerations = ledger.generations();
+  const integrity = snapshot.integrity;
+  if (!integrity.valid) {
+    return emptyReport(generated_at, {
+      valid: false,
+      failed_at_seq: integrity.sequence ?? null,
+      expected_previous_hash: integrity.expected_previous_hash ?? null,
+      observed_hash: integrity.observed_hash ?? null,
+    });
+  }
+
+  const events = snapshot.events;
+  const tableGenerations = snapshot.generations;
   if (!generationsTableConsistent(tableGenerations, generationEventRecords(events))) {
     return emptyReport(generated_at, {
       valid: false,
@@ -270,7 +299,13 @@ export async function buildEvolutionReport({ root, ledger }) {
   const generations = buildGenerations(events, tableGenerations);
 
   const tokenTotals = latestCumulativeByRun(events, TOKEN_TOTAL_EVENTS, tokenTotal);
+  for (const [runId, value] of invocationTotalsByRun(events, invocationTokenTotal)) {
+    if (!tokenTotals.has(runId)) tokenTotals.set(runId, value);
+  }
   const usdTotals = latestCumulativeByRun(events, USD_TOTAL_EVENTS, usdTotalMicros);
+  for (const [runId, value] of invocationTotalsByRun(events, invocationUsdTotalMicros)) {
+    if (!usdTotals.has(runId)) usdTotals.set(runId, value);
+  }
 
   const runs = summarizeRuns(events);
   return {
