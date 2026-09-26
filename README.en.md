@@ -107,7 +107,7 @@ evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
 
-`evofence status` prints a one-screen operational overview: the active generation, ledger integrity, cumulative totals (runs, generations, accepted and rejected candidates), and the five most recent run summaries. Pass `--json` for the status object as pretty JSON. The status never embeds evidence command output content.
+`evofence status` prints a one-screen operational overview: the active generation, ledger integrity, cumulative totals (runs, generations, accepted and rejected candidates), and the five most recent run summaries. Pass `--json` for the status object as pretty JSON. The status never embeds evidence command output content. A missing ledger, a zero-byte ledger file, or a ledger without schema is reported as the documented empty state. `evofence status` exits 0 when the ledger is healthy or empty, and exits 1 when ledger integrity fails or the ledger cannot be read.
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.
 

@@ -105,7 +105,7 @@ evofence experiment export evidence.json
 evofence rollback <generation-id>
 ```
 
-`evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。
+`evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。尚无 ledger、ledger 文件为 0 字节或尚未建表时，`evofence status` 输出上述空状态。ledger 健康或为空时退出码为 0，完整性校验失败或 ledger 无法读取时退出码为 1。
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
