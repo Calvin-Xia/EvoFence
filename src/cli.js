@@ -198,24 +198,27 @@ function isInsideDirectory(directory, target) {
 // Canonicalize a path even when its tail does not exist yet: resolve the longest
 // existing ancestor via realpathSync.native (symlinks, junctions, 8.3 aliases) and
 // re-append the remaining components. Dangling links are followed through
-// lstat/readlink so a leaf link into state cannot masquerade as a plain file name.
-function canonicalizePath(target, depth = 0) {
+// lstat/readlink so a leaf link into state cannot masquerade as a plain file name;
+// symlink chains that exceed the depth cap fail closed instead of falling back to
+// lexical resolution.
+function canonicalizePath(target, display, depth = 0) {
   const suffix = [];
   let current = path.resolve(target);
   for (;;) {
     try {
       return path.join(realpathSync.native(current), ...suffix);
     } catch {
-      if (depth < 32) {
-        let link = null;
-        try {
-          if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
-        } catch {
-          // Missing component: treated as an ordinary suffix below.
+      let link = null;
+      try {
+        if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
+      } catch {
+        // Missing component: treated as an ordinary suffix below.
+      }
+      if (link !== null) {
+        if (depth >= 32) {
+          throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report through an unresolvable symlink chain: ${display}`);
         }
-        if (link !== null) {
-          return path.join(canonicalizePath(path.resolve(path.dirname(current), link), depth + 1), ...suffix);
-        }
+        return path.join(canonicalizePath(path.resolve(path.dirname(current), link), display, depth + 1), ...suffix);
       }
       const parent = path.dirname(current);
       if (parent === current) return path.join(current, ...suffix);
@@ -230,7 +233,7 @@ function canonicalizePath(target, depth = 0) {
 function assertReportOutputOutsideState(root, output, display) {
   const normalize = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
   const state = normalize(canonicalizePath(path.join(realpathSync.native(root), '.evofence')));
-  const target = normalize(canonicalizePath(output));
+  const target = normalize(canonicalizePath(output, display));
   if (isInsideDirectory(state, target)) {
     throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report over EvoFence state: ${display}`);
   }

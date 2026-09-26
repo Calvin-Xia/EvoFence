@@ -942,6 +942,42 @@ test('CLI report rejects dangling symlink targets that resolve into .evofence', 
   );
 });
 
+test('CLI report fails closed on symlink chains that exceed the resolution cap', async (t) => {
+  const makeChain = async (links, finalTarget, prefix) => {
+    const names = [];
+    for (let index = 0; index < links; index += 1) names.push(path.join(fixture.root, `${prefix}-${index}`));
+    for (let index = links - 1; index >= 0; index -= 1) {
+      const target = index === links - 1 ? finalTarget : names[index + 1];
+      try {
+        await symlink(target, names[index], process.platform === 'win32' ? 'junction' : 'file');
+      } catch {
+        try {
+          await symlink(target, names[index], 'junction');
+        } catch {
+          return null;
+        }
+      }
+    }
+    return names[0];
+  };
+
+  const unsafeStart = await makeChain(33, path.join(fixture.root, '.evofence', 'report.json'), 'chain-out');
+  if (unsafeStart === null) {
+    t.skip('symlink and junction creation are unavailable in this environment');
+    return;
+  }
+
+  const result = spawnCli(['report', path.basename(unsafeStart)]);
+  assert.match(result.stderr, /^\[PROTECTED_PATH\]/, `a 33-link chain into state must fail closed, got: ${result.stderr}`);
+  assert.equal(existsSync(path.join(fixture.root, '.evofence', 'report.json')), false, 'nothing may be written under .evofence');
+
+  // A chain within the cap that resolves outside state must not be rejected.
+  const safeStart = await makeChain(32, path.join(fixture.root, 'safe-report.json'), 'safe-out');
+  if (safeStart === null) return;
+  const safeResult = spawnCli(['report', path.basename(safeStart)]);
+  assert.doesNotMatch(safeResult.stderr, /\[PROTECTED_PATH\]/, 'a deep chain resolving outside state must stay writable');
+});
+
 test('Ledger.readSnapshot returns integrity, events and generations from one transaction', async () => {
   const ledgerFile = await scratchLedger('read-snapshot', (ledger) => {
     ledger.append('run.started', 'run-f2-snapshot', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
