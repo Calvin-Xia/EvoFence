@@ -32,15 +32,22 @@ function acceptedEvent(events, generationId) {
 function proposalEventFor(events, accepted) {
   const digest = accepted.payload?.proposal_sha256;
   if (typeof digest === 'string') {
-    const byDigest = latestEvent(events, (event) => event.event_type === 'proposal.created'
+    const byDigest = events.filter((event) => event.event_type === 'proposal.created'
       && event.run_id === accepted.run_id && event.payload?.proposal_sha256 === digest);
-    if (!byDigest) {
+    if (!byDigest.length) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches no proposal.created event for run ${accepted.run_id}.`);
     }
-    return byDigest;
+    if (byDigest.length > 1) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches ${byDigest.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
+    }
+    return byDigest[0];
   }
-  return latestEvent(events, (event) => event.event_type === 'proposal.created'
+  const byIteration = events.filter((event) => event.event_type === 'proposal.created'
     && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
+  if (byIteration.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${byIteration.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
+  }
+  return byIteration[0] ?? null;
 }
 
 function evidenceEventFor(events, accepted) {
@@ -102,6 +109,33 @@ function verifyObjectiveEvidence(accepted, evidenceEvent, generationId) {
   }
 }
 
+function improvementBaselineScore(events, accepted) {
+  const previous = latestEvent(events, (event) => event.event_type === 'candidate.accepted'
+    && event.run_id === accepted.run_id
+    && event.seq < accepted.seq
+    && typeof event.payload?.objective_score === 'number');
+  if (previous) return previous.payload.objective_score;
+  const baseline = latestEvent(events, (event) => event.event_type === 'evidence.baseline' && event.run_id === accepted.run_id);
+  const score = baseline?.payload?.objective?.objective?.score ?? baseline?.payload?.objective?.score;
+  return typeof score === 'number' ? score : null;
+}
+
+function verifyImprovementEvidence(events, accepted, runStartedEvent, generationId) {
+  if (!accepted) return;
+  const improvement = accepted.payload?.improvement;
+  if (typeof improvement !== 'number') return;
+  const score = accepted.payload?.objective_score;
+  const direction = runStartedEvent?.payload?.contract_snapshot?.objective?.direction;
+  const baselineScore = improvementBaselineScore(events, accepted);
+  if (typeof score !== 'number' || baselineScore === null || typeof direction !== 'string') {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted improvement ${improvement} for generation ${generationId} cannot be derived from ledger evidence.`);
+  }
+  const expected = direction === 'maximize' ? score - baselineScore : baselineScore - score;
+  if (expected !== improvement) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted improvement ${improvement} disagrees with ledger evidence (expected ${expected}) for generation ${generationId}.`);
+  }
+}
+
 function auditObjective(accepted, proposalEvent, runStartedEvent) {
   if (!accepted) return null;
   const contractObjective = runStartedEvent?.payload?.contract_snapshot?.objective;
@@ -147,6 +181,7 @@ export async function generationDiff({ root, ledger, generationId }) {
   verifyObjectiveEvidence(accepted, evidenceEvent, generationId);
   const runStartedEvent = runStartedEventFor(events, generation.run_id)
     ?? runStartedEventFor(events, accepted?.run_id ?? null);
+  verifyImprovementEvidence(events, accepted, runStartedEvent, generationId);
 
   // Pin diff attributes to the generation's tree so a divergent primary checkout
   // (e.g. different .gitattributes) cannot skew the diff or its recorded hash.
