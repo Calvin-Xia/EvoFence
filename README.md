@@ -101,6 +101,8 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence report evolution-report.md
+evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
 
@@ -114,6 +116,14 @@ evofence diff g-run-20260101120000-abcd1234-i01 --json
 ```
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
+
+`evofence report [file] [--json]` 会把 ledger 汇总为演化报告：运行记录（`run.failed` 记为 FAILED 并带出失败码）、已接受的新一代、目标得分变化、已观测的 token/USD 用量和 ledger 哈希链校验结果。目标的指标名与优化方向取自每个 run 自己的 `contract_snapshot` 历史快照：跨目标不可比的代不会被合并（聚合字段输出 null，并按目标分组列出），方向未知时不会默认按 maximize 计算。完整性一栏报告哈希链校验结果与断链位置（`failed_at_seq`）；哈希链不带密钥，只能发现意外损坏或未重算哈希的修改，不能作为防篡改证明。报告还会把 generations 表与哈希链上的 `generation.accepted` 事件交叉校验，不一致时拒绝汇总（`generations_mismatch`）。默认输出 Markdown（`--json` 输出机器可读的 JSON，同时适合写入文件）；传入文件路径时会写入该文件并自动创建父目录，然后打印相对于仓库根目录的路径；输出路径不得落在 `.evofence/` 内，否则拒绝写入以保护控制面状态。例如：
+
+```sh
+evofence report
+evofence report reports/evolution.md
+evofence report reports/evolution.json --json
+```
 
 ### Agent 插件与扩展
 

@@ -103,6 +103,8 @@ evofence ledger verify
 evofence ledger recent 10
 evofence experiment export evidence.json
 evofence rollback <generation-id>
+evofence report evolution-report.md
+evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
 
@@ -116,6 +118,14 @@ evofence diff g-run-20260101120000-abcd1234-i01 --json
 ```
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
+
+`evofence report [file] [--json]` summarizes the ledger into an evolution report: runs (`run.failed` runs are reported as FAILED with their failure code), accepted generations, objective score movement, observed token/USD usage, and the ledger hash-chain verification result. Objective metric and direction come from each run's own historical `contract_snapshot`: generations with incompatible objectives are never combined (the aggregate fields stay null and per-objective groups are listed), and an unknown direction is never assumed to be maximize. The integrity section reports the hash-chain check and the breaking sequence (`failed_at_seq`); the chain is unkeyed, so it detects accidental corruption and edits that did not recompute the hashes, but it is not tamper proof. The report also cross-checks the `generations` table against the hash-chained `generation.accepted` events and refuses to summarize on any disagreement (`generations_mismatch`). It prints Markdown by default, or machine-readable JSON with `--json`; when given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root; an output path inside `.evofence/` is rejected to protect control-plane state. For example:
+
+```sh
+evofence report
+evofence report reports/evolution.md
+evofence report reports/evolution.json --json
+```
 
 ### Agent plugins and extensions
 
