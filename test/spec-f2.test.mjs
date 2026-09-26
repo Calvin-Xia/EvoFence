@@ -914,6 +914,34 @@ test('CLI report rejects state-alias symlink paths that resolve into .evofence',
   );
 });
 
+test('CLI report rejects dangling symlink targets that resolve into .evofence', async (t) => {
+  // Leaf file symlink dangling into state (the POSIX repro), or, where file symlinks
+  // need privileges, a directory junction with a not-yet-existing target.
+  const leafLink = path.join(fixture.root, 'dangling-out');
+  const junctionLink = path.join(fixture.root, 'dangling-alias');
+  let attempted = 'dangling-out';
+  try {
+    await symlink(path.join(fixture.root, '.evofence', 'report.json'), leafLink);
+  } catch {
+    try {
+      await symlink(path.join(fixture.root, '.evofence', 'ghost'), junctionLink, 'junction');
+      attempted = 'dangling-alias/report.json';
+    } catch {
+      t.skip('symlink and junction creation are unavailable in this environment');
+      return;
+    }
+  }
+
+  const result = spawnCli(['report', attempted]);
+  assert.notEqual(result.status, 0, 'a dangling link resolving into .evofence must be rejected');
+  assert.match(result.stderr, /^\[PROTECTED_PATH\]/, result.stderr);
+  assert.equal(
+    existsSync(path.join(fixture.root, '.evofence', 'report.json')) || existsSync(path.join(fixture.root, '.evofence', 'ghost')),
+    false,
+    'no file may be created under .evofence via the dangling link',
+  );
+});
+
 test('Ledger.readSnapshot returns integrity, events and generations from one transaction', async () => {
   const ledgerFile = await scratchLedger('read-snapshot', (ledger) => {
     ledger.append('run.started', 'run-f2-snapshot', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { realpathSync } from 'node:fs';
+import { lstatSync, readlinkSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -197,14 +197,26 @@ function isInsideDirectory(directory, target) {
 
 // Canonicalize a path even when its tail does not exist yet: resolve the longest
 // existing ancestor via realpathSync.native (symlinks, junctions, 8.3 aliases) and
-// re-append the remaining components.
-function canonicalizePath(target) {
+// re-append the remaining components. Dangling links are followed through
+// lstat/readlink so a leaf link into state cannot masquerade as a plain file name.
+function canonicalizePath(target, depth = 0) {
   const suffix = [];
   let current = path.resolve(target);
   for (;;) {
     try {
       return path.join(realpathSync.native(current), ...suffix);
     } catch {
+      if (depth < 32) {
+        let link = null;
+        try {
+          if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
+        } catch {
+          // Missing component: treated as an ordinary suffix below.
+        }
+        if (link !== null) {
+          return path.join(canonicalizePath(path.resolve(path.dirname(current), link), depth + 1), ...suffix);
+        }
+      }
       const parent = path.dirname(current);
       if (parent === current) return path.join(current, ...suffix);
       suffix.unshift(path.basename(current));
