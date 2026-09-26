@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add `evofence diff <generation-id> [--json]`, a generation audit view backed by `src/lib/audit.js`: it reports a generation's changed paths, unified diff (capped at 200 KiB), objective delta, and the gate evidence that accepted it, without embedding evidence output content.
+- Add `evofence diff <generation-id> [--json]`, a generation audit view backed by `src/lib/audit.js`: it verifies the ledger hash chain first (failing with `LEDGER_CORRUPT`), reports a generation's changed paths, unified diff (capped at 200 KiB, marked in text output when truncated), objective delta, and the gate evidence that accepted it without embedding evidence output content, recomputes `diff_sha256` from Git and flags disagreements with the recorded `diff_sha256_recorded` via `diff_sha256_matches`, and labels generations without acceptance evidence as not accepted.
 
 ## 0.2.1
 

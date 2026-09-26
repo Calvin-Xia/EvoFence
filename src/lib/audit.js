@@ -81,6 +81,10 @@ function auditEvidence(evidenceEvent) {
 }
 
 export async function generationDiff({ root, ledger, generationId }) {
+  const integrity = ledger.verify();
+  if (!integrity.valid) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `SQLite ledger hash chain failed at event ${integrity.sequence}.`);
+  }
   const generation = ledger.generation(generationId);
   if (!generation) throw new EvoFenceError('GENERATION_NOT_FOUND', `Generation not found: ${generationId}`);
   const events = ledger.events();
@@ -90,21 +94,23 @@ export async function generationDiff({ root, ledger, generationId }) {
   const runStartedEvent = runStartedEventFor(events, generation.run_id)
     ?? runStartedEventFor(events, accepted?.run_id ?? null);
 
-  const [changedPaths, diffText, recordedDiffHash] = await Promise.all([
+  const [changedPaths, diffText, computedDiffHash] = await Promise.all([
     changedPathsBetween(root, generation.parent_sha, generation.sha),
     runGit(root, ['diff', '--no-ext-diff', '--no-renames', generation.parent_sha, generation.sha], { maxOutputBytes: 50_000_000 }),
-    typeof accepted?.payload?.diff_sha256 === 'string'
-      ? accepted.payload.diff_sha256
-      : diffHash(root, generation.parent_sha, generation.sha),
+    diffHash(root, generation.parent_sha, generation.sha),
   ]);
   const { diff, diff_truncated } = capDiff(diffText);
+  const recordedDiffHash = typeof accepted?.payload?.diff_sha256 === 'string' ? accepted.payload.diff_sha256 : null;
 
   return {
     generation_id: generation.generation_id,
     run_id: generation.run_id ?? null,
     sha: generation.sha,
     parent_sha: generation.parent_sha,
-    diff_sha256: recordedDiffHash,
+    accepted: accepted !== null,
+    diff_sha256: computedDiffHash,
+    diff_sha256_recorded: recordedDiffHash,
+    diff_sha256_matches: recordedDiffHash === null ? null : recordedDiffHash === computedDiffHash,
     changed_paths: [...changedPaths].sort(),
     diff,
     diff_truncated,
@@ -123,10 +129,20 @@ function objectiveDelta(objective) {
 }
 
 export function formatGenerationDiff(report) {
-  const lines = [
-    `Generation ${report.generation_id} ${report.sha.slice(0, 12)} ${objectiveDelta(report.objective)}`,
+  const status = report.accepted === false
+    ? 'not accepted (no candidate.accepted event in the ledger)'
+    : objectiveDelta(report.objective);
+  const lines = [`Generation ${report.generation_id} ${report.sha.slice(0, 12)} ${status}`];
+  if (report.diff_sha256_matches === false) {
+    lines.push(`[diff hash mismatch: the ledger records ${report.diff_sha256_recorded} but the git diff hashes to ${report.diff_sha256}]`);
+  }
+  lines.push(
     ...report.changed_paths,
     ...(report.evidence ? report.evidence.checks.map((check) => `${check.id} ${check.kind} ${check.result}`) : []),
-  ];
-  return `${lines.join('\n')}\n${report.diff}`;
+    ...(report.diff_truncated
+      ? [`[diff truncated at ${DIFF_CAP_BYTES} bytes; the unified diff below is incomplete]`]
+      : []),
+  );
+  const tail = report.diff_truncated ? '\n[... diff truncated ...]' : '';
+  return `${lines.join('\n')}\n${report.diff}${tail}`;
 }

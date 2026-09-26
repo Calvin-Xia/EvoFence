@@ -7,6 +7,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -14,6 +15,7 @@ import { pathToFileURL } from 'node:url';
 const EVIDENCE_SECRET = 'EVIDENCE-STDOUT-MUST-NOT-LEAK-7f3c9a';
 const RUN_ID = 'run-f1-fixture';
 const ORPHAN_RUN_ID = 'run-f1-orphan';
+const AUDIT_RUN_ID = 'run-f1-audit-fixture';
 const GENERATION_ID = `g-${RUN_ID}-i01`;
 const ORPHAN_GENERATION_ID = 'g-orphan-fixture';
 const PROPOSAL_ID = 'prop-f1-fixture-01';
@@ -28,7 +30,8 @@ const EXPECTED_CHECKS = [
   { id: 'public-1', kind: 'public_check', result: 'PASS' },
 ];
 const DOCUMENTED_KEYS = [
-  'generation_id', 'run_id', 'sha', 'parent_sha', 'diff_sha256', 'changed_paths',
+  'generation_id', 'run_id', 'sha', 'parent_sha', 'accepted', 'diff_sha256', 'diff_sha256_recorded',
+  'diff_sha256_matches', 'changed_paths',
   'diff', 'diff_truncated', 'objective', 'evidence', 'proposal_id', 'accepted_at',
 ];
 
@@ -249,6 +252,102 @@ async function buildFixture() {
   return { directory, root, ledgerFile, parentSha, sha, recordedDiffHash, recordedChangedPaths, acceptedAt };
 }
 
+async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null } = {}) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
+  const root = path.join(directory, 'repo');
+  await mkdir(path.join(root, 'src'), { recursive: true });
+  runGit(root, ['init', '--quiet', '--initial-branch=main']);
+  runGit(root, ['config', 'user.name', 'EvoFence Fixture']);
+  runGit(root, ['config', 'user.email', 'fixture@example.invalid']);
+  runGit(root, ['config', 'commit.gpgsign', 'false']);
+  runGit(root, ['config', 'core.autocrlf', 'false']);
+
+  await writeFile(path.join(root, 'src/app.txt'), 'v1\n');
+  runGit(root, ['add', '-A']);
+  runGit(root, ['commit', '--quiet', '-m', 'baseline']);
+  const parentSha = runGit(root, ['rev-parse', 'HEAD']);
+
+  await writeFile(path.join(root, 'src/app.txt'), bigDiff ? `${'x'.repeat(300 * 1024)}\n` : 'v2\n');
+  runGit(root, ['add', '-A']);
+  runGit(root, ['commit', '--quiet', '-m', 'accept']);
+  const sha = runGit(root, ['rev-parse', 'HEAD']);
+
+  const { Ledger, ledgerPath } = await repoImport('src/lib/ledger.js');
+  const { diffHash } = await repoImport('src/lib/git.js');
+  const ledgerFile = ledgerPath(root);
+  const recordedDiffHash = recordedDiffHashOverride ?? (await diffHash(root, parentSha, sha));
+  const generationId = 'g-audit-fixture-i01';
+
+  await mkdir(path.dirname(ledgerFile), { recursive: true });
+  const ledger = new Ledger(ledgerFile);
+  try {
+    ledger.append('run.started', AUDIT_RUN_ID, {
+      contract_snapshot: { objective: { name: OBJECTIVE_METRIC, direction: 'maximize' } },
+    });
+    ledger.append('proposal.created', AUDIT_RUN_ID, {
+      proposal_id: 'prop-audit-fixture-01',
+      iteration: 1,
+      proposal_sha256: 'e'.repeat(64),
+      proposal: { expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' } },
+    });
+    ledger.append('evidence.candidate', AUDIT_RUN_ID, {
+      iteration: 1,
+      evidence: {
+        all_public_passed: true,
+        all_private_within_tolerance: true,
+        public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
+      },
+    });
+    ledger.recordGeneration({
+      generation_id: generationId,
+      run_id: AUDIT_RUN_ID,
+      sha,
+      parent_sha: parentSha,
+      created_at: GENERATION_CREATED_AT,
+    });
+    ledger.append('candidate.accepted', AUDIT_RUN_ID, {
+      iteration: 1,
+      generation_id: generationId,
+      sha,
+      parent_sha: parentSha,
+      diff_sha256: recordedDiffHash,
+      objective_score: OBJECTIVE_SCORE,
+      improvement: OBJECTIVE_IMPROVEMENT,
+      proposal_sha256: 'e'.repeat(64),
+    });
+  } finally {
+    ledger.close();
+  }
+  return { directory, root, ledgerFile, generationId, parentSha, sha, recordedDiffHash };
+}
+
+async function callGenerationDiffAt(auditFixture, generationId) {
+  const { generationDiff } = await repoImport('src/lib/audit.js');
+  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const ledger = new Ledger(auditFixture.ledgerFile);
+  try {
+    return await generationDiff({ root: auditFixture.root, ledger, generationId });
+  } finally {
+    ledger.close();
+  }
+}
+
+function tamperAcceptedPayload(ledgerFile, mutate) {
+  const requireFromCwd = createRequire(path.join(process.cwd(), 'package.json'));
+  const Database = requireFromCwd('better-sqlite3');
+  const db = new Database(ledgerFile);
+  try {
+    db.exec('DROP TRIGGER IF EXISTS events_no_update');
+    const row = db.prepare("SELECT seq, payload_json FROM events WHERE event_type = 'candidate.accepted' ORDER BY seq DESC LIMIT 1").get();
+    assert.ok(row, 'tamper fixture must contain a candidate.accepted event');
+    const payload = JSON.parse(row.payload_json);
+    mutate(payload);
+    db.prepare('UPDATE events SET payload_json = ? WHERE seq = ?').run(JSON.stringify(payload), row.seq);
+  } finally {
+    db.close();
+  }
+}
+
 before(async () => {
   cliPath = path.resolve('src/cli.js');
   fixture = await buildFixture();
@@ -276,13 +375,17 @@ async function callGenerationDiff(generationId) {
   }
 }
 
-function spawnCli(args) {
+function spawnCliIn(root, args) {
   return spawnSync(process.execPath, [cliPath, ...args], {
-    cwd: fixture.root,
+    cwd: root,
     encoding: 'utf8',
     timeout: 60000,
     maxBuffer: 16 * 1024 * 1024,
   });
+}
+
+function spawnCli(args) {
+  return spawnCliIn(fixture.root, args);
 }
 
 test('generationDiff returns the full documented report for an accepted generation', async () => {
@@ -299,6 +402,9 @@ test('generationDiff returns the full documented report for an accepted generati
   assert.match(report.sha, /^[0-9a-f]{40}$/);
   assert.match(report.parent_sha, /^[0-9a-f]{40}$/);
   assert.equal(report.diff_sha256, fixture.recordedDiffHash);
+  assert.equal(report.accepted, true);
+  assert.equal(report.diff_sha256_recorded, fixture.recordedDiffHash);
+  assert.equal(report.diff_sha256_matches, true);
   assert.deepEqual(report.changed_paths, fixture.recordedChangedPaths);
   assert.deepEqual(report.changed_paths, EXPECTED_CHANGED_PATHS);
   assert.equal(report.diff_truncated, false);
@@ -341,11 +447,17 @@ test('generationDiff reports null links for a generation without candidate event
   assert.equal(report.diff_truncated, false);
   assert.equal(typeof report.diff, 'string');
   assert.equal(report.diff.trim(), '');
+  assert.equal(report.accepted, false);
+  assert.equal(report.diff_sha256_recorded, null);
+  assert.equal(report.diff_sha256_matches, null);
   assert.equal(report.objective, null);
   assert.equal(report.evidence, null);
   assert.equal(report.proposal_id, null);
   assert.equal(typeof report.accepted_at, 'string');
   assert.equal(Number.isNaN(Date.parse(report.accepted_at)), false);
+  const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+  const text = formatGenerationDiff(report);
+  assert.ok(text.includes('not accepted'), `text output must label the generation as not accepted:\n${text}`);
 });
 
 test('generationDiff rejects an unknown generation with EvoFenceError GENERATION_NOT_FOUND', async () => {
@@ -414,6 +526,94 @@ test('CLI diff --json prints the documented report as parseable JSON', async () 
   });
   assert.equal(report.proposal_id, PROPOSAL_ID);
   assert.equal(result.stdout.includes(EVIDENCE_SECRET), false, 'CLI output must never embed evidence output');
+});
+
+test('generationDiff rejects a tampered ledger with EvoFenceError LEDGER_CORRUPT before presenting evidence', async () => {
+  const auditFixture = await buildAuditFixture();
+  try {
+    tamperAcceptedPayload(auditFixture.ledgerFile, (payload) => {
+      payload.objective_score = 0.99;
+      payload.improvement = 0.49;
+    });
+    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const probe = new Ledger(auditFixture.ledgerFile);
+    try {
+      assert.equal(probe.verify().valid, false, 'the tampered fixture must break the hash chain');
+    } finally {
+      probe.close();
+    }
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /hash chain failed at event \d+/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI diff exits 1 with LEDGER_CORRUPT when the ledger hash chain is broken', async () => {
+  const auditFixture = await buildAuditFixture();
+  try {
+    tamperAcceptedPayload(auditFixture.ledgerFile, (payload) => {
+      payload.objective_score = 0.99;
+      payload.improvement = 0.49;
+    });
+    const result = spawnCliIn(auditFixture.root, ['diff', auditFixture.generationId]);
+    assert.equal(result.status, 1, `expected exit code 1, got ${result.status}`);
+    assert.ok(
+      result.stderr.startsWith('[LEDGER_CORRUPT] '),
+      `stderr must start with "[LEDGER_CORRUPT] ": ${result.stderr}`,
+    );
+    assert.equal(result.stdout, '', 'a corrupt ledger must never yield a printed audit record');
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff caps an oversized diff and formatGenerationDiff marks the truncation', async () => {
+  const auditFixture = await buildAuditFixture({ bigDiff: true });
+  try {
+    const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
+    assert.equal(report.diff_truncated, true);
+    assert.ok(Buffer.byteLength(report.diff, 'utf8') <= 200 * 1024, 'diff must be capped at 200 KiB');
+    assert.ok(
+      Buffer.byteLength(report.diff, 'utf8') > 200 * 1024 - 1024,
+      'the cap should keep nearly 200 KiB of the oversized diff',
+    );
+    const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+    const text = formatGenerationDiff(report);
+    assert.match(text, /\[diff truncated at 204800 bytes;/, `text output must announce the truncation:\n${text.slice(-200)}`);
+    assert.ok(text.endsWith('[... diff truncated ...]'), 'text output must end with a truncation marker');
+    const result = spawnCliIn(auditFixture.root, ['diff', auditFixture.generationId]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\[diff truncated at 204800 bytes;/);
+    assert.match(result.stdout, /\[\.\.\. diff truncated \.\.\.\]/);
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff recomputes diff_sha256 and flags a ledger claim that does not match the git diff', async () => {
+  const bogus = 'f'.repeat(64);
+  const auditFixture = await buildAuditFixture({ recordedDiffHashOverride: bogus });
+  try {
+    const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
+    const { diffHash } = await repoImport('src/lib/git.js');
+    const expected = await diffHash(auditFixture.root, auditFixture.parentSha, auditFixture.sha);
+    assert.equal(report.diff_sha256, expected, 'diff_sha256 must be recomputed from git at report time');
+    assert.notEqual(report.diff_sha256, bogus);
+    assert.equal(report.diff_sha256_recorded, bogus);
+    assert.equal(report.diff_sha256_matches, false);
+    const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+    const text = formatGenerationDiff(report);
+    assert.ok(text.includes('[diff hash mismatch:'), `text output must mark the mismatch:\n${text.split('\n')[0]}`);
+    assert.ok(text.includes(bogus) && text.includes(expected), 'the mismatch marker must show both hashes');
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
 });
 
 test('CLI diff exits 1 with GENERATION_NOT_FOUND for an unknown generation', async () => {
