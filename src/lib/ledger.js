@@ -160,7 +160,9 @@ export class Ledger {
     `);
 
     return runs.map((run) => {
-      const started = JSON.parse(run.payload_json);
+      // Payloads are stored as raw JSON text and may be tampered with; a JSON-valid
+      // payload is not guaranteed to be an object.
+      const started = JSON.parse(run.payload_json) ?? {};
       const summary = {
         run_id: run.run_id,
         started_at: run.created_at,
@@ -175,7 +177,7 @@ export class Ledger {
       let hasAuthoritativeIterations = false;
 
       for (const event of runEvents.all(run.run_id)) {
-        const payload = JSON.parse(event.payload_json);
+        const payload = JSON.parse(event.payload_json) ?? {};
         if (Number.isInteger(payload.iteration) && payload.iteration > 0) observedIterations.add(payload.iteration);
 
         if (

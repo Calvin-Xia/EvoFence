@@ -58,10 +58,11 @@ export async function buildStatus({ root, ledger }) {
   try {
     Object.assign(status, aggregateRuns(ledger));
   } catch (error) {
-    // verify() hashes the raw payload_json column, so malformed payload JSON is a
-    // corruption symptom it detects without parsing. Keep the failed-integrity
-    // presentation instead of crashing the diagnostic with a SyntaxError.
-    if (verification.valid || !(error instanceof SyntaxError)) throw error;
+    // verify() hashes the raw payload_json column without parsing it, so payload
+    // corruption surfaces here as an aggregation failure. Once integrity has failed,
+    // aggregation is best-effort: keep the failed-integrity presentation instead of
+    // letting the aggregation error replace it.
+    if (verification.valid) throw error;
   }
   return status;
 }

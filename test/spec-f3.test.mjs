@@ -202,11 +202,24 @@ async function buildFixture() {
     malformed.close();
   }
 
+  // A corrupted copy of the ledger: payload_json is valid JSON but not an object
+  // (`null`). verify() reports invalid via the raw-column hash; payload access must
+  // not throw a TypeError.
+  const nonObjectLedgerFile = path.join(root, '.evofence', 'ledger-non-object.sqlite');
+  await copyFile(ledgerFile, nonObjectLedgerFile);
+  const nonObject = new Ledger(nonObjectLedgerFile);
+  try {
+    nonObject.db.exec('DROP TRIGGER IF EXISTS events_no_update');
+    nonObject.db.prepare("UPDATE events SET payload_json = 'null' WHERE run_id = ? AND event_type = 'run.finished'").run(RUN_2);
+  } finally {
+    nonObject.close();
+  }
+
   const emptyLedgerFile = path.join(root, '.evofence', 'ledger-empty.sqlite');
   const emptyLedger = new Ledger(emptyLedgerFile);
   emptyLedger.close();
 
-  return { directory, root, ledgerFile, tamperedLedgerFile, emptyLedgerFile, malformedLedgerFile, startedAt };
+  return { directory, root, ledgerFile, tamperedLedgerFile, emptyLedgerFile, malformedLedgerFile, nonObjectLedgerFile, startedAt };
 }
 
 before(async () => {
@@ -560,6 +573,81 @@ test('CLI status reports an unreadable ledger as LEDGER_UNAVAILABLE instead of c
     assert.equal(result.status, 1, `status must exit 1 for an unreadable ledger:\n${result.stdout}${result.stderr}`);
     assert.ok(result.stderr.includes('[LEDGER_UNAVAILABLE]'), `status must report LEDGER_UNAVAILABLE:\n${result.stderr}`);
     assert.equal(result.stdout.includes('Ledger integrity:'), false, 'no overview must be printed for an unreadable ledger');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('buildStatus keeps the failed-integrity status when payload aggregation fails', async () => {
+  const { buildStatus } = await repoImport('src/lib/status.js');
+  const ledger = {
+    verify: () => ({ valid: false }),
+    activeGeneration: () => null,
+    events: () => { throw new TypeError('aggregation failure'); },
+    recentRuns: () => [],
+  };
+
+  const status = await buildStatus({ root: fixture.root, ledger });
+
+  assert.equal(status.integrity.valid, false);
+  assert.deepEqual(status.recent_runs, []);
+  assert.deepEqual(status.totals, { runs: 0, generations: 0, accepted_candidates: 0, rejected_candidates: 0 });
+});
+
+test('buildStatus surfaces payload aggregation failures when integrity is valid', async () => {
+  const { buildStatus } = await repoImport('src/lib/status.js');
+  const ledger = {
+    verify: () => ({ valid: true }),
+    activeGeneration: () => null,
+    events: () => { throw new TypeError('aggregation failure'); },
+    recentRuns: () => [],
+  };
+
+  await assert.rejects(() => buildStatus({ root: fixture.root, ledger }), /aggregation failure/);
+});
+
+test('buildStatus keeps the failed-integrity status when payload_json is valid non-object JSON', async () => {
+  const status = await callBuildStatus(fixture.nonObjectLedgerFile);
+
+  assert.equal(status.integrity.valid, false);
+  assert.equal(status.totals.runs, TOTALS.runs, 'aggregation stays best-effort after verification fails');
+  assert.equal(status.recent_runs.length, 5);
+});
+
+test('CLI status keeps the failed-integrity presentation for a non-object payload_json', async () => {
+  const probe = await makeProbeRepo('non-object-payload');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await copyFile(fixture.nonObjectLedgerFile, path.join(probe.root, '.evofence', 'ledger.sqlite'));
+
+    const text = spawnCli(['status'], probe.root);
+    assert.equal(text.status, 1, 'status must exit 1 when integrity fails');
+    assert.ok(text.stdout.includes('Ledger integrity: FAILED'), `status must report FAILED integrity:\n${text.stdout}`);
+    assert.equal(text.stderr.includes('[LEDGER_UNAVAILABLE]'), false, `aggregation errors must not replace the integrity result:\n${text.stderr}`);
+    assert.equal(text.stderr.includes('Cannot read properties'), false, `status must not crash on non-object payloads:\n${text.stderr}`);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status reports runs with non-object payloads on a healthy ledger', async () => {
+  const probe = await makeProbeRepo('non-object-healthy');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
+    const ledger = new Ledger(ledgerFile);
+    try {
+      ledger.append('run.started', 'run-null-1', null);
+      ledger.append('run.finished', 'run-null-1', null);
+    } finally {
+      ledger.close();
+    }
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 0, `status must succeed for non-object payloads on a healthy ledger:\n${result.stdout}${result.stderr}`);
+    assert.ok(result.stdout.includes('Ledger integrity: ok'), result.stdout);
+    assert.ok(result.stdout.includes('run-null-1'), result.stdout);
   } finally {
     await rm(probe.directory, { recursive: true, force: true });
   }
