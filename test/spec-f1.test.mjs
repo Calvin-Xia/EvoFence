@@ -16,6 +16,8 @@ const EVIDENCE_SECRET = 'EVIDENCE-STDOUT-MUST-NOT-LEAK-7f3c9a';
 const RUN_ID = 'run-f1-fixture';
 const ORPHAN_RUN_ID = 'run-f1-orphan';
 const AUDIT_RUN_ID = 'run-f1-audit-fixture';
+const AUDIT_ARTIFACT = '.evofence/artifacts/run-f1-audit-fixture/candidate-1-1.json';
+const AUDIT_FORGED_ARTIFACT = '.evofence/artifacts/run-f1-audit-fixture/candidate-1-9.json';
 const GENERATION_ID = `g-${RUN_ID}-i01`;
 const ORPHAN_GENERATION_ID = 'g-orphan-fixture';
 const PROPOSAL_ID = 'prop-f1-fixture-01';
@@ -252,7 +254,16 @@ async function buildFixture() {
   return { directory, root, ledgerFile, parentSha, sha, recordedDiffHash, recordedChangedPaths, acceptedAt };
 }
 
-async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null, acceptedShaMismatch = false, acceptedForeignRun = false } = {}) {
+async function buildAuditFixture({
+  bigDiff = false,
+  recordedDiffHashOverride = null,
+  acceptedShaMismatch = false,
+  acceptedForeignRun = false,
+  evidenceArtifactMismatch = false,
+  evidenceAmbiguous = false,
+  proposalDigestMismatch = false,
+  legacyAccepted = false,
+} = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
   await mkdir(path.join(root, 'src'), { recursive: true });
@@ -293,11 +304,23 @@ async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = n
     ledger.append('evidence.candidate', AUDIT_RUN_ID, {
       iteration: 1,
       evidence: {
+        artifact: AUDIT_ARTIFACT,
         all_public_passed: true,
         all_private_within_tolerance: true,
         public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
       },
     });
+    if (evidenceAmbiguous) {
+      ledger.append('evidence.candidate', AUDIT_RUN_ID, {
+        iteration: 1,
+        evidence: {
+          artifact: AUDIT_ARTIFACT,
+          all_public_passed: true,
+          all_private_within_tolerance: true,
+          public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
+        },
+      });
+    }
     ledger.recordGeneration({
       generation_id: generationId,
       run_id: AUDIT_RUN_ID,
@@ -305,7 +328,7 @@ async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = n
       parent_sha: parentSha,
       created_at: GENERATION_CREATED_AT,
     });
-    ledger.append('candidate.accepted', acceptedForeignRun ? 'run-forged' : AUDIT_RUN_ID, {
+    const acceptedPayload = {
       iteration: 1,
       generation_id: generationId,
       sha: acceptedShaMismatch ? parentSha : sha,
@@ -313,8 +336,12 @@ async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = n
       diff_sha256: recordedDiffHash,
       objective_score: OBJECTIVE_SCORE,
       improvement: OBJECTIVE_IMPROVEMENT,
-      proposal_sha256: 'e'.repeat(64),
-    });
+    };
+    if (!legacyAccepted) {
+      acceptedPayload.proposal_sha256 = proposalDigestMismatch ? 'f'.repeat(64) : 'e'.repeat(64);
+      acceptedPayload.evidence_artifact = evidenceArtifactMismatch ? AUDIT_FORGED_ARTIFACT : AUDIT_ARTIFACT;
+    }
+    ledger.append('candidate.accepted', acceptedForeignRun ? 'run-forged' : AUDIT_RUN_ID, acceptedPayload);
   } finally {
     ledger.close();
   }
@@ -683,6 +710,63 @@ test('generationDiff rejects candidate.accepted evidence recorded under a differ
       assert.match(error.message, /recorded under run run-forged/);
       return true;
     });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects evidence bound to a different artifact than the acceptance record', async () => {
+  const auditFixture = await buildAuditFixture({ evidenceArtifactMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /evidence_artifact .* matches 0 evidence\.candidate events/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects ambiguous evidence candidates for the accepted artifact', async () => {
+  const auditFixture = await buildAuditFixture({ evidenceAmbiguous: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /evidence_artifact .* matches 2 evidence\.candidate events/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects an acceptance record whose proposal digest matches no proposal', async () => {
+  const auditFixture = await buildAuditFixture({ proposalDigestMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /proposal_sha256 .* matches no proposal\.created/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff keeps the run/iteration fallback for legacy acceptance events without bindings', async () => {
+  const auditFixture = await buildAuditFixture({ legacyAccepted: true });
+  try {
+    const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
+    assert.equal(report.proposal_id, 'prop-audit-fixture-01');
+    assert.deepEqual(report.evidence.checks, [{ id: 'check-1', kind: 'public_check', result: 'PASS' }]);
+    assert.equal(report.diff_sha256_matches, true);
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }

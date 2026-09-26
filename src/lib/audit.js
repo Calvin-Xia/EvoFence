@@ -34,15 +34,27 @@ function proposalEventFor(events, accepted) {
   if (typeof digest === 'string') {
     const byDigest = latestEvent(events, (event) => event.event_type === 'proposal.created'
       && event.run_id === accepted.run_id && event.payload?.proposal_sha256 === digest);
-    if (byDigest) return byDigest;
+    if (!byDigest) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches no proposal.created event for run ${accepted.run_id}.`);
+    }
+    return byDigest;
   }
   return latestEvent(events, (event) => event.event_type === 'proposal.created'
     && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
 }
 
 function evidenceEventFor(events, accepted) {
-  return latestEvent(events, (event) => event.event_type === 'evidence.candidate'
+  const candidates = events.filter((event) => event.event_type === 'evidence.candidate'
     && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
+  const artifact = accepted.payload?.evidence_artifact;
+  if (typeof artifact === 'string') {
+    const bound = candidates.filter((event) => event.payload?.evidence?.artifact === artifact);
+    if (bound.length !== 1) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence_artifact ${artifact} matches ${bound.length} evidence.candidate events for run ${accepted.run_id} iteration ${accepted.payload?.iteration}; expected exactly one.`);
+    }
+    return bound[0];
+  }
+  return candidates.at(-1) ?? null;
 }
 
 function runStartedEventFor(events, runId) {
