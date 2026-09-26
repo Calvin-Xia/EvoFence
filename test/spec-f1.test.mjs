@@ -252,7 +252,7 @@ async function buildFixture() {
   return { directory, root, ledgerFile, parentSha, sha, recordedDiffHash, recordedChangedPaths, acceptedAt };
 }
 
-async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null } = {}) {
+async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = null, acceptedShaMismatch = false } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
   await mkdir(path.join(root, 'src'), { recursive: true });
@@ -308,7 +308,7 @@ async function buildAuditFixture({ bigDiff = false, recordedDiffHashOverride = n
     ledger.append('candidate.accepted', AUDIT_RUN_ID, {
       iteration: 1,
       generation_id: generationId,
-      sha,
+      sha: acceptedShaMismatch ? parentSha : sha,
       parent_sha: parentSha,
       diff_sha256: recordedDiffHash,
       objective_score: OBJECTIVE_SCORE,
@@ -343,6 +343,22 @@ function tamperAcceptedPayload(ledgerFile, mutate) {
     const payload = JSON.parse(row.payload_json);
     mutate(payload);
     db.prepare('UPDATE events SET payload_json = ? WHERE seq = ?').run(JSON.stringify(payload), row.seq);
+  } finally {
+    db.close();
+  }
+}
+
+function tamperGenerationRow(ledgerFile, mutate) {
+  const requireFromCwd = createRequire(path.join(process.cwd(), 'package.json'));
+  const Database = requireFromCwd('better-sqlite3');
+  const db = new Database(ledgerFile);
+  try {
+    db.exec('DROP TRIGGER IF EXISTS generations_no_update');
+    const row = db.prepare('SELECT * FROM generations ORDER BY generation_id LIMIT 1').get();
+    assert.ok(row, 'tamper fixture must contain a generations row');
+    mutate(row);
+    db.prepare('UPDATE generations SET run_id = ?, sha = ?, parent_sha = ?, created_at = ? WHERE generation_id = ?')
+      .run(row.run_id, row.sha, row.parent_sha, row.created_at, row.generation_id);
   } finally {
     db.close();
   }
@@ -611,6 +627,47 @@ test('generationDiff recomputes diff_sha256 and flags a ledger claim that does n
     const text = formatGenerationDiff(report);
     assert.ok(text.includes('[diff hash mismatch:'), `text output must mark the mismatch:\n${text.split('\n')[0]}`);
     assert.ok(text.includes(bogus) && text.includes(expected), 'the mismatch marker must show both hashes');
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a generation row that disagrees with its hash-chained record', async () => {
+  const auditFixture = await buildAuditFixture();
+  try {
+    tamperGenerationRow(auditFixture.ledgerFile, (row) => {
+      row.run_id = 'run-forged';
+      row.created_at = '2099-01-01T00:00:00.000Z';
+    });
+    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const probe = new Ledger(auditFixture.ledgerFile);
+    try {
+      assert.equal(probe.verify().valid, true, 'the hash chain alone cannot detect a modified generations row');
+    } finally {
+      probe.close();
+    }
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /generation\.accepted record/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects candidate.accepted evidence that disagrees with the generation row', async () => {
+  const auditFixture = await buildAuditFixture({ acceptedShaMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /candidate\.accepted evidence disagrees/);
+      return true;
+    });
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }

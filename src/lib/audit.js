@@ -50,6 +50,29 @@ function runStartedEventFor(events, runId) {
   return latestEvent(events, (event) => event.event_type === 'run.started' && event.run_id === runId);
 }
 
+const GENERATION_RECORD_KEYS = ['run_id', 'sha', 'parent_sha', 'created_at'];
+
+function verifyGenerationMetadata(events, generation, accepted) {
+  const record = latestEvent(events, (event) => event.event_type === 'generation.accepted'
+    && event.payload?.generation_id === generation.generation_id)?.payload ?? null;
+  if (!record) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} has no hash-chained generation.accepted record.`);
+  }
+  for (const key of GENERATION_RECORD_KEYS) {
+    if (record[key] !== generation[key]) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `Generation ${generation.generation_id} ${key} disagrees with its hash-chained generation.accepted record.`);
+    }
+  }
+  if (accepted) {
+    const payload = accepted.payload ?? {};
+    if (payload.generation_id !== generation.generation_id
+      || payload.sha !== generation.sha
+      || payload.parent_sha !== generation.parent_sha) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence disagrees with generation ${generation.generation_id} metadata.`);
+    }
+  }
+}
+
 function auditObjective(accepted, proposalEvent, runStartedEvent) {
   if (!accepted) return null;
   const contractObjective = runStartedEvent?.payload?.contract_snapshot?.objective;
@@ -89,6 +112,7 @@ export async function generationDiff({ root, ledger, generationId }) {
   if (!generation) throw new EvoFenceError('GENERATION_NOT_FOUND', `Generation not found: ${generationId}`);
   const events = ledger.events();
   const accepted = acceptedEvent(events, generationId);
+  verifyGenerationMetadata(events, generation, accepted);
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
   const runStartedEvent = runStartedEventFor(events, generation.run_id)

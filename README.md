@@ -106,7 +106,7 @@ evofence diff <generation-id> [--json]
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
-`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true，文本输出会显式标注截断）。输出前会先校验账本哈希链，链断裂时以 `LEDGER_CORRUPT` 失败。`diff_sha256` 由 Git 现场重算（口径为 `git diff --binary parent_sha..sha`），与账本记录的 `diff_sha256_recorded` 比对，结果记入 `diff_sha256_matches`（账本无记录时为 `null`），不一致会在文本输出中标注。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现（没有 `candidate.accepted` 事件的新一代会标注 `not accepted`），证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
+`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true，文本输出会显式标注截断）。输出前会先校验账本哈希链，并将 `generations` 行与哈希链上的 `generation.accepted` / `candidate.accepted` 记录交叉比对，链断裂或元数据不一致时以 `LEDGER_CORRUPT` 失败。`diff_sha256` 由 Git 现场重算（口径为 `git diff --binary parent_sha..sha`），与账本记录的 `diff_sha256_recorded` 比对，结果记入 `diff_sha256_matches`（账本无记录时为 `null`），不一致会在文本输出中标注。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现（没有 `candidate.accepted` 事件的新一代会标注 `not accepted`），证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
 
 ```sh
 evofence diff g-run-20260101120000-abcd1234-i01
