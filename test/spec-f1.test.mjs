@@ -230,6 +230,13 @@ async function buildFixture() {
       parent_sha: parentSha,
       created_at: GENERATION_CREATED_AT,
     });
+    ledger.append('gate.decision', RUN_ID, {
+      iteration: 1,
+      decision: 'ACCEPT',
+      reason: 'ALL_REQUIRED_EVIDENCE_PASSED',
+      evidence_ok: true,
+      base_sha: parentSha,
+    });
     acceptedAt = ledger.append('candidate.accepted', RUN_ID, {
       iteration: 1,
       generation_id: GENERATION_ID,
@@ -285,6 +292,10 @@ async function buildAuditFixture({
   evidenceLate = false,
   runStartedLate = false,
   runStartedDuplicate = false,
+  gateDecisionMissing = false,
+  gateDecisionReject = false,
+  evidenceFailedGate = false,
+  evidenceLegacyDuplicate = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -351,7 +362,7 @@ async function buildAuditFixture({
       evidence: {
         artifact: AUDIT_ARTIFACT,
         objective: { score: OBJECTIVE_SCORE },
-        all_public_passed: true,
+        all_public_passed: !evidenceFailedGate,
         all_private_within_tolerance: true,
         public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
       },
@@ -365,6 +376,18 @@ async function buildAuditFixture({
           all_public_passed: true,
           all_private_within_tolerance: true,
           public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
+        },
+      });
+    }
+    if (evidenceLegacyDuplicate) {
+      ledger.append('evidence.candidate', AUDIT_RUN_ID, {
+        iteration: mainIteration,
+        evidence: {
+          artifact: AUDIT_FORGED_ARTIFACT,
+          objective: { score: OBJECTIVE_SCORE },
+          all_public_passed: true,
+          all_private_within_tolerance: true,
+          public: [{ id: 'check-2', kind: 'public_check', result: 'PASS' }],
         },
       });
     }
@@ -408,6 +431,13 @@ async function buildAuditFixture({
         parent_sha: parentSha,
         created_at: GENERATION_CREATED_AT,
       });
+      ledger.append('gate.decision', AUDIT_RUN_ID, {
+        iteration: 1,
+        decision: 'ACCEPT',
+        reason: 'ALL_REQUIRED_EVIDENCE_PASSED',
+        evidence_ok: true,
+        base_sha: parentSha,
+      });
       ledger.append('candidate.accepted', AUDIT_RUN_ID, {
         iteration: 1,
         generation_id: 'g-audit-fixture-i00',
@@ -422,6 +452,15 @@ async function buildAuditFixture({
     }
     if (!proposalLate) appendMainProposal();
     if (!evidenceLate) appendMainEvidence();
+    if (!gateDecisionMissing) {
+      ledger.append('gate.decision', AUDIT_RUN_ID, {
+        iteration: mainIteration,
+        decision: gateDecisionReject ? 'REJECT' : 'ACCEPT',
+        reason: gateDecisionReject ? 'NO_PRACTICAL_IMPROVEMENT' : 'ALL_REQUIRED_EVIDENCE_PASSED',
+        evidence_ok: !gateDecisionReject,
+        base_sha: parentSha,
+      });
+    }
     ledger.recordGeneration({
       generation_id: generationId,
       run_id: AUDIT_RUN_ID,
@@ -1112,6 +1151,66 @@ test('generationDiff rejects ambiguous run started events before the acceptance'
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
       assert.match(error.message, /2 run\.started events before the acceptance/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a generation with no ACCEPT gate decision', async () => {
+  const auditFixture = await buildAuditFixture({ gateDecisionMissing: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /0 gate\.decision records \(0 ACCEPT\); a unique preceding ACCEPT gate decision is required/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a generation whose gate decision is not ACCEPT', async () => {
+  const auditFixture = await buildAuditFixture({ gateDecisionReject: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /1 gate\.decision records \(0 ACCEPT\); a unique preceding ACCEPT gate decision is required/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects bound evidence that failed its gate', async () => {
+  const auditFixture = await buildAuditFixture({ evidenceFailedGate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /did not pass its gate \(all_public_passed=false, all_private_within_tolerance=true\)/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects ambiguous legacy evidence links', async () => {
+  const auditFixture = await buildAuditFixture({ legacyAccepted: true, evidenceLegacyDuplicate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /matches 2 evidence\.candidate events for run .*; the evidence link is ambiguous/);
       return true;
     });
   } finally {

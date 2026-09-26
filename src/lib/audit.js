@@ -77,7 +77,10 @@ function evidenceEventFor(events, accepted) {
     }
     return bound[0];
   }
-  return candidates.at(-1) ?? null;
+  if (candidates.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${candidates.length} evidence.candidate events for run ${accepted.run_id}; the evidence link is ambiguous.`);
+  }
+  return candidates[0] ?? null;
 }
 
 function runStartedEventFor(events, runId, beforeSeq = Infinity) {
@@ -121,11 +124,31 @@ function verifyGenerationMetadata(events, generation) {
   }
 }
 
-function verifyObjectiveEvidence(accepted, evidenceEvent, generationId) {
-  if (!accepted || typeof accepted.payload?.objective_score !== 'number') return;
-  const evidenceScore = evidenceEvent?.payload?.evidence?.objective?.score;
-  if (evidenceScore !== accepted.payload.objective_score) {
-    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted objective_score ${accepted.payload.objective_score} disagrees with bound evidence score ${evidenceScore === undefined ? 'missing' : evidenceScore} for generation ${generationId}.`);
+function verifyGateDecision(events, accepted) {
+  if (!accepted) return;
+  const iteration = accepted.payload?.iteration;
+  const decisions = events.filter((event) => event.event_type === 'gate.decision'
+    && event.run_id === accepted.run_id
+    && event.seq < accepted.seq
+    && typeof iteration === 'number'
+    && event.payload?.iteration === iteration);
+  const passing = decisions.filter((event) => event.payload?.decision === 'ACCEPT');
+  if (decisions.length !== 1 || passing.length !== 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${accepted.payload?.generation_id ?? 'unknown'} has ${decisions.length} gate.decision records (${passing.length} ACCEPT); a unique preceding ACCEPT gate decision is required.`);
+  }
+}
+
+function verifyAcceptanceEvidence(accepted, evidenceEvent, generationId) {
+  if (!accepted) return;
+  const evidence = evidenceEvent?.payload?.evidence ?? null;
+  if (evidence && (evidence.all_public_passed !== true || evidence.all_private_within_tolerance !== true)) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted for generation ${generationId} is bound to evidence that did not pass its gate (all_public_passed=${evidence.all_public_passed === true}, all_private_within_tolerance=${evidence.all_private_within_tolerance === true}).`);
+  }
+  if (typeof accepted.payload?.objective_score === 'number') {
+    const evidenceScore = evidence?.objective?.score;
+    if (evidenceScore !== accepted.payload.objective_score) {
+      throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted objective_score ${accepted.payload.objective_score} disagrees with bound evidence score ${evidenceScore === undefined ? 'missing' : evidenceScore} for generation ${generationId}.`);
+    }
   }
 }
 
@@ -133,7 +156,8 @@ function improvementBaselineScore(events, accepted) {
   const previous = latestEvent(events, (event) => event.event_type === 'candidate.accepted'
     && event.run_id === accepted.run_id && event.seq < accepted.seq);
   if (previous) {
-    verifyObjectiveEvidence(previous, evidenceEventFor(events, previous), previous.payload?.generation_id ?? 'unknown');
+    verifyGateDecision(events, previous);
+    verifyAcceptanceEvidence(previous, evidenceEventFor(events, previous), previous.payload?.generation_id ?? 'unknown');
     const score = previous.payload?.objective_score;
     return typeof score === 'number' ? score : null;
   }
@@ -203,9 +227,10 @@ export async function generationDiff({ root, ledger, generationId }) {
   const events = ledger.events();
   const accepted = acceptedEvent(events, generationId);
   verifyGenerationMetadata(events, generation);
+  verifyGateDecision(events, accepted);
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
-  verifyObjectiveEvidence(accepted, evidenceEvent, generationId);
+  verifyAcceptanceEvidence(accepted, evidenceEvent, generationId);
   const runStartedEvent = runStartedEventFor(events, generation.run_id, accepted?.seq)
     ?? runStartedEventFor(events, accepted?.run_id ?? null, accepted?.seq);
   verifyImprovementEvidence(events, accepted, runStartedEvent, generationId);
