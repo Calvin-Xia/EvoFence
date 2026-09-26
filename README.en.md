@@ -111,7 +111,7 @@ Rollback changes EvoFence's active-generation pointer and Git ref. It does not r
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
 
-`evofence report [file] [--json]` summarizes the ledger into an evolution report: runs, accepted generations, objective score movement, observed token/USD usage, and ledger integrity. It prints Markdown by default, or machine-readable JSON with `--json`; when given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root. For example:
+`evofence report [file] [--json]` summarizes the ledger into an evolution report: runs (`run.failed` runs are reported as FAILED with their failure code), accepted generations, objective score movement, observed token/USD usage, and the ledger hash-chain verification result. Objective metric and direction come from each run's own historical `contract_snapshot`: generations with incompatible objectives are never combined (the aggregate fields stay null and per-objective groups are listed), and an unknown direction is never assumed to be maximize. The integrity section reports the hash-chain check and the breaking sequence (`failed_at_seq`); the chain is unkeyed, so it detects accidental corruption and edits that did not recompute the hashes, but it is not tamper proof. It prints Markdown by default, or machine-readable JSON with `--json`; when given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root. For example:
 
 ```sh
 evofence report
