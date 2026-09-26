@@ -263,6 +263,7 @@ async function buildAuditFixture({
   evidenceAmbiguous = false,
   proposalDigestMismatch = false,
   legacyAccepted = false,
+  gitattributesShift = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -279,6 +280,10 @@ async function buildAuditFixture({
   const parentSha = runGit(root, ['rev-parse', 'HEAD']);
 
   await writeFile(path.join(root, 'src/app.txt'), bigDiff ? `${'x'.repeat(300 * 1024)}\n` : 'v2\n');
+  if (gitattributesShift) {
+    await writeFile(path.join(root, 'src/data.bin'), 'BBBB\n');
+    await writeFile(path.join(root, '.gitattributes'), 'src/data.bin binary\n');
+  }
   runGit(root, ['add', '-A']);
   runGit(root, ['commit', '--quiet', '-m', 'accept']);
   const sha = runGit(root, ['rev-parse', 'HEAD']);
@@ -287,6 +292,11 @@ async function buildAuditFixture({
   const { diffHash } = await repoImport('src/lib/git.js');
   const ledgerFile = ledgerPath(root);
   const recordedDiffHash = recordedDiffHashOverride ?? (await diffHash(root, parentSha, sha));
+  if (gitattributesShift) {
+    // Simulate the real topology: the accepted generation is not checked out in the
+    // primary worktree, whose .gitattributes therefore diverge from the generation's.
+    runGit(root, ['checkout', '--quiet', parentSha]);
+  }
   const generationId = 'g-audit-fixture-i01';
 
   await mkdir(path.dirname(ledgerFile), { recursive: true });
@@ -767,6 +777,21 @@ test('generationDiff keeps the run/iteration fallback for legacy acceptance even
     assert.equal(report.proposal_id, 'prop-audit-fixture-01');
     assert.deepEqual(report.evidence.checks, [{ id: 'check-1', kind: 'public_check', result: 'PASS' }]);
     assert.equal(report.diff_sha256_matches, true);
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff pins diff attributes to the generation despite a divergent primary worktree', async () => {
+  const auditFixture = await buildAuditFixture({ gitattributesShift: true });
+  try {
+    const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
+    assert.equal(report.diff_sha256_matches, true, 'the acceptance-time hash must reproduce despite the shifted primary checkout');
+    assert.ok(
+      report.diff.includes('Binary files /dev/null and b/src/data.bin differ'),
+      `the diff must follow the generation tree attributes (binary marker):\n${report.diff}`,
+    );
+    assert.ok(!report.diff.includes('+BBBB'), 'the diff must not fall back to the primary checkout textual rendering');
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }

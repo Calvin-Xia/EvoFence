@@ -131,10 +131,13 @@ export async function generationDiff({ root, ledger, generationId }) {
   const runStartedEvent = runStartedEventFor(events, generation.run_id)
     ?? runStartedEventFor(events, accepted?.run_id ?? null);
 
+  // Pin diff attributes to the generation's tree so a divergent primary checkout
+  // (e.g. different .gitattributes) cannot skew the diff or its recorded hash.
+  const attrEnv = { GIT_ATTR_SOURCE: generation.sha };
   const [changedPaths, diffText, computedDiffHash] = await Promise.all([
     changedPathsBetween(root, generation.parent_sha, generation.sha),
-    runGit(root, ['diff', '--no-ext-diff', '--no-renames', generation.parent_sha, generation.sha], { maxOutputBytes: 50_000_000 }),
-    diffHash(root, generation.parent_sha, generation.sha),
+    runGit(root, ['diff', '--no-ext-diff', '--no-renames', generation.parent_sha, generation.sha], { maxOutputBytes: 50_000_000, env: attrEnv }),
+    diffHash(root, generation.parent_sha, generation.sha, { env: attrEnv }),
   ]);
   const { diff, diff_truncated } = capDiff(diffText);
   const recordedDiffHash = typeof accepted?.payload?.diff_sha256 === 'string' ? accepted.payload.diff_sha256 : null;

@@ -75,7 +75,7 @@ export async function changedPathsBetween(root, baseSha, targetSha) {
   return [...new Set(diff.split('\0').filter(Boolean).map((name) => name.replaceAll('\\', '/')))];
 }
 
-export async function diffHash(root, baseSha, targetSha = null) {
+export async function diffHash(root, baseSha, targetSha = null, options = {}) {
   const args = ['diff', '--no-ext-diff', '--no-renames', '--binary', baseSha];
   if (targetSha) {
     args.push(targetSha);
@@ -84,7 +84,7 @@ export async function diffHash(root, baseSha, targetSha = null) {
     if (intent.code !== 0) throw new EvoFenceError('GIT_STAGE_FAILED', intent.stderr.trim() || 'Unable to include new candidate files in the diff hash.');
     args.push('--', ...CANDIDATE_PATHSPEC);
   }
-  const diff = await runGit(root, args, { maxOutputBytes: 50_000_000 });
+  const diff = await runGit(root, args, { maxOutputBytes: 50_000_000, env: options.env });
   return sha256(diff);
 }
 
