@@ -19,6 +19,7 @@ const AUDIT_RUN_ID = 'run-f1-audit-fixture';
 const AUDIT_ARTIFACT = '.evofence/artifacts/run-f1-audit-fixture/candidate-1-1.json';
 const AUDIT_PRIOR_ARTIFACT = '.evofence/artifacts/run-f1-audit-fixture/candidate-1-0.json';
 const AUDIT_FORGED_ARTIFACT = '.evofence/artifacts/run-f1-audit-fixture/candidate-1-9.json';
+const FOREIGN_SHA = '0'.repeat(40);
 const GENERATION_ID = `g-${RUN_ID}-i01`;
 const ORPHAN_GENERATION_ID = 'g-orphan-fixture';
 const PROPOSAL_ID = 'prop-f1-fixture-01';
@@ -308,6 +309,8 @@ async function buildAuditFixture({
   baselineInvalidScore = false,
   gateEvidenceOkFalse = false,
   gateImprovementMismatch = false,
+  linkBaseShaTarget = null,
+  proposalEmbedBaseMismatch = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -344,7 +347,7 @@ async function buildAuditFixture({
   }
   const generationId = 'g-audit-fixture-i01';
   const mainIteration = priorAccepted ? 2 : 1;
-  const mainProposal = { expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' } };
+  const mainProposal = { base_sha: proposalEmbedBaseMismatch ? FOREIGN_SHA : parentSha, expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' } };
   const mainProposalDigest = proposalContentMismatch ? 'e'.repeat(64) : sha256(stableStringify(mainProposal));
   const fixtureImprovement = acceptedMissingScore
     ? undefined
@@ -359,6 +362,7 @@ async function buildAuditFixture({
     ledger.append('proposal.created', AUDIT_RUN_ID, {
       proposal_id: 'prop-audit-fixture-01',
       iteration: mainIteration,
+      base_sha: linkBaseShaTarget === 'proposal' ? FOREIGN_SHA : parentSha,
       proposal_sha256: mainProposalDigest,
       ...(proposalMissing ? {} : { proposal: mainProposal }),
     });
@@ -366,14 +370,16 @@ async function buildAuditFixture({
       ledger.append('proposal.created', AUDIT_RUN_ID, {
         proposal_id: 'prop-audit-fixture-02',
         iteration: mainIteration,
+        base_sha: parentSha,
         proposal_sha256: mainProposalDigest,
-        proposal: { expected_effect: { primary_metric: 'other_metric', direction: 'increase' } },
+        proposal: { base_sha: parentSha, expected_effect: { primary_metric: 'other_metric', direction: 'increase' } },
       });
     }
   };
   const appendMainEvidence = () => {
     ledger.append('evidence.candidate', AUDIT_RUN_ID, {
       iteration: mainIteration,
+      base_sha: linkBaseShaTarget === 'evidence' ? FOREIGN_SHA : parentSha,
       evidence: {
         artifact: AUDIT_ARTIFACT,
         objective: { score: OBJECTIVE_SCORE, valid_score: !evidenceInvalidScore },
@@ -385,6 +391,7 @@ async function buildAuditFixture({
     if (evidenceAmbiguous) {
       ledger.append('evidence.candidate', AUDIT_RUN_ID, {
         iteration: mainIteration,
+        base_sha: parentSha,
         evidence: {
           artifact: AUDIT_ARTIFACT,
           objective: { score: OBJECTIVE_SCORE, valid_score: true },
@@ -397,6 +404,7 @@ async function buildAuditFixture({
     if (evidenceLegacyDuplicate) {
       ledger.append('evidence.candidate', AUDIT_RUN_ID, {
         iteration: mainIteration,
+        base_sha: parentSha,
         evidence: {
           artifact: AUDIT_FORGED_ARTIFACT,
           objective: { score: OBJECTIVE_SCORE, valid_score: true },
@@ -429,16 +437,18 @@ async function buildAuditFixture({
       });
     }
     if (priorAccepted) {
-      const priorProposal = { expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' }, hypothesis: 'the prior candidate' };
+      const priorProposal = { base_sha: parentSha, expected_effect: { primary_metric: OBJECTIVE_METRIC, direction: 'increase' }, hypothesis: 'the prior candidate' };
       const priorProposalDigest = sha256(stableStringify(priorProposal));
       ledger.append('proposal.created', AUDIT_RUN_ID, {
         proposal_id: 'prop-audit-fixture-00',
         iteration: 1,
+        base_sha: parentSha,
         proposal_sha256: priorProposalDigest,
         proposal: priorProposal,
       });
       ledger.append('evidence.candidate', AUDIT_RUN_ID, {
         iteration: 1,
+        base_sha: parentSha,
         evidence: {
           artifact: AUDIT_PRIOR_ARTIFACT,
           objective: { score: priorEvidenceScoreMismatch ? 0.4 : PRIOR_SCORE, valid_score: true },
@@ -483,7 +493,7 @@ async function buildAuditFixture({
         reason: gateDecisionReject ? 'NO_PRACTICAL_IMPROVEMENT' : 'ALL_REQUIRED_EVIDENCE_PASSED',
         evidence_ok: gateEvidenceOkFalse ? false : !gateDecisionReject,
         ...(gateImprovementMismatch ? { improvement: 0.42 } : (fixtureImprovement === undefined ? {} : { improvement: fixtureImprovement })),
-        base_sha: parentSha,
+        base_sha: linkBaseShaTarget === 'gate' ? FOREIGN_SHA : parentSha,
       });
     }
     ledger.recordGeneration({
@@ -1347,6 +1357,39 @@ test('generationDiff rejects a gate decision whose improvement disagrees with th
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
       assert.match(error.message, /ACCEPT gate decision improvement 0\.42 disagrees with candidate\.accepted improvement 0\.25/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects linked records from a different parent', async () => {
+  const { EvoFenceError } = await repoImport('src/lib/errors.js');
+  const labels = { proposal: 'proposal.created', evidence: 'evidence.candidate', gate: 'gate.decision' };
+  for (const target of ['gate', 'evidence', 'proposal']) {
+    const auditFixture = await buildAuditFixture({ linkBaseShaTarget: target });
+    try {
+      await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+        assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+        assert.equal(error.code, 'LEDGER_CORRUPT');
+        assert.match(error.message, new RegExp(`${labels[target]} base_sha 0{40} disagrees with the accepted parent`));
+        return true;
+      });
+    } finally {
+      await rm(auditFixture.directory, { recursive: true, force: true });
+    }
+  }
+});
+
+test('generationDiff rejects a proposal whose embedded base_sha disagrees with the accepted parent', async () => {
+  const auditFixture = await buildAuditFixture({ proposalEmbedBaseMismatch: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /proposal\.created proposal\.base_sha 0{40} disagrees with the accepted parent/);
       return true;
     });
   } finally {

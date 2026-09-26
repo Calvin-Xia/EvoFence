@@ -43,6 +43,23 @@ function verifyProposalDigestClaim(event) {
   }
 }
 
+function verifyLinkedBaseSha(event, parentSha, label, generationId) {
+  const base = event.payload?.base_sha;
+  if (base !== parentSha) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `${label} base_sha ${base ?? 'missing'} disagrees with the accepted parent ${parentSha} for generation ${generationId ?? 'unknown'}.`);
+  }
+}
+
+function verifyProposalLink(event, accepted) {
+  const parentSha = accepted.payload?.parent_sha;
+  const generationId = accepted.payload?.generation_id ?? 'unknown';
+  verifyLinkedBaseSha(event, parentSha, 'proposal.created', generationId);
+  const proposal = event.payload?.proposal;
+  if (proposal && typeof proposal === 'object' && proposal.base_sha !== parentSha) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `proposal.created proposal.base_sha ${proposal.base_sha ?? 'missing'} disagrees with the accepted parent ${parentSha} for generation ${generationId}.`);
+  }
+}
+
 function proposalEventFor(events, accepted) {
   const digest = accepted.payload?.proposal_sha256;
   if (typeof digest === 'string') {
@@ -55,6 +72,7 @@ function proposalEventFor(events, accepted) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches ${byDigest.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
     }
     verifyProposalDigestClaim(byDigest[0]);
+    verifyProposalLink(byDigest[0], accepted);
     return byDigest[0];
   }
   const byIteration = events.filter((event) => event.event_type === 'proposal.created'
@@ -62,7 +80,10 @@ function proposalEventFor(events, accepted) {
   if (byIteration.length > 1) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${byIteration.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
   }
-  if (byIteration[0]) verifyProposalDigestClaim(byIteration[0]);
+  if (byIteration[0]) {
+    verifyProposalDigestClaim(byIteration[0]);
+    verifyProposalLink(byIteration[0], accepted);
+  }
   return byIteration[0] ?? null;
 }
 
@@ -75,11 +96,13 @@ function evidenceEventFor(events, accepted) {
     if (bound.length !== 1) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted evidence_artifact ${artifact} matches ${bound.length} evidence.candidate events for run ${accepted.run_id} iteration ${accepted.payload?.iteration}; expected exactly one.`);
     }
+    verifyLinkedBaseSha(bound[0], accepted.payload?.parent_sha, 'evidence.candidate', accepted.payload?.generation_id);
     return bound[0];
   }
   if (candidates.length > 1) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${candidates.length} evidence.candidate events for run ${accepted.run_id}; the evidence link is ambiguous.`);
   }
+  if (candidates[0]) verifyLinkedBaseSha(candidates[0], accepted.payload?.parent_sha, 'evidence.candidate', accepted.payload?.generation_id);
   return candidates[0] ?? null;
 }
 
@@ -143,6 +166,7 @@ function verifyGateDecision(events, accepted) {
   if (gate.improvement !== accepted.payload?.improvement) {
     throw new EvoFenceError('LEDGER_CORRUPT', `the ACCEPT gate decision improvement ${gate.improvement} disagrees with candidate.accepted improvement ${accepted.payload?.improvement} for generation ${accepted.payload?.generation_id ?? 'unknown'}.`);
   }
+  verifyLinkedBaseSha(passing[0], accepted.payload?.parent_sha, 'gate.decision', accepted.payload?.generation_id);
 }
 
 function verifyAcceptanceEvidence(accepted, evidenceEvent, generationId) {
