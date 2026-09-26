@@ -280,6 +280,11 @@ async function buildAuditFixture({
   priorEvidenceScoreMismatch = false,
   evidenceBaselineDuplicate = false,
   evidenceBaselineLate = false,
+  proposalMissing = false,
+  proposalLate = false,
+  evidenceLate = false,
+  runStartedLate = false,
+  runStartedDuplicate = false,
 } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-spec-f1-audit-'));
   const root = path.join(directory, 'repo');
@@ -321,10 +326,58 @@ async function buildAuditFixture({
 
   await mkdir(path.dirname(ledgerFile), { recursive: true });
   const ledger = new Ledger(ledgerFile);
-  try {
-    ledger.append('run.started', AUDIT_RUN_ID, {
-      contract_snapshot: { objective: { name: OBJECTIVE_METRIC, direction: 'maximize' } },
+  const appendRunStarted = () => ledger.append('run.started', AUDIT_RUN_ID, {
+    contract_snapshot: { objective: { name: OBJECTIVE_METRIC, direction: 'maximize' } },
+  });
+  const appendMainProposal = () => {
+    ledger.append('proposal.created', AUDIT_RUN_ID, {
+      proposal_id: 'prop-audit-fixture-01',
+      iteration: mainIteration,
+      proposal_sha256: mainProposalDigest,
+      ...(proposalMissing ? {} : { proposal: mainProposal }),
     });
+    if (proposalDuplicate) {
+      ledger.append('proposal.created', AUDIT_RUN_ID, {
+        proposal_id: 'prop-audit-fixture-02',
+        iteration: mainIteration,
+        proposal_sha256: mainProposalDigest,
+        proposal: { expected_effect: { primary_metric: 'other_metric', direction: 'increase' } },
+      });
+    }
+  };
+  const appendMainEvidence = () => {
+    ledger.append('evidence.candidate', AUDIT_RUN_ID, {
+      iteration: mainIteration,
+      evidence: {
+        artifact: AUDIT_ARTIFACT,
+        objective: { score: OBJECTIVE_SCORE },
+        all_public_passed: true,
+        all_private_within_tolerance: true,
+        public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
+      },
+    });
+    if (evidenceAmbiguous) {
+      ledger.append('evidence.candidate', AUDIT_RUN_ID, {
+        iteration: mainIteration,
+        evidence: {
+          artifact: AUDIT_ARTIFACT,
+          objective: { score: OBJECTIVE_SCORE },
+          all_public_passed: true,
+          all_private_within_tolerance: true,
+          public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
+        },
+      });
+    }
+  };
+  try {
+    if (!runStartedLate) {
+      appendRunStarted();
+      if (runStartedDuplicate) {
+        ledger.append('run.started', AUDIT_RUN_ID, {
+          contract_snapshot: { objective: { name: 'other_metric', direction: 'minimize' } },
+        });
+      }
+    }
     ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: BASELINE_SCORE } });
     if (evidenceBaselineDuplicate) {
       ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: 0.9 } });
@@ -367,42 +420,8 @@ async function buildAuditFixture({
         proposal_sha256: priorProposalDigest,
       });
     }
-    ledger.append('proposal.created', AUDIT_RUN_ID, {
-      proposal_id: 'prop-audit-fixture-01',
-      iteration: mainIteration,
-      proposal_sha256: mainProposalDigest,
-      proposal: mainProposal,
-    });
-    if (proposalDuplicate) {
-      ledger.append('proposal.created', AUDIT_RUN_ID, {
-        proposal_id: 'prop-audit-fixture-02',
-        iteration: mainIteration,
-        proposal_sha256: mainProposalDigest,
-        proposal: { expected_effect: { primary_metric: 'other_metric', direction: 'increase' } },
-      });
-    }
-    ledger.append('evidence.candidate', AUDIT_RUN_ID, {
-      iteration: mainIteration,
-      evidence: {
-        artifact: AUDIT_ARTIFACT,
-        objective: { score: OBJECTIVE_SCORE },
-        all_public_passed: true,
-        all_private_within_tolerance: true,
-        public: [{ id: 'check-1', kind: 'public_check', result: 'PASS' }],
-      },
-    });
-    if (evidenceAmbiguous) {
-      ledger.append('evidence.candidate', AUDIT_RUN_ID, {
-        iteration: mainIteration,
-        evidence: {
-          artifact: AUDIT_ARTIFACT,
-          objective: { score: OBJECTIVE_SCORE },
-          all_public_passed: true,
-          all_private_within_tolerance: true,
-          public: [{ id: 'check-dup', kind: 'public_check', result: 'PASS' }],
-        },
-      });
-    }
+    if (!proposalLate) appendMainProposal();
+    if (!evidenceLate) appendMainEvidence();
     ledger.recordGeneration({
       generation_id: generationId,
       run_id: AUDIT_RUN_ID,
@@ -432,6 +451,9 @@ async function buildAuditFixture({
         improvement: 0.1,
       });
     }
+    if (evidenceLate) appendMainEvidence();
+    if (proposalLate) appendMainProposal();
+    if (runStartedLate) appendRunStarted();
     if (evidenceBaselineLate) {
       ledger.append('evidence.baseline', AUDIT_RUN_ID, { objective: { score: 0.9 } });
     }
@@ -1017,6 +1039,81 @@ test('generationDiff ignores baseline evidence that follows the acceptance', asy
     const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
     assert.equal(report.objective.score, OBJECTIVE_SCORE);
     assert.equal(report.objective.improvement, OBJECTIVE_IMPROVEMENT);
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a digest claim with no proposal object', async () => {
+  const auditFixture = await buildAuditFixture({ proposalMissing: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /digest claim .* has no proposal object to recompute/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects gate evidence that follows the acceptance', async () => {
+  const auditFixture = await buildAuditFixture({ evidenceLate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /matches 0 evidence\.candidate events/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a proposal that follows the acceptance', async () => {
+  const auditFixture = await buildAuditFixture({ proposalLate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /matches no proposal\.created event/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects a contract snapshot that follows the acceptance', async () => {
+  const auditFixture = await buildAuditFixture({ runStartedLate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /cannot be derived from ledger evidence/);
+      return true;
+    });
+  } finally {
+    await rm(auditFixture.directory, { recursive: true, force: true });
+  }
+});
+
+test('generationDiff rejects ambiguous run started events before the acceptance', async () => {
+  const auditFixture = await buildAuditFixture({ runStartedDuplicate: true });
+  try {
+    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
+      assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
+      assert.equal(error.code, 'LEDGER_CORRUPT');
+      assert.match(error.message, /2 run\.started events before the acceptance/);
+      return true;
+    });
   } finally {
     await rm(auditFixture.directory, { recursive: true, force: true });
   }

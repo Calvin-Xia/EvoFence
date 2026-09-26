@@ -32,8 +32,11 @@ function acceptedEvent(events, generationId) {
 
 function verifyProposalDigestClaim(event) {
   const claim = event.payload?.proposal_sha256;
+  if (typeof claim !== 'string') return;
   const proposal = event.payload?.proposal;
-  if (typeof claim !== 'string' || !proposal || typeof proposal !== 'object') return;
+  if (!proposal || typeof proposal !== 'object') {
+    throw new EvoFenceError('LEDGER_CORRUPT', `proposal.created digest claim ${claim} has no proposal object to recompute.`);
+  }
   const computed = sha256(stableStringify(proposal));
   if (computed !== claim) {
     throw new EvoFenceError('LEDGER_CORRUPT', `proposal.created digest claim ${claim} does not match its proposal content (computed ${computed}).`);
@@ -44,7 +47,7 @@ function proposalEventFor(events, accepted) {
   const digest = accepted.payload?.proposal_sha256;
   if (typeof digest === 'string') {
     const byDigest = events.filter((event) => event.event_type === 'proposal.created'
-      && event.run_id === accepted.run_id && event.payload?.proposal_sha256 === digest);
+      && event.run_id === accepted.run_id && event.seq < accepted.seq && event.payload?.proposal_sha256 === digest);
     if (!byDigest.length) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches no proposal.created event for run ${accepted.run_id}.`);
     }
@@ -55,7 +58,7 @@ function proposalEventFor(events, accepted) {
     return byDigest[0];
   }
   const byIteration = events.filter((event) => event.event_type === 'proposal.created'
-    && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
+    && event.run_id === accepted.run_id && event.seq < accepted.seq && event.payload?.iteration === accepted.payload?.iteration);
   if (byIteration.length > 1) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${byIteration.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
   }
@@ -65,7 +68,7 @@ function proposalEventFor(events, accepted) {
 
 function evidenceEventFor(events, accepted) {
   const candidates = events.filter((event) => event.event_type === 'evidence.candidate'
-    && event.run_id === accepted.run_id && event.payload?.iteration === accepted.payload?.iteration);
+    && event.run_id === accepted.run_id && event.seq < accepted.seq && event.payload?.iteration === accepted.payload?.iteration);
   const artifact = accepted.payload?.evidence_artifact;
   if (typeof artifact === 'string') {
     const bound = candidates.filter((event) => event.payload?.evidence?.artifact === artifact);
@@ -77,9 +80,13 @@ function evidenceEventFor(events, accepted) {
   return candidates.at(-1) ?? null;
 }
 
-function runStartedEventFor(events, runId) {
+function runStartedEventFor(events, runId, beforeSeq = Infinity) {
   if (typeof runId !== 'string' || !runId) return null;
-  return latestEvent(events, (event) => event.event_type === 'run.started' && event.run_id === runId);
+  const matches = events.filter((event) => event.event_type === 'run.started' && event.run_id === runId && event.seq < beforeSeq);
+  if (matches.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `run ${runId} has ${matches.length} run.started events before the acceptance; the contract snapshot is ambiguous.`);
+  }
+  return matches[0] ?? null;
 }
 
 const GENERATION_RECORD_KEYS = ['run_id', 'sha', 'parent_sha', 'created_at'];
@@ -199,8 +206,8 @@ export async function generationDiff({ root, ledger, generationId }) {
   const proposalEvent = accepted ? proposalEventFor(events, accepted) : null;
   const evidenceEvent = accepted ? evidenceEventFor(events, accepted) : null;
   verifyObjectiveEvidence(accepted, evidenceEvent, generationId);
-  const runStartedEvent = runStartedEventFor(events, generation.run_id)
-    ?? runStartedEventFor(events, accepted?.run_id ?? null);
+  const runStartedEvent = runStartedEventFor(events, generation.run_id, accepted?.seq)
+    ?? runStartedEventFor(events, accepted?.run_id ?? null, accepted?.seq);
   verifyImprovementEvidence(events, accepted, runStartedEvent, generationId);
 
   // Pin diff attributes to the generation's tree so a divergent primary checkout
