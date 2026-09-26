@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { repositoryRoot } from './git.js';
 import { EvoFenceError, invariant } from './errors.js';
+import { Ledger, ledgerPath } from './ledger.js';
 
 const templates = fileURLToPath(new URL('../../templates/', import.meta.url));
 
@@ -139,6 +140,17 @@ export async function initializeRepository(cwd) {
       await writeFile(destination, `${JSON.stringify(schema, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
       created.push(path.join('.evofence', 'schemas', name));
     }
+  }
+
+  const ledgerFile = ledgerPath(root);
+  try {
+    const info = await lstat(ledgerFile);
+    invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${ledgerFile}`);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    const ledger = new Ledger(ledgerFile);
+    ledger.close();
+    created.push(path.join('.evofence', 'ledger.sqlite'));
   }
 
   return { root, created, existing: created.length === 0 };

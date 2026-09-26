@@ -6,7 +6,7 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -190,11 +190,23 @@ async function buildFixture() {
     tampered.close();
   }
 
+  // A corrupted copy of the ledger: payload_json is malformed JSON. verify() hashes the
+  // raw column and reports invalid, but parsing event payloads must not crash status.
+  const malformedLedgerFile = path.join(root, '.evofence', 'ledger-malformed.sqlite');
+  await copyFile(ledgerFile, malformedLedgerFile);
+  const malformed = new Ledger(malformedLedgerFile);
+  try {
+    malformed.db.exec('DROP TRIGGER IF EXISTS events_no_update');
+    malformed.db.prepare("UPDATE events SET payload_json = '{\"iteration\":' WHERE seq = 2").run();
+  } finally {
+    malformed.close();
+  }
+
   const emptyLedgerFile = path.join(root, '.evofence', 'ledger-empty.sqlite');
   const emptyLedger = new Ledger(emptyLedgerFile);
   emptyLedger.close();
 
-  return { directory, root, ledgerFile, tamperedLedgerFile, emptyLedgerFile, startedAt };
+  return { directory, root, ledgerFile, tamperedLedgerFile, emptyLedgerFile, malformedLedgerFile, startedAt };
 }
 
 before(async () => {
@@ -224,13 +236,23 @@ async function callBuildStatus(ledgerFile) {
   }
 }
 
-function spawnCli(args) {
+function spawnCli(args, cwd = fixture.root) {
   return spawnSync(process.execPath, [cliPath, ...args], {
-    cwd: fixture.root,
+    cwd,
     encoding: 'utf8',
     timeout: 60000,
     maxBuffer: 16 * 1024 * 1024,
   });
+}
+
+async function makeProbeRepo(name) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), `evofence-spec-${name}-`));
+  const root = path.join(directory, 'repo');
+  await mkdir(root, { recursive: true });
+  runGit(root, ['init', '--quiet', '--initial-branch=main']);
+  runGit(root, ['config', 'user.name', 'EvoFence Fixture']);
+  runGit(root, ['config', 'user.email', 'fixture@example.invalid']);
+  return { directory, root };
 }
 
 test('buildStatus returns the documented status with totals across all runs and a capped recent_runs', async () => {
@@ -424,4 +446,121 @@ test('CLI help lists the status command', () => {
     result.stdout.includes('status [--json]'),
     `help text must document the status command:\n${result.stdout}`,
   );
+});
+
+test('init creates the ledger database so status reports the empty state immediately', async () => {
+  const probe = await makeProbeRepo('init-ledger');
+  try {
+    const initResult = spawnCli(['init'], probe.root);
+    assert.equal(initResult.status, 0, initResult.stderr);
+    assert.equal(existsSync(path.join(probe.root, '.evofence', 'ledger.sqlite')), true, 'init must create the ledger database');
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.includes('Active generation: none'), result.stdout);
+    assert.ok(result.stdout.includes('Ledger integrity: ok'), result.stdout);
+    assert.ok(result.stdout.includes('Totals: runs=0 generations=0 accepted_candidates=0 rejected_candidates=0'), result.stdout);
+    assert.ok(result.stdout.includes('Recent runs:'), result.stdout);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status reports the documented empty state when the ledger file does not exist', async () => {
+  const probe = await makeProbeRepo('missing-ledger');
+  try {
+    const text = spawnCli(['status'], probe.root);
+    assert.equal(text.status, 0, text.stderr);
+    assert.ok(text.stdout.includes('Active generation: none'), text.stdout);
+    assert.ok(text.stdout.includes('Ledger integrity: ok'), text.stdout);
+    assert.ok(text.stdout.includes('Totals: runs=0 generations=0 accepted_candidates=0 rejected_candidates=0'), text.stdout);
+
+    const json = spawnCli(['status', '--json'], probe.root);
+    assert.equal(json.status, 0, json.stderr);
+    const status = JSON.parse(json.stdout);
+    assert.equal(status.active_generation, null);
+    assert.equal(status.integrity.valid, true);
+    assert.deepEqual(status.recent_runs, []);
+    assert.deepEqual(status.totals, { runs: 0, generations: 0, accepted_candidates: 0, rejected_candidates: 0 });
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status treats a zero-byte ledger file as an empty ledger', async () => {
+  const probe = await makeProbeRepo('zero-byte-ledger');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await writeFile(path.join(probe.root, '.evofence', 'ledger.sqlite'), '');
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.includes('Active generation: none'), result.stdout);
+    assert.ok(result.stdout.includes('Ledger integrity: ok'), result.stdout);
+    assert.ok(result.stdout.includes('Totals: runs=0 generations=0 accepted_candidates=0 rejected_candidates=0'), result.stdout);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('buildStatus keeps the failed-integrity status when payload_json is malformed', async () => {
+  const status = await callBuildStatus(fixture.malformedLedgerFile);
+
+  assert.equal(status.integrity.valid, false);
+  assert.equal(status.active_generation?.generation_id, GEN3_ID);
+  assert.deepEqual(status.recent_runs, []);
+  assert.deepEqual(status.totals, { runs: 0, generations: 0, accepted_candidates: 0, rejected_candidates: 0 });
+});
+
+test('CLI status keeps the failed-integrity presentation for a malformed payload_json', async () => {
+  const probe = await makeProbeRepo('malformed-payload');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await copyFile(fixture.malformedLedgerFile, path.join(probe.root, '.evofence', 'ledger.sqlite'));
+
+    const text = spawnCli(['status'], probe.root);
+    assert.equal(text.status, 1, 'status must exit 1 when integrity fails');
+    assert.ok(text.stdout.includes('Ledger integrity: FAILED'), `status must report FAILED integrity:\n${text.stdout}`);
+    assert.equal(text.stderr.includes('Unexpected end of JSON input'), false, `status must not crash on malformed payloads:\n${text.stderr}`);
+
+    const json = spawnCli(['status', '--json'], probe.root);
+    assert.equal(json.status, 1, 'status must exit 1 when integrity fails');
+    const status = JSON.parse(json.stdout);
+    assert.equal(status.integrity.valid, false);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status exits 1 when the ledger hash chain is tampered and 0 when healthy', async () => {
+  const probe = await makeProbeRepo('tampered-exit-code');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await copyFile(fixture.tamperedLedgerFile, path.join(probe.root, '.evofence', 'ledger.sqlite'));
+
+    const tampered = spawnCli(['status'], probe.root);
+    assert.equal(tampered.status, 1, `status must exit 1 on failed integrity:\n${tampered.stdout}${tampered.stderr}`);
+    assert.ok(tampered.stdout.includes('Ledger integrity: FAILED'), tampered.stdout);
+    assert.ok(tampered.stdout.includes(`Totals: runs=${TOTALS.runs}`), `totals must stay visible when payloads still parse:\n${tampered.stdout}`);
+
+    const healthy = spawnCli(['status'], fixture.root);
+    assert.equal(healthy.status, 0, healthy.stderr);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status reports an unreadable ledger as LEDGER_UNAVAILABLE instead of crashing', async () => {
+  const probe = await makeProbeRepo('unreadable-ledger');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await writeFile(path.join(probe.root, '.evofence', 'ledger.sqlite'), 'this is not a sqlite database');
+
+    const result = spawnCli(['status'], probe.root);
+    assert.equal(result.status, 1, `status must exit 1 for an unreadable ledger:\n${result.stdout}${result.stderr}`);
+    assert.ok(result.stderr.includes('[LEDGER_UNAVAILABLE]'), `status must report LEDGER_UNAVAILABLE:\n${result.stderr}`);
+    assert.equal(result.stdout.includes('Ledger integrity:'), false, 'no overview must be printed for an unreadable ledger');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
 });

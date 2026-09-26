@@ -3,9 +3,12 @@ function rejectionKey(event) {
   return Number.isInteger(iteration) && iteration > 0 ? `iteration:${iteration}` : `event:${event.seq}`;
 }
 
-export async function buildStatus({ root, ledger }) {
-  const verification = ledger.verify();
-  const totals = { runs: 0, generations: 0, accepted_candidates: 0, rejected_candidates: 0 };
+function zeroTotals() {
+  return { runs: 0, generations: 0, accepted_candidates: 0, rejected_candidates: 0 };
+}
+
+function aggregateRuns(ledger) {
+  const totals = zeroTotals();
   const rejectedByRun = new Map();
 
   for (const event of ledger.events()) {
@@ -30,13 +33,37 @@ export async function buildStatus({ root, ledger }) {
 
   for (const keys of rejectedByRun.values()) totals.rejected_candidates += keys.size;
 
+  return { totals, recent_runs: ledger.recentRuns(5) };
+}
+
+export function emptyStatus(root) {
   return {
+    root: String(root).replaceAll('\\', '/'),
+    active_generation: null,
+    integrity: { valid: true },
+    recent_runs: [],
+    totals: zeroTotals(),
+  };
+}
+
+export async function buildStatus({ root, ledger }) {
+  const verification = ledger.verify();
+  const status = {
     root: String(root).replaceAll('\\', '/'),
     active_generation: ledger.activeGeneration() ?? null,
     integrity: { valid: verification.valid },
-    recent_runs: ledger.recentRuns(5),
-    totals,
+    recent_runs: [],
+    totals: zeroTotals(),
   };
+  try {
+    Object.assign(status, aggregateRuns(ledger));
+  } catch (error) {
+    // verify() hashes the raw payload_json column, so malformed payload JSON is a
+    // corruption symptom it detects without parsing. Keep the failed-integrity
+    // presentation instead of crashing the diagnostic with a SyntaxError.
+    if (verification.valid || !(error instanceof SyntaxError)) throw error;
+  }
+  return status;
 }
 
 export function formatStatus(status) {

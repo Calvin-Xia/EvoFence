@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { readFile, writeFile } from 'node:fs/promises';
+import { lstat, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { initializeRepository } from './lib/init.js';
 import { loadContract, loadPrivateHoldout, parseYamlText } from './lib/contract.js';
 import { Ledger, ledgerPath } from './lib/ledger.js';
-import { buildStatus, formatStatus } from './lib/status.js';
+import { buildStatus, emptyStatus, formatStatus } from './lib/status.js';
 import { collectEvidence } from './lib/evidence.js';
 import { runEvolution } from './lib/runner.js';
 import { repositoryRoot, setActiveGenerationRef } from './lib/git.js';
@@ -175,20 +175,53 @@ async function commandLedger(args) {
   } finally { ledger.close(); }
 }
 
+async function pathExists(target) {
+  try {
+    await lstat(target);
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+// A missing events table means the ledger file carries no schema yet (for example a
+// zero-byte file left behind by an interrupted creation): treat it as an empty ledger.
+function isMissingEventsSchema(error) {
+  return error?.code === 'SQLITE_ERROR' && /no such table: ['"]?events['"]?$/.test(String(error.message));
+}
+
 async function commandStatus(args) {
   const { options, positional } = parseOptions(args, ['json']);
   if (positional.length || Object.keys(options).some((name) => name !== 'json')) {
     throw new EvoFenceError('USAGE', 'Use: evofence status [--json]');
   }
   const root = await repositoryRoot(process.cwd());
-  const ledger = new Ledger(ledgerPath(root), { readOnly: true });
-  try {
-    const status = await buildStatus({ root, ledger });
-    if (options.json) printJson(status);
-    else process.stdout.write(`${formatStatus(status)}\n`);
-  } finally {
-    ledger.close();
+  const file = ledgerPath(root);
+  let status;
+  if (!(await pathExists(file))) {
+    status = emptyStatus(root);
+  } else {
+    let ledger;
+    try {
+      ledger = new Ledger(file, { readOnly: true });
+    } catch (error) {
+      throw new EvoFenceError('LEDGER_UNAVAILABLE', `Cannot open the ledger at ${file}: ${error.message}`);
+    }
+    try {
+      status = await buildStatus({ root, ledger });
+    } catch (error) {
+      if (!isMissingEventsSchema(error)) {
+        throw new EvoFenceError('LEDGER_UNAVAILABLE', `Cannot read the ledger at ${file}: ${error.message}`);
+      }
+      status = emptyStatus(root);
+    } finally {
+      ledger.close();
+    }
   }
+  if (options.json) printJson(status);
+  else process.stdout.write(`${formatStatus(status)}\n`);
+  if (!status.integrity.valid) process.exitCode = 1;
 }
 
 async function commandRollback(args) {
