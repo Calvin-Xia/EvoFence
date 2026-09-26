@@ -1,4 +1,5 @@
 import { EvoFenceError } from './errors.js';
+import { sha256, stableStringify } from './fs.js';
 import { assertGitVersionAtLeast, changedPathsBetween, diffHash, runGit } from './git.js';
 
 const DIFF_CAP_BYTES = 200 * 1024;
@@ -29,6 +30,16 @@ function acceptedEvent(events, generationId) {
   return latestEvent(events, (event) => event.event_type === 'candidate.accepted' && event.payload?.generation_id === generationId);
 }
 
+function verifyProposalDigestClaim(event) {
+  const claim = event.payload?.proposal_sha256;
+  const proposal = event.payload?.proposal;
+  if (typeof claim !== 'string' || !proposal || typeof proposal !== 'object') return;
+  const computed = sha256(stableStringify(proposal));
+  if (computed !== claim) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `proposal.created digest claim ${claim} does not match its proposal content (computed ${computed}).`);
+  }
+}
+
 function proposalEventFor(events, accepted) {
   const digest = accepted.payload?.proposal_sha256;
   if (typeof digest === 'string') {
@@ -40,6 +51,7 @@ function proposalEventFor(events, accepted) {
     if (byDigest.length > 1) {
       throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted proposal_sha256 ${digest} matches ${byDigest.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
     }
+    verifyProposalDigestClaim(byDigest[0]);
     return byDigest[0];
   }
   const byIteration = events.filter((event) => event.event_type === 'proposal.created'
@@ -47,6 +59,7 @@ function proposalEventFor(events, accepted) {
   if (byIteration.length > 1) {
     throw new EvoFenceError('LEDGER_CORRUPT', `candidate.accepted iteration ${accepted.payload?.iteration} matches ${byIteration.length} proposal.created events for run ${accepted.run_id}; the proposal link is ambiguous.`);
   }
+  if (byIteration[0]) verifyProposalDigestClaim(byIteration[0]);
   return byIteration[0] ?? null;
 }
 
@@ -111,12 +124,19 @@ function verifyObjectiveEvidence(accepted, evidenceEvent, generationId) {
 
 function improvementBaselineScore(events, accepted) {
   const previous = latestEvent(events, (event) => event.event_type === 'candidate.accepted'
-    && event.run_id === accepted.run_id
-    && event.seq < accepted.seq
-    && typeof event.payload?.objective_score === 'number');
-  if (previous) return previous.payload.objective_score;
-  const baseline = latestEvent(events, (event) => event.event_type === 'evidence.baseline' && event.run_id === accepted.run_id);
-  const score = baseline?.payload?.objective?.objective?.score ?? baseline?.payload?.objective?.score;
+    && event.run_id === accepted.run_id && event.seq < accepted.seq);
+  if (previous) {
+    verifyObjectiveEvidence(previous, evidenceEventFor(events, previous), previous.payload?.generation_id ?? 'unknown');
+    const score = previous.payload?.objective_score;
+    return typeof score === 'number' ? score : null;
+  }
+  const baselines = events.filter((event) => event.event_type === 'evidence.baseline'
+    && event.run_id === accepted.run_id && event.seq < accepted.seq);
+  if (baselines.length > 1) {
+    throw new EvoFenceError('LEDGER_CORRUPT', `${baselines.length} evidence.baseline events precede the acceptance of generation ${accepted.payload?.generation_id ?? 'unknown'}; the baseline is ambiguous.`);
+  }
+  if (!baselines.length) return null;
+  const score = baselines[0].payload?.objective?.objective?.score ?? baselines[0].payload?.objective?.score;
   return typeof score === 'number' ? score : null;
 }
 
