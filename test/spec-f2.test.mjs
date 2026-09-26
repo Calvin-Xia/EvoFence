@@ -783,3 +783,44 @@ test('buildEvolutionReport refuses to summarize payloads behind a forged hash ch
   assert.deepEqual(report.generations, []);
   assert.equal(report.objective, null);
 });
+
+test('CLI report refuses to write the report over protected EvoFence state', async () => {
+  const before = await readFile(path.join(fixture.root, '.evofence', 'contract.yaml'), 'utf8');
+
+  const relativeAttempt = spawnCli(['report', '.evofence/contract.yaml']);
+  assert.notEqual(relativeAttempt.status, 0, 'writing onto the contract must be rejected');
+  assert.match(relativeAttempt.stderr, /^\[PROTECTED_PATH\]/, relativeAttempt.stderr);
+  assert.equal(
+    await readFile(path.join(fixture.root, '.evofence', 'contract.yaml'), 'utf8'),
+    before,
+    'the contract must be untouched after the rejected write',
+  );
+
+  const absoluteAttempt = spawnCli(['report', fixture.ledgerFile]);
+  assert.notEqual(absoluteAttempt.status, 0, 'writing onto the ledger must be rejected');
+  assert.match(absoluteAttempt.stderr, /^\[PROTECTED_PATH\]/, absoluteAttempt.stderr);
+  const ledgerProof = new (await repoImport('src/lib/ledger.js')).Ledger(fixture.ledgerFile);
+  try {
+    assert.equal(ledgerProof.verify().valid, true, 'the ledger must be untouched after the rejected write');
+  } finally {
+    ledgerProof.close();
+  }
+});
+
+test('buildEvolutionReport refuses to summarize when the generations table contradicts the verified events', async () => {
+  const ledgerFile = await scratchLedger('generations-mismatch', (ledger) => {
+    ledger.append('run.started', 'run-f2-table', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
+    acceptScratchGeneration(ledger, 'run-f2-table', 1, 'g-t1', 0.25, 0.25, '2026-03-09T00:00:00.000Z');
+    ledger.append('run.finished', 'run-f2-table', { status: 'ACCEPTED', iterations: 1 });
+    // Corrupt the unhashed generations table while the event chain stays intact.
+    ledger.db.exec('DROP TRIGGER IF EXISTS generations_no_update');
+    ledger.db.prepare("UPDATE generations SET sha = 'deadbeef' WHERE generation_id = 'g-t1'").run();
+  });
+
+  const report = await callBuildEvolutionReport(ledgerFile);
+  assert.equal(report.integrity.valid, false, 'an altered generations table must not be summarized as integrity.valid: true');
+  assert.equal(report.integrity.generations_mismatch, true);
+  assert.deepEqual(report.runs, []);
+  assert.deepEqual(report.generations, []);
+  assert.equal(report.objective, null);
+});

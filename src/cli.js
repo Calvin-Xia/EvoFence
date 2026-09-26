@@ -190,11 +190,40 @@ async function commandRollback(args) {
   } finally { ledger.close(); }
 }
 
+function isInsideDirectory(directory, target) {
+  const relative = path.relative(directory, target);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+// The report output must never land on EvoFence control-plane state (`.evofence/**`):
+// an unconditional overwrite here would destroy the ledger or the contract.
+function assertReportOutputOutsideState(root, output, display) {
+  const stateDir = path.join(realpathSync.native(root), '.evofence');
+  const candidates = new Set([output]);
+  try {
+    candidates.add(path.join(realpathSync.native(path.dirname(output)), path.basename(output)));
+  } catch {
+    // The output directory may not exist yet; the resolved-path check still applies.
+  }
+  try {
+    candidates.add(realpathSync.native(output));
+  } catch {
+    // The output file may not exist yet (or is not a symlink into state).
+  }
+  const normalize = (value) => (process.platform === 'win32' ? value.toLowerCase() : value);
+  const state = normalize(stateDir);
+  if ([...candidates].some((candidate) => isInsideDirectory(state, normalize(path.resolve(candidate))))) {
+    throw new EvoFenceError('PROTECTED_PATH', `Refusing to write the report over EvoFence state: ${display}`);
+  }
+}
+
 async function commandReport(args) {
   if (args.some((arg) => arg.startsWith('--') && arg !== '--json')) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
   const { options, positional } = parseOptions(args, ['json']);
   if (positional.length > 1) throw new EvoFenceError('USAGE', 'Use: evofence report [file] [--json]');
   const root = await repositoryRoot(process.cwd());
+  const output = positional.length ? path.resolve(process.cwd(), positional[0]) : null;
+  if (output !== null) assertReportOutputOutsideState(root, output, positional[0]);
   const ledger = new Ledger(ledgerPath(root), { readOnly: true });
   try {
     const report = await buildEvolutionReport({ root, ledger });
@@ -203,7 +232,6 @@ async function commandReport(args) {
       process.stdout.write(content);
       return;
     }
-    const output = path.resolve(process.cwd(), positional[0]);
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, content, { mode: 0o600 });
     process.stdout.write(`Report written to ${path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/')}\n`);

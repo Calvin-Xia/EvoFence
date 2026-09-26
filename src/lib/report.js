@@ -129,6 +129,37 @@ function buildGenerations(events, generations) {
   return [...records.values()];
 }
 
+// The `generations` table is not covered by Ledger.verify(); its rows must match the
+// hash-chained `generation.accepted` events before anything derived from them is reported.
+function generationEventRecords(events) {
+  const records = new Map();
+  for (const event of events) {
+    if (event.event_type !== 'generation.accepted') continue;
+    const payload = event.payload ?? {};
+    if (typeof payload.generation_id !== 'string') continue;
+    records.set(payload.generation_id, {
+      run_id: typeof payload.run_id === 'string' ? payload.run_id : null,
+      sha: typeof payload.sha === 'string' ? payload.sha : null,
+      parent_sha: typeof payload.parent_sha === 'string' ? payload.parent_sha : null,
+      created_at: typeof payload.created_at === 'string' ? payload.created_at : null,
+    });
+  }
+  return records;
+}
+
+function generationsTableConsistent(tableRows, eventRecords) {
+  if (tableRows.length !== eventRecords.size) return false;
+  for (const row of tableRows) {
+    const record = eventRecords.get(row.generation_id);
+    if (!record
+      || record.run_id !== row.run_id
+      || record.sha !== row.sha
+      || record.parent_sha !== row.parent_sha
+      || record.created_at !== row.created_at) return false;
+  }
+  return true;
+}
+
 function objectiveSnapshot(event) {
   const objective = event.payload?.contract_snapshot?.objective;
   return {
@@ -226,7 +257,17 @@ export async function buildEvolutionReport({ root, ledger }) {
     });
   }
 
-  const generations = buildGenerations(events, ledger.generations());
+  const tableGenerations = ledger.generations();
+  if (!generationsTableConsistent(tableGenerations, generationEventRecords(events))) {
+    return emptyReport(generated_at, {
+      valid: false,
+      failed_at_seq: null,
+      expected_previous_hash: null,
+      observed_hash: null,
+      generations_mismatch: true,
+    });
+  }
+  const generations = buildGenerations(events, tableGenerations);
 
   const tokenTotals = latestCumulativeByRun(events, TOKEN_TOTAL_EVENTS, tokenTotal);
   const usdTotals = latestCumulativeByRun(events, USD_TOTAL_EVENTS, usdTotalMicros);
@@ -260,6 +301,7 @@ function formatDelta(value) {
 function formatIntegrity(integrity) {
   if (integrity?.valid) return 'valid';
   if (integrity?.parse_failed) return 'INVALID (unparseable event payload)';
+  if (integrity?.generations_mismatch) return 'INVALID (generations table disagrees with the event chain)';
   return `INVALID${Number.isInteger(integrity?.failed_at_seq) ? ` (failed at seq ${integrity.failed_at_seq})` : ''}`;
 }
 
