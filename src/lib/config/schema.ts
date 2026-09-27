@@ -47,9 +47,29 @@ export interface FieldSpec {
   readonly defaultValue?: unknown;
   /** Known child keys for `kind: 'object'`. */
   readonly fields?: Readonly<Record<string, FieldSpec>>;
+  /**
+   * Item spec for the array kinds (`stringArray`, `invariantArray`). Declaring it makes the
+   * walker recurse into every item, so an unknown key inside an entry is reported exactly like
+   * an unknown top-level key. Omit it to leave item contents opaque (unknown keys ignored).
+   */
+  readonly items?: FieldSpec;
   /** `true` = a dynamic map; unknown child keys stay accepted. */
   readonly open?: boolean;
 }
+
+/** One `{ id, command }` entry of `hard_invariants[]` / `regressions[]`.
+ *
+ * Deliberately NOT `required`: the missing/type/uniqueness rules (and their 0.3.0 messages) stay
+ * in `validate.ts::itemArray`. This spec only lets the shape walk report an unknown entry key
+ * (e.g. `enabled: false`) instead of silently dropping it.
+ */
+const invariantItemSpec: FieldSpec = {
+  kind: 'object',
+  fields: {
+    id: { kind: 'string' },
+    command: { kind: 'string' },
+  },
+};
 
 /** The only two code defaults in the config surface (`contract.js:44,46`). */
 export const CONTRACT_DEFAULTS: Readonly<Record<string, number>> = Object.freeze({
@@ -72,7 +92,7 @@ export const CONTRACT_SCHEMA: FieldSpec = {
         min_delta: { kind: 'number', required: true },
       },
     },
-    hard_invariants: { kind: 'invariantArray', required: true },
+    hard_invariants: { kind: 'invariantArray', required: true, items: invariantItemSpec },
     allowed_evolution_surface: { kind: 'stringArray', required: true },
     protected_paths: { kind: 'stringArray', required: true },
     evidence: {
@@ -152,7 +172,7 @@ export const CONFIG_SCHEMA: FieldSpec = {
 export const HOLDOUT_SCHEMA: FieldSpec = {
   kind: 'object',
   fields: {
-    regressions: { kind: 'invariantArray', required: true },
+    regressions: { kind: 'invariantArray', required: true, items: invariantItemSpec },
   },
 };
 

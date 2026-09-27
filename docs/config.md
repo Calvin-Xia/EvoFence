@@ -24,7 +24,9 @@ Two rules are the point of the layer:
 
 1. **Unknown fields are rejected.** 0.3.0 had no `additionalProperties: false` semantics, so a
    mistyped key was silently ignored. v2 lists the offending path, for example
-   `rejected field(s): budget_typo (Unknown field: budget_typo.)`.
+   `rejected field(s): budget_typo (Unknown field: budget_typo.)`. An unknown key inside an array
+   entry is reported the same way, as in `regressions[0].enabled`; the open maps described below
+   are the only places that stay permissive.
 2. **Missing required fields are rejected**, reported as `missing field(s): ...`. They are never
    filled in.
 
@@ -90,10 +92,16 @@ machine-readable registry and a test pins that a permissive value changes no jud
   fails `status` with the configuration code (`INVALID_CONTRACT` / `INVALID_CONFIG` /
   `UNSUPPORTED_CONTRACT`) and exit code 1; an absent file stays tolerable, so a repository without
   `.evofence/` state still has a status.
-- The run path loads the contract through the gate-domain loader (`src/lib/contract.ts` →
-  `src/lib/gate/contract-document.ts`), which keeps the 0.3.0 value rules verbatim (the same two
-  defaults, the same hard `invariant` per field) but does **not** reject unknown keys. The
-  unknown-key rejection above is the v2 validator, which `init`, `status` and the tests exercise.
+- Every path that reads a policy document from disk goes through `src/lib/config/`. `run` and
+  `experiment run` load the contract and `config.yaml` through `loadRequiredContractDocumentSync` /
+  `loadRequiredConfigDocumentSync` before dispatching an agent, `evidence run` loads the same pair
+  for a manual check, and the private holdout goes through `validatePolicyFileSync('holdout')`
+  inside `loadPrivateHoldout` (`src/lib/contract.ts`). An unknown or missing key is therefore
+  refused on the run paths exactly as `init` and `status` refuse it, from one validator for the
+  four documents. An absent holdout stays `[]`: no private oracle configured is not an error.
+- `validateContract` (`src/lib/gate/contract-document.ts`) stays the pure, in-memory 0.3.0 value
+  checker behind the public export. It has no `additionalProperties: false` semantics and no longer
+  reads files, so it is not the gate that rejects a typo.
 
 To check a document by hand, run `evofence status` and read the reported paths, or add
 `--json` to get `details.rejected_fields` / `details.missing_fields`.

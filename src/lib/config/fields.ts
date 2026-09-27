@@ -8,6 +8,10 @@
  *     declared code defaults, and returns a normalized copy of the document.
  *   - `validate.ts` answers "is each present value legal".
  *
+ * An array field that declares `items` is walked item by item, so an unknown key inside an entry
+ * is reported as `field[index].key` just like an unknown top-level key; an array without `items`
+ * stays opaque (the value rules still check the array itself).
+ *
  * A field that is absent is therefore reported once as `missing` (never as `rejected`), and a
  * field that is present is reported once as `rejected` when its value is illegal (never as
  * `missing`). That split is what keeps the audit lists unambiguous.
@@ -46,6 +50,13 @@ function normalizeNode(spec: FieldSpec, value: unknown, prefix: string, out: Sha
     }
     if (spec.required && prefix) out.missing.push(prefix);
     return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    if (prefix) out.present.push(prefix);
+    if (!spec.items) return cloneJson(value);
+    const items = spec.items;
+    return value.map((item, index) => normalizeNode(items, item, `${prefix}[${index}]`, out));
   }
 
   if (isPlainObject(value)) {
