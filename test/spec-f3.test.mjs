@@ -123,7 +123,7 @@ async function buildFixture() {
   runGit(root, ['commit', '--quiet', '-m', 'fixture']);
 
   await mkdir(path.join(root, '.evofence'), { recursive: true });
-  const { Ledger, ledgerPath } = await repoImport('src/lib/ledger.js');
+  const { Ledger, ledgerPath } = await repoImport('dist/lib/ledger.js');
   const ledgerFile = ledgerPath(root);
   const startedAt = {};
   const ledger = new Ledger(ledgerFile);
@@ -223,7 +223,7 @@ async function buildFixture() {
 }
 
 before(async () => {
-  cliPath = path.resolve('src/cli.js');
+  cliPath = path.resolve('dist/cli.js');
   fixture = await buildFixture();
 });
 
@@ -232,8 +232,8 @@ after(async () => {
 });
 
 async function callBuildStatus(ledgerFile) {
-  const { buildStatus } = await repoImport('src/lib/status.js');
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { buildStatus } = await repoImport('dist/lib/status.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(ledgerFile);
   try {
     // The documented signature receives an open ledger; tolerate an implementation that
@@ -354,7 +354,7 @@ test('buildStatus reports invalid ledger integrity for a tampered ledger', async
 });
 
 test('formatStatus renders the root, active generation, integrity, totals and recent runs', async () => {
-  const { formatStatus } = await repoImport('src/lib/status.js');
+  const { formatStatus } = await repoImport('dist/lib/status.js');
   const status = await callBuildStatus(fixture.ledgerFile);
   const text = formatStatus(status);
 
@@ -394,7 +394,7 @@ test('formatStatus renders the root, active generation, integrity, totals and re
 });
 
 test('formatStatus renders Active generation: none and Ledger integrity: FAILED for a stub status', async () => {
-  const { formatStatus } = await repoImport('src/lib/status.js');
+  const { formatStatus } = await repoImport('dist/lib/status.js');
   const text = formatStatus({
     root: fixture.root.replaceAll('\\', '/'),
     active_generation: null,
@@ -579,7 +579,7 @@ test('CLI status reports an unreadable ledger as LEDGER_UNAVAILABLE instead of c
 });
 
 test('buildStatus keeps the failed-integrity status when payload aggregation fails', async () => {
-  const { buildStatus } = await repoImport('src/lib/status.js');
+  const { buildStatus } = await repoImport('dist/lib/status.js');
   const ledger = {
     verify: () => ({ valid: false }),
     activeGeneration: () => null,
@@ -595,7 +595,7 @@ test('buildStatus keeps the failed-integrity status when payload aggregation fai
 });
 
 test('buildStatus surfaces payload aggregation failures when integrity is valid', async () => {
-  const { buildStatus } = await repoImport('src/lib/status.js');
+  const { buildStatus } = await repoImport('dist/lib/status.js');
   const ledger = {
     verify: () => ({ valid: true }),
     activeGeneration: () => null,
@@ -634,7 +634,7 @@ test('CLI status reports runs with non-object payloads on a healthy ledger', asy
   const probe = await makeProbeRepo('non-object-healthy');
   try {
     await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
-    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const { Ledger } = await repoImport('dist/lib/ledger.js');
     const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
     const ledger = new Ledger(ledgerFile);
     try {
@@ -657,7 +657,7 @@ test('CLI status reports a partially missing ledger schema as LEDGER_UNAVAILABLE
   const probe = await makeProbeRepo('partial-schema');
   try {
     await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
-    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const { Ledger } = await repoImport('dist/lib/ledger.js');
     const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
     const ledger = new Ledger(ledgerFile);
     try {
@@ -691,7 +691,7 @@ test('CLI status treats a ledger database without any EvoFence schema as empty',
   const probe = await makeProbeRepo('foreign-schema');
   try {
     await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
-    const { Ledger } = await repoImport('src/lib/ledger.js');
+    const { Ledger } = await repoImport('dist/lib/ledger.js');
     const ledgerFile = path.join(probe.root, '.evofence', 'ledger.sqlite');
     const ledger = new Ledger(ledgerFile);
     try {

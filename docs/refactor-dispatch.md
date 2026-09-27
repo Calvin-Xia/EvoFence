@@ -74,11 +74,30 @@ git worktree remove ../evofence-wt-<域>
 
 ## 5. 活动台账（执行期实时更新）
 
-| pane | agent 名 | 模型 | claim_by | 当前节点 | 状态 |
+### 已完成 / 已归档
+
+| pane | agent 名 | 模型（自报） | claim_by | 节点 | 状态 |
 |---|---|---|---|---|---|
-| wA:p2 | recon | deepseek/deepseek-flash | herdr-recon | l1_recon | idle（产出已交付） |
-| wA:p3 | designer | xiaomi/mimo-v2.6-pro | herdr-designer | l1_design | working |
-| wA:p4 | recon-review | deepseek/deepseek-flash | herdr-review | （复核，非节点） | done |
+| wA:p2 | recon | deepseek/deepseek-flash · high | herdr-recon | l1_recon | passed（归档 tab） |
+| wA:p3 | designer | xiaomi/mimo-v2.6-pro · high | herdr-designer | l1_design | passed（归档 tab） |
+| wA:p6 | base | deepseek/deepseek-flash · high | herdr-base | l1_base, l2_types | passed（归档 tab） |
+| wA:p4 | recon-review | deepseek/deepseek-flash · high | herdr-review | （交叉复核，非节点） | 已交付，pane 已关闭 |
+
+### L2 并行波（4 并发，各在自己的 worktree）
+
+| pane | agent 名 | 模型（启动参数） | claim_by | 节点 | worktree / 分支 |
+|---|---|---|---|---|---|
+| wA:p8 | wt-ledger | deepseek/deepseek-flash --thinking high | herdr-ledger | l2_ledger | `C:\Users\Calvin-Xia\evofence-wt-ledger` / refactor/ledger |
+| wA:p9 | wt-gate | deepseek/deepseek-flash --thinking high | herdr-gate | l2_gate | `C:\Users\Calvin-Xia\evofence-wt-gate` / refactor/gate |
+| wA:pA | wt-exec | deepseek/deepseek-flash --thinking high | herdr-exec | l2_exec | `C:\Users\Calvin-Xia\evofence-wt-exec` / refactor/exec |
+| wA:pB | wt-io | deepseek/deepseek-flash --thinking high | herdr-io | l2_config | `C:\Users\Calvin-Xia\evofence-wt-io` / refactor/io |
+
+峰值并发写者 = 4（≤4 上限）。主检出（`main`）在并行波期间只有编排会话在做状态流转，无执行 agent 直接写入。
+worktree 基线提交 = `34b193f`（L2 四域共同祖先，含 TS 基座与共享类型层）。
+
+### pane ↔ 节点 双向唯一性
+
+每个 pane 同一时刻只持有一个 running 节点；每个节点只有一个 claim_by。
 
 ## 6. 红线
 
