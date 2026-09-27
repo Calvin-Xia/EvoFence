@@ -12,3 +12,7 @@ docs/deep-research-report.md
 
 # graph CLI transient locks
 .graph/.locks/
+
+# pi goal-tracking state (machine-local)
+.pi/goals/
+.pi/.goals-pool-snapshot.json*
