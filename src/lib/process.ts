@@ -1,16 +1,34 @@
 import { spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
-import { EvoFenceError } from './errors.js';
+import { EvoFenceError } from './exec/errors.js';
+import type { ProcessResult, StopReason, TrustedCommandResult } from '../types/index.js';
 
 const DEFAULT_MAX_OUTPUT = 1_048_576;
 const SENSITIVE_ENV_NAME = /(?:^|[_-])(?:TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH|BEARER|COOKIE|SESSION)(?:$|[_-])|(?:^|[_-])(?:API|ACCESS|PRIVATE|CLIENT|SIGNING|ENCRYPTION)[_-]?KEY(?:$|[_-])|(?:ASKPASS|AUTH_SOCK|KUBECONFIG|DOCKER_CONFIG)$/i;
 
-function isSensitiveEnvironmentName(name) {
+/** Environment overlay accepted by `runProcess`; `null`/`undefined` removes the variable. */
+export type EnvironmentValues = Record<string, string | null | undefined>;
+
+/** Options accepted by {@link runProcess}. */
+export interface RunProcessOptions {
+  cwd?: string;
+  timeoutMs?: number;
+  maxOutputBytes?: number;
+  env?: EnvironmentValues;
+  input?: string | Uint8Array;
+  shell?: boolean;
+  /** Called per stdout chunk; a returned string requests an early stop with that reason. */
+  onChunk?: (stream: 'stdout' | 'stderr', chunk: string) => StopReason | void;
+  stopGraceMs?: number;
+}
+
+function isSensitiveEnvironmentName(name: string): boolean {
   return SENSITIVE_ENV_NAME.test(name);
 }
 
-export function sanitizedEnvironment(extra = {}) {
-  const env = {};
+export function sanitizedEnvironment(extra: EnvironmentValues = {}): Record<string, string | undefined> {
+  const env: Record<string, string | undefined> = {};
   for (const [name, value] of Object.entries(process.env)) {
     if (isSensitiveEnvironmentName(name)) continue;
     env[name] = value;
@@ -26,10 +44,10 @@ export function sanitizedEnvironment(extra = {}) {
   return env;
 }
 
-async function taskkillProcessTree(pid) {
+async function taskkillProcessTree(pid: number): Promise<boolean> {
   return new Promise((resolve) => {
     let settled = false;
-    const finish = (success) => {
+    const finish = (success: boolean) => {
       if (settled) return;
       settled = true;
       resolve(success);
@@ -40,52 +58,55 @@ async function taskkillProcessTree(pid) {
   });
 }
 
-async function killTree(child, { force = false } = {}) {
-  if (!child.pid) return true;
+async function killTree(child: ChildProcess, { force = false }: { force?: boolean } = {}): Promise<boolean> {
+  const pid = child.pid;
+  if (!pid) return true;
   if (process.platform === 'win32') {
     if (child.exitCode !== null && !force) return true;
-    const killed = await taskkillProcessTree(child.pid);
+    const killed = await taskkillProcessTree(pid);
     if (!killed && child.exitCode === null) child.kill('SIGKILL');
     return killed;
   }
   if (child.exitCode !== null && !force) return true;
   try {
-    process.kill(-child.pid, 'SIGKILL');
+    process.kill(-pid, 'SIGKILL');
     return true;
   } catch (error) {
-    if (error.code === 'ESRCH') return true;
+    if ((error as NodeJS.ErrnoException).code === 'ESRCH') return true;
     child.kill('SIGKILL');
     return false;
   }
 }
 
-async function closesWithin(closePromise, timeoutMs) {
-  let timer;
+async function closesWithin(closePromise: Promise<unknown>, timeoutMs: number): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const result = await Promise.race([
     closePromise.then(() => true),
-    new Promise((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); timer.unref?.(); }),
+    new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); timer.unref?.(); }),
   ]);
   if (timer) clearTimeout(timer);
   return result;
 }
 
-export async function canTerminateProcessTree() {
+export async function canTerminateProcessTree(): Promise<boolean> {
   if (process.platform !== 'win32') return true;
   const probe = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { stdio: 'ignore', windowsHide: true });
-  const started = await new Promise((resolve) => {
+  const started = await new Promise<boolean>((resolve) => {
     probe.once('spawn', () => resolve(true));
     probe.once('error', () => resolve(false));
   });
   if (!started) return false;
+  const probePid = probe.pid;
+  if (probePid === undefined) return false;
   const closePromise = new Promise((resolve) => probe.once('close', resolve));
-  const killed = await taskkillProcessTree(probe.pid);
+  const killed = await taskkillProcessTree(probePid);
   if (killed && await closesWithin(closePromise, 1000)) return true;
   probe.kill('SIGKILL');
   await closesWithin(closePromise, 1000);
   return false;
 }
 
-export function runProcess(command, args, options = {}) {
+export function runProcess(command: string, args: readonly string[], options: RunProcessOptions = {}): Promise<ProcessResult> {
   const {
     cwd,
     timeoutMs = 120000,
@@ -106,21 +127,22 @@ export function runProcess(command, args, options = {}) {
       windowsHide: true,
       stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     });
-    const stdoutChunks = [];
-    const stderrChunks = [];
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
     let stdoutStoredBytes = 0;
     let stderrStoredBytes = 0;
     let stdoutBytes = 0;
     let stderrBytes = 0;
     let timedOut = false;
     let outputLimited = false;
-    let stopReason = null;
-    let callbackError = null;
+    let stopReason: StopReason | null = null;
+    let callbackError: Error | null = null;
     let treeTerminationFailed = false;
-    let treeKillPromise = null;
-    let forceKillTimer = null;
+    let treeKillPromise: Promise<unknown> | null = null;
+    let forceKillTimer: ReturnType<typeof setTimeout> | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let settled = false;
-    const requestStop = (reason, graceMs = stopGraceMs) => {
+    const requestStop = (reason: StopReason, graceMs = stopGraceMs) => {
       if (stopReason) return;
       stopReason = reason;
       if (graceMs === 0 && process.platform === 'win32') {
@@ -143,7 +165,7 @@ export function runProcess(command, args, options = {}) {
       }, Math.max(0, graceMs));
       forceKillTimer.unref?.();
     };
-    const append = (chunk, stream) => {
+    const append = (chunk: Buffer, stream: 'stdout' | 'stderr') => {
       if (stream === 'stdout') {
         stdoutBytes += chunk.length;
         const room = Math.max(0, maxOutputBytes - stdoutStoredBytes);
@@ -157,7 +179,7 @@ export function runProcess(command, args, options = {}) {
           const requestedStop = onChunk?.(stream, chunk.toString('utf8'));
           if (typeof requestedStop === 'string' && requestedStop) requestStop(requestedStop);
         } catch (error) {
-          callbackError = error;
+          callbackError = error as Error;
           requestStop('OUTPUT_CALLBACK_ERROR');
         }
       } else {
@@ -171,14 +193,14 @@ export function runProcess(command, args, options = {}) {
         if (chunk.length > room) outputLimited = true;
       }
     };
-    child.stdout?.on('data', (chunk) => append(chunk, 'stdout'));
-    child.stderr?.on('data', (chunk) => append(chunk, 'stderr'));
+    child.stdout?.on('data', (chunk: Buffer) => append(chunk, 'stdout'));
+    child.stderr?.on('data', (chunk: Buffer) => append(chunk, 'stderr'));
     child.once('error', (error) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       if (forceKillTimer) clearTimeout(forceKillTimer);
-      reject(new EvoFenceError('PROCESS_START_FAILED', `Could not start ${command}: ${error.message}`, { command, code: error.code }));
+      reject(new EvoFenceError('PROCESS_START_FAILED', `Could not start ${command}: ${error.message}`, { command, code: (error as NodeJS.ErrnoException).code }));
     });
     child.once('close', (code, signal) => {
       if (settled) return;
@@ -214,28 +236,28 @@ export function runProcess(command, args, options = {}) {
         });
       })();
     });
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       timedOut = true;
       requestStop('TIMEOUT', 1500);
     }, Math.max(1, timeoutMs));
     timer.unref?.();
-    if (input !== undefined) child.stdin.end(input);
+    if (input !== undefined) child.stdin?.end(input);
   });
 }
 
-export async function runTrustedCommand(command, { cwd, timeoutMs = 120000, maxOutputBytes = DEFAULT_MAX_OUTPUT, env = {} } = {}) {
+export async function runTrustedCommand(command: string, { cwd, timeoutMs = 120000, maxOutputBytes = DEFAULT_MAX_OUTPUT, env = {} }: Omit<RunProcessOptions, 'input' | 'shell' | 'onChunk' | 'stopGraceMs'> = {}): Promise<TrustedCommandResult> {
   const result = await runProcess(command, [], { cwd, timeoutMs, maxOutputBytes, env, shell: true });
   return { ...result, command };
 }
 
-export function finalNumericLine(output) {
+export function finalNumericLine(output: string): number | null {
   const lines = output.trim().split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (!lines.length) return null;
   const value = Number(lines.at(-1));
   return Number.isFinite(value) ? value : null;
 }
 
-export async function waitForClose(child) {
+export async function waitForClose(child: ChildProcess): Promise<{ code: number | null; signal: NodeJS.Signals | null }> {
   const [code, signal] = await once(child, 'close');
-  return { code, signal };
+  return { code: code as number | null, signal: signal as NodeJS.Signals | null };
 }
