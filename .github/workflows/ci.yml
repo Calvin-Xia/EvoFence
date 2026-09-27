@@ -28,6 +28,10 @@ jobs:
       # typecheck and build first makes each gate report itself.
       - name: typecheck
         run: npm run typecheck
+      # Source-shape gate: no `.js` under `src/` (would escape the TypeScript program) and no
+      # `src/**/*.ts` over 350 lines. Static, no build needed, so it runs right after typecheck.
+      - name: src:policy
+        run: npm run src:policy
       - name: build
         run: npm run build
       # The module-graph cycle gate lives in `npm run check`, which CI does not call,

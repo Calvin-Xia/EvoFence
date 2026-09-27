@@ -5,14 +5,20 @@
  * Every refusal here happens BEFORE any agent is dispatched, and in the same order as 0.3.0,
  * so the observed error codes are unchanged.
  */
-import { loadContract, loadPrivateHoldout } from '../contract.js';
+import { loadPrivateHoldout } from '../contract.js';
+// R1 fix F1: the run path reads contract.yaml/config.yaml through the same v2 validator that
+// `init`/`status` use. `src/lib/contract.js::loadContract` (the 0.3.0 gate validator) accepted
+// unknown fields, so `run` and `status` disagreed about the same file; adopting the required
+// v2 loaders here is the L3 decision `src/lib/config/load.ts` had left open. Both loaders keep
+// the 0.3.0 fail-closed identities (`MISSING_FILE` when absent, `INVALID_CONTRACT`/
+// `INVALID_CONFIG` when rejected) and materialize the two `CONTRACT_DEFAULTS`.
+import { loadRequiredConfigDocumentSync, loadRequiredContractDocumentSync } from '../config/index.js';
 import { Ledger, ledgerPath } from '../ledger.js';
 import { ensureDirectory } from '../fs.js';
 import { EvoFenceError } from './errors.js';
 import { requireEvidenceConfigured } from '../policy.js';
 import { canTerminateProcessTree } from '../process.js';
 import { createRunId, headSha, repositoryRoot } from '../git.js';
-import { loadConfig } from './runner-config.js';
 import { currentPolicyHashes } from './runner-events.js';
 import { ensurePrivateIgnored } from './runner-candidate.js';
 import { parseNumericBudget, usdFromMicros, usdToMicros } from './budget.js';
@@ -36,8 +42,8 @@ export async function prepareRun(options: RunEvolutionOptions): Promise<RunConte
   const adapterRunner = (options.adapterRunner ?? null) as AdapterRunner | null;
 
   const root = await repositoryRoot(cwd);
-  const contract = await loadContract(root) as EvoFenceContract;
-  const config = await loadConfig(root) as EvoFenceConfig;
+  const contract = loadRequiredContractDocumentSync(root) as EvoFenceContract;
+  const config = loadRequiredConfigDocumentSync(root) as EvoFenceConfig;
   const holdout = await loadPrivateHoldout(root) as unknown[];
   requireEvidenceConfigured(contract);
   if (holdout.length > 0 && !allowReadableHoldout) {

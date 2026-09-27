@@ -109,9 +109,12 @@ export function loadRequiredConfigDocumentSync(root: string): EvoFenceConfig {
 }
 
 /**
- * Required-file variant of {@link loadContractDocumentSync}. The gate domain's `loadContract`
- * (`src/lib/contract.js`) is the current run-path loader; adopting this one is an L3 decision
- * because it additionally rejects unknown keys.
+ * Required-file variant of {@link loadContractDocumentSync}. This IS the run-path loader since
+ * R1 fix F1: `src/lib/exec/runner-preflight.ts` and `src/lib/exec/runner-events.ts` call it
+ * instead of the 0.3.0 gate loader `src/lib/contract.js::loadContract`, so `run` and `status`
+ * now reject the same unknown keys with the same code. That adoption was the L3 decision this
+ * comment used to defer; `src/lib/contract.js::loadContract` remains only as the published
+ * R2 facade (`src/index.ts`).
  */
 export function loadRequiredContractDocumentSync(root: string): EvoFenceContract {
   const loaded = loadContractDocumentSync(root);

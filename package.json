@@ -29,8 +29,9 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "src:policy": "node scripts/check-src-policy.mjs",
     "dep:check": "node scripts/check-deps.mjs",
-    "check": "npm run typecheck && npm run dep:check && npm test",
+    "check": "npm run typecheck && npm run src:policy && npm run dep:check && npm test",
     "test": "npm run build && node --test",
     "test:e2e": "npm run build && node --test test-e2e/cli-flow.mjs"
   },

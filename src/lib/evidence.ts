@@ -19,6 +19,10 @@ import { finalNumericLine, runTrustedCommand } from './process.js';
 import { sha256 } from './fs.js';
 import { EvoFenceError } from './errors.js';
 import { allCasesPassed, casePassed, isValidObjectiveScore, withinTolerance } from './gate/evidence.js';
+// R1 fix F2: the single source of truth for the two declared contract code defaults.
+// `src/lib/config/schema.js` is data-only (it imports nothing but the type contract), so this
+// does not drag the config barrel's YAML/fs IO into the evidence collector.
+import { CONTRACT_DEFAULTS } from './config/schema.js';
 import type { EvidencePhase, TimedProcessResult, TrustedCommandResult } from '../types/exec.js';
 import type { EvoFenceContract, PrivateRegressionConfig } from '../types/config.js';
 import type { EvidenceBundle, EvidenceCaseSummary, EvidenceCheckSummary, ObjectiveEvidence, PrivateEvidenceCase } from '../types/evidence.js';
@@ -80,11 +84,12 @@ async function execute(command: string, options: TrustedCommandOptions): Promise
 function boundedTimeout(contract: EvoFenceContract, deadlineAt: number): number {
   const remaining = deadlineAt - Date.now();
   if (remaining <= 0) throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The run wall-clock budget has expired.');
-  // NOTE: `validateContract` reads `per_command_timeout_ms ?? 120000` for its own range check but
-  // does not write the default back onto the document, so an omitted key is `undefined` here and
-  // `Math.min(undefined, remaining)` is `NaN`. That is 0.3.0 behaviour, preserved verbatim
-  // (the template always supplies the key); L2 only moved the code, it did not change it.
-  const perCommandTimeoutMs = contract.evidence.per_command_timeout_ms as number;
+  // R1 fix F2. `validateContract` only range-checks `per_command_timeout_ms ?? 120000`; it never
+  // writes the default back onto the document, so an omitted key arrives as `undefined` and
+  // `Math.min(undefined, remaining)` is `NaN`. Node coerces `setTimeout(NaN)` to a 1 ms timer,
+  // which killed every evidence command that omitted the key. Apply the declared default from
+  // its single source of truth (`CONTRACT_DEFAULTS`) instead of re-hard-coding it here.
+  const perCommandTimeoutMs = contract.evidence.per_command_timeout_ms ?? CONTRACT_DEFAULTS['evidence.per_command_timeout_ms'];
   return Math.max(1, Math.min(perCommandTimeoutMs, remaining));
 }
 
@@ -102,7 +107,9 @@ export async function collectEvidence({
 }: CollectEvidenceOptions): Promise<EvidenceBundle> {
   const startedAt = new Date();
   const results: EvidenceCheckSummary[] = [];
-  const maxOutputBytes = contract.evidence.max_output_bytes as number;
+  // Same omitted-key shape as `boundedTimeout` (R1 fix F2): an absent `max_output_bytes` must
+  // fall back to the declared default, not to `NaN` at the process-output guard.
+  const maxOutputBytes = contract.evidence.max_output_bytes ?? CONTRACT_DEFAULTS['evidence.max_output_bytes'];
   const env = {
     EVOFENCE_PHASE: phase,
     EVOFENCE_RUN_ID: runId,

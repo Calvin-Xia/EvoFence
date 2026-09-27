@@ -4,8 +4,11 @@
  * `src/lib/runner.js`.
  */
 import { sha256, stableStringify } from '../fs.js';
-import { loadContract, loadPrivateHoldout } from '../contract.js';
-import { loadConfig } from './runner-config.js';
+import { loadPrivateHoldout } from '../contract.js';
+// The drift digests must be computed from the exact same validated documents the run path starts
+// with, so this uses the v2 loaders too (R1 fix F1); a mixed pair would report policy drift on
+// every iteration for a file nobody changed.
+import { loadRequiredConfigDocumentSync, loadRequiredContractDocumentSync } from '../config/index.js';
 import type { AdapterEventPayload, AdapterPhase, AdapterName, PolicyHashes } from '../../types/index.js';
 import type { AdapterResultLike } from './types.js';
 
@@ -37,9 +40,9 @@ export function adapterEvent(result: AdapterResultLike, adapter: string, phase: 
 
 /** The three policy digests compared at each drift checkpoint. */
 export async function currentPolicyHashes(root: string): Promise<PolicyHashes> {
-  const contract = await loadContract(root);
+  const contract = loadRequiredContractDocumentSync(root);
   const holdout = await loadPrivateHoldout(root);
-  const config = await loadConfig(root);
+  const config = loadRequiredConfigDocumentSync(root);
   return {
     contract: sha256(stableStringify(contract)),
     holdout: sha256(stableStringify(holdout)),
