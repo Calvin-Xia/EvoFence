@@ -1,0 +1,47 @@
+{
+  // EvoFence build baseline (node l1_base of graph evofence-ts-refactor).
+  //
+  // TRANSITIONAL SETTING -- `allowJs` exists only while src/ still holds the 0.3.0
+  // JavaScript implementation. It lets `tsc` compile today's src/*.js into dist/
+  // and lets declaration emit produce dist/*.d.ts, so the build pipeline is green
+  // from day one. Removing it after L2 finishes migrating every src/ domain to
+  // TypeScript is a one-line change: delete the two `allowJs` / `checkJs` lines
+  // below and drop the `src/**/*.js` glob from `include` (see adr_0002 for the
+  // dist-only release shape this build serves).
+  // `checkJs` stays off on purpose: this node only stands up the build, it does not
+  // type-check or migrate the untouched 0.3.0 sources -- that is the L2 domains' job.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+
+    "rootDir": "src",
+    "outDir": "dist",
+
+    "allowJs": true,
+    "checkJs": false,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmitOnError": true,
+    "newLine": "lf"
+  },
+  "include": ["src/**/*.js", "src/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

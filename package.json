@@ -8,13 +8,17 @@
     "node": ">=22.13.0"
   },
   "bin": {
-    "evofence": "src/cli.js"
+    "evofence": "dist/cli.js"
   },
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "types": "./dist/index.d.ts",
   "files": [
-    "src/",
+    "dist/",
     "templates/",
     "docs/pi-tool-strategy.md",
     "README.md",
@@ -23,12 +27,19 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test",
-    "check": "node --check src/cli.js && node --check src/index.js && node --test"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dep:check": "node scripts/check-deps.mjs",
+    "check": "npm run typecheck && npm run dep:check && npm test",
+    "test": "npm run build && node --test"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "typescript": "^7.0.2"
   },
   "repository": {
     "type": "git",
