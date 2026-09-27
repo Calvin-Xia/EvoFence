@@ -69,7 +69,26 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
+// `--json` failure contract (node `l2_report`): when the invoked command's machine-readable view
+// is one this node owns, a failure is reported as ONE JSON object on stderr, so a JSON consumer
+// can parse it and stdout stays byte-empty. Other commands keep the 0.3.0 text error verbatim —
+// `diff --json` in particular is pinned by the F1 acceptance oracle (`spec-f1:1429`,
+// `spec-f1:1440`), which asserts the `[CODE] message` text on stderr; rolling this contract out
+// to `diff`/`run`/`experiment` is l2_cli's call (see the report's item 7).
+const JSON_ERROR_COMMANDS = new Set(['report', 'status']);
+
+function jsonErrorRequested() {
+  const argv = process.argv.slice(2);
+  return JSON_ERROR_COMMANDS.has(argv[0] ?? '') && argv.includes('--json');
+}
+
 function printError(error) {
+  if (jsonErrorRequested()) {
+    const payload = { error: { code: error?.code ?? null, message: error?.message ?? String(error) } };
+    if (error?.details !== undefined) payload.error.details = error.details;
+    process.stderr.write(`${JSON.stringify(payload, null, 2)}\n`);
+    return;
+  }
   const code = error.code ? `[${error.code}] ` : '';
   process.stderr.write(`${code}${error.message}\n`);
   if (error.details && process.env.EVOFENCE_DEBUG) process.stderr.write(`${JSON.stringify(error.details, null, 2)}\n`);

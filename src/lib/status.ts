@@ -1,47 +1,38 @@
 /**
  * `evofence status`: ledger read-side aggregation and text rendering.
  *
- * Converted from `src/lib/status.js` (L2 io domain, node `l2_config`). Export surface is
- * unchanged (`emptyStatus` / `buildStatus` / `formatStatus`) and the ledger aggregation logic is
+ * Converted from `src/lib/status.js` (L2 io domain, node `l2_config`) and re-pointed at the
+ * shared view contract by node `l2_report`. Export surface is unchanged (`emptyStatus` /
+ * `buildStatus` / `formatStatus`, plus the `StatusLedger` type) and the aggregation logic is
  * byte-for-byte the same, including the best-effort rule: when `verify()` already reported the
- * chain invalid, an aggregation failure must not replace the failed-integrity presentation;
- * when the chain is valid, the aggregation error propagates.
+ * chain invalid, an aggregation failure must not replace the failed-integrity presentation; when
+ * the chain is valid, the aggregation error propagates.
  *
- * WHAT IS NEW HERE (node `l2_config`): both entry points now validate the repository policy
- * through `../config` before reporting. An invalid `.evofence/contract.yaml` /
- * `.evofence/config.yaml` throws `INVALID_CONTRACT` / `INVALID_CONFIG` (listed field paths in
- * the message, exit code 1 via `cli.js`), and a valid one is echoed as a `policy` block so the
- * status output can be checked against the file it came from. An absent policy file stays
- * tolerable: a repository without `.evofence/` state still has a status (`policy: null`).
+ * UNIFIED VIEW CONTRACT (node `l2_report`): `StatusView` now *extends* the frozen shared type
+ * `src/types/report.ts` `StatusView` instead of re-declaring its fields, and the ledger read
+ * interface plus the payload-narrowing primitives come from `./report/ledger-view.js` — the same
+ * module `buildEvolutionReport` consumes. `report` and `status` therefore cannot drift, and
+ * neither imports the ledger implementation or the runner (DoD 5).
+ *
+ * POLICY VALIDATION (node `l2_config`): an invalid `.evofence/contract.yaml` /
+ * `.evofence/config.yaml` throws `INVALID_CONTRACT` / `INVALID_CONFIG` (listed field paths in the
+ * message, exit code 1 via `cli.js`), and a valid one is echoed as a `policy` block. An absent
+ * policy file stays tolerable: a repository without `.evofence/` state still has a status.
  */
 import { inspectPolicySync, type PolicySnapshot } from './config/index.js';
-import type { GenerationRecord, LedgerEvent, JsonValue, RecentRunSummary, StatusTotals } from '../types/index.js';
+import { iterationOf, payloadObject, type StatusLedger } from './report/ledger-view.js';
+import type { LedgerEvent, RecentRunSummary, StatusTotals, StatusView as StatusViewContract } from '../types/index.js';
 
-/** The slice of `Ledger` `status` reads; structural so the ledger domain stays decoupled. */
-export interface StatusLedger {
-  verify(): { valid: boolean };
-  activeGeneration(): GenerationRecord | null;
-  events(): LedgerEvent[];
-  recentRuns(limit: number): RecentRunSummary[];
-}
+export type { StatusLedger } from './report/ledger-view.js';
 
-/** `buildStatus()` return value (the 0.3.0 shape plus the validated `policy` snapshot). */
-export interface StatusView {
-  root: string;
-  active_generation: GenerationRecord | null;
-  integrity: { valid: boolean };
-  recent_runs: RecentRunSummary[];
-  totals: StatusTotals;
+/** `buildStatus()` return value: the shared status view plus the validated `policy` snapshot. */
+export interface StatusView extends StatusViewContract {
   policy: PolicySnapshot | null;
 }
 
-function payloadObject(payload: JsonValue): Record<string, JsonValue> | null {
-  return typeof payload === 'object' && payload !== null && !Array.isArray(payload) ? payload : null;
-}
-
 function rejectionKey(event: LedgerEvent): string {
-  const iteration = payloadObject(event.payload)?.iteration;
-  return Number.isInteger(iteration) && (iteration as number) > 0 ? `iteration:${iteration}` : `event:${event.seq}`;
+  const iteration = iterationOf(event.payload);
+  return iteration !== null ? `iteration:${iteration}` : `event:${event.seq}`;
 }
 
 function zeroTotals(): StatusTotals {

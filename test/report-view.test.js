@@ -1,0 +1,350 @@
+// Acceptance oracle for the report/status view contract added by node `l2_report`:
+//   - `report.gate_decisions` (門禁结论) and `report.ledger` (账本引用) — DoD 1.
+//   - the `--json` failure contract in `cli.js` `printError` — DoD 4.
+// The pre-existing `spec-f1`/`spec-f2`/`spec-f3` oracles keep owning the 0.3.0 fields; this file
+// only pins what is NEW, and imports from `dist/` (ADR-0004).
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { buildEvolutionReport } from '../dist/lib/report.js';
+import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
+
+const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
+const SANITIZATION_SECRET = 'PRIVATE-ORACLE-MUST-NOT-LEAK-l2report';
+const PARENT_SHA = 'c3'.repeat(20);
+const GEN_SHA = 'a1'.repeat(20);
+const CONTRACT_SNAPSHOT = { objective: { name: 'quality_score', direction: 'maximize' } };
+
+function runGit(cwd, args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
+  assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr || result.stdout}`);
+  return result.stdout.trim();
+}
+
+function spawnCli(args, cwd) {
+  return spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
+}
+
+/** A ledger with one rejected-then-accepted run and one escalated run. */
+function seedLedger(ledger) {
+  ledger.append('run.started', 'run-a', { adapter: 'codex', base_sha: PARENT_SHA, contract_snapshot: CONTRACT_SNAPSHOT });
+  ledger.append('gate.decision', 'run-a', {
+    iteration: 1,
+    decision: 'REJECT',
+    reason: 'PUBLIC_TEST_FAILURE',
+    // Both blobs carry private-oracle text and must never be projected into the report.
+    failure: { reason: 'PUBLIC_TEST_FAILURE', stdout: SANITIZATION_SECRET },
+    details: { stdout: SANITIZATION_SECRET },
+    requests: [{ stdout: SANITIZATION_SECRET }],
+  });
+  ledger.append('gate.decision', 'run-a', {
+    iteration: 2,
+    decision: 'ACCEPT',
+    reason: 'OBJECTIVE_IMPROVED',
+    evidence_ok: true,
+    risk: { band: 'LOW', score: 1 },
+    improvement: 0.4,
+    min_delta: 0.1,
+    private_regressions: false,
+  });
+  ledger.append('candidate.accepted', 'run-a', { iteration: 2, generation_id: 'g-a-i2', sha: GEN_SHA, parent_sha: PARENT_SHA, objective_score: 0.5, improvement: 0.4 });
+  ledger.recordGeneration({ generation_id: 'g-a-i2', run_id: 'run-a', sha: GEN_SHA, parent_sha: PARENT_SHA, created_at: '2026-03-02T00:00:00.000Z' });
+  ledger.append('run.finished', 'run-a', { status: 'ACCEPTED', iterations: 2, observed_total: 1200 });
+  ledger.append('run.started', 'run-b', { adapter: 'pi', base_sha: GEN_SHA, contract_snapshot: CONTRACT_SNAPSHOT });
+  ledger.append('gate.decision', 'run-b', { iteration: 1, decision: 'ESCALATE', reason: 'CAPABILITY_DENIED' });
+  ledger.append('run.finished', 'run-b', { status: 'ESCALATE', iterations: 1 });
+}
+
+async function scratchLedger(seed = seedLedger) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-report-'));
+  const ledger = new Ledger(path.join(directory, 'ledger.sqlite'));
+  try {
+    seed(ledger);
+  } finally {
+    ledger.close();
+  }
+  return directory;
+}
+
+async function withLedger(directory, fn) {
+  const ledger = new Ledger(path.join(directory, 'ledger.sqlite'));
+  try {
+    return await fn(ledger);
+  } finally {
+    ledger.close();
+  }
+}
+
+async function makeRepo(label) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), `evofence-report-${label}-`));
+  const root = path.join(directory, 'repo');
+  await mkdir(root, { recursive: true });
+  runGit(root, ['init', '--quiet', '--initial-branch=main']);
+  runGit(root, ['config', 'user.name', 'EvoFence Fixture']);
+  runGit(root, ['config', 'user.email', 'fixture@example.invalid']);
+  runGit(root, ['config', 'commit.gpgsign', 'false']);
+  await writeFile(path.join(root, 'README.md'), '# fixture repository\n');
+  runGit(root, ['add', '-A']);
+  runGit(root, ['commit', '--quiet', '-m', 'fixture']);
+  return { directory, root };
+}
+
+/* ------------------------------------------------------------------ *
+ * report view: gate decisions + ledger reference (DoD 1)
+ * ------------------------------------------------------------------ */
+
+test('gate_decisions projects every gate.decision event, oldest first, with its ledger seq', async () => {
+  const directory = await scratchLedger();
+  try {
+    const report = await withLedger(directory, (ledger) => buildEvolutionReport({ root: directory, ledger }));
+
+    assert.deepEqual(report.gate_decisions.map((row) => row.decision), ['REJECT', 'ACCEPT', 'ESCALATE']);
+    assert.deepEqual(report.gate_decisions.map((row) => row.run_id), ['run-a', 'run-a', 'run-b']);
+    assert.deepEqual(report.gate_decisions.map((row) => row.iteration), [1, 2, 1]);
+    // `seq` is the traceability handle: strictly increasing, and the last one is the chain tip - 3.
+    const seqs = report.gate_decisions.map((row) => row.seq);
+    assert.deepEqual(seqs, [...seqs].sort((a, b) => a - b));
+    assert.equal(typeof report.gate_decisions[0].seq, 'number');
+
+    const [rejected, accepted, escalated] = report.gate_decisions;
+    assert.equal(rejected.reason, 'PUBLIC_TEST_FAILURE');
+    assert.equal(rejected.failure_code, 'PUBLIC_TEST_FAILURE');
+    assert.equal(rejected.evidence_ok, null);
+    assert.equal(rejected.risk_band, null);
+    assert.equal(accepted.evidence_ok, true);
+    assert.equal(accepted.risk_band, 'LOW');
+    assert.equal(accepted.improvement, 0.4);
+    assert.equal(accepted.min_delta, 0.1);
+    assert.equal(accepted.private_regressions, false);
+    assert.equal(accepted.failure_code, null);
+    assert.equal(escalated.reason, 'CAPABILITY_DENIED');
+    assert.equal(escalated.failure_code, null);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('gate_decisions never project the raw failure/details/requests blobs', async () => {
+  const directory = await scratchLedger();
+  try {
+    const report = await withLedger(directory, (ledger) => buildEvolutionReport({ root: directory, ledger }));
+    assert.equal(JSON.stringify(report).includes(SANITIZATION_SECRET), false, 'private-oracle text must not reach the report');
+    for (const row of report.gate_decisions) {
+      assert.equal(Object.hasOwn(row, 'failure'), false);
+      assert.equal(Object.hasOwn(row, 'details'), false);
+      assert.equal(Object.hasOwn(row, 'requests'), false);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('ledger reference points back at the chain the report was computed from', async () => {
+  const directory = await scratchLedger();
+  try {
+    const report = await withLedger(directory, (ledger) => buildEvolutionReport({ root: directory, ledger }));
+    const tip = await withLedger(directory, (ledger) => ledger.verify());
+
+    assert.equal(report.ledger.event_count, tip.events);
+    assert.equal(report.ledger.head_hash, tip.head);
+    assert.equal(report.ledger.first_seq, 1);
+    assert.equal(report.ledger.last_seq, tip.events);
+    assert.equal(typeof report.ledger.read_at, 'string');
+    assert.equal(Number.isNaN(Date.parse(report.ledger.read_at)), false, 'read_at must be an ISO timestamp');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('a broken chain still returns every view class, with unknown ledger facts left null', async () => {
+  const stub = {
+    readSnapshot: () => ({
+      integrity: { valid: false, sequence: 3, expected_previous_hash: 'aa', observed_hash: 'bb' },
+      events: [],
+      generations: [],
+    }),
+  };
+  const report = await buildEvolutionReport({ root: '<stub>', ledger: stub });
+
+  assert.equal(report.integrity.valid, false);
+  assert.deepEqual(report.runs, []);
+  assert.deepEqual(report.gate_decisions, []);
+  assert.deepEqual(report.ledger, {
+    event_count: null,
+    head_hash: null,
+    first_seq: null,
+    last_seq: null,
+    read_at: report.ledger.read_at,
+  });
+});
+
+test('a valid snapshot that reports no tip metadata still yields a usable reference', async () => {
+  // Mirrors the spec-f2 stub shape: `integrity: { valid: true }` without `events`/`head`.
+  const events = [
+    { seq: 1, event_type: 'run.started', run_id: 'run-stub', created_at: '2026-03-11T00:00:00.000Z', payload: { adapter: 'codex' } },
+    { seq: 2, event_type: 'run.finished', run_id: 'run-stub', created_at: '2026-03-11T00:00:01.000Z', payload: { status: 'PLATEAU', iterations: 1 } },
+  ];
+  const report = await buildEvolutionReport({ root: '<stub>', ledger: { readSnapshot: () => ({ integrity: { valid: true }, events, generations: [] }) } });
+
+  assert.equal(report.integrity.valid, true);
+  assert.equal(report.ledger.event_count, 2);
+  assert.equal(report.ledger.head_hash, null);
+  assert.equal(report.ledger.first_seq, 1);
+  assert.equal(report.ledger.last_seq, 2);
+});
+
+/* ------------------------------------------------------------------ *
+ * CLI surfaces (DoD 1 / 2 / 4)
+ * ------------------------------------------------------------------ */
+
+test('CLI report --json carries run summaries, gate decisions and the ledger reference', async () => {
+  const directory = await scratchLedger();
+  try {
+    const ledgerFile = path.join(directory, 'ledger.sqlite');
+    const source = new Ledger(ledgerFile);
+    source.close();
+    // Run the CLI from a git repo whose .evofence/ledger.sqlite is the seeded ledger.
+    const probe = await makeRepo('report-json');
+    try {
+      await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+      await writeFile(path.join(probe.root, '.evofence', 'ledger.sqlite'), await readFile(ledgerFile));
+
+      const result = spawnCli(['report', '--json'], probe.root);
+      assert.equal(result.status, 0, result.stderr);
+      const report = JSON.parse(result.stdout);
+      assert.ok(Array.isArray(report.runs) && report.runs.length === 2, 'run summaries');
+      assert.ok(Array.isArray(report.gate_decisions) && report.gate_decisions.length === 3, 'gate conclusions');
+      assert.equal(typeof report.ledger.event_count, 'number', 'ledger reference');
+      assert.equal(report.ledger.event_count, report.ledger.last_seq);
+      assert.equal(result.stdout.includes(SANITIZATION_SECRET), false, 'CLI output must never embed private-oracle text');
+    } finally {
+      await rm(probe.directory, { recursive: true, force: true });
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI report renders the gate decisions table only when there are decisions', async () => {
+  const directory = await scratchLedger();
+  try {
+    const probe = await makeRepo('report-text');
+    try {
+      await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+      await writeFile(path.join(probe.root, '.evofence', 'ledger.sqlite'), await readFile(path.join(directory, 'ledger.sqlite')));
+
+      const result = spawnCli(['report'], probe.root);
+      assert.equal(result.status, 0, result.stderr);
+      assert.ok(result.stdout.includes('## Gate decisions'), result.stdout);
+      assert.ok(result.stdout.includes('CAPABILITY_DENIED'), result.stdout);
+      assert.ok(result.stdout.includes('- Ledger reference:'), result.stdout);
+      assert.equal(result.stdout.includes(SANITIZATION_SECRET), false);
+    } finally {
+      await rm(probe.directory, { recursive: true, force: true });
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI status --json exits 0 with parseable JSON', async () => {
+  const probe = await makeRepo('status-json');
+  try {
+    const result = spawnCli(['status', '--json'], probe.root);
+    assert.equal(result.status, 0, result.stderr);
+    const status = JSON.parse(result.stdout);
+    assert.equal(typeof status.root, 'string');
+    assert.equal(typeof status.totals.runs, 'number');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('a --json failure is one parseable error object on stderr and leaves stdout empty', async () => {
+  const probe = await makeRepo('json-error');
+  try {
+    const result = spawnCli(['status', '--json', 'bogus'], probe.root);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '', 'stdout must stay clean in --json mode');
+    const payload = JSON.parse(result.stderr);
+    assert.deepEqual(payload, { error: { code: 'USAGE', message: 'Use: evofence status [--json]' } });
+    assert.equal(Object.hasOwn(payload.error, 'details'), false, 'no details key when there are none');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('a --json failure with details exposes them under error.details', async () => {
+  const probe = await makeRepo('json-error-details');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await writeFile(path.join(probe.root, '.evofence', 'contract.yaml'), 'contract_version: 1\nmystery_field: 1\n', 'utf8');
+
+    const result = spawnCli(['status', '--json'], probe.root);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    const payload = JSON.parse(result.stderr);
+    assert.equal(payload.error.code, 'INVALID_CONTRACT');
+    assert.equal(typeof payload.error.message, 'string');
+    assert.deepEqual(payload.error.details.rejected_fields.map((issue) => issue.path), ['mystery_field']);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('the non-JSON text failure path is unchanged', async () => {
+  const probe = await makeRepo('text-error');
+  try {
+    const result = spawnCli(['status', 'bogus'], probe.root);
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr.trim(), '[USAGE] Use: evofence status [--json]');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('commands outside the report/status scope keep their 0.3.0 text error under --json', async () => {
+  // Deliberate scope boundary: the F1 acceptance oracle pins `diff --json` stderr as text
+  // (`spec-f1` "CLI diff exits 1 with ..."), so the JSON error contract does not cover it yet.
+  const probe = await makeRepo('diff-scope');
+  try {
+    for (const args of [['diff', '--json'], ['diff', 'g-missing', '--json']]) {
+      const result = spawnCli(args, probe.root);
+      assert.equal(result.status, 1);
+      assert.equal(result.stderr.trim().startsWith('{'), false, `diff --json must keep text stderr: ${result.stderr}`);
+    }
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * view-module boundaries (DoD 5)
+ * ------------------------------------------------------------------ */
+
+test('the view modules never import the runner or the ledger implementation', async () => {
+  const viewModules = [
+    '../dist/lib/report.js',
+    '../dist/lib/status.js',
+    '../dist/lib/report/budget.js',
+    '../dist/lib/report/gates.js',
+    '../dist/lib/report/generations.js',
+    '../dist/lib/report/ledger-view.js',
+    '../dist/lib/report/objective.js',
+    '../dist/lib/report/reference.js',
+    '../dist/lib/report/render.js',
+    '../dist/lib/report/runs.js',
+    '../dist/lib/report/view.js',
+  ];
+  for (const relative of viewModules) {
+    const source = await readFile(fileURLToPath(new URL(relative, import.meta.url)), 'utf8');
+    const specifiers = [...source.matchAll(/from\s*['"]([^'"]+)['"]/g)].map((match) => match[1]);
+    for (const specifier of specifiers) {
+      assert.equal(/runner|adapter|\.\.\/ledger\.js|git\.js|process\.js/.test(specifier), false, `${relative} must not import ${specifier}`);
+    }
+  }
+});
