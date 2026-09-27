@@ -32,13 +32,31 @@ jobs:
         run: test "$(npm --version)" = "11.17.0"
 
       - run: npm ci
-      - run: npm test
+
+      # `dist/` is the published artifact (adr_0002), not the repository tree: since
+      # 0.4.0 `package.json` bin/exports/types point into `dist/` and `files` ships it.
+      # Everything below therefore has to run against a fresh build, and type-check and
+      # build stay explicit steps so a compile failure reports itself instead of
+      # surfacing as a confusing failing `npm test` (same rationale as ci.yml).
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build dist
+        run: npm run build
 
       - name: Verify release metadata
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: node scripts/verify-release-metadata.js
+
+      # Static guard for the Trusted Publishing wiring itself: `id-token: write`,
+      # the pinned npm CLI with a version self-check, and `npm publish --tag ...`.
+      - name: Verify publish workflow configuration
+        run: node scripts/verify-publish-workflow.js
+
+      - name: Test before publishing
+        run: npm test
 
       - name: Publish prerelease to beta
         if: github.event.release.prerelease
