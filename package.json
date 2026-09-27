@@ -31,7 +31,8 @@
     "typecheck": "tsc --noEmit",
     "dep:check": "node scripts/check-deps.mjs",
     "check": "npm run typecheck && npm run dep:check && npm test",
-    "test": "npm run build && node --test"
+    "test": "npm run build && node --test",
+    "test:e2e": "npm run build && node --test test-e2e/cli-flow.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
