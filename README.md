@@ -239,11 +239,11 @@ npm pack --dry-run   # 查看发布内容
 
 ### 拓扑驱动的开发方式
 
-0.4.0 这次重构由 [Super Plumber](https://github.com/LUKAWI/super-plumber) 驱动：它把需求拆成带依赖、门禁与 ADR 管辖的拓扑图，本仓库的 19 个工作流节点、5 份 ADR 和全部验收记录都在 `.graph/` 里。
+0.4.0 这次重构由 [Super Plumber](https://github.com/LUKAWI/super-plumber) 驱动：它把需求拆成带依赖、门禁与 ADR 管辖的拓扑图（19 个工作流节点、5 份 ADR）。
 
-- `.graph/` 是真相源。根目录的 `CONTEXT-MAP.md`、`DECISIONS.md`，以及 `docs/adr/`、`docs/contexts/`、`docs/topology.mmd` 都是它的**生成视图**，手改会被下一次导出覆盖。
-- 重新导出：`graph export --docs --graph evofence-ts-refactor`；只检查是否漂移：`graph export --docs --check --graph evofence-ts-refactor`。
-- 这些命令需要单独安装的 Super Plumber CLI（`npm install --global @lukawi/super-plumber`）。它不是本仓库的依赖，`npm run check` 与 CI 都不需要它。
+- 图的运行态（节点、边、ADR、`events.jsonl` 审计日志）在 `.graph/`，**已被 Git 忽略**：它是驱动这次重构的过程状态，不是产品源码，也不进 npm 包。（它体积的大头是每次结构变更自动产生的快照副本。）
+- 根目录的 `CONTEXT-MAP.md`、`DECISIONS.md`，以及 `docs/adr/`、`docs/contexts/`、`docs/topology.mmd` 是它导出的**可读视图**，已入库：没有图的人靠它们读这份设计与决议，所以不要手改，改动走图再重新导出。
+- 导出与漂移检查：`graph export --docs --graph evofence-ts-refactor` / `graph export --docs --check --graph evofence-ts-refactor`。需要单独安装的 Super Plumber CLI（`npm install --global @lukawi/super-plumber`），它不是本仓库依赖，`npm run check` 与 CI 都不需要它。
 
 ## 发布
 

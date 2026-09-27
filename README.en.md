@@ -237,11 +237,11 @@ The research source document `docs/deep-research-report.md` is not included in t
 
 ### Topology-driven development
 
-The 0.4.0 rewrite was driven by [Super Plumber](https://github.com/LUKAWI/super-plumber), which turns a requirement into a topology graph with dependencies, gates and ADR jurisdiction. This repository's 19 workflow nodes, 5 ADRs and the whole acceptance record live in `.graph/`.
+The 0.4.0 rewrite was driven by [Super Plumber](https://github.com/LUKAWI/super-plumber), which turns a requirement into a topology graph with dependencies, gates and ADR jurisdiction (19 workflow nodes, 5 ADRs).
 
-- `.graph/` is the source of truth. `CONTEXT-MAP.md`, `DECISIONS.md` at the repository root, plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd`, are **generated views** of it — editing them by hand is overwritten on the next export.
-- Re-export with `graph export --docs --graph evofence-ts-refactor`; drift-check only with `graph export --docs --check --graph evofence-ts-refactor`.
-- Those commands need the separately installed Super Plumber CLI (`npm install --global @lukawi/super-plumber`). It is not a dependency of this repository, and neither `npm run check` nor CI requires it.
+- The graph's live state (nodes, edges, ADRs, the `events.jsonl` audit log) lives in `.graph/`, which is **gitignored on purpose**: it is the process state that drove the refactor, not product source, and most of its bulk is per-mutation snapshot copies. It never enters the npm package.
+- `CONTEXT-MAP.md`, `DECISIONS.md` at the repository root, plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd`, are **exported views** of that graph and are tracked: they are how everyone who does not hold the graph reads the design and its decisions, so do not hand-edit them — change the graph and re-export.
+- Export and drift-check with `graph export --docs --graph evofence-ts-refactor` / `graph export --docs --check --graph evofence-ts-refactor`. Those need the separately installed Super Plumber CLI (`npm install --global @lukawi/super-plumber`). It is not a dependency of this repository, and neither `npm run check` nor CI requires it.
 
 ## Publishing
 
