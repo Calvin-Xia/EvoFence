@@ -1,5 +1,100 @@
 # Changelog
 
+## 0.4.0 — BREAKING
+
+A breaking refactor of the 0.3.0 codebase: the source language, the published shape, the CLI
+command surface, the config validator and the ledger on-disk format all change. There is no
+feature work beyond what is listed below.
+
+### ① Source is TypeScript; the release shape is `dist/` only
+
+- All of `src/` is now TypeScript. The 0.3.0 `.js` sources are gone and the runtime and published
+  artifact is the `tsc` output in `dist/` (ADR-0002).
+- `package.json` publishes `dist/` plus `templates/`, `README.md`, `README.en.md`, `CHANGELOG.md`,
+  `LICENSE` and `docs/pi-tool-strategy.md`. `bin.evofence` is `dist/cli.js`; `exports["."]` and
+  `types` resolve to `dist/index.js` / `dist/index.d.ts` (0.3.0 published `src/index.js` and
+  `src/cli.js` directly).
+- The build emits declarations and maps (`dist/**/*.d.ts`, `*.d.ts.map`, `*.js.map`), so consumers
+  get real types for the same public API — the 18 symbols re-exported from `src/index.ts`.
+- Scripts: `npm run build` (`tsc`), `npm run typecheck` (`tsc --noEmit`), `npm run dep:check`
+  (acyclic dependency check over `src/`), `npm test` (**builds first**, then `node --test`),
+  `npm run test:e2e` (builds first, then the CLI flow suite) and `npm run check` (typecheck +
+  dep:check + test). Tests import the build output under `dist/`, not `src/` (ADR-0004).
+
+### ② CLI command-surface redesign (ADR-0003)
+
+- The eleven 0.3.0 groups are kept (`init`, `run`, `proposal`, `evidence`, `gate`, `ledger`,
+  `diff`, `rollback`, `experiment`, `report`, `status`) and the flag/JSON/exit conventions inside
+  them are unified around one manifest (`src/lib/cli/catalog.ts`).
+- `--json` is accepted by **every** subcommand. 0.3.0 honoured it only on `run`, `diff`, `report`
+  and `status`; `init`, `rollback`, `ledger export` and `experiment export` gained a JSON view.
+- In `--json` mode a failure prints ONE `{"error":{"code","message","details"?}}` object on
+  stderr and leaves stdout empty. Text mode keeps the 0.3.0 `[CODE] message` line on stderr.
+- Unknown flags are now rejected everywhere. 0.3.0 silently ignored an unknown value flag on
+  `run` (`--foo bar`) and swallowed stray arguments on `init`/`proposal` as positional noise.
+- `--flag=value` is accepted in addition to `--flag value`.
+- `evidence run <dir> --json` is now accepted (0.3.0 treated `--json` as a third positional and
+  failed with `USAGE`); the command already printed JSON, so this only makes the flag legal.
+- Exit codes are frozen at `0` (success) and `1` (any failure) and are declared per command
+  instead of being emergent; `evofence --help` is generated from the same manifest as the
+  dispatcher, so the command list can no longer drift from the implementation.
+
+### ③ Config v2: strict validation, unknown and missing fields rejected
+
+- `.evofence/contract.yaml`, `.evofence/config.yaml`, `.evofence/private/holdout.yaml` and the
+  `experiment run` manifest go through one v2 validator (`src/lib/config/`).
+- **Unknown fields are rejected** with the offending paths listed
+  (`INVALID_CONTRACT` / `INVALID_CONFIG` / `INVALID_HOLDOUT` / `INVALID_EXPERIMENT`). 0.3.0 had no
+  `additionalProperties: false` semantics, so a mistyped key such as `budget:` was silently
+  ignored.
+- **Missing required fields are rejected** and reported as `missing field(s): ...`. The whole
+  config surface has exactly two code defaults — `evidence.per_command_timeout_ms` (120000) and
+  `evidence.max_output_bytes` (1048576). Values in `templates/contract.yaml` stay template values;
+  they are not runtime fallbacks.
+- `evofence init` validates the scaffold it just wrote, and `evofence status` validates both policy
+  files: an invalid `contract.yaml` / `config.yaml` now fails `status` with exit code 1
+  (`INVALID_CONTRACT` / `INVALID_CONFIG`) instead of being ignored, and those codes survive the CLI
+  wrapper.
+- The YAML version fields are unchanged: `config.yaml` still requires `version: 1` and
+  `contract.yaml` still requires `contract_version: 1`. "v2" names the validator layer, not a new
+  value for those keys.
+- Documented non-gates (unchanged from 0.3.0): `acceptance.require_proposal`,
+  `acceptance.require_claims` and `capabilities.shell.mode` are template-only keys with zero code
+  references (`src/lib/gate/dead-keys.ts`). `capabilities.authority_ceiling` is validated (A0–A3)
+  but consulted by no decision, and `capabilities.network` / `dependency_install` / `credentials`
+  are only echoed into `.evofence-task.md`. `capabilities.external_api` **is** a live capability
+  gate, resolved through the dynamic capability table.
+
+### ④ Ledger schema v2 — BREAKING, no migration
+
+- The ledger now declares schema v2 in the `state` table (the `schema_version` key). The hash-chain
+  recipe, the DDL, the pragmas, the append-only triggers, the table set and the write order are
+  unchanged from 0.3.0.
+- **0.3.0 ledgers are not readable and are never converted.** Opening one fails with
+  `LEDGER_SCHEMA_INCOMPATIBLE`; the refusal happens before any pragma or DDL runs, so the old
+  database is left untouched. `ledger show` / `ledger verify` / `ledger recent` / `diff` /
+  `rollback` / `run` surface `LEDGER_SCHEMA_INCOMPATIBLE` (exit 1); `status` reports
+  `LEDGER_UNAVAILABLE` with a message naming the observed (v1) format.
+- No migration, upgrade or downgrade path is provided, and none is planned in this release
+  (adr_0001).
+
+### ⑤ Upgrading 0.3.0 → 0.4.0
+
+1. Reinstall: `npm install --global --allow-scripts=better-sqlite3 evofence`, or `npm ci` in a
+   checkout. The package now ships `dist/`.
+2. **Back up or discard `.evofence/ledger.sqlite`.** 0.4.0 cannot read it. Move it aside (for
+   example to `.evofence/ledger.sqlite.v1.bak`) and run `evofence init` to create a fresh v2
+   ledger. Old history remains available only in the old build; it is not carried forward.
+3. Re-check `.evofence/contract.yaml` and `.evofence/config.yaml` against the v2 validator. Run
+   `evofence status`: it prints the exact rejected and missing field paths and exits 1. Remove
+   unknown keys and add the reported missing fields.
+4. Audit scripts and CI that call the CLI. `--json` is now global, unknown flags are hard errors,
+   and in `--json` mode failures put one JSON object on stderr with stdout empty.
+5. Update anything that imports the package: the runtime entry moved from `src/index.js` to
+   `dist/index.js`. The 18 public symbols are unchanged, but only the `dist/` build is shipped.
+6. If you relied on `acceptance.require_proposal`, `acceptance.require_claims` or
+   `capabilities.shell.mode` as gates, stop: they never took effect and still do not.
+
 ## 0.3.0
 
 - Add `evofence diff <generation-id> [--json]`, a generation audit view backed by `src/lib/audit.js`: it verifies the ledger hash chain and cross-checks the generation row against its hash-chained `generation.accepted` / `candidate.accepted` records first (failing with `LEDGER_CORRUPT`), reports a generation's changed paths, unified diff (capped at 200 KiB, marked in text output when truncated), objective delta, and the gate evidence that accepted it without embedding evidence output content, recomputes `diff_sha256` from Git with diff attributes pinned to the generation tree (Git 2.42+ required; older Git fails clearly) and flags disagreements with the recorded `diff_sha256_recorded` via `diff_sha256_matches`, binds the displayed evidence, proposal, objective score and improvement to the acceptance record's `evidence_artifact` / `proposal_sha256` links and recomputed gate evidence (proposal digests rehashed against content, improvement baseline derived from validated prior evidence chained to the accepted parent), requires a unique preceding ACCEPT gate decision and gate-passed bound and baseline evidence (valid score and improvement meeting the contract min_delta), rejects ambiguous duplicate acceptance, proposal, evidence or baseline records, and never accepts records appended after the acceptance as its gate, proposal, baseline or contract, and binds every linked record's base_sha to the accepted parent (legacy records without those links keep the run/iteration fallback), and labels generations without acceptance evidence as not accepted.

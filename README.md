@@ -69,6 +69,27 @@ regressions:
 
 如果没有配置私有回归，EvoFence 就没有隐藏回归证据，不能据此声称隐藏测试表现良好。内置智能体适配器无法保证智能体读不到同一主机上的其他文件，因此默认不允许使用私有检查。`--allow-readable-holdout` 表示你接受智能体可能读取 oracle；如需真正保密，请使用限制挂载范围的容器或虚拟机。
 
+### 配置校验（v2）与不生效的键
+
+`.evofence/contract.yaml`、`.evofence/config.yaml`、`.evofence/private/holdout.yaml` 与 experiment 清单都由同一套 v2 校验器读取（完整字段表见 [`docs/config.md`](docs/config.md)）：
+
+- **未知字段被拒绝**：0.3.0 会静默忽略拼错的键，现在以 `INVALID_CONTRACT` / `INVALID_CONFIG` / `INVALID_HOLDOUT` / `INVALID_EXPERIMENT` 失败并列出具体路径。
+- **缺失必填字段被拒绝**：报 `missing field(s): ...`。整份配置只有两个代码默认值——`evidence.per_command_timeout_ms`（120000）与 `evidence.max_output_bytes`（1048576）；其余字段缺失即失败。`templates/contract.yaml` 里的初始值只是模板值，不是运行时兜底。
+- `evofence init` 会校验自己写下的骨架，`evofence status` 会校验两份策略文件：无效的 `contract.yaml` / `config.yaml` 让 `status` 以退出码 1 失败并给出配置错误码，而不是被忽略；文件不存在仍是可容忍的。
+- YAML 里的版本键没有变：`config.yaml` 仍要求 `version: 1`，`contract.yaml` 仍要求 `contract_version: 1`。“v2”指校验层，不是这两个键的新值。
+
+以下模板键**当前不生效**，不要把门禁语义寄托在它们身上：
+
+| 键 | 真实状态 |
+| --- | --- |
+| `acceptance.require_proposal` | 未生效：代码零引用；提案校验始终执行 |
+| `acceptance.require_claims` | 未生效：代码零引用；claims 校验始终执行 |
+| `capabilities.shell.mode` | 未生效：代码零引用 |
+| `capabilities.authority_ceiling` | 仅校验 A0–A3（A4 被拒），不参与任何决策 |
+| `capabilities.network` / `dependency_install` / `credentials` | 仅写进 `.evofence-task.md` 的契约摘要，不阻止任何行为 |
+
+与此相对，`capabilities.external_api` 是**真实生效**的能力门：proposal 通过 `requested_capabilities` 请求它时，控制器按 contract 中该键的值裁决（模板为 `deny`，即请求被拒）。未配置的能力一律拒绝。
+
 ## 运行演化循环
 
 ```sh
@@ -94,6 +115,7 @@ EvoFence 会从子进程环境中过滤常见的凭证变量名，包括 `*_TOKE
 ## 检查、导出与回滚
 
 ```sh
+evofence init --json
 evofence status
 evofence status --json
 evofence proposal inspect <run-id>-i1
@@ -101,12 +123,19 @@ evofence gate <run-id>-i1
 evofence ledger show <run-id>
 evofence ledger verify
 evofence ledger recent 10
+evofence ledger export evidence.json --json
 evofence experiment export evidence.json
-evofence rollback <generation-id>
+evofence rollback <generation-id> --json
 evofence report evolution-report.md
 evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
+
+### 命令面约定（0.4.0）
+
+- `--json` 被**每一条**子命令接受（0.3.0 只在 `run` / `diff` / `report` / `status` 上生效）。`ledger show|verify|recent`、`proposal inspect`、`gate` 始终只输出 JSON；`evidence run` 默认先打印进度行再打印 JSON 文档，加 `--json` 会抑制进度行，让 stdout 只剩一个 JSON 文档。
+- 未知 flag 在任何命令上都是用法错误（0.3.0 会静默忽略 `run` 上的未知取值 flag）；`--flag=value` 与 `--flag value` 等价。
+- 退出码只有 `0`（成功）与 `1`（任何失败）。文本模式在 stderr 打印 `[CODE] message`；`--json` 模式下 stdout 保持为空，stderr 打印单个 `{"error":{"code","message","details"?}}` 对象。
 
 `evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。尚无 ledger、ledger 文件为 0 字节或尚未建表时，`evofence status` 输出上述空状态。ledger 健康或为空时退出码为 0，完整性校验失败或 ledger 无法读取时退出码为 1。
 
@@ -180,6 +209,8 @@ evofence experiment run experiment.yaml
 
 ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希链。它能发现意外或不完整的修改，但同一操作系统账户下的进程仍可替换数据库文件。如果本地主机不在你的信任边界内，请备份数据库，或将导出的证据存放在单独受控的系统中。
 
+账本 schema 在 0.4.0 升到 v2（在 `state` 表写入 `schema_version` 标记），哈希链算法、DDL、触发器与写入顺序不变。**读取 0.3.0 的账本会显式失败：不提供迁移，也不会就地升级或降级。** 拒绝发生在任何 pragma / DDL 之前，旧数据库不会被改动。`ledger show|verify|recent`、`diff`、`rollback`、`run` 以 `LEDGER_SCHEMA_INCOMPATIBLE` 退出 1；`status` 报 `LEDGER_UNAVAILABLE`，消息里说明观测到的是 0.3.0（v1）格式。升级步骤见 [CHANGELOG](CHANGELOG.md)。
+
 ## 已知限制
 
 - 会强制执行 `max_iterations`、`max_wall_clock_ms`、失败候选数和连续无改进次数上限。设置 `max_tokens` 后，会按 Codex 完成的 turn、OpenCode 完成的 step 和 Pi 完成的 assistant 消息统计，并计入 Pi 报告的嵌套工具模型用量与压缩用量；达到或超过阈值时终止 agent 进程树，并停止评估和接受当前候选。CLI 只在完整消息/turn/step 边界报告用量，跨线响应已经完成，因此实际用量可能超过阈值；这不是请求前的严格 token 上限。Claude Code 的完整 whole-tree token 数只在任务结束的 result 事件中提供，因此设置 `max_tokens` 时会在启动 agent 前拒绝 Claude 运行。Pi 的自动重试若没有附带用量，会在 token 预算模式下触发 fail closed。预算模式下，用量缺失、字段不完整或被截断时会停止运行。Windows 会先探测系统能否终止整个进程树；若权限不足，预算运行会在启动智能体前拒绝执行。Claude Code v2.1.246+ 会记录完整的按模型 token 和 CLI 报告的美元成本估算；Pi 会按其模型价格记录 USD 成本估算。`max_usd` 目前只支持 Claude Code：EvoFence 把剩余 run-wide 预算传给每次 CLI 调用的 `--max-budget-usd`，并以完整的 `result.total_cost_usd` 估算值累计；达到上限、用量缺失/截断、超时或无法确认进程树终止时，会停止且不评估当前候选。触发上限的响应可能使估算值越过阈值；该值不是服务商最终账单。Codex、OpenCode 和 Pi 配置非空 `max_usd` 会在启动前拒绝。OpenCode 的 cost 仍保留 CLI 报告值，不推断币种，也不代表最终账单。
@@ -191,9 +222,18 @@ ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希�
 
 ```sh
 npm ci
-npm test
-npm pack --dry-run
+npm run build        # tsc：把 src/**/*.ts 编译到 dist/，并生成 .d.ts / .d.ts.map / .js.map
+npm run typecheck    # tsc --noEmit
+npm run dep:check    # 检查 src/ 内部依赖图无环
+npm test             # 先 npm run build，再用 Node 内置测试运行器跑 test/**
+npm run test:e2e     # 先 npm run build，再跑 test-e2e/cli-flow.mjs
+npm run check        # typecheck + dep:check + test
+npm pack --dry-run   # 查看发布内容
 ```
+
+源码是 TypeScript（`src/**/*.ts`）。运行时入口与发布产物只有 `dist/`：`package.json` 的 `bin.evofence` 指向 `dist/cli.js`，`exports["."]` 与 `types` 指向 `dist/index.js` / `dist/index.d.ts`。`files` 只发布 `dist/`、`templates/`、`README.md`、`README.en.md`、`CHANGELOG.md`、`LICENSE` 和 `docs/pi-tool-strategy.md`。测试直接从 `dist/**` import（ADR-0004），所以 `npm test` 一定先构建；改完源码请重新 `npm run build`，不要把过期的 `dist/` 结果当成测试结论。
+
+消费者拿到类型的方式：`import { runEvolution, Ledger } from 'evofence'` 由 `exports["."].types` 解析到 `dist/index.d.ts`；公共 API 就是 `src/index.ts` 重新导出的 18 个符号。`npm pack --dry-run` 可确认 tarball 内只有 dist 形态。
 
 研究报告源文件 `docs/deep-research-report.md` 不会包含在 npm 包中。
 
