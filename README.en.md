@@ -71,6 +71,27 @@ regressions:
 
 With no private regressions configured, EvoFence has no hidden-regression evidence and cannot support claims about hidden-test performance. The built-in agent adapters cannot guarantee read isolation from other files on the same host, so `run` refuses to use private checks by default. `--allow-readable-holdout` explicitly accepts that the agent may read the oracle; use a container/VM with restricted mounts for actual secrecy.
 
+### Config validation (v2) and keys that are not gates
+
+`.evofence/contract.yaml`, `.evofence/config.yaml`, `.evofence/private/holdout.yaml` and the experiment manifest are all read by one v2 validator (the full field tables are in [`docs/config.md`](docs/config.md)):
+
+- **Unknown fields are rejected**: 0.3.0 silently ignored a mistyped key; v2 fails with `INVALID_CONTRACT` / `INVALID_CONFIG` / `INVALID_HOLDOUT` / `INVALID_EXPERIMENT` and lists the offending paths.
+- **Missing required fields are rejected** as `missing field(s): ...`. The whole config surface has exactly two code defaults — `evidence.per_command_timeout_ms` (120000) and `evidence.max_output_bytes` (1048576). Values in `templates/contract.yaml` are template values, not runtime fallbacks.
+- `evofence init` validates the scaffold it wrote, and `evofence status` validates both policy files: an invalid `contract.yaml` / `config.yaml` now fails `status` with exit code 1 and a configuration error code instead of being ignored, while an absent file stays tolerable.
+- The YAML version fields did not change: `config.yaml` still requires `version: 1` and `contract.yaml` still requires `contract_version: 1`. "v2" names the validator layer, not a new value for those keys.
+
+The following template keys are **not effective**, so do not treat them as gates:
+
+| Key | Real status |
+| --- | --- |
+| `acceptance.require_proposal` | Not a gate: zero code references; proposal validation always runs. |
+| `acceptance.require_claims` | Not a gate: zero code references; claims validation always runs. |
+| `capabilities.shell.mode` | Not a gate: zero code references. |
+| `capabilities.authority_ceiling` | Validated as `A0`–`A3` (`A4` rejected) but consulted by no decision. |
+| `capabilities.network` / `dependency_install` / `credentials` | Only echoed into the `.evofence-task.md` contract summary; they block nothing. |
+
+By contrast, `capabilities.external_api` **is** a live capability gate: when a proposal requests it through `requested_capabilities`, the controller judges it by this contract value (the template sets `deny`, so the request is denied). An unconfigured capability is always denied.
+
 ## Run an evolution loop
 
 ```sh
@@ -96,6 +117,7 @@ EvoFence filters common credential-shaped environment names, including `*_TOKEN`
 ## Inspect, export, and roll back
 
 ```sh
+evofence init --json
 evofence status
 evofence status --json
 evofence proposal inspect <run-id>-i1
@@ -103,12 +125,19 @@ evofence gate <run-id>-i1
 evofence ledger show <run-id>
 evofence ledger verify
 evofence ledger recent 10
+evofence ledger export evidence.json --json
 evofence experiment export evidence.json
-evofence rollback <generation-id>
+evofence rollback <generation-id> --json
 evofence report evolution-report.md
 evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
+
+### Command-surface conventions (0.4.0)
+
+- `--json` is accepted by **every** subcommand (0.3.0 honoured it only on `run`, `diff`, `report` and `status`). `ledger show|verify|recent`, `proposal inspect` and `gate` always print only JSON. `evidence run` prints progress lines and then the JSON document; adding `--json` suppresses the progress lines so stdout carries one JSON document.
+- Unknown flags are a usage error on every command (0.3.0 silently ignored an unknown value flag on `run`), and `--flag=value` is equivalent to `--flag value`.
+- There are only two exit codes: `0` (success) and `1` (any failure). Text mode prints `[CODE] message` on stderr; in `--json` mode stdout stays empty and stderr carries one `{"error":{"code","message","details"?}}` object.
 
 `evofence status` prints a one-screen operational overview: the active generation, ledger integrity, cumulative totals (runs, generations, accepted and rejected candidates), and the five most recent run summaries. Pass `--json` for the status object as pretty JSON. The status never embeds evidence command output content. A missing ledger, a zero-byte ledger file, or a ledger without schema is reported as the documented empty state. `evofence status` exits 0 when the ledger is healthy or empty, and exits 1 when ledger integrity fails or the ledger cannot be read.
 
@@ -178,6 +207,8 @@ Run it with `evofence experiment run experiment.yaml`.
 
 The ledger is a local SQLite database with append-only triggers and a SHA-256 hash chain. This detects accidental or partial edits, but a process with the same OS account can still replace the database file. Back it up or store exported evidence in a separately controlled system if the local host is outside your trust boundary.
 
+The ledger schema moved to v2 in 0.4.0 (a `schema_version` marker in the `state` table). The hash-chain recipe, DDL, triggers and write order are unchanged. **A 0.3.0 ledger is not readable and is never converted**: opening it fails with `LEDGER_SCHEMA_INCOMPATIBLE`, before any pragma or DDL runs, so the old database is left untouched. `ledger show|verify|recent`, `diff`, `rollback` and `run` exit 1 with that code; `status` reports `LEDGER_UNAVAILABLE` and names the observed 0.3.0 (v1) format in its message. See [CHANGELOG.md](CHANGELOG.md) for the upgrade steps.
+
 ## Current limits
 
 - `max_iterations`, `max_wall_clock_ms`, failed-candidate count, and consecutive no-improvement count are enforced. When `max_tokens` is set, EvoFence sums completed Codex turns, OpenCode steps, and Pi assistant messages, including Pi-reported nested tool-model and compaction usage. When usage reaches or exceeds the threshold, EvoFence terminates the agent process tree and stops before evaluating or accepting the current candidate. CLIs report usage at completed message/turn/step boundaries, so the crossing response has already completed and actual usage can exceed the threshold; this is not a strict pre-request token cap. Claude Code exposes complete whole-tree token usage only in its final result event, so EvoFence refuses to start Claude runs when `max_tokens` is configured. Pi retries without attached usage fail closed when a token budget is active. Missing, incomplete, or truncated usage stops a budgeted run. On Windows, EvoFence first probes whether the host can terminate an entire process tree; if the permission is unavailable, it refuses to start a budgeted run. Claude Code v2.1.246+ reports per-model whole-tree tokens and CLI cost estimates; Pi records USD cost estimates from its model pricing data. `max_usd` currently supports Claude Code only: EvoFence passes the remaining run-wide budget to each CLI invocation via `--max-budget-usd` and accumulates complete `result.total_cost_usd` estimates. It stops without evaluating the candidate when the cap is reached, usage is missing/truncated, the process times out, or process-tree termination cannot be confirmed. The response crossing the cap may put the estimate over the limit; this is not the provider's final bill. A non-null `max_usd` with Codex, OpenCode, or Pi is rejected before launch. OpenCode's reported cost is preserved without inferring a currency and is not a final bill.
@@ -189,9 +220,18 @@ The ledger is a local SQLite database with append-only triggers and a SHA-256 ha
 
 ```sh
 npm ci
-npm test
-npm pack --dry-run
+npm run build        # tsc: compile src/**/*.ts into dist/ plus .d.ts / .d.ts.map / .js.map
+npm run typecheck    # tsc --noEmit
+npm run dep:check    # verify the src/ dependency graph is acyclic
+npm test             # runs npm run build first, then node --test over test/**
+npm run test:e2e     # runs npm run build first, then test-e2e/cli-flow.mjs
+npm run check        # typecheck + dep:check + test
+npm pack --dry-run   # inspect the published tarball
 ```
+
+The source is TypeScript (`src/**/*.ts`) and the runtime and published artifact is `dist/` only: `package.json` points `bin.evofence` at `dist/cli.js`, and `exports["."]` / `types` at `dist/index.js` / `dist/index.d.ts`. `files` publishes `dist/`, `templates/`, `README.md`, `README.en.md`, `CHANGELOG.md`, `LICENSE` and `docs/pi-tool-strategy.md`. Tests import `dist/**` directly (ADR-0004), so `npm test` always builds first; re-run `npm run build` after editing source and never read a stale `dist/` as a test result.
+
+Consumers get types through `exports["."].types`, which resolves to `dist/index.d.ts`; the public API is the 18 symbols re-exported from `src/index.ts`. `npm pack --dry-run` confirms the tarball is the dist-only shape.
 
 The research source document `docs/deep-research-report.md` is not included in the npm package.
 
