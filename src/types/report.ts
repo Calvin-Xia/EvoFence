@@ -119,11 +119,59 @@ export interface StatusIntegrity {
 }
 
 /**
+ * `status.policy.contract` — the objective/budget/evidence facts `status` echoes so its printed
+ * output can be checked against `.evofence/contract.yaml` (counts where the document has arrays).
+ */
+export interface StatusPolicyContractSummary {
+  objective: { name: string; direction: string; min_delta: number };
+  budgets: {
+    max_iterations: number;
+    max_wall_clock_ms: number;
+    max_failed_candidates: number;
+    max_consecutive_no_improvement: number;
+  };
+  evidence: { public_commands: string[]; per_command_timeout_ms: number; max_output_bytes: number };
+  hard_invariants: number;
+  protected_paths: number;
+}
+
+/** One effective adapter in `status.policy.adapters`; `command` falls back to the adapter name. */
+export interface StatusPolicyAdapterSummary {
+  name: string;
+  command: string;
+  model: string | null;
+  agent: string | null;
+}
+
+/**
+ * `status.policy` — the validated policy state, or `null` when the repository has neither
+ * `.evofence/contract.yaml` nor `.evofence/config.yaml` (an absent policy is not an error).
+ *
+ * PAIRED DECLARATION: the runtime producer is `PolicySnapshot` in `src/lib/config/load.ts`
+ * (review F8a — `StatusView` used to omit this key even though `status --json` emits it). The
+ * shape is declared here rather than imported because ADR-0005 and `src/types/README.md` forbid
+ * `src/types/**` from importing `src/lib/**`. Two checks keep the pair honest:
+ *   - `src/lib/status.ts` declares `interface StatusView extends StatusViewContract { policy:
+ *     PolicySnapshot | null }`, so `tsc` fails as soon as the lib shape stops being assignable
+ *     to this one (a dropped or retyped field);
+ *   - `test/fix-status-policy-shape.test.js` pins the emitted key set of `status --json` and of
+ *     `emptyStatus()` against these fields, which also catches a field the lib adds and this
+ *     declaration misses.
+ * The clean end state is to move `PolicySnapshot` into `src/types/config.ts` and have
+ * `src/lib/config/load.ts` re-export it; that edit is outside this batch's file boundary.
+ */
+export interface StatusPolicySnapshot {
+  contract: StatusPolicyContractSummary | null;
+  adapters: StatusPolicyAdapterSummary[];
+  files: { contract: string | null; config: string | null };
+}
+
+/**
  * `buildStatus()` return value.
  *
  * `active_generation` and `recent_runs` stay empty when the ledger is missing or unreadable;
  * a failed verification is reported through {@link StatusIntegrity} while the counters keep
- * their best-effort values.
+ * their best-effort values. `policy` is `null` when no policy document exists.
  */
 export interface StatusView {
   /** Absolute root path, normalised to `/` separators. */
@@ -133,6 +181,8 @@ export interface StatusView {
   /** At most five entries (`recentRuns(5)`), each already sanitized. */
   recent_runs: RecentRunSummary[];
   totals: StatusTotals;
+  /** Validated `.evofence` policy state; `null` without either policy file. */
+  policy: StatusPolicySnapshot | null;
 }
 
 /* ------------------------------------------------------------------ *

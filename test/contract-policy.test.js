@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseYamlText, validateContract } from '../dist/lib/contract.js';
 import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../dist/lib/policy.js';
@@ -25,6 +25,32 @@ import {
 } from '../dist/lib/gate/index.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
+
+/**
+ * Every TypeScript file under `src/` whose text contains `needle`, as repo-relative POSIX paths.
+ *
+ * The gate domain's machine-readable ledger (`DEAD_CONTRACT_KEYS`, `dead-keys.ts`) publishes
+ * `grep`-verifiable evidence strings, so this test re-runs the grep instead of trusting prose
+ * (review F10). Line numbers are deliberately not asserted: they drift on unrelated edits.
+ */
+async function grepSources(needle) {
+  const hits = [];
+  const walk = async (directory) => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules' && !entry.name.startsWith('.')) await walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith('.ts')) continue;
+      if ((await readFile(full, 'utf8')).includes(needle)) {
+        hits.push(path.relative(projectRoot, full).split(path.sep).join('/'));
+      }
+    }
+  };
+  await walk(path.join(projectRoot, 'src'));
+  return hits.sort();
+}
 
 test('the generated contract template validates and YAML duplicate keys are rejected', async () => {
   const template = await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8');
@@ -113,8 +139,23 @@ const budgetBase = { limits: budgetLimits, observed_tokens: null, observed_usd_m
 const metadata = { path: '/w/.git', contents: new Uint8Array([1]), sha256: 'a'.repeat(64) };
 const isolationBase = { expected_metadata: metadata, observed_metadata: { ...metadata }, holdout_ignored: undefined, unisolated_agent_accepted: false, readable_holdout_accepted: false, adapter_requires_sandbox: false };
 
+// ------------------------------------------------------------------ *
+// REFERENCE-IMPLEMENTATION LOCKS (fix batch R2 · review F3).
+//
+// Every `evaluate*Gate` / `verdict*` case below marked "(reference implementation, unwired)"
+// calls a gate entry point that has NO production caller (see the WIRING STATUS block in
+// `src/lib/gate/index.ts`). The shipped run path decides in `src/lib/exec/budget.ts`
+// (accounting) and `src/lib/exec/runner-budgeted.ts` (pre-invocation allowance). A green run
+// there therefore proves the reference implementation is self-consistent — it does NOT mean the
+// running product behaves that way. The production side of the same decisions is pinned, and
+// asserted to agree on the thresholds and on the usage-unavailable cases, by
+// `test/fix-gate-wiring.test.js`. Cases that call a *wired* helper (`checkProposal`,
+// `assessCapabilities`, `capabilitySetting`, `matchesGlob`, `isProtectedPath`) are not marked.
+// ------------------------------------------------------------------ *
+
 // DoD 3 — every judgement face refuses, and names the missing input, instead of passing.
-test('gate judgement entries fail closed and name the missing input', () => {
+// Reference implementation only (see the block above): no production caller today.
+test('gate judgement entries (reference implementation, unwired) fail closed and name the missing input', () => {
   const policy = evaluatePolicyGate(undefined);
   assert.deepEqual([policy.passed, policy.reason, policy.missing], [false, 'GATE_INPUT_MISSING', ['input']]);
   const contract = evaluateContractGate(null);
@@ -132,7 +173,8 @@ test('gate judgement entries fail closed and name the missing input', () => {
 });
 
 // DoD 1 + 3 — the contract gate is an independent entry point over the three policy digests.
-test('contract gate attributes drift to the changed policy document', () => {
+// Reference implementation only: the run path compares `currentPolicyHashes` inline.
+test('contract gate (reference implementation, unwired) attributes drift to the changed policy document', () => {
   const hashes = { contract: 'a'.repeat(64), holdout: 'b'.repeat(64), config: 'c'.repeat(64) };
   const stable = evaluateContractGate({ initial: hashes, current: { ...hashes } }, 'PROPOSAL');
   assert.deepEqual([stable.passed, stable.drifted, stable.changed], [true, false, null]);
@@ -141,6 +183,9 @@ test('contract gate attributes drift to the changed policy document', () => {
 });
 
 // DoD 4 — `capabilities.external_api` is a live gate reached through the dynamic contract table.
+// WIRED half: `capabilitySetting` / `assessCapabilities` run in production via `src/lib/policy.ts`
+// (consumed by `src/lib/exec/runner-iteration.ts`). Reference half: the `evaluateCapabilityGate`
+// assertions at the end of this test have no production caller (review F3).
 test('capabilities.external_api is a live dynamic-table capability gate', async () => {
   const template = await templateContract();
   assert.equal(template.capabilities.external_api, 'deny');
@@ -156,6 +201,8 @@ test('capabilities.external_api is a live dynamic-table capability gate', async 
 });
 
 // DoD 5 — the three template-only keys are documented as unwired, not left as fake gates.
+// The evidence strings are re-grepped here (review F10) so they cannot rot into a claim the
+// source contradicts.
 test('template-only contract keys are documented as unwired, not left as fake gates', async () => {
   const text = await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8');
   assert.match(text, /require_proposal: true/);
@@ -163,6 +210,21 @@ test('template-only contract keys are documented as unwired, not left as fake ga
   assert.match(text, /mode: evidence_commands_only/);
   assert.deepEqual(DEAD_CONTRACT_KEYS.map((entry) => entry.path), ['acceptance.require_proposal', 'acceptance.require_claims', 'capabilities.shell.mode']);
   assert.ok(DEAD_CONTRACT_KEYS.every((entry) => entry.evidence.length > 0));
+
+  // F10 — each `evidence` string must be falsifiable by grep and must survive the attempt.
+  const validationLayerHits = ['src/lib/config/schema.ts', 'src/lib/config/validate.ts', 'src/lib/gate/dead-keys.ts', 'src/types/config.ts'];
+  assert.deepEqual(await grepSources('require_proposal'), validationLayerHits);
+  assert.deepEqual(await grepSources('require_claims'), validationLayerHits);
+  // The nested key is never written as a dotted literal outside this registry — only the
+  // template nests it under `capabilities.shell`.
+  assert.deepEqual(await grepSources('capabilities.shell.mode'), ['src/lib/gate/dead-keys.ts']);
+  assert.equal(DEAD_CONTRACT_KEYS.every((entry) => !entry.evidence.includes('no reference under src/')), true);
+  const byPath = new Map(DEAD_CONTRACT_KEYS.map((entry) => [entry.path, entry.evidence]));
+  for (const dotted of ['acceptance.require_proposal', 'acceptance.require_claims']) {
+    assert.match(byPath.get(dotted), /config\/schema\.ts/);
+    assert.match(byPath.get(dotted), /config\/validate\.ts/);
+  }
+  assert.match(byPath.get('capabilities.shell.mode'), /templates\/contract\.yaml/);
   assert.equal(isDeadContractKey('capabilities.shell.mode'), true);
   assert.equal(isDeadContractKey('capabilities.external_api'), false);
   const template = await templateContract();
@@ -173,7 +235,8 @@ test('template-only contract keys are documented as unwired, not left as fake ga
 });
 
 // DoD 1 — the budget thresholds are pure, and accounting stays in the exec domain.
-test('budget judgement keeps the 0.3.0 thresholds and fails closed on missing counters', () => {
+// Reference implementation only (see the block above): the run path uses `exec/budget.ts`.
+test('budget judgement (reference implementation, unwired) keeps the 0.3.0 thresholds and fails closed on missing counters', () => {
   assert.equal(parseNumericBudget(undefined, 20, '--iterations'), 20);
   assert.equal(parseNumericBudget(null, 3600000, '--max-wall-clock-ms'), 3600000);
   assert.equal(parseNumericBudget('3', 20, '--iterations'), 3);
@@ -207,7 +270,9 @@ test('budget judgement keeps the 0.3.0 thresholds and fails closed on missing co
 });
 
 // DoD 1 + 3 — the isolation gate compares pointer digests and refuses one-sided metadata.
-test('isolation gate fails closed on worktree metadata and holdout opt-ins', () => {
+// Reference implementation only: production calls `worktreeMetadataMatches` (`src/lib/git.ts`)
+// and checks the opt-ins in `runner-preflight.ts` / `runner-candidate.ts`.
+test('isolation gate (reference implementation, unwired) fails closed on worktree metadata and holdout opt-ins', () => {
   assert.equal(evaluateIsolationGate(isolationBase).passed, true);
   const changed = evaluateIsolationGate({ ...isolationBase, observed_metadata: { ...metadata, sha256: 'b'.repeat(64) } });
   assert.deepEqual([changed.passed, changed.reason, changed.metadata_restored], [false, 'WORKTREE_METADATA_CHANGED', true]);
@@ -221,7 +286,10 @@ test('isolation gate fails closed on worktree metadata and holdout opt-ins', () 
 });
 
 // DoD 1 + 3 — the evidence gate recomputes the public verdict instead of trusting the bundle flag.
-test('evidence gate recomputes public pass and refuses unreadable objective scores', () => {
+// Reference implementation only: production uses `allCasesPassed` / `casePassed` /
+// `withinTolerance` (`gate/evidence.ts`) through `src/lib/evidence.ts`, and the verdict mapping
+// is inlined in `src/lib/exec/runner-evaluate.ts`.
+test('evidence gate and verdictForEvidence (reference implementation, unwired) recompute public pass and refuse unreadable objective scores', () => {
   const input = (baseline, candidate, overrides = {}) => ({ baseline, candidate, tolerance: 0, direction: 'maximize', min_delta: 0.01, ...overrides });
   const passing = evaluateEvidenceGate(input(objectiveBundle(0.5), objectiveBundle(0.6)));
   assert.deepEqual([passing.passed, passing.evidence_ok], [true, true]);
@@ -245,7 +313,10 @@ test('evidence gate recomputes public pass and refuses unreadable objective scor
 });
 
 // DoD 1 — the path-policy and refusal-to-decision tables are independent entry points.
-test('policy gate and candidate-check verdicts keep the 0.3.0 mapping', async () => {
+// Reference implementation only for `evaluatePolicyGate` / `decisionForCandidateCheck` /
+// `verdictForRisk`: production uses `checkChangedPaths` (`gate/paths.ts`, wired via
+// `src/lib/policy.ts`) and inlines the decision table in `src/lib/exec/runner-evaluate.ts`.
+test('policy gate and candidate-check verdicts (reference implementation, unwired) keep the 0.3.0 mapping', async () => {
   const contract = await templateContract();
   const clean = evaluatePolicyGate({ contract, changed_paths: ['src/feature.js'] });
   assert.deepEqual([clean.passed, clean.violations], [true, []]);

@@ -42,6 +42,26 @@ export type GateDecision = (typeof GATE_DECISIONS)[number];
  */
 export type GateReason = string;
 
+/**
+ * The envelope every gate judgement shares: did it pass, why, and which input was missing.
+ *
+ * ADR-0005 puts the shared type contract in `src/types/**`, so this lives here and the gate
+ * domain re-exports it (`src/lib/gate/fail-closed.ts`, `src/lib/gate/index.ts`). The third field
+ * is what makes a judgement fail-closed instead of fail-open: an entry point that cannot see its
+ * input returns `passed: false` plus the offending field paths, never `true` by default.
+ */
+export interface GateJudgementBase {
+  /**
+   * Fail-closed summary flag. `false` means "do not proceed": either the check failed, or the
+   * input needed to make the check was absent.
+   */
+  passed: boolean;
+  /** `null` when `passed` is true; otherwise the machine-readable refusal reason. */
+  reason: GateReason | null;
+  /** Dotted paths of the fields that were absent/unusable, in the order they were checked. */
+  missing: string[];
+}
+
 /* ------------------------------------------------------------------ *
  * Contract gate
  * ------------------------------------------------------------------ */

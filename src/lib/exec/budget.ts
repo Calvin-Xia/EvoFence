@@ -5,48 +5,29 @@
  * *pure* verdicts; the wiring — counting observed usage, appending `budget.*` events and
  * throwing `RESOURCE_EXHAUSTED` / `*_USAGE_UNAVAILABLE` — is the exec domain's job and lives
  * here (see `docs/refactor-inventory.md` §6.3).
+ *
+ * SINGLE IMPLEMENTATION (fix batch R2 · review F3): the money/budget primitives — `USD_MICROS`,
+ * `parseNumericBudget`, `usdToMicros`, `usdFromMicros` — are now declared exactly once, in
+ * `src/lib/gate/budget.ts`, and re-exported here. This module used to carry a byte-identical
+ * copy of them (its `usdToMicros`/`usdFromMicros` had already drifted to a narrower `value:
+ * number` parameter), so a fix on one side could silently miss the other. Re-exporting keeps
+ * every existing import path (`./budget.js` in `runner-preflight.ts`, `runner-budgeted.ts`,
+ * `runner-run.ts`) and every existing call signature working: `usdToMicros` keeps its runtime
+ * `INVALID_BUDGET` check, and the gate's `unknown` parameter is strictly wider than the old
+ * `number` one, so every existing call site still type-checks unchanged.
+ *
+ * The remaining copy in `src/lib/exec/adapter-args.ts` is deliberately different — its
+ * Claude-specific error text is part of the observed contract and its header says so — and is
+ * outside this module.
  */
-import { EvoFenceError, invariant } from './errors.js';
+import { EvoFenceError } from './errors.js';
+import { USD_MICROS, parseNumericBudget, usdFromMicros, usdToMicros } from '../gate/budget.js';
 import type { Ledger } from '../ledger.js';
 import type { AdapterResultLike, AdapterUsageLike } from './types.js';
 
-export const USD_MICROS = 1_000_000;
-
-export function parseNumericBudget(value: unknown, ceiling: number, name: string): number {
-  if (value === undefined || value === null) return ceiling;
-  const parsed = Number(value);
-  invariant(Number.isInteger(parsed) && parsed > 0, 'INVALID_BUDGET', `${name} must be a positive integer.`);
-  invariant(parsed <= ceiling, 'BUDGET_ABOVE_POLICY', `${name} cannot exceed the contract limit (${ceiling}).`);
-  return parsed;
-}
-
-export function usdToMicros(value: number, rounding: 'floor' | 'ceil' = 'floor'): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    throw new EvoFenceError('INVALID_BUDGET', 'USD amounts must be finite and non-negative.');
-  }
-  const match = value.toString().toLowerCase().match(/^(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/);
-  if (!match) throw new EvoFenceError('INVALID_BUDGET', 'USD amount could not be represented as a decimal.');
-  const fraction = match[2] ?? '';
-  const digits = BigInt(`${match[1]}${fraction}`);
-  if (digits === 0n) return 0;
-  const shift = 6 - fraction.length + Number(match[3] ?? 0);
-  let micros: bigint;
-  if (shift >= 0) {
-    micros = digits * (10n ** BigInt(shift));
-  } else {
-    const divisor = 10n ** BigInt(-shift);
-    micros = digits / divisor;
-    if (rounding === 'ceil' && digits % divisor !== 0n) micros += 1n;
-  }
-  if (micros > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new EvoFenceError('INVALID_BUDGET', 'USD amount exceeds EvoFence safe accounting range.');
-  }
-  return Number(micros);
-}
-
-export function usdFromMicros(value: number): number {
-  return value / USD_MICROS;
-}
+// One implementation, in the lower (judgement) domain; exec only re-exports it. The bindings are
+// imported above because `recordTokenUsage` / `recordCostUsage` below call them.
+export { USD_MICROS, parseNumericBudget, usdFromMicros, usdToMicros };
 
 /** Shared ledger coordinates for one adapter invocation. */
 export interface BudgetContext {

@@ -9,23 +9,20 @@
  * Imports: `src/types/**` only.
  */
 
-import type { GateReason } from '../../types/gate.js';
+import type { GateReason, GateJudgementBase } from '../../types/gate.js';
 
 /** Reason reported whenever a judgement ran without the input it needed. */
 export const GATE_INPUT_MISSING = 'GATE_INPUT_MISSING';
 
-/** The shared shape of every judgement result in this domain. */
-export interface GateJudgementBase {
-  /**
-   * Fail-closed summary flag. `false` means "do not proceed": either the check failed, or the
-   * input needed to make the check was absent.
-   */
-  passed: boolean;
-  /** `null` when `passed` is true; otherwise the machine-readable refusal reason. */
-  reason: GateReason | null;
-  /** Dotted paths of the fields that were absent/unusable, in the order they were checked. */
-  missing: string[];
-}
+/**
+ * The shared shape of every judgement result in this domain.
+ *
+ * Declared in `src/types/gate.ts` (ADR-0005: `src/types/**` is the only type base) and
+ * re-exported here so the historical `./fail-closed.js` import path keeps working — the five
+ * other judgement faces (`paths`, `capability`, `evidence`, `isolation`, `contract`) still
+ * import the envelope from this module.
+ */
+export type { GateJudgementBase };
 
 /** A plain (non-array, non-null) object. */
 export function isRecord(value: unknown): value is Record<string, unknown> {
