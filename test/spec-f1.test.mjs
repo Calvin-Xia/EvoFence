@@ -1426,17 +1426,27 @@ test('CLI diff exits 1 with GENERATION_NOT_FOUND for an unknown generation', asy
   const result = spawnCli(['diff', 'g-missing-fixture', '--json']);
 
   assert.equal(result.status, 1, `expected exit code 1, got ${result.status}`);
-  assert.ok(
-    result.stderr.startsWith('[GENERATION_NOT_FOUND] '),
-    `stderr must start with "[GENERATION_NOT_FOUND] ": ${result.stderr}`,
-  );
-  assert.match(result.stderr, /g-missing-fixture/);
+  // ADR-0003 (l2_cli handoff): `--json` switches the FAILURE output to one JSON object on
+  // stderr, so this asserts the structured envelope instead of the old `[CODE] message` prefix.
+  // It is strictly stronger: the code, the message and the empty stdout are all pinned.
+  assert.equal(result.stdout, '', 'stdout must stay clean in --json mode');
+  const payload = JSON.parse(result.stderr);
+  assert.equal(payload.error.code, 'GENERATION_NOT_FOUND');
+  assert.match(payload.error.message, /g-missing-fixture/);
 });
 
 test('CLI diff exits 1 with the documented usage error when the generation id is missing', () => {
   for (const args of [['diff'], ['diff', '--json']]) {
     const result = spawnCli(args);
     assert.equal(result.status, 1, `expected exit code 1 for "evofence ${args.join(' ')}", got ${result.status}`);
+    if (args.includes('--json')) {
+      // Same usage error, machine-readable envelope (ADR-0003 / l2_cli handoff).
+      assert.equal(result.stdout, '');
+      assert.deepEqual(JSON.parse(result.stderr), {
+        error: { code: 'USAGE', message: 'Use: evofence diff <generation-id> [--json]' },
+      });
+      continue;
+    }
     assert.equal(
       result.stderr.trim(),
       '[USAGE] Use: evofence diff <generation-id> [--json]',

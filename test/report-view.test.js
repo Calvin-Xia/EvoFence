@@ -307,16 +307,45 @@ test('the non-JSON text failure path is unchanged', async () => {
   }
 });
 
-test('commands outside the report/status scope keep their 0.3.0 text error under --json', async () => {
-  // Deliberate scope boundary: the F1 acceptance oracle pins `diff --json` stderr as text
-  // (`spec-f1` "CLI diff exits 1 with ..."), so the JSON error contract does not cover it yet.
-  const probe = await makeRepo('diff-scope');
+test('the JSON error contract covers commands outside report/status too', async () => {
+  // Replaces the earlier scope boundary. ADR-0003 (l2_cli handoff) unified the failure output:
+  // `--json` anywhere in argv makes ANY failure one JSON object on stderr, and spec-f1's two
+  // `diff --json` assertions were updated to the same envelope.
+  const probe = await makeRepo('json-error-scope');
   try {
-    for (const args of [['diff', '--json'], ['diff', 'g-missing', '--json']]) {
-      const result = spawnCli(args, probe.root);
-      assert.equal(result.status, 1);
-      assert.equal(result.stderr.trim().startsWith('{'), false, `diff --json must keep text stderr: ${result.stderr}`);
-    }
+    const usage = spawnCli(['diff', '--json'], probe.root);
+    assert.equal(usage.status, 1);
+    assert.equal(usage.stdout, '');
+    assert.deepEqual(JSON.parse(usage.stderr), {
+      error: { code: 'USAGE', message: 'Use: evofence diff <generation-id> [--json]' },
+    });
+
+    const init = spawnCli(['init'], probe.root);
+    assert.equal(init.status, 0, init.stderr);
+    const unknown = spawnCli(['proposal', 'inspect', 'no-such-proposal', '--json'], probe.root);
+    assert.equal(unknown.status, 1);
+    assert.equal(unknown.stdout, '');
+    assert.equal(JSON.parse(unknown.stderr).error.code, 'PROPOSAL_NOT_FOUND');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
+test('a policy failure keeps its own code and details even with a ledger present', async () => {
+  // l2_cli handoff from l2_config: `commandStatus` used to rewrite every `buildStatus` failure as
+  // LEDGER_UNAVAILABLE, which hid the real code. The config codes are now re-thrown untouched.
+  const probe = await makeRepo('config-code-with-ledger');
+  try {
+    const init = spawnCli(['init'], probe.root);
+    assert.equal(init.status, 0, init.stderr);
+    await writeFile(path.join(probe.root, '.evofence', 'contract.yaml'), 'contract_version: 1\nmystery_field: 1\n', 'utf8');
+
+    const result = spawnCli(['status', '--json'], probe.root);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    const payload = JSON.parse(result.stderr);
+    assert.equal(payload.error.code, 'INVALID_CONTRACT', 'the ledger wrapper must not rewrite the code');
+    assert.deepEqual(payload.error.details.rejected_fields.map((issue) => issue.path), ['mystery_field']);
   } finally {
     await rm(probe.directory, { recursive: true, force: true });
   }
