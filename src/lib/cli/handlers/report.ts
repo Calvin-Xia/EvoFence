@@ -4,6 +4,10 @@
  * DOMAIN: CLI handler (node `l2_cli`). Renders Markdown or JSON to stdout, or writes the same
  * content to a path after the output-safety gate refuses anything inside `.evofence/**` or any
  * hard link to control-plane state.
+ *
+ * `--json` contract (F8c): stdout is JSON and nothing else in EVERY shape. Without a path it is
+ * the report document; with a path it is the `{written,bytes}` envelope from `writePayload` (the
+ * `Report written to <path>` line stays text-mode only).
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
@@ -12,6 +16,7 @@ import { repositoryRoot } from '../../git.js';
 import { Ledger, ledgerPath } from '../../ledger.js';
 import { buildEvolutionReport, formatEvolutionReport } from '../../report.js';
 import { assertReportOutputOutsideState } from '../report-output.js';
+import { jsonDocument, writePayload } from '../output.js';
 import { positional, type CommandContext } from './context.js';
 
 export async function commandReport(context: CommandContext): Promise<number> {
@@ -30,7 +35,8 @@ export async function commandReport(context: CommandContext): Promise<number> {
     }
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, content, { mode: 0o600 });
-    context.stdout(`Report written to ${path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/')}\n`);
+    const relative = path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/');
+    context.stdout(context.json ? jsonDocument(writePayload(relative, content)) : `Report written to ${relative}\n`);
     return 0;
   } finally {
     ledger.close();

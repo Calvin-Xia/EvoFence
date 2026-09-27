@@ -5,7 +5,9 @@
 - 来源清单：`docs/refactor-inventory.md` §9（含 §9.4 的用例全名、§9.5 不变式速查、§9.6 对复核 F1 的更正）。
 - 方法：`test/**` 全部 import 指向 `dist/`（ADR-0004：测试以构建产物为被测对象），`npm test` = `npm run build && node --test`，先构建再跑。
 - 运行：`npm test`，退出码 0 且 `fail` 为 0。
-- 用例基线：0.3.0 §9 的 12 个文件合计 **152** 个用例；重构后（本节点之前）合计 **204**；本节点新增 17 个 → **221**。
+- 用例基线：0.3.0 §9 的 12 个文件合计 **152** 个用例；本节点开工前合计 **204**；l3_tests_unit 新增 17 个 → **221**（此为该节点产文时的时点快照）。
+- **修订（fix/r3 复核整改 F9）**：本文原把 `integrations` 行现状数记 2（实为 4）、`release` 行记 4（实为 14），合计写成 221 与实测终值差 12。现把两行现状数更新为实测值（见 §2.11/§2.12），全库合计更新为 **234**（12 个旧文件 172 + 非旧 12 的新文件 62）；本文不再声称「221 = 现状」，221 只作 l3_tests_unit 时点快照保留。
+- 计数口径：`node --test` 逐文件实测后求和（`npm test` 全绿：234/234，fix/r3 复核整改时粘贴）。
 - 命名约定：本节点新增的补强文件为 `test/unit-*.test.js`（既有文件只改 import 路径与新增用例，不削弱既有断言）。
 
 ## 1. 迁移总表（12 条，条目数 = §9 旧文件数）
@@ -22,8 +24,8 @@
 | 8 | `test/git.test.js` | 4 | 4 | 同名文件（`../dist/lib/git.js`） | 无 |
 | 9 | `test/contract-policy.test.js` | 6 | 14 | 同名文件（`../dist/lib/{contract,policy}.js`、`dist/lib/gate/index.js`） | L2 gate 域新增 8 例（见 §2.9） |
 | 10 | `test/process.test.js` | 7 | 7 | 同名文件（`../dist/lib/process.js`） | 无 |
-| 11 | `test/integrations.test.js` | 2 | 2 | 同名文件（不 import 仓库代码，只读插件文本） | 无（并行节点 `l3-integ` 独占） |
-| 12 | `test/release.test.js` | 4 | 4 | 同名文件（import `../scripts/verify-release-metadata.js`，非 `src/` 产物） | 无 |
+| 11 | `test/integrations.test.js` | 2 | **4** | 同名文件（不 import 仓库代码，只读插件文本） | 无（并行节点 `l3-integ` 独占；`l3-integ` 另加 2 例，见 §2.11） |
+| 12 | `test/release.test.js` | 4 | **14** | 同名文件（import `../scripts/verify-release-metadata.js` 与 `../scripts/verify-publish-workflow.js`，非 `src/` 产物） | 无（`l4_release` 另加 10 例，见 §2.12） |
 
 > §9 的 12 条全部有落点，无缺项。
 
@@ -127,16 +129,18 @@
 | **env 剥离** | 同名 | `secret-like environment values are not passed to child processes` |
 | objective 末行解析 | 同名 | `objective parser reads only a finite final score` |
 
-### 2.11 `test/integrations.test.js`（2 例，集成/插件清单）
+### 2.11 `test/integrations.test.js`（4 例，集成/插件清单）
 
 | 覆盖点（§9.4） | 对应测试文件 | 用例 |
 | --- | --- | --- |
 | Codex/Claude marketplace 命名空间完整 | `test/integrations.test.js` | `Codex and Claude marketplaces point to complete, namespaced plugins` |
 | OpenCode/Pi 集成包声明模块依赖 | 同名 | `OpenCode and Pi integration packages declare the modules their extensions import` |
+| **CLI 调用面与 catalog 一致（l3-integ 新增）** | 同名 | `every EvoFence CLI invocation shipped with an integration exists in the command catalog` |
+| **项目级 pi 入口可运行且 src/ 无 .js 孪生（l3-integ 新增）** | 同名 | `the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin` |
 
 > 该文件不 import 仓库代码（只读插件文本），由并行节点 `l3-integ` 独占。
 
-### 2.12 `test/release.test.js`（4 例，发布元数据）
+### 2.12 `test/release.test.js`（14 例，发布元数据 + 发布面静态守卫）
 
 | 覆盖点（§9.4） | 对应测试文件 | 用例 |
 | --- | --- | --- |
@@ -144,6 +148,10 @@
 | stable tag/flag 一致 | 同名 | `release metadata accepts a matching stable release tag and flag` |
 | tag/prerelease 不匹配拒绝 | 同名 | `release metadata rejects tag mismatch and prerelease flag mismatch` |
 | 作为脚本运行时必需 event 值 | 同名 | `release metadata requires event values when run as a script` |
+| **0.4.0 stable tag 接受、0.3.0 拒绝（l4_release 新增）** | 同名 | `release metadata accepts the 0.4.0 stable tag this release ships, and still rejects 0.3.0` |
+| **package.json 版本即发布版本（l4_release 新增）** | 同名 | `the shipped package.json is the version the release gate publishes` |
+| **发布面：dist 形态接受 / 源码树形态拒绝 / 缺产物 fail-closed（l4_release 新增 3 例）** | 同名 | `publish surface accepts the dist-shaped package.json this repository ships`、`publish surface rejects the 0.3.0 source-tree package shape`、`publish surface fails closed when a promised dist artifact is missing` |
+| **publish.yml 的 OIDC Trusted Publishing 守卫（l4_release 新增 5 例）** | 同名 | `the shipped publish workflow passes the OIDC Trusted Publishing gate`、`the publish workflow gate rejects a workflow without id-token: write`、`the publish workflow gate rejects a build that runs after the publish step`、`the publish workflow gate rejects an untagged publish and a missing npm CLI pin`、`the publish workflow gate reports invalid YAML instead of throwing a parse stack` |
 
 > 该文件测的是 `scripts/verify-release-metadata.js`（发布脚本，不在 `src/`→`dist/` 编译面内），因此保持原 import 是正确落点，不是漏迁移。
 
@@ -186,7 +194,7 @@
 
 | 文件 | 例数 | 归属 | 主题 |
 | --- | --- | --- | --- |
-| `test/cli-surface.test.js` | 9 | L2（io/cli） | CLI 命令面 manifest 驱动冒烟 + `--json` 契约 + handler 注册表一致性 |
+| `test/cli-surface.test.js` | 10 | L2（io/cli）+ fix/r3 | CLI 命令面 manifest 驱动冒烟 + `--json` 契约（含写文件形态，见 `JSON_WRITE_SMOKES`）+ handler 注册表一致性 |
 | `test/config.test.js` | 21 | L2（io/config） | v2 config 面与校验 |
 | `test/report-view.test.js` | 14 | L2（io/report） | `report.gate_decisions`/`report.ledger` 新字段 + `--json` 失败契约 |
 | `test/unit-ledger-chain.test.js` | 11 | **l3_tests_unit** | 哈希链三重判定负向用例（DoD 3） |
