@@ -98,12 +98,18 @@ export const BUILTIN_GRANTED_CAPABILITIES = [
 ] as const;
 
 /** One row of `assessCapabilities().requests`. */
-export interface CapabilityReviewEntry {
+/**
+ * A type alias (not an interface) on purpose: TypeScript only grants implicit
+ * index signatures to object-literal type aliases, so this is what makes the
+ * entry assignable to the ledger-facing `JsonValue` shape. Every field here is
+ * JSON-serializable, so keeping it assignable is the intent.
+ */
+export type CapabilityReviewEntry = {
   capability: string;
   allowed: boolean;
   scope: string | null;
   reason: 'policy_allow' | 'not_allowed_by_contract';
-}
+};
 
 /** `assessCapabilities()` result — `allowed` is the AND of every entry. */
 export interface CapabilityReview {
