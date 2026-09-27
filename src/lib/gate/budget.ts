@@ -4,8 +4,18 @@
  * Boundary: this module owns the budget *decision* — the constants, the threshold semantics and
  * the pure thresholds — and nothing else. The accounting itself (ledger events, the adapter's
  * live token monitor, the process-tree interrupt) lives in the exec domain
- * (`src/lib/runner.js`, `src/lib/adapter.js`) and is deliberately NOT duplicated here: the exec
- * domain will be wired to these functions after the L2 merge.
+ * (`src/lib/exec/budget.ts`, `src/lib/exec/runner-budgeted.ts`) and is deliberately NOT
+ * duplicated here.
+ *
+ * WIRING STATUS (fix batch R2 · review F3) — read this before trusting a test against this file:
+ *   - WIRED: the primitives below (`USD_MICROS`, `parseNumericBudget`, `usdToMicros`,
+ *     `usdFromMicros`) ARE on the production path. `src/lib/exec/budget.ts` re-exports them and
+ *     `runner-preflight.ts` / `runner-budgeted.ts` / `runner-run.ts` call them.
+ *   - NOT WIRED: `evaluateBudgetGate` (and the other `evaluate*Gate` / verdict entry points) has
+ *     no production caller today. Production decisions are taken by the accounting functions in
+ *     `src/lib/exec/budget.ts` (`recordTokenUsage` / `recordCostUsage`) and the pre-invocation
+ *     allowance check in `src/lib/exec/runner-budgeted.ts`.
+ *   See the WIRING STATUS block in `./index.ts` for the whole domain and the tests that pin it.
  *
  * Ported verbatim from 0.3.0:
  *   - `parseNumericBudget` (`src/lib/runner.js:33-39`): `INVALID_BUDGET` / `BUDGET_ABOVE_POLICY`.
@@ -20,10 +30,9 @@
  */
 
 import type { BudgetsConfig } from '../../types/config.js';
-import type { BudgetGateInput, BudgetGateResult, BudgetMetric } from '../../types/gate.js';
+import type { BudgetGateInput, BudgetGateResult, BudgetMetric, GateJudgementBase } from '../../types/gate.js';
 import type { UsdMicros } from '../../types/shared.js';
 import { EvoFenceError, invariant } from '../errors.js';
-import type { GateJudgementBase } from './fail-closed.js';
 import { failingJudgement, isFiniteNumber, isRecord, passingJudgement, refusedJudgement } from './fail-closed.js';
 
 /** Micro-dollars per dollar; the accounting unit of every USD budget. */
@@ -101,6 +110,12 @@ function invalidLimits(limits: Record<string, unknown>, missing: string[]): void
 
 /**
  * Independent budget-gate entry point: has any budget dimension been exhausted?
+ *
+ * WIRING STATUS (review F3): this function is a pure **reference implementation** — it is NOT
+ * called anywhere on the production path (see the module header). Production takes the same
+ * decisions in `src/lib/exec/runner-budgeted.ts` (pre-invocation allowance) and
+ * `src/lib/exec/budget.ts` (post-invocation accounting); `test/fix-gate-wiring.test.js` pins
+ * that the two agree on the exhaustion threshold and on the usage-unavailable cases.
  *
  * Fail-closed: an absent input, a malformed limit block, or a counter the gate needs but did not
  * receive (`observed_tokens` while `max_tokens` is set, `deadline_at`, …) returns

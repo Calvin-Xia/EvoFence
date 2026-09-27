@@ -8,12 +8,18 @@
  *
  * DISPOSITION — kept, and marked non-effective here (no deletion):
  *   `acceptance.require_proposal`, `acceptance.require_claims` and `capabilities.shell.mode` are
- *   declared only in `templates/contract.yaml`. Deleting them would mean editing the template,
+ *   declared in `templates/contract.yaml`. Deleting them would mean editing the template,
  *   which is outside this node's file boundary (L2 R5 forbids `templates/**`), and
  *   `validateContract` deliberately has no `additionalProperties: false`, so an unknown template
  *   key is inert rather than an error. They are therefore documented as unwired — NOT left
  *   looking like live gates — and a test pins that a contract setting them to a permissive value
  *   still changes no judgement (`docs/refactor-inventory.md` §5.2 "dead keys").
+ *
+ *   "No code path reads them" below means *no judgement or gate reads them*, which is the claim
+ *   the inventory makes. Two of the three ARE mentioned by the config validator — as a declared
+ *   boolean (`config/schema.ts`), a type check (`config/validate.ts`) and a typed optional field
+ *   (`src/types/config.ts`) — so each `evidence` string names those hits explicitly instead of
+ *   claiming `grep` finds nothing (review F10: the old strings were falsifiable by grep).
  *
  * Contrast (must NOT be confused with the three above):
  *   - `capabilities.external_api` is LIVE despite zero literal occurrences in `src/`: it is read
@@ -37,22 +43,28 @@ export interface ContractKeyDisposition {
   evidence: string;
 }
 
-/** The three keys the DoD singles out: template-only, zero code references, no effect. */
+/**
+ * The three keys the DoD singles out: template-only, no judgement reads them, no effect.
+ *
+ * Every `evidence` string below is a `grep -rn '<path>' src/` result as of fix batch R2, so it
+ * can be re-checked mechanically (review F10): the only hits outside this registry are the
+ * config-validation layer for the two `acceptance` keys.
+ */
 export const DEAD_CONTRACT_KEYS: readonly ContractKeyDisposition[] = [
   {
     path: 'acceptance.require_proposal',
     status: 'dead',
-    evidence: 'no reference under src/; proposal validation is unconditional in checkProposal (gate/proposal.ts)',
+    evidence: 'grep src/ hits only the config-validation layer (config/schema.ts, config/validate.ts) and the field type (types/config.ts) plus this registry; no judgement consumes it — proposal validation is unconditional in checkProposal (gate/proposal.ts)',
   },
   {
     path: 'acceptance.require_claims',
     status: 'dead',
-    evidence: 'no reference under src/; claims validation is unconditional in checkClaims (gate/proposal.ts)',
+    evidence: 'grep src/ hits only the config-validation layer (config/schema.ts, config/validate.ts) and the field type (types/config.ts) plus this registry; no judgement consumes it — claims validation is unconditional in checkClaims (gate/proposal.ts)',
   },
   {
     path: 'capabilities.shell.mode',
     status: 'dead',
-    evidence: 'no reference under src/; the only shell capability name is the hardcoded builtin shell:evidence_commands_only (BUILTIN_GRANTED_CAPABILITIES)',
+    evidence: 'grep src/ for the dotted path hits this registry only (the key is nested under capabilities.shell in templates/contract.yaml); capabilities is indexed dynamically by capability NAME (capabilitySetting, gate/capability.ts), and the only shell capability the task file grants is the hardcoded builtin shell:evidence_commands_only (BUILTIN_GRANTED_CAPABILITIES)',
   },
 ] as const;
 
