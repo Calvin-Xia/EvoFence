@@ -21,6 +21,25 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm pack --dry-run
+      - name: install
+        run: npm ci
+      # Type-check and build explicitly before `npm test`. `npm test` builds on its own,
+      # but a compile or type failure then surfaces as a failing test step; keeping
+      # typecheck and build first makes each gate report itself.
+      - name: typecheck
+        run: npm run typecheck
+      - name: build
+        run: npm run build
+      # The module-graph cycle gate lives in `npm run check`, which CI does not call,
+      # so without this step the acyclicity gate never runs in CI. Static and fast.
+      - name: dep:check
+        run: npm run dep:check
+      - name: test
+        run: npm test
+      # `test-e2e/` sits outside the tree `node --test` discovers, so this suite only
+      # runs when a step asks for it. Deliberately sequential after `npm test`: its CLI
+      # subprocesses starve the timing-sensitive budgets in `test/`.
+      - name: test:e2e
+        run: npm run test:e2e
+      - name: pack
+        run: npm pack --dry-run
