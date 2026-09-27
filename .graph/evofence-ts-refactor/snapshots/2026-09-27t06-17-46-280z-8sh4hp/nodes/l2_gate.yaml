@@ -1,0 +1,35 @@
+id: l2_gate
+type: task
+label: 门禁域模块化
+level: 2
+context: ctx_gate
+status: pending
+plan:
+  description: >-
+    把 contract、evidence、policy、budget、isolation 各判定面拆成独立门禁模块，统一判定输入输出类型与 fail-closed
+    语义：任一判定输入缺失或超时按不通过处理。核查配置键的接线状态，真实生效的能力门与零引用键分流处理。判定模块不依赖执行编排与账本模块。
+expected_outcome:
+  definition_of_done:
+    - 各判定面有独立判定入口，可被外部模块单独导入，且各文件行数 ≤350
+    - 执行 npx tsc --noEmit，退出码为 0
+    - 判定输入缺失的场景返回不通过结论且附缺失原因（有对应测试用例断言）
+    - capabilities.external_api 能力审批门行为有测试锁定（动态查表路径有用例覆盖）
+    - require_proposal、require_claims、capabilities.shell.mode 三个零引用键要么删除、要么在文档中标注为未生效，不得保留成未接线的假门（逐一处置结论列入执行报告）
+    - 门禁模块的引用仅指向共享类型契约层与自身子模块
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:14.321Z'
+updated_at: '2026-09-27T06:14:14.321Z'
+checkpoints:
+  - id: cp1
+    label: 判定面拆分
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: fail-closed 判定行为核对
+    status: pending
+    verifier: auto
+  - id: cp3
+    label: 能力门与死键分流核对
+    status: pending
+    verifier: auto

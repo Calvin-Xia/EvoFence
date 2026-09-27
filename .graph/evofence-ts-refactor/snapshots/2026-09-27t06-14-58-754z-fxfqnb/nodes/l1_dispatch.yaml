@@ -1,0 +1,29 @@
+id: l1_dispatch
+type: task
+label: herdr 派单机制就绪
+level: 1
+context: ctx_ext
+status: pending
+plan:
+  description: >-
+    建立 herdr 派单纪律：执行 pane 与 git worktree 一一对应，pane 与节点 claim_by 映射可追溯，模型限定 deepseek/deepseek-flash 与
+    xiaomi/mimo-v2.6-pro 两个 high 档，并发执行 agent 数 ≤4，所有并行写操作在各自 worktree 内进行。
+expected_outcome:
+  definition_of_done:
+    - 派单审计记录列出每个执行 pane 与其 claim_by 节点的对应关系，映射双向唯一（一个 pane 不同时持有两个 running 节点）
+    - 派单审计记录中执行 agent 使用的模型全部属于 deepseek/deepseek-flash、xiaomi/mimo-v2.6-pro 两个 high 档，无白名单外模型
+    - git worktree list 输出显示并行写操作各自的 worktree 检出，主检出不被执行 agent 直接写入
+    - 并发执行 agent 数峰值 ≤4（派单记录中同时 running 的 pane 数可复核）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:13:49.602Z'
+updated_at: '2026-09-27T06:13:49.602Z'
+checkpoints:
+  - id: cp1
+    label: 派单纪律与映射表就位
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: worktree 隔离核对
+    status: pending
+    verifier: auto

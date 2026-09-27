@@ -1,0 +1,55 @@
+id: l4_docs
+type: task
+label: 文档同步与 BREAKING 说明
+level: 4
+context: ctx_io
+status: passed
+plan:
+  description: >-
+    同步 README.md、README.en.md、AGENTS.md、CHANGELOG.md 与 0.4.0 实现：命令面、config 格式、ledger schema 的破坏性变更逐项写明。CHANGELOG 0.4.0
+    条目打 BREAKING 标记并声明旧 ledger 与旧 config 不兼容且不提供迁移。
+expected_outcome:
+  definition_of_done:
+    - README.md 与 README.en.md 中的命令示例逐条存在于新命令面（可由命令面清单复核）
+    - AGENTS.md 描述的项目结构、构建与测试命令与仓库现状一致（npm run build、npm test 等命令存在）
+    - CHANGELOG.md 的 0.4.0 条目含 BREAKING 标注，并写明旧 ledger 与旧 config 不兼容且不提供迁移
+    - 文档不出现未实现的功能描述（抽查命令面与文档条目一一对应）
+    - l2_gate 与 l2_config 的死键处置结论（删除或标注未生效）在文档中有对应说明
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:58.805Z'
+updated_at: '2026-09-27T08:32:48.216Z'
+checkpoints:
+  - id: cp1
+    label: 文档逐项同步
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: BREAKING 与死键说明核对
+    status: passed
+    verifier: auto
+assigned_to: herdr-docs
+execution_report:
+  summary: >-
+    文档同步到 0.4.0 实现：README.md / README.en.md / AGENTS.md / CHANGELOG.md 改写，新增 docs/config.md（v2 config 表面文档）。编排会话独立核验：①
+    用构建产物里的真实命令面（dist/lib/cli/catalog.js 的 15 条）反查 README.md 与 README.en.md 的命令示例——中文版 6 条、英文版 7 条，不在命令面的条数为 0；②
+    AGENTS.md 引用的 npm 脚本（build/typecheck/dep:check/check/test:e2e）在 package.json 中全部真实存在；③ CHANGELOG 新增 0.4.0 段并标
+    BREAKING，四小节分别覆盖源码/发布形态转 dist-only、CLI 命令面重设计、config v2 严格校验、'ledger schema v2 — BREAKING, no migration'，并列升级说明；④
+    构建与 d.ts 使用说明成文（README 第 225-236 行：构建产物布局、消费者如何经 exports.types 拿到类型、npm test 先构建的纪律）；⑤ 死键与能力门如实写明——README 表格列出
+    require_proposal/require_claims/capabilities.shell.mode 为'未生效：代码零引用'，并明确 capabilities.external_api 是真实生效的能力门；⑥
+    沙箱措辞逐处核验：README/README.en/AGENTS 均明确声明 worktree 隔离不能替代 OS 沙箱，无过度宣称。
+  started_at: '2026-09-27T08:25:34.756Z'
+  artifacts:
+    - CHANGELOG.md
+    - README.md
+    - README.en.md
+    - AGENTS.md
+    - docs/config.md
+  notes: 无源码改动；构建与测试未受影响（build 0、npm test 全绿）。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T08:32:47.887Z'
+    note: >-
+      机械核对：五项 DoD 逐条有证据（命令示例 0 越界、AGENTS 脚本真实存在、CHANGELOG BREAKING 含不迁移声明、构建与 d.ts 说明成文、死键与 external_api
+      如实说明），另加沙箱措辞专项检查无过度宣称。
+  completed_at: '2026-09-27T08:32:48.217Z'

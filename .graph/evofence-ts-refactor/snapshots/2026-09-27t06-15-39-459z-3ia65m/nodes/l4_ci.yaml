@@ -1,0 +1,27 @@
+id: l4_ci
+type: task
+label: CI 流水线升级
+level: 4
+context: ctx_io
+status: pending
+plan:
+  description: 升级 ci.yml：加入 TypeScript 构建与类型检查步骤，保留 ubuntu 与 windows 双平台与 Node 22、24 矩阵，npm test 与 npm pack --dry-run 步骤在构建之后执行。
+expected_outcome:
+  definition_of_done:
+    - ci.yml 含 npm run build 与类型检查步骤，且位于 npm test 之前
+    - ci.yml 的矩阵覆盖 ubuntu 与 windows 两个平台与 Node 22、24 两个版本
+    - ci.yml 中 npm test 与 npm pack --dry-run 步骤存在
+    - workflow 文件通过 YAML 解析（本地解析命令退出码为 0）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:15:08.570Z'
+updated_at: '2026-09-27T06:15:08.570Z'
+checkpoints:
+  - id: cp1
+    label: 构建步骤接入
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: 矩阵与步骤核对
+    status: pending
+    verifier: auto

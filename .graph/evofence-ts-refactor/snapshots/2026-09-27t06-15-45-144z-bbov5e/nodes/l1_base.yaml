@@ -1,0 +1,29 @@
+id: l1_base
+type: task
+label: TS 构建基座
+level: 1
+context: ctx_io
+status: pending
+plan:
+  description: >-
+    引入 TypeScript 构建基座：tsconfig 配置 ESM 产物与声明输出，package.json 增加构建期 devDependencies 与 build、typecheck 脚本，产出 dist
+    目录骨架。dependencies 运行时集合保持不变。
+expected_outcome:
+  definition_of_done:
+    - package.json 的 devDependencies 含 typescript，dependencies 仍为 better-sqlite3 与 yaml 两项
+    - 执行 npm run build，退出码为 0 且 dist 目录产出 ESM JS、d.ts 与 declarationMap 映射文件
+    - 执行 npx tsc --noEmit，退出码为 0
+    - tsconfig 含 declaration 与 declarationMap 开关，模块与解析策略与 NodeNext 一致
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:13:49.519Z'
+updated_at: '2026-09-27T06:13:49.519Z'
+checkpoints:
+  - id: cp1
+    label: tsconfig 与脚本就位
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: 构建产物冒烟
+    status: pending
+    verifier: auto

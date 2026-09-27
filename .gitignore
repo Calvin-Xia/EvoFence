@@ -9,3 +9,6 @@ coverage/
 *.tgz
 dist/
 docs/deep-research-report.md
+
+# graph CLI transient locks
+.graph/.locks/

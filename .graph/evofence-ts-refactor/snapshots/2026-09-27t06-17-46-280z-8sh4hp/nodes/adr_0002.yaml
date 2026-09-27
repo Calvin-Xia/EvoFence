@@ -1,0 +1,18 @@
+id: adr_0002
+type: adr
+label: 发行形态：仅发布 dist 构建产物与类型声明
+level: 1
+status: proposed
+attempts: 0
+max_attempts: 0
+created_at: '2026-09-27T06:16:56.269Z'
+updated_at: '2026-09-27T06:16:56.269Z'
+decision: >-
+  0.4.0 起 npm 包只发布 dist 下的 ESM JS 与类型声明（含 declarationMap 映射文件），package.json 的 bin、exports、types、files 全部指向
+  dist；TypeScript 源码不随包发布。
+background: 0.3.0 的 bin 直指 src 下 JS 源码、无构建步骤；0.4.0 改为模块化 TypeScript 后必须先定发布面，该决定影响打包清单、CI 与 publish 流程的构建步骤、消费方加载路径与排障体验。
+considered_options: >-
+  A 发布 TS 源码并依赖 Node 类型剥离直接运行 → 落选：运行行为随 Node 版本的类型剥离差异漂移，且拿不到 d.ts；B 仅发布 dist ESM JS 与 d.ts 与 declarationMap →
+  选中：产物形态稳定，类型可被消费方直接引用；C 同时发布 src 与 dist → 落选：双份产物易漂移，违背不发布源码的意图
+why: dist-only 让发布内容与构建产物一一对应，d.ts 与 declarationMap 给消费方类型跳转能力，且与 OIDC 发布流水线的构建步骤天然对齐。
+consequences: 构建步骤成为发布的必要环节，CI 与 publish 流程必须先构建后发布；打包清单要排除 src 与 test；不发布源码意味着线上排障依赖 source map 与 declarationMap。

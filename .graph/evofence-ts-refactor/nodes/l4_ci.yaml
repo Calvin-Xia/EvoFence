@@ -1,0 +1,44 @@
+id: l4_ci
+type: task
+label: CI 流水线升级
+level: 4
+context: ctx_io
+status: passed
+plan:
+  description: 升级 ci.yml：加入 TypeScript 构建与类型检查步骤，保留 ubuntu 与 windows 双平台与 Node 22、24 矩阵，npm test 与 npm pack --dry-run 步骤在构建之后执行。
+expected_outcome:
+  definition_of_done:
+    - ci.yml 含 npm run build 与类型检查步骤，且位于 npm test 之前
+    - ci.yml 的矩阵覆盖 ubuntu 与 windows 两个平台与 Node 22、24 两个版本
+    - ci.yml 中 npm test 与 npm pack --dry-run 步骤存在
+    - workflow 文件通过 YAML 解析（本地解析命令退出码为 0）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:15:08.570Z'
+updated_at: '2026-09-27T08:30:40.344Z'
+checkpoints:
+  - id: cp1
+    label: 构建步骤接入
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: 矩阵与步骤核对
+    status: passed
+    verifier: auto
+assigned_to: herdr-ci
+execution_report:
+  summary: >-
+    CI 流水线升级完成：ci.yml 改为逐门禁具名步骤——install → typecheck → build → dep:check → test → test:e2e → pack，矩阵保持 ubuntu-latest +
+    windows-latest × Node 22/24。编排会话独立验证：① 用仓库自带 yaml 依赖解析 ci.yml 成功（退出码 0）；② 解析结果确认 matrix
+    os=[ubuntu-latest,windows-latest]、node=[22,24]；③ 步骤顺序确认类型检查与构建均在 npm test 之前；④ npm test 与 npm pack --dry-run 步骤均存在。
+  started_at: '2026-09-27T08:25:35.100Z'
+  artifacts:
+    - .github/workflows/ci.yml
+  notes: >-
+    两处补强理由已写入 workflow 注释：① dep:check（模块依赖环门禁）此前只存在于 npm run check，而 CI 从未调用 check，等于该门禁在 CI 中从未运行；② test:e2e 套件位于 node
+    --test 默认发现路径之外，此前不会被任何 CI 步骤拾取，且刻意排在 npm test 之后（其 CLI 子进程会挤占 test/ 中时序敏感的预算断言）。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T08:30:40.060Z'
+    note: 机械核对：四项 DoD 逐条有实测证据（build/typecheck 在 test 之前、matrix 双平台双版本、npm test 与 pack 步骤存在、YAML 解析退出码 0）。
+  completed_at: '2026-09-27T08:30:40.345Z'

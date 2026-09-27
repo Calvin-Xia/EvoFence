@@ -1,0 +1,359 @@
+{"ts":"2026-09-27T06:09:07.264Z","actor":"user","kind":"class_changed","to":"standard","by":"user","detail":"class: (未设) → standard（by=user）"}
+{"ts":"2026-09-27T06:09:13.161Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-09-13-148z-ygymn5 message=\"auto: structural amend (add-node ctx_gate) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:09:13.173Z","actor":"cli","kind":"node_created","node":"ctx_gate","to":"pending"}
+{"ts":"2026-09-27T06:09:13.177Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=ctx_gate; auto_snapshot=2026-09-27t06-09-13-148z-ygymn5"}
+{"ts":"2026-09-27T06:09:13.608Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-09-13-593z-kys80h message=\"auto: structural amend (add-node ctx_exec) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:09:13.621Z","actor":"cli","kind":"node_created","node":"ctx_exec","to":"pending"}
+{"ts":"2026-09-27T06:09:13.625Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=ctx_exec; auto_snapshot=2026-09-27t06-09-13-593z-kys80h"}
+{"ts":"2026-09-27T06:09:14.057Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-09-14-041z-w02abk message=\"auto: structural amend (add-node ctx_ledger) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:09:14.069Z","actor":"cli","kind":"node_created","node":"ctx_ledger","to":"pending"}
+{"ts":"2026-09-27T06:09:14.075Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=ctx_ledger; auto_snapshot=2026-09-27t06-09-14-041z-w02abk"}
+{"ts":"2026-09-27T06:09:14.448Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-09-14-432z-idciaf message=\"auto: structural amend (add-node ctx_io) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:09:14.458Z","actor":"cli","kind":"node_created","node":"ctx_io","to":"pending"}
+{"ts":"2026-09-27T06:09:14.462Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=ctx_io; auto_snapshot=2026-09-27t06-09-14-432z-idciaf"}
+{"ts":"2026-09-27T06:09:14.880Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-09-14-858z-enlrfx message=\"auto: structural amend (add-node ctx_ext) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:09:14.890Z","actor":"cli","kind":"node_created","node":"ctx_ext","to":"pending"}
+{"ts":"2026-09-27T06:09:14.894Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=ctx_ext; auto_snapshot=2026-09-27t06-09-14-858z-enlrfx"}
+{"ts":"2026-09-27T06:10:16.850Z","actor":"cli","kind":"node_content_updated","node":"ctx_exec","detail":"fields: boundary, glossary, contracts"}
+{"ts":"2026-09-27T06:10:16.909Z","actor":"cli","kind":"node_content_updated","node":"ctx_gate","detail":"fields: boundary, glossary, contracts"}
+{"ts":"2026-09-27T06:10:50.103Z","actor":"cli","kind":"node_content_updated","node":"ctx_io","detail":"fields: boundary, glossary, contracts"}
+{"ts":"2026-09-27T06:10:50.124Z","actor":"cli","kind":"node_content_updated","node":"ctx_ledger","detail":"fields: boundary, glossary, contracts"}
+{"ts":"2026-09-27T06:10:59.406Z","actor":"cli","kind":"node_content_updated","node":"ctx_ext","detail":"fields: boundary, glossary, contracts"}
+{"ts":"2026-09-27T06:13:32.921Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-13-32-891z-0d2jxr message=\"auto: structural amend (add-node l1_design) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:13:32.960Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-13-32-940z-70mlbk message=\"auto: structural amend (add-node l1_recon) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:13:32.994Z","actor":"cli","kind":"node_created","node":"l1_design","to":"pending"}
+{"ts":"2026-09-27T06:13:32.997Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l1_design; auto_snapshot=2026-09-27t06-13-32-891z-0d2jxr"}
+{"ts":"2026-09-27T06:13:33.009Z","actor":"cli","kind":"node_created","node":"l1_recon","to":"pending"}
+{"ts":"2026-09-27T06:13:33.013Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l1_recon; auto_snapshot=2026-09-27t06-13-32-940z-70mlbk"}
+{"ts":"2026-09-27T06:13:49.515Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-13-49-490z-67yd34 message=\"auto: structural amend (add-node l1_base) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:13:49.547Z","actor":"cli","kind":"node_created","node":"l1_base","to":"pending"}
+{"ts":"2026-09-27T06:13:49.550Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l1_base; auto_snapshot=2026-09-27t06-13-49-490z-67yd34"}
+{"ts":"2026-09-27T06:13:49.598Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-13-49-572z-wyasmf message=\"auto: structural amend (add-node l1_dispatch) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:13:49.640Z","actor":"cli","kind":"node_created","node":"l1_dispatch","to":"pending"}
+{"ts":"2026-09-27T06:13:49.644Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l1_dispatch; auto_snapshot=2026-09-27t06-13-49-572z-wyasmf"}
+{"ts":"2026-09-27T06:14:01.036Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-01-007z-g93nnq message=\"auto: structural amend (add-node l2_types) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:01.072Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-01-045z-d2eff3 message=\"auto: structural amend (add-node l2_ledger) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:01.099Z","actor":"cli","kind":"node_created","node":"l2_types","to":"pending"}
+{"ts":"2026-09-27T06:14:01.103Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_types; auto_snapshot=2026-09-27t06-14-01-007z-g93nnq"}
+{"ts":"2026-09-27T06:14:01.130Z","actor":"cli","kind":"node_created","node":"l2_ledger","to":"pending"}
+{"ts":"2026-09-27T06:14:01.134Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_ledger; auto_snapshot=2026-09-27t06-14-01-045z-d2eff3"}
+{"ts":"2026-09-27T06:14:14.268Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-14-235z-ohbsiz message=\"auto: structural amend (add-node l2_config) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:14.317Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-14-285z-6mruj4 message=\"auto: structural amend (add-node l2_gate) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:14.339Z","actor":"cli","kind":"node_created","node":"l2_config","to":"pending"}
+{"ts":"2026-09-27T06:14:14.343Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_config; auto_snapshot=2026-09-27t06-14-14-235z-ohbsiz"}
+{"ts":"2026-09-27T06:14:14.353Z","actor":"cli","kind":"node_created","node":"l2_gate","to":"pending"}
+{"ts":"2026-09-27T06:14:14.357Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_gate; auto_snapshot=2026-09-27t06-14-14-285z-6mruj4"}
+{"ts":"2026-09-27T06:14:28.253Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-28-217z-evy9u5 message=\"auto: structural amend (add-node l2_report) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:28.310Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-28-274z-jn4eta message=\"auto: structural amend (add-node l2_exec) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:28.327Z","actor":"cli","kind":"node_created","node":"l2_report","to":"pending"}
+{"ts":"2026-09-27T06:14:28.331Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_report; auto_snapshot=2026-09-27t06-14-28-217z-evy9u5"}
+{"ts":"2026-09-27T06:14:28.344Z","actor":"cli","kind":"node_created","node":"l2_exec","to":"pending"}
+{"ts":"2026-09-27T06:14:28.348Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_exec; auto_snapshot=2026-09-27t06-14-28-274z-jn4eta"}
+{"ts":"2026-09-27T06:14:33.886Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-33-844z-9xbldr message=\"auto: structural amend (add-node l2_cli) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:33.898Z","actor":"cli","kind":"node_created","node":"l2_cli","to":"pending"}
+{"ts":"2026-09-27T06:14:33.902Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l2_cli; auto_snapshot=2026-09-27t06-14-33-844z-9xbldr"}
+{"ts":"2026-09-27T06:14:45.682Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-45-636z-l1kquo message=\"auto: structural amend (add-node l3_tests_e2e) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:45.742Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-45-700z-qwjwhm message=\"auto: structural amend (add-node l3_tests_unit) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:45.773Z","actor":"cli","kind":"node_created","node":"l3_tests_e2e","to":"pending"}
+{"ts":"2026-09-27T06:14:45.777Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l3_tests_e2e; auto_snapshot=2026-09-27t06-14-45-636z-l1kquo"}
+{"ts":"2026-09-27T06:14:45.802Z","actor":"cli","kind":"node_created","node":"l3_tests_unit","to":"pending"}
+{"ts":"2026-09-27T06:14:45.807Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l3_tests_unit; auto_snapshot=2026-09-27t06-14-45-700z-qwjwhm"}
+{"ts":"2026-09-27T06:14:58.714Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-58-669z-l32jae message=\"auto: structural amend (add-node l3_integrations) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:58.731Z","actor":"cli","kind":"node_created","node":"l3_integrations","to":"pending"}
+{"ts":"2026-09-27T06:14:58.735Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l3_integrations; auto_snapshot=2026-09-27t06-14-58-669z-l32jae"}
+{"ts":"2026-09-27T06:14:58.800Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-14-58-754z-fxfqnb message=\"auto: structural amend (add-node l4_docs) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:14:58.815Z","actor":"cli","kind":"node_created","node":"l4_docs","to":"pending"}
+{"ts":"2026-09-27T06:14:58.819Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l4_docs; auto_snapshot=2026-09-27t06-14-58-754z-fxfqnb"}
+{"ts":"2026-09-27T06:15:08.495Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-08-445z-cy4y5b message=\"auto: structural amend (add-node l4_release) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:08.566Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-08-521z-9o4uuw message=\"auto: structural amend (add-node l4_ci) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:08.591Z","actor":"cli","kind":"node_created","node":"l4_release","to":"pending"}
+{"ts":"2026-09-27T06:15:08.595Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l4_release; auto_snapshot=2026-09-27t06-15-08-445z-cy4y5b"}
+{"ts":"2026-09-27T06:15:08.606Z","actor":"cli","kind":"node_created","node":"l4_ci","to":"pending"}
+{"ts":"2026-09-27T06:15:08.610Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l4_ci; auto_snapshot=2026-09-27t06-15-08-521z-9o4uuw"}
+{"ts":"2026-09-27T06:15:23.689Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-23-638z-f7kops message=\"auto: structural amend (add-node l5_review) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:23.748Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-23-700z-5saols message=\"auto: structural amend (add-node l5_accept) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:23.769Z","actor":"cli","kind":"node_created","node":"l5_review","to":"pending"}
+{"ts":"2026-09-27T06:15:23.773Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l5_review; auto_snapshot=2026-09-27t06-15-23-638z-f7kops"}
+{"ts":"2026-09-27T06:15:23.793Z","actor":"cli","kind":"node_created","node":"l5_accept","to":"pending"}
+{"ts":"2026-09-27T06:15:23.797Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=l5_accept; auto_snapshot=2026-09-27t06-15-23-700z-5saols"}
+{"ts":"2026-09-27T06:15:36.386Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-36-341z-xrqoyy message=\"auto: structural amend (add-edge e001) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:36.401Z","actor":"cli","kind":"edge_created","edge":"e001","detail":"l1_recon -[depends_on]-> l1_design"}
+{"ts":"2026-09-27T06:15:36.406Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e001; auto_snapshot=2026-09-27t06-15-36-341z-xrqoyy"}
+{"ts":"2026-09-27T06:15:37.057Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-37-008z-ox237l message=\"auto: structural amend (add-edge e002) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:37.069Z","actor":"cli","kind":"edge_created","edge":"e002","detail":"l1_design -[depends_on]-> l1_base"}
+{"ts":"2026-09-27T06:15:37.072Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e002; auto_snapshot=2026-09-27t06-15-37-008z-ox237l"}
+{"ts":"2026-09-27T06:15:37.518Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-37-463z-t6zgko message=\"auto: structural amend (add-edge e003) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:37.533Z","actor":"cli","kind":"edge_created","edge":"e003","detail":"l1_design -[depends_on]-> l1_dispatch"}
+{"ts":"2026-09-27T06:15:37.538Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e003; auto_snapshot=2026-09-27t06-15-37-463z-t6zgko"}
+{"ts":"2026-09-27T06:15:38.054Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-38-001z-pyb10d message=\"auto: structural amend (add-edge e004) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:38.068Z","actor":"cli","kind":"edge_created","edge":"e004","detail":"l1_base -[depends_on]-> l2_types"}
+{"ts":"2026-09-27T06:15:38.072Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e004; auto_snapshot=2026-09-27t06-15-38-001z-pyb10d"}
+{"ts":"2026-09-27T06:15:38.551Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-38-499z-rf92vd message=\"auto: structural amend (add-edge e005) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:38.565Z","actor":"cli","kind":"edge_created","edge":"e005","detail":"l1_dispatch -[depends_on]-> l2_exec"}
+{"ts":"2026-09-27T06:15:38.569Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e005; auto_snapshot=2026-09-27t06-15-38-499z-rf92vd"}
+{"ts":"2026-09-27T06:15:39.012Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-38-953z-0ku4bt message=\"auto: structural amend (add-edge e006) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:39.026Z","actor":"cli","kind":"edge_created","edge":"e006","detail":"l2_types -[depends_on]-> l2_ledger"}
+{"ts":"2026-09-27T06:15:39.029Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e006; auto_snapshot=2026-09-27t06-15-38-953z-0ku4bt"}
+{"ts":"2026-09-27T06:15:39.523Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-39-459z-3ia65m message=\"auto: structural amend (add-edge e007) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:39.537Z","actor":"cli","kind":"edge_created","edge":"e007","detail":"l2_types -[depends_on]-> l2_config"}
+{"ts":"2026-09-27T06:15:39.540Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e007; auto_snapshot=2026-09-27t06-15-39-459z-3ia65m"}
+{"ts":"2026-09-27T06:15:39.979Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-39-922z-fiepjl message=\"auto: structural amend (add-edge e008) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:39.992Z","actor":"cli","kind":"edge_created","edge":"e008","detail":"l2_types -[depends_on]-> l2_gate"}
+{"ts":"2026-09-27T06:15:39.995Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e008; auto_snapshot=2026-09-27t06-15-39-922z-fiepjl"}
+{"ts":"2026-09-27T06:15:40.438Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-40-371z-ponrvz message=\"auto: structural amend (add-edge e009) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:40.455Z","actor":"cli","kind":"edge_created","edge":"e009","detail":"l2_types -[depends_on]-> l2_exec"}
+{"ts":"2026-09-27T06:15:40.460Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e009; auto_snapshot=2026-09-27t06-15-40-371z-ponrvz"}
+{"ts":"2026-09-27T06:15:40.898Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-40-835z-y2apaw message=\"auto: structural amend (add-edge e010) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:40.911Z","actor":"cli","kind":"edge_created","edge":"e010","detail":"l2_ledger -[depends_on]-> l2_report"}
+{"ts":"2026-09-27T06:15:40.916Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e010; auto_snapshot=2026-09-27t06-15-40-835z-y2apaw"}
+{"ts":"2026-09-27T06:15:41.376Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-41-313z-ddrf99 message=\"auto: structural amend (add-edge e011) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:41.390Z","actor":"cli","kind":"edge_created","edge":"e011","detail":"l2_exec -[depends_on]-> l2_report"}
+{"ts":"2026-09-27T06:15:41.395Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e011; auto_snapshot=2026-09-27t06-15-41-313z-ddrf99"}
+{"ts":"2026-09-27T06:15:41.883Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-41-821z-dlx89d message=\"auto: structural amend (add-edge e012) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:41.897Z","actor":"cli","kind":"edge_created","edge":"e012","detail":"l2_report -[depends_on]-> l2_cli"}
+{"ts":"2026-09-27T06:15:41.900Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e012; auto_snapshot=2026-09-27t06-15-41-821z-dlx89d"}
+{"ts":"2026-09-27T06:15:42.329Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-42-265z-xhmel1 message=\"auto: structural amend (add-edge e013) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:42.343Z","actor":"cli","kind":"edge_created","edge":"e013","detail":"l2_gate -[depends_on]-> l2_cli"}
+{"ts":"2026-09-27T06:15:42.347Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e013; auto_snapshot=2026-09-27t06-15-42-265z-xhmel1"}
+{"ts":"2026-09-27T06:15:42.786Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-42-715z-mbezgq message=\"auto: structural amend (add-edge e014) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:42.802Z","actor":"cli","kind":"edge_created","edge":"e014","detail":"l2_config -[depends_on]-> l2_cli"}
+{"ts":"2026-09-27T06:15:42.806Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e014; auto_snapshot=2026-09-27t06-15-42-715z-mbezgq"}
+{"ts":"2026-09-27T06:15:43.297Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-43-233z-45c7sk message=\"auto: structural amend (add-edge e015) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:43.312Z","actor":"cli","kind":"edge_created","edge":"e015","detail":"l2_ledger -[depends_on]-> l3_tests_unit"}
+{"ts":"2026-09-27T06:15:43.315Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e015; auto_snapshot=2026-09-27t06-15-43-233z-45c7sk"}
+{"ts":"2026-09-27T06:15:43.764Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-43-686z-xih979 message=\"auto: structural amend (add-edge e016) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:43.780Z","actor":"cli","kind":"edge_created","edge":"e016","detail":"l2_gate -[depends_on]-> l3_tests_unit"}
+{"ts":"2026-09-27T06:15:43.784Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e016; auto_snapshot=2026-09-27t06-15-43-686z-xih979"}
+{"ts":"2026-09-27T06:15:44.248Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-44-181z-is311k message=\"auto: structural amend (add-edge e017) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:44.262Z","actor":"cli","kind":"edge_created","edge":"e017","detail":"l2_exec -[depends_on]-> l3_tests_unit"}
+{"ts":"2026-09-27T06:15:44.266Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e017; auto_snapshot=2026-09-27t06-15-44-181z-is311k"}
+{"ts":"2026-09-27T06:15:44.749Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-44-680z-q6srny message=\"auto: structural amend (add-edge e018) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:44.764Z","actor":"cli","kind":"edge_created","edge":"e018","detail":"l2_cli -[depends_on]-> l3_tests_unit"}
+{"ts":"2026-09-27T06:15:44.767Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e018; auto_snapshot=2026-09-27t06-15-44-680z-q6srny"}
+{"ts":"2026-09-27T06:15:45.243Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-45-144z-bbov5e message=\"auto: structural amend (add-edge e019) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:45.257Z","actor":"cli","kind":"edge_created","edge":"e019","detail":"l2_cli -[depends_on]-> l3_tests_e2e"}
+{"ts":"2026-09-27T06:15:45.261Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e019; auto_snapshot=2026-09-27t06-15-45-144z-bbov5e"}
+{"ts":"2026-09-27T06:15:45.704Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-15-45-627z-4l1a2i message=\"auto: structural amend (add-edge e020) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:15:45.720Z","actor":"cli","kind":"edge_created","edge":"e020","detail":"l2_cli -[depends_on]-> l3_integrations"}
+{"ts":"2026-09-27T06:15:45.724Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e020; auto_snapshot=2026-09-27t06-15-45-627z-4l1a2i"}
+{"ts":"2026-09-27T06:16:03.407Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-03-325z-d6fkag message=\"auto: structural amend (add-edge e021) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:03.424Z","actor":"cli","kind":"edge_created","edge":"e021","detail":"l3_tests_unit -[depends_on]-> l4_docs"}
+{"ts":"2026-09-27T06:16:03.428Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e021; auto_snapshot=2026-09-27t06-16-03-325z-d6fkag"}
+{"ts":"2026-09-27T06:16:03.874Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-03-793z-ajnll0 message=\"auto: structural amend (add-edge e022) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:03.889Z","actor":"cli","kind":"edge_created","edge":"e022","detail":"l2_cli -[depends_on]-> l4_docs"}
+{"ts":"2026-09-27T06:16:03.892Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e022; auto_snapshot=2026-09-27t06-16-03-793z-ajnll0"}
+{"ts":"2026-09-27T06:16:04.351Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-04-264z-xhxo3j message=\"auto: structural amend (add-edge e023) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:04.367Z","actor":"cli","kind":"edge_created","edge":"e023","detail":"l3_tests_unit -[depends_on]-> l4_ci"}
+{"ts":"2026-09-27T06:16:04.371Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e023; auto_snapshot=2026-09-27t06-16-04-264z-xhxo3j"}
+{"ts":"2026-09-27T06:16:04.857Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-04-778z-vdgzju message=\"auto: structural amend (add-edge e024) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:04.871Z","actor":"cli","kind":"edge_created","edge":"e024","detail":"l3_tests_e2e -[depends_on]-> l4_ci"}
+{"ts":"2026-09-27T06:16:04.875Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e024; auto_snapshot=2026-09-27t06-16-04-778z-vdgzju"}
+{"ts":"2026-09-27T06:16:05.367Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-05-281z-p55xu6 message=\"auto: structural amend (add-edge e025) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:05.382Z","actor":"cli","kind":"edge_created","edge":"e025","detail":"l4_ci -[depends_on]-> l4_release"}
+{"ts":"2026-09-27T06:16:05.385Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e025; auto_snapshot=2026-09-27t06-16-05-281z-p55xu6"}
+{"ts":"2026-09-27T06:16:05.842Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-05-757z-fgd7cq message=\"auto: structural amend (add-edge e026) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:05.857Z","actor":"cli","kind":"edge_created","edge":"e026","detail":"l3_integrations -[depends_on]-> l4_release"}
+{"ts":"2026-09-27T06:16:05.860Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e026; auto_snapshot=2026-09-27t06-16-05-757z-fgd7cq"}
+{"ts":"2026-09-27T06:16:06.360Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-06-276z-5wnvum message=\"auto: structural amend (add-edge e027) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:06.377Z","actor":"cli","kind":"edge_created","edge":"e027","detail":"l3_tests_unit -[depends_on]-> l5_review"}
+{"ts":"2026-09-27T06:16:06.381Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e027; auto_snapshot=2026-09-27t06-16-06-276z-5wnvum"}
+{"ts":"2026-09-27T06:16:06.886Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-06-784z-mldsbi message=\"auto: structural amend (add-edge e028) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:06.901Z","actor":"cli","kind":"edge_created","edge":"e028","detail":"l3_tests_e2e -[depends_on]-> l5_review"}
+{"ts":"2026-09-27T06:16:06.905Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e028; auto_snapshot=2026-09-27t06-16-06-784z-mldsbi"}
+{"ts":"2026-09-27T06:16:07.412Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-07-325z-n3fwuh message=\"auto: structural amend (add-edge e029) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:07.429Z","actor":"cli","kind":"edge_created","edge":"e029","detail":"l3_integrations -[depends_on]-> l5_review"}
+{"ts":"2026-09-27T06:16:07.433Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e029; auto_snapshot=2026-09-27t06-16-07-325z-n3fwuh"}
+{"ts":"2026-09-27T06:16:07.916Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-07-824z-1tu511 message=\"auto: structural amend (add-edge e030) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:07.932Z","actor":"cli","kind":"edge_created","edge":"e030","detail":"l4_release -[depends_on]-> l5_review"}
+{"ts":"2026-09-27T06:16:07.936Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e030; auto_snapshot=2026-09-27t06-16-07-824z-1tu511"}
+{"ts":"2026-09-27T06:16:08.393Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-08-305z-962s07 message=\"auto: structural amend (add-edge e031) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:08.409Z","actor":"cli","kind":"edge_created","edge":"e031","detail":"l5_review -[depends_on]-> l5_accept"}
+{"ts":"2026-09-27T06:16:08.413Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e031; auto_snapshot=2026-09-27t06-16-08-305z-962s07"}
+{"ts":"2026-09-27T06:16:08.923Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-08-836z-nooibw message=\"auto: structural amend (add-edge e032) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:08.940Z","actor":"cli","kind":"edge_created","edge":"e032","detail":"l4_docs -[depends_on]-> l5_accept"}
+{"ts":"2026-09-27T06:16:08.944Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e032; auto_snapshot=2026-09-27t06-16-08-836z-nooibw"}
+{"ts":"2026-09-27T06:16:09.435Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-09-333z-ph0kd5 message=\"auto: structural amend (add-edge e033) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:09.456Z","actor":"cli","kind":"edge_created","edge":"e033","detail":"l4_ci -[depends_on]-> l5_accept"}
+{"ts":"2026-09-27T06:16:09.460Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e033; auto_snapshot=2026-09-27t06-16-09-333z-ph0kd5"}
+{"ts":"2026-09-27T06:16:09.993Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-09-896z-f8m8pj message=\"auto: structural amend (add-edge e034) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:10.009Z","actor":"cli","kind":"edge_created","edge":"e034","detail":"l4_release -[depends_on]-> l5_accept"}
+{"ts":"2026-09-27T06:16:10.012Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e034; auto_snapshot=2026-09-27t06-16-09-896z-f8m8pj"}
+{"ts":"2026-09-27T06:16:56.226Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-56-123z-afak1p message=\"auto: structural amend (add-node adr_0001) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:56.244Z","actor":"cli","kind":"adr_created","node":"adr_0001","to":"proposed","detail":"ledger schema v2 破坏性变更且不提供迁移"}
+{"ts":"2026-09-27T06:16:56.247Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=adr_0001; auto_snapshot=2026-09-27t06-16-56-123z-afak1p"}
+{"ts":"2026-09-27T06:16:56.371Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-16-56-272z-tipwg2 message=\"auto: structural amend (add-node adr_0002) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:16:56.389Z","actor":"cli","kind":"adr_created","node":"adr_0002","to":"proposed","detail":"发行形态：仅发布 dist 构建产物与类型声明"}
+{"ts":"2026-09-27T06:16:56.393Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=adr_0002; auto_snapshot=2026-09-27t06-16-56-272z-tipwg2"}
+{"ts":"2026-09-27T06:17:15.712Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-15-604z-yby93d message=\"auto: structural amend (add-node adr_0003) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:15.729Z","actor":"cli","kind":"adr_created","node":"adr_0003","to":"proposed","detail":"CLI 命令面重设计：命令分组与 --json 契约可破坏性调整"}
+{"ts":"2026-09-27T06:17:15.733Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=adr_0003; auto_snapshot=2026-09-27t06-17-15-604z-yby93d"}
+{"ts":"2026-09-27T06:17:29.126Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-29-023z-hpiqui message=\"auto: structural amend (add-node adr_0004) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:29.142Z","actor":"cli","kind":"adr_created","node":"adr_0004","to":"proposed","detail":"TS 测试执行策略：编译后运行构建产物"}
+{"ts":"2026-09-27T06:17:29.145Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=adr_0004; auto_snapshot=2026-09-27t06-17-29-023z-hpiqui"}
+{"ts":"2026-09-27T06:17:29.671Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-29-573z-l682q8 message=\"auto: structural amend (add-node adr_0005) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:29.688Z","actor":"cli","kind":"adr_created","node":"adr_0005","to":"proposed","detail":"模块依赖方向：类型契约层在最底层，单向依赖无环"}
+{"ts":"2026-09-27T06:17:29.691Z","actor":"cli","kind":"graph_amended","detail":"action=add-node target=adr_0005; auto_snapshot=2026-09-27t06-17-29-573z-l682q8"}
+{"ts":"2026-09-27T06:17:46.389Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-46-280z-8sh4hp message=\"auto: structural amend (add-edge e035) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:46.408Z","actor":"cli","kind":"edge_created","edge":"e035","detail":"adr_0002 -[decides]-> l1_base"}
+{"ts":"2026-09-27T06:17:46.411Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e035; auto_snapshot=2026-09-27t06-17-46-280z-8sh4hp"}
+{"ts":"2026-09-27T06:17:46.979Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-46-875z-6uo35q message=\"auto: structural amend (add-edge e036) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:46.997Z","actor":"cli","kind":"edge_created","edge":"e036","detail":"adr_0001 -[decides]-> ctx_ledger"}
+{"ts":"2026-09-27T06:17:47.000Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e036; auto_snapshot=2026-09-27t06-17-46-875z-6uo35q"}
+{"ts":"2026-09-27T06:17:47.567Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-47-455z-n4fukf message=\"auto: structural amend (add-edge e037) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:47.585Z","actor":"cli","kind":"edge_created","edge":"e037","detail":"adr_0003 -[decides]-> l2_cli"}
+{"ts":"2026-09-27T06:17:47.589Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e037; auto_snapshot=2026-09-27t06-17-47-455z-n4fukf"}
+{"ts":"2026-09-27T06:17:48.120Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-48-017z-p0v9ib message=\"auto: structural amend (add-edge e038) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:48.136Z","actor":"cli","kind":"edge_created","edge":"e038","detail":"adr_0004 -[decides]-> l3_tests_unit"}
+{"ts":"2026-09-27T06:17:48.140Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e038; auto_snapshot=2026-09-27t06-17-48-017z-p0v9ib"}
+{"ts":"2026-09-27T06:17:48.651Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-17-48-540z-5nd9u9 message=\"auto: structural amend (add-edge e039) by cli\" docs_export=skipped"}
+{"ts":"2026-09-27T06:17:48.669Z","actor":"cli","kind":"edge_created","edge":"e039","detail":"adr_0005 -[decides]-> l2_types"}
+{"ts":"2026-09-27T06:17:48.673Z","actor":"cli","kind":"graph_amended","detail":"action=add-edge target=e039; auto_snapshot=2026-09-27t06-17-48-540z-5nd9u9"}
+{"ts":"2026-09-27T06:18:16.019Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-18-15-905z-e93rok message=\"拓扑定稿\" docs_exported=12"}
+{"ts":"2026-09-27T06:23:08.468Z","actor":"cli","kind":"adr_accepted","node":"adr_0001","from":"proposed","to":"accepted"}
+{"ts":"2026-09-27T06:23:08.919Z","actor":"cli","kind":"adr_accepted","node":"adr_0002","from":"proposed","to":"accepted"}
+{"ts":"2026-09-27T06:23:09.331Z","actor":"cli","kind":"adr_accepted","node":"adr_0003","from":"proposed","to":"accepted"}
+{"ts":"2026-09-27T06:23:09.811Z","actor":"cli","kind":"adr_accepted","node":"adr_0004","from":"proposed","to":"accepted"}
+{"ts":"2026-09-27T06:23:10.286Z","actor":"cli","kind":"adr_accepted","node":"adr_0005","from":"proposed","to":"accepted"}
+{"ts":"2026-09-27T06:23:12.772Z","actor":"Calvin-Xia","kind":"design_approved","detail":"by=Calvin-Xia, status=approved"}
+{"ts":"2026-09-27T06:23:13.357Z","actor":"cli","kind":"snapshot_created","detail":"snapshot=2026-09-27t06-23-13-239z-88wgk6 message=\"拓扑定稿 + 人审通过 + 5 ADR accepted\" docs_exported=12"}
+{"ts":"2026-09-27T06:35:41.207Z","actor":"cli","kind":"node_status","node":"l1_recon","from":"pending","to":"ready"}
+{"ts":"2026-09-27T06:35:41.515Z","actor":"cli","kind":"node_status","node":"l1_recon","from":"ready","to":"running","detail":"claim by herdr-recon"}
+{"ts":"2026-09-27T06:35:41.729Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_recon","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T06:35:41.856Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_recon","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T06:35:41.983Z","actor":"unknown","kind":"execution_report","node":"l1_recon"}
+{"ts":"2026-09-27T06:35:42.229Z","actor":"cli","kind":"node_status","node":"l1_recon","from":"running","to":"passed"}
+{"ts":"2026-09-27T06:35:47.531Z","actor":"cli","kind":"verdict","node":"l1_recon","detail":"verdict=passed"}
+{"ts":"2026-09-27T06:35:47.858Z","actor":"cli","kind":"node_status","node":"l1_design","from":"pending","to":"ready"}
+{"ts":"2026-09-27T06:35:48.170Z","actor":"cli","kind":"node_status","node":"l1_design","from":"ready","to":"running","detail":"claim by herdr-designer"}
+{"ts":"2026-09-27T06:35:48.346Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_design","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T06:35:48.502Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_design","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T06:35:48.664Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_design","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T06:35:48.840Z","actor":"unknown","kind":"execution_report","node":"l1_design"}
+{"ts":"2026-09-27T06:35:49.207Z","actor":"cli","kind":"verdict","node":"l1_design","detail":"verdict=passed"}
+{"ts":"2026-09-27T06:35:49.436Z","actor":"cli","kind":"node_status","node":"l1_design","from":"running","to":"passed"}
+{"ts":"2026-09-27T06:35:54.582Z","actor":"cli","kind":"node_status","node":"l1_base","from":"pending","to":"ready"}
+{"ts":"2026-09-27T06:35:54.873Z","actor":"cli","kind":"node_status","node":"l1_base","from":"ready","to":"running","detail":"claim by herdr-base"}
+{"ts":"2026-09-27T06:35:55.082Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_base","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T06:35:55.232Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_base","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T06:35:55.361Z","actor":"unknown","kind":"execution_report","node":"l1_base"}
+{"ts":"2026-09-27T06:35:55.733Z","actor":"cli","kind":"verdict","node":"l1_base","detail":"verdict=passed"}
+{"ts":"2026-09-27T06:35:55.997Z","actor":"cli","kind":"node_status","node":"l1_base","from":"running","to":"passed"}
+{"ts":"2026-09-27T06:35:56.364Z","actor":"cli","kind":"node_content_updated","node":"l2_exec","detail":"fields: expected_outcome"}
+{"ts":"2026-09-27T06:45:36.458Z","actor":"cli","kind":"node_status","node":"l2_types","from":"pending","to":"ready"}
+{"ts":"2026-09-27T06:45:36.737Z","actor":"cli","kind":"node_status","node":"l2_types","from":"ready","to":"running","detail":"claim by herdr-base"}
+{"ts":"2026-09-27T06:45:36.948Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_types","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T06:45:37.088Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_types","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T06:45:37.244Z","actor":"unknown","kind":"execution_report","node":"l2_types"}
+{"ts":"2026-09-27T06:45:37.721Z","actor":"cli","kind":"verdict","node":"l2_types","detail":"verdict=passed"}
+{"ts":"2026-09-27T06:45:37.983Z","actor":"cli","kind":"node_status","node":"l2_types","from":"running","to":"passed"}
+{"ts":"2026-09-27T06:48:07.298Z","actor":"cli","kind":"node_status","node":"l1_dispatch","from":"pending","to":"ready"}
+{"ts":"2026-09-27T06:48:07.803Z","actor":"cli","kind":"node_status","node":"l1_dispatch","from":"ready","to":"running","detail":"claim by herdr-base"}
+{"ts":"2026-09-27T06:48:08.173Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_dispatch","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T06:48:08.499Z","actor":"unknown","kind":"checkpoint_updated","node":"l1_dispatch","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T06:48:08.709Z","actor":"unknown","kind":"execution_report","node":"l1_dispatch"}
+{"ts":"2026-09-27T06:48:09.273Z","actor":"cli","kind":"verdict","node":"l1_dispatch","detail":"verdict=passed"}
+{"ts":"2026-09-27T06:48:10.081Z","actor":"cli","kind":"node_status","node":"l1_dispatch","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:10:54.382Z","actor":"cli","kind":"node_status","node":"l2_ledger","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:10:54.713Z","actor":"cli","kind":"node_status","node":"l2_ledger","from":"ready","to":"running","detail":"claim by herdr-ledger"}
+{"ts":"2026-09-27T07:10:54.883Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_ledger","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:10:55.018Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_ledger","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:10:55.159Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_ledger","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T07:10:55.397Z","actor":"unknown","kind":"execution_report","node":"l2_ledger"}
+{"ts":"2026-09-27T07:10:55.841Z","actor":"cli","kind":"verdict","node":"l2_ledger","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:10:56.077Z","actor":"cli","kind":"node_status","node":"l2_ledger","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:11:00.966Z","actor":"cli","kind":"node_status","node":"l2_gate","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:11:01.334Z","actor":"cli","kind":"node_status","node":"l2_gate","from":"ready","to":"running","detail":"claim by herdr-gate"}
+{"ts":"2026-09-27T07:11:01.497Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_gate","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:11:01.629Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_gate","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:11:01.781Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_gate","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T07:11:01.910Z","actor":"unknown","kind":"execution_report","node":"l2_gate"}
+{"ts":"2026-09-27T07:11:02.323Z","actor":"cli","kind":"verdict","node":"l2_gate","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:11:02.565Z","actor":"cli","kind":"node_status","node":"l2_gate","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:11:07.348Z","actor":"cli","kind":"node_status","node":"l2_exec","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:11:07.650Z","actor":"cli","kind":"node_status","node":"l2_exec","from":"ready","to":"running","detail":"claim by herdr-exec"}
+{"ts":"2026-09-27T07:11:07.845Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_exec","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:11:08.002Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_exec","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:11:08.159Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_exec","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T07:11:08.310Z","actor":"unknown","kind":"execution_report","node":"l2_exec"}
+{"ts":"2026-09-27T07:11:08.702Z","actor":"cli","kind":"verdict","node":"l2_exec","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:11:08.928Z","actor":"cli","kind":"node_status","node":"l2_exec","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:11:13.328Z","actor":"cli","kind":"node_status","node":"l2_config","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:11:13.694Z","actor":"cli","kind":"node_status","node":"l2_config","from":"ready","to":"running","detail":"claim by herdr-io"}
+{"ts":"2026-09-27T07:11:13.861Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_config","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:11:14.005Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_config","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:11:14.152Z","actor":"unknown","kind":"execution_report","node":"l2_config"}
+{"ts":"2026-09-27T07:11:14.552Z","actor":"cli","kind":"verdict","node":"l2_config","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:11:14.791Z","actor":"cli","kind":"node_status","node":"l2_config","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:11:33.990Z","actor":"cli","kind":"node_status","node":"l2_report","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:11:34.283Z","actor":"cli","kind":"node_status","node":"l2_report","from":"ready","to":"running","detail":"claim by herdr-io"}
+{"ts":"2026-09-27T07:31:55.746Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_report","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:31:55.882Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_report","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:31:56.036Z","actor":"unknown","kind":"execution_report","node":"l2_report"}
+{"ts":"2026-09-27T07:31:56.470Z","actor":"cli","kind":"verdict","node":"l2_report","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:31:56.784Z","actor":"cli","kind":"node_status","node":"l2_report","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:32:02.308Z","actor":"cli","kind":"node_status","node":"l2_cli","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:32:02.626Z","actor":"cli","kind":"node_status","node":"l2_cli","from":"ready","to":"running","detail":"claim by herdr-io"}
+{"ts":"2026-09-27T07:52:50.193Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_cli","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T07:52:50.332Z","actor":"unknown","kind":"checkpoint_updated","node":"l2_cli","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T07:52:50.470Z","actor":"unknown","kind":"execution_report","node":"l2_cli"}
+{"ts":"2026-09-27T07:52:50.906Z","actor":"cli","kind":"verdict","node":"l2_cli","detail":"verdict=passed"}
+{"ts":"2026-09-27T07:52:51.199Z","actor":"cli","kind":"node_status","node":"l2_cli","from":"running","to":"passed"}
+{"ts":"2026-09-27T07:54:30.741Z","actor":"cli","kind":"node_status","node":"l3_tests_unit","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:54:31.338Z","actor":"cli","kind":"node_status","node":"l3_tests_e2e","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:54:31.815Z","actor":"cli","kind":"node_status","node":"l3_integrations","from":"pending","to":"ready"}
+{"ts":"2026-09-27T07:54:32.752Z","actor":"cli","kind":"node_status","node":"l3_tests_unit","from":"ready","to":"running","detail":"claim by herdr-unit"}
+{"ts":"2026-09-27T07:54:33.264Z","actor":"cli","kind":"node_status","node":"l3_tests_e2e","from":"ready","to":"running","detail":"claim by herdr-e2e"}
+{"ts":"2026-09-27T07:54:33.846Z","actor":"cli","kind":"node_status","node":"l3_integrations","from":"ready","to":"running","detail":"claim by herdr-integ"}
+{"ts":"2026-09-27T08:19:13.814Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_integrations","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:19:13.961Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_integrations","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:19:14.107Z","actor":"unknown","kind":"execution_report","node":"l3_integrations"}
+{"ts":"2026-09-27T08:19:14.792Z","actor":"cli","kind":"verdict","node":"l3_integrations","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:19:15.070Z","actor":"cli","kind":"node_status","node":"l3_integrations","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:21:35.676Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_tests_unit","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:21:35.847Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_tests_unit","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:21:36.019Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_tests_unit","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T08:21:36.178Z","actor":"unknown","kind":"execution_report","node":"l3_tests_unit"}
+{"ts":"2026-09-27T08:21:36.601Z","actor":"cli","kind":"verdict","node":"l3_tests_unit","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:21:36.901Z","actor":"cli","kind":"node_status","node":"l3_tests_unit","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:25:18.002Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_tests_e2e","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:25:18.138Z","actor":"unknown","kind":"checkpoint_updated","node":"l3_tests_e2e","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:25:18.269Z","actor":"unknown","kind":"execution_report","node":"l3_tests_e2e"}
+{"ts":"2026-09-27T08:25:18.728Z","actor":"cli","kind":"verdict","node":"l3_tests_e2e","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:25:18.999Z","actor":"cli","kind":"node_status","node":"l3_tests_e2e","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:25:34.175Z","actor":"cli","kind":"node_status","node":"l4_docs","from":"pending","to":"ready"}
+{"ts":"2026-09-27T08:25:34.469Z","actor":"cli","kind":"node_status","node":"l4_ci","from":"pending","to":"ready"}
+{"ts":"2026-09-27T08:25:34.790Z","actor":"cli","kind":"node_status","node":"l4_docs","from":"ready","to":"running","detail":"claim by herdr-docs"}
+{"ts":"2026-09-27T08:25:35.135Z","actor":"cli","kind":"node_status","node":"l4_ci","from":"ready","to":"running","detail":"claim by herdr-ci"}
+{"ts":"2026-09-27T08:30:39.298Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_ci","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:30:39.494Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_ci","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:30:39.654Z","actor":"unknown","kind":"execution_report","node":"l4_ci"}
+{"ts":"2026-09-27T08:30:40.072Z","actor":"cli","kind":"verdict","node":"l4_ci","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:30:40.352Z","actor":"cli","kind":"node_status","node":"l4_ci","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:32:47.089Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_docs","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:32:47.233Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_docs","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:32:47.382Z","actor":"unknown","kind":"execution_report","node":"l4_docs"}
+{"ts":"2026-09-27T08:32:47.902Z","actor":"cli","kind":"verdict","node":"l4_docs","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:32:48.225Z","actor":"cli","kind":"node_status","node":"l4_docs","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:38:50.503Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_release","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T08:38:50.700Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_release","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T08:38:50.842Z","actor":"unknown","kind":"checkpoint_updated","node":"l4_release","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T08:38:50.997Z","actor":"unknown","kind":"execution_report","node":"l4_release"}
+{"ts":"2026-09-27T08:38:51.418Z","actor":"cli","kind":"verdict","node":"l4_release","detail":"verdict=passed"}
+{"ts":"2026-09-27T08:38:55.171Z","actor":"cli","kind":"node_status","node":"l4_release","from":"pending","to":"ready"}
+{"ts":"2026-09-27T08:38:55.491Z","actor":"cli","kind":"node_status","node":"l4_release","from":"ready","to":"running","detail":"claim by herdr-release"}
+{"ts":"2026-09-27T08:38:55.790Z","actor":"cli","kind":"node_status","node":"l4_release","from":"running","to":"passed"}
+{"ts":"2026-09-27T08:39:10.899Z","actor":"cli","kind":"node_status","node":"l5_review","from":"pending","to":"ready"}
+{"ts":"2026-09-27T08:39:11.178Z","actor":"cli","kind":"node_status","node":"l5_review","from":"ready","to":"running","detail":"claim by herdr-review2"}
+{"ts":"2026-09-27T09:25:23.511Z","actor":"unknown","kind":"checkpoint_updated","node":"l5_review","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T09:25:23.642Z","actor":"unknown","kind":"checkpoint_updated","node":"l5_review","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T09:25:23.771Z","actor":"unknown","kind":"checkpoint_updated","node":"l5_review","from":"pending","to":"passed","detail":"checkpoint=cp3"}
+{"ts":"2026-09-27T09:25:23.935Z","actor":"unknown","kind":"execution_report","node":"l5_review"}
+{"ts":"2026-09-27T09:25:24.402Z","actor":"cli","kind":"verdict","node":"l5_review","detail":"verdict=passed"}
+{"ts":"2026-09-27T09:25:24.709Z","actor":"cli","kind":"node_status","node":"l5_review","from":"running","to":"passed"}
+{"ts":"2026-09-27T09:27:21.823Z","actor":"cli","kind":"node_status","node":"l5_accept","from":"pending","to":"ready"}
+{"ts":"2026-09-27T09:27:22.152Z","actor":"cli","kind":"node_status","node":"l5_accept","from":"ready","to":"running","detail":"claim by herdr-accept"}
+{"ts":"2026-09-27T09:27:22.383Z","actor":"unknown","kind":"checkpoint_updated","node":"l5_accept","from":"pending","to":"passed","detail":"checkpoint=cp1"}
+{"ts":"2026-09-27T09:27:22.538Z","actor":"unknown","kind":"checkpoint_updated","node":"l5_accept","from":"pending","to":"passed","detail":"checkpoint=cp2"}
+{"ts":"2026-09-27T09:27:22.686Z","actor":"unknown","kind":"execution_report","node":"l5_accept"}
+{"ts":"2026-09-27T09:27:23.053Z","actor":"cli","kind":"verdict","node":"l5_accept","detail":"verdict=passed"}
+{"ts":"2026-09-27T09:27:23.336Z","actor":"cli","kind":"node_status","node":"l5_accept","from":"running","to":"passed"}

@@ -1,0 +1,57 @@
+id: l2_config
+type: task
+label: config v2 校验与 fail-closed
+level: 2
+context: ctx_io
+status: passed
+plan:
+  description: >-
+    重新设计 config v2 格式（破坏性变更），实现严格校验与 fail-closed：未知字段、缺失必填项、类型不符一律报错退出，不猜测默认值。对照 docs/refactor-inventory-review.md
+    的复核结论锁定代码默认值边界。
+expected_outcome:
+  definition_of_done:
+    - 合法配置下执行 evofence status，退出码为 0 且输出与配置内容一致
+    - 含未知字段的配置下执行同一命令，退出码非 0 且错误信息列出被拒字段名
+    - 缺失必填项的配置下执行同一命令，退出码非 0 且错误信息列出缺失项
+    - 不为缺失字段新增代码默认值：仅保留 per_command_timeout_ms 与 max_output_bytes 两个现有代码默认，其余字段缺失即 INVALID_CONTRACT 报错
+    - 上述 2 个代码默认值与其余 fail-closed 字段的语义逐条有测试锁定（npm test 中配置用例 0 failures）
+    - config 模块单文件行数 ≤350，不引用执行域与账本域模块
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:14.273Z'
+updated_at: '2026-09-27T07:11:14.783Z'
+checkpoints:
+  - id: cp1
+    label: 格式与校验规则落地
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: fail-closed 与默认值边界核对
+    status: passed
+    verifier: auto
+assigned_to: herdr-io
+execution_report:
+  summary: >-
+    config v2 严格校验落地：新建 src/lib/config/ 5 模块（index/load/schema/validate/fields，最大 validate.ts 273 行），并将共享叶子
+    fs.js/errors.js 与 init.js/status.js 同名转为 .ts（为全域解除 .js 依赖）。编排会话独立实测三个场景：① 合法配置 node dist/cli.js status 退出 0；② 追加未知字段
+    unknown_probe → 退出 1 且输出 rejected field(s): unknown_probe；③ 删除必填 version → 退出 1 且输出 missing field(s):
+    version。默认值边界：代码默认仅 2 个（per_command_timeout_ms ?? 120000、max_output_bytes ?? 1048576），重构后保留在
+    gate/contract-document.ts:45/47，未新增任何缺失即兜底的默认值，其余字段缺失即 INVALID_CONTRACT（fail-closed 不被削弱）。config 模块不引用执行域与账本域。
+  started_at: '2026-09-27T07:11:13.685Z'
+  artifacts:
+    - src/lib/config/validate.ts
+    - src/lib/config/schema.ts
+    - src/lib/fs.ts
+    - src/lib/errors.ts
+    - src/lib/init.ts
+    - src/lib/status.ts
+    - test/config.test.js
+  notes: >-
+    范围收敛（编排会话决议）：loadConfig 实现在 runner.js（exec 域），本节点不越域，v2 校验只在 status/init 接线；runner 侧接线需求已如实上报。另发现 cli.js 的 catch
+    会把配置错误码统一重包成 LEDGER_UNAVAILABLE（退出码与字段名仍正确），需 l2_cli 对 INVALID_CONTRACT/INVALID_CONFIG/UNSUPPORTED_CONTRACT 直接
+    rethrow。行为变更已披露：未知键拒绝与未知 adapter 名拒绝是相对 0.3.0 的收紧，系本节点 DoD 要求。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T07:11:14.540Z'
+    note: 机械核对：六项 DoD 逐条有实测证据（三场景退出码与错误信息、2 个代码默认值定位、无新增默认值、行数上限 273、不引用 exec/ledger 域）。runner 侧接线属编排会话明确收敛出去的范围，不构成未达标。
+  completed_at: '2026-09-27T07:11:14.784Z'

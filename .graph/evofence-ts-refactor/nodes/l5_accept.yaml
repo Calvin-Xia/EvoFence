@@ -1,0 +1,65 @@
+id: l5_accept
+type: task
+label: 终局验收收口
+level: 5
+context: ctx_io
+status: passed
+plan:
+  description: 按图级验收标准收口：汇总结构校验、构建、测试、打包、文档与审计证据，确认全部工作流节点 passed 且证据齐备，确认未创建 tag、未真实发布。
+expected_outcome:
+  definition_of_done:
+    - 执行 graph validate 与 sp.mjs check-design --json，两者 errors 均为 0
+    - 执行 npm run build、npm test、npm run dep:check，三者退出码均为 0
+    - 图级 5 条验收标准逐条有证据，证据清单列入执行报告
+    - 全部工作流节点 status 为 passed，且 git tag 相对 0.3.0 无新增
+    - dist 产物与 d.ts 齐全，package.json 的 bin、exports、types、files 指向的路径均存在
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:15:23.753Z'
+updated_at: '2026-09-27T09:27:23.325Z'
+checkpoints:
+  - id: cp1
+    label: 证据汇总
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: 收口核对
+    status: passed
+    verifier: auto
+assigned_to: herdr-accept
+execution_report:
+  summary: >-
+    终局三层验收收口。**状态层**：graph status → 工作流 19 顶点全部 passed（本节点收口前 18/19，余 1 即自身）。**结构层**：graph validate → 0 错误 0 警告（29 节点/39
+    边，拓扑排序通过、无环）；sp.mjs check-design → 全部通过。**成果层（8 条成功标准逐条取证）**：① 拓扑：.graph/evofence-ts-refactor 建成，design_approved
+    by=Calvin-Xia，346 条审计事件可解释全部状态流转，无手改 YAML 痕迹（复核 agent 独立核对）；② TypeScript：npx tsc --noEmit exit 0；npm run build exit
+    0；dist 102 个 .js + 102 个 .d.ts + 102 个 .d.ts.map；package.json 的 bin/exports.types/exports.default/types/files 五个目标经
+    fs 逐个核验存在；dist/cli.js --help 与全子命令冒烟 6 条成功路径 exit 0、3 条失败路径 exit 1；**消费者视角双重验证**：全新目录 npm install file: 后 import
+    evofence 得到全部 18 个符号，且 strict+skipLibCheck:false 的 TS 工程从 dist/index.d.ts 类型解析 0 error；③ 模块化：src 下 102 个 .ts、0 个
+    .js；最大文件 350 行（scripts/check-src-policy.mjs 门禁 350 上限，已接入 check 与 CI）；npm run dep:check → modules 102 / edges 364 /
+    cycles 0 / acyclic true（复核已独立验证该脚本注入环后 cycles=1，非空跑）；0.3.0 的 858 行 runner.js → runner.ts 门面 + exec/ 21 模块；④ 测试：npm
+    test → 244 通过 0 失败；docs/test-coverage-map.md 覆盖 0.3.0 全部 12 个测试文件（基准经复核在 v0.3.0 实跑 152 例核对）；哈希链篡改负向测试存在（本节点另独立复现：未篡改
+    exit 0，注入伪造事件后 exit 1 且 valid=false、sequence=1、expected/observed hash 俱全）；⑤ 发布流水线：npm pack --dry-run → 418 文件 / dist
+    408 条 / .d.ts 204 / **src 条目 0 / test 条目 0**；npm publish --dry-run exit 0；ci.yml 与 publish.yml 含构建与类型检查步骤；OIDC
+    静态校验脚本 exit 0；**未真实发布**：git tag 仍为 v0.2.0/v0.2.1/v0.3.0（无 v0.4.0），npm registry 上 evofence 最高版本仍 0.3.0；⑥
+    文档：README/README.en/AGENTS/CHANGELOG 与实现一致（命令示例经真实 catalog 反查 0 越界；AGENTS 引用的 npm 脚本全部存在）；CHANGELOG 0.4.0 段标
+    BREAKING 且明写 ''ledger schema v2 — BREAKING, no migration'' 与升级说明；⑦ herdr 审计：复核 agent 从 pi session 元数据独立解析 16
+    个会话，模型全部在白名单内（14 个 deepseek-flash·high + 1 个 mimo-v2.6-pro·high + 1 个编排会话），并发峰值 4（≤4），10 个 worktree 会话与 git worktree
+    list 逐域对应；⑧ 内核不变式：哈希链逐字节口径未变（复核已逐字节复算）、篡改必失败（本轮独立复现）、config 与 ledger 两处 fail-closed 成立（run 路径已由整改 F1 接入）、文档四处明确否定
+    worktree 隔离＝OS 沙箱。
+  started_at: '2026-09-27T09:27:22.141Z'
+  artifacts:
+    - docs/refactor-final-review.md
+    - CHANGELOG.md
+    - docs/test-coverage-map.md
+    - scripts/check-src-policy.mjs
+    - dist/index.d.ts
+  notes: >-
+    复核 12 条发现全部闭环或记录，最高严重度「重要」，无阻塞级；整改未新增图节点。遗留提示（不构成本目标未达标）：① 10 个重构用 worktree 检出仍在磁盘上待清理；②
+    integrations/deepseek-harness 声明 evofence@0.4.0 而该版本尚未发布，待真实发布后即可安装。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T09:27:23.040Z'
+    note: >-
+      机械核对（手册 10.1 自裁）：状态层 19/19、结构层 validate 与 doctor 双 0 error、成果层 8 条成功标准逐条有命令级证据（含消费者双视角、串改双向、pack/publish
+      dry-run、tag 与 registry 双向未发布佐证）。主观项（ADR accept）已由用户裁决，无遗留待签项。
+  completed_at: '2026-09-27T09:27:23.325Z'

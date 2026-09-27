@@ -1,0 +1,4 @@
+id: e007
+source: l2_types
+target: l2_config
+type: depends_on

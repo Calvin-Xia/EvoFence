@@ -1,0 +1,31 @@
+id: l5_review
+type: task
+label: 独立交叉复核
+level: 5
+context: ctx_io
+status: pending
+plan:
+  description: 由执行者之外的第二双眼对 L2 至 L4 产物做双轴复核：规格轴对照成功标准与 DoD，惯例轴对照仓库规范与命令面一致性。输出逐条复核结论与 herdr 派单审计核对结果。
+expected_outcome:
+  definition_of_done:
+    - 成功标准 8 条逐条对照表存在，每条标注证据位置（命令输出、文件或执行报告条目）
+    - 复核结论覆盖 L2 至 L4 每个节点的产物，发现的问题有对应整改记录或豁免理由
+    - herdr 派单审计核对：pane 与 claim_by 映射一一对应、模型全部在白名单内、并行写操作均有 worktree 隔离证据
+    - 复核者与被复核节点的执行者不同（执行报告中记录复核来源）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:15:23.693Z'
+updated_at: '2026-09-27T06:15:23.693Z'
+checkpoints:
+  - id: cp1
+    label: 规格轴复核
+    status: pending
+    verifier: cross_review
+  - id: cp2
+    label: 惯例轴复核
+    status: pending
+    verifier: cross_review
+  - id: cp3
+    label: 派单审计核对
+    status: pending
+    verifier: cross_review

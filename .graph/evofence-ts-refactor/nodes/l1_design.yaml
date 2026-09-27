@@ -1,0 +1,54 @@
+id: l1_design
+type: task
+label: 拓扑定稿与人审通过
+level: 1
+context: ctx_io
+status: passed
+plan:
+  description: >-
+    把目标契约落成 .graph 拓扑：图级 entry/exit 与验收标准、5 个 bounded context、19 个工作流节点、34 条 depends_on 边、5 条 ADR 与各自 decides
+    边。跑通结构校验与质量体检后交人审，人审通过后本节点方可流转。
+expected_outcome:
+  definition_of_done:
+    - 执行 graph validate，输出 errors=0
+    - 执行 node C:/Users/Calvin-Xia/.pi/agent/skills/plumber-execute/scripts/sp.mjs check-design --json，输出 errors=0
+    - graph events 中存在 design_approved 审计事件，且事件时间不早于拓扑最后一次修改
+    - graph export --mermaid 产出的预览包含 29 个顶点与 39 条边（19 个工作流节点、5 个 context、5 个 ADR；34 条 depends_on 与 5 条 decides）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:13:32.925Z'
+updated_at: '2026-09-27T06:35:49.428Z'
+checkpoints:
+  - id: cp1
+    label: 结构校验通过
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: 质量体检通过
+    status: passed
+    verifier: auto
+  - id: cp3
+    label: 人审 approve
+    status: passed
+    verifier: human
+assigned_to: herdr-designer
+execution_report:
+  summary: >-
+    拓扑 design-validate-doctor-人审 全链路完成。图 evofence-ts-refactor 含 29 顶点/39 边（19 工作流 + 5 context + 5 ADR）单根 l1_recon 单汇
+    l5_accept 无环全可达。graph validate 0 error/0 warning；doctor check-design 全部通过；人审 approve
+    凭据已落（by=Calvin-Xia，design_approved 事件）；5 条 ADR 全部 accepted；设计冻结快照 2026-09-27t06-23-13-239z-88wgk6（69 文件）；预览
+    docs/topology.mmd 与 http://localhost:18734。
+  started_at: '2026-09-27T06:35:48.149Z'
+  artifacts:
+    - docs/topology.mmd
+    - .graph/evofence-ts-refactor/graph.yaml
+    - CONTEXT-MAP.md
+    - DECISIONS.md
+  notes: 偏离说明：设计师为让 DoD 可独立验证锚定了 11 个命令分组骨架并要求 ledger verify / status / report --json 三入口保留，收窄了完全破坏性重设计的自由度，已在人审时向用户披露并获批。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T06:35:49.194Z'
+    note: >-
+      机械核对：validate 0 error/0 warning、doctor 全部通过、design_approved 事件存在且晚于最后一次拓扑修改、Mermaid 含 29 顶点 39 边、cp3 人审 checkpoint
+      由用户对话批准。主观项（ADR accept）由用户裁决：5 条全部 accept。
+  completed_at: '2026-09-27T06:35:49.428Z'

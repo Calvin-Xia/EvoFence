@@ -1,0 +1,16 @@
+id: adr_0001
+type: adr
+label: ledger schema v2 破坏性变更且不提供迁移
+level: 1
+status: accepted
+attempts: 0
+max_attempts: 0
+created_at: '2026-09-27T06:16:56.119Z'
+updated_at: '2026-09-27T06:23:08.460Z'
+decision: ledger 记录 schema 升级到 v2，0.3.0 的账本数据不兼容且不提供迁移脚本；sha256 的 prev/hash 哈希链结构与 fail-closed 校验语义作为内核不变式保留，并以篡改负向测试锁定。
+background: 0.4.0 允许对 ledger schema 做破坏性重新设计；哈希链与 fail-closed 是产品内核不变式，重构后必须保留并被测试覆盖。旧数据不迁移是目标契约明确的范围边界。
+considered_options: >-
+  A 提供 0.3.0 到 0.4.0 的迁移脚本 → 落选：迁移面大且目标契约明确不提供旧数据迁移；B 破坏性 v2 加显式不兼容报错 → 选中：成本低且把 fail-closed 语义显性化；C 保留旧 schema 仅扩展字段 →
+  落选：旧结构约束新设计，类型层与判定面被迫兼容历史包袱
+why: 不迁移省掉一次性迁移代码与对应测试面；读取旧账本时显式报错比静默降级更符合 fail-closed 语义。
+consequences: 0.3.0 的账本在 0.4.0 下读取会显式失败，用户需自行归档旧账本；哈希链实现要靠负向测试守住；文档与 BREAKING 说明必须写明不兼容且不迁移。

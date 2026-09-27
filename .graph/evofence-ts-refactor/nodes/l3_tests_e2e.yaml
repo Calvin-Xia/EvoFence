@@ -1,0 +1,46 @@
+id: l3_tests_e2e
+type: task
+label: 端到端 CLI 冒烟与退出码断言
+level: 3
+context: ctx_io
+status: passed
+plan:
+  description: 建立端到端冒烟套件：对命令面清单中的每个子命令在临时目录中跑真实流程，断言退出码、--json 输出形状与产物文件清单。覆盖主链路与失败路径。
+expected_outcome:
+  definition_of_done:
+    - 执行端到端冒烟套件，退出码为 0
+    - 冒烟覆盖命令面清单中全部子命令（init、run、proposal、evidence、gate、ledger、diff、rollback、experiment、report、status 各组），每条含退出码断言
+    - 失败路径断言存在：非法配置与篡改账本场景下退出码非 0
+    - 冒烟在临时目录中运行，执行后仓库工作区 git status 无新增改动
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:45.686Z'
+updated_at: '2026-09-27T08:25:18.992Z'
+checkpoints:
+  - id: cp1
+    label: 主链路冒烟
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: 失败路径断言
+    status: passed
+    verifier: auto
+assigned_to: herdr-e2e
+execution_report:
+  summary: >-
+    端到端 CLI 冒烟套件建成：test-e2e/cli-flow.mjs（658 行，独立于 npm test）+ package.json 增加 test:e2e 脚本。编排会话独立运行：24 用例全通过、退出码 0。DoD
+    实证：① 覆盖 catalog.ts 中全部 15 个命令组——init(2)/run(3)/proposal inspect/evidence run(2)/gate/ledger
+    show|verify|recent|export/diff/rollback/experiment run(2)|export/report/status(2)，每条均断言退出码；② run 与 experiment
+    组用**桩适配器**跑通完整闭环（run 断言 ACCEPTED 退出 0），不是受控失败占位；③ 失败路径断言齐备：未知配置字段与缺必填项均断言 INVALID_CONFIG、篡改哈希链后 ledger verify 退出
+    1，另有 run 未知适配器 UNKNOWN_ADAPTER、基线不健康 BASELINE_UNHEALTHY、evidence 公检失败、experiment 缺 goal_file 等；④
+    冒烟全在临时目录运行，实测跑完后仓库工作区仅含本节点改动无残留（git status 佐证）；⑤ 未削弱既有断言、未删除用例。
+  started_at: '2026-09-27T07:54:33.252Z'
+  artifacts:
+    - test-e2e/cli-flow.mjs
+    - package.json
+  notes: 该套件与 npm test 分离（node --test 默认发现规则不会拾取 test-e2e/cli-flow.mjs），CI 归属见 l4_ci。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T08:25:18.715Z'
+    note: 机械核对：四项 DoD 逐条有编排会话实测证据（24 用例 0 失败、15 命令组全覆盖含强断言、两类失败路径含篡改账本、临时目录运行且仓库无残留）。
+  completed_at: '2026-09-27T08:25:18.993Z'

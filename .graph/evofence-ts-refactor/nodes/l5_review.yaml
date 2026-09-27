@@ -1,0 +1,65 @@
+id: l5_review
+type: task
+label: 独立交叉复核
+level: 5
+context: ctx_io
+status: passed
+plan:
+  description: 由执行者之外的第二双眼对 L2 至 L4 产物做双轴复核：规格轴对照成功标准与 DoD，惯例轴对照仓库规范与命令面一致性。输出逐条复核结论与 herdr 派单审计核对结果。
+expected_outcome:
+  definition_of_done:
+    - 成功标准 8 条逐条对照表存在，每条标注证据位置（命令输出、文件或执行报告条目）
+    - 复核结论覆盖 L2 至 L4 每个节点的产物，发现的问题有对应整改记录或豁免理由
+    - herdr 派单审计核对：pane 与 claim_by 映射一一对应、模型全部在白名单内、并行写操作均有 worktree 隔离证据
+    - 复核者与被复核节点的执行者不同（执行报告中记录复核来源）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:15:23.693Z'
+updated_at: '2026-09-27T09:25:24.697Z'
+checkpoints:
+  - id: cp1
+    label: 规格轴复核
+    status: passed
+    verifier: cross_review
+  - id: cp2
+    label: 惯例轴复核
+    status: passed
+    verifier: cross_review
+  - id: cp3
+    label: 派单审计核对
+    status: passed
+    verifier: cross_review
+assigned_to: herdr-review2
+execution_report:
+  summary: >-
+    独立交叉复核完成（复核 agent 未参与任何节点执行，claim_by herdr-review2）。结论：**需修订**——正面确认了 6 项最关键的声称（拓扑未被手改：19 节点状态全部可由 346
+    条事件解释；dep:check 非空跑：注入环后 cycles=1/acyclic=false；未真实发布：registry 仍 0.3.0 + 无 v0.4.0 tag + origin/main 落后 26
+    提交；模型白名单未破：从 pi session 元数据独立解析 16 个会话，14 个 deepseek-flash·high + 1 个 mimo-v2.6-pro·high + 1 个编排会话；无沙箱过度宣称；pack
+    无源码泄漏），并给出 F1-F12 共 12 条发现（4 条「重要」、无阻塞级）。复核产物：docs/refactor-final-review.md（46 KB，含 8 条成功标准逐条对照、L2-L4
+    逐节点惯例轴复核、派单审计独立核对、可复现取证命令清单）。**整改台账（三批并行，文件所有权互斥）**：R1 闭环 F1（run 路径接入 config v2 校验——现 status 与 run
+    对同一份含未知字段的文件给出完全一致的 INVALID_CONTRACT 与相同 rejected_fields）、F2（CONTRACT_DEFAULTS 成为超时默认值唯一真相源——省略该键时 evidence 退出
+    0、duration 401ms、stderr 0 字节，不再有 NaN→1ms 误杀与 TimeoutNaNWarning）、F4（移除 allowJs/checkJs 与 src/**/*.js include）、F11（新增
+    scripts/check-src-policy.mjs：src 不得有 .js、单文件不得超 350 行，已接入 check 与 CI）；R2 闭环 F3（金额/预算原语归一到 gate/budget.ts 单点声明、exec
+    侧改为 re-export 消除漂移；6 个未接线的 evaluate*Gate 显式标注为参考实现；补 5 条生产路径用例含预算耗尽与用量不可得）、F8a（StatusView 补 policy
+    并有形状用例）、F8b（GateJudgementBase 移入类型底座）、F10（死键证据串改为与 grep 事实一致）；R3 闭环 F5（派单文档如实记录 L2 四并发共用测试文件违规 6 处 + 新增合并前
+    touched-file 交集检查条款）、F6（回填 L3/L4 与复核角色台账、§3 改为真实 src/lib 布局）、F7（5 份 ADR + 5 份 context + CONTEXT-MAP.md +
+    DECISIONS.md 共 12 文件转为已跟踪，删除仓库根 nul）、F8c（写文件形态 --json 统一为 JSON 信封：report→{written,bytes}、ledger/experiment
+    export→{exported}，并补 manifest 驱动的防漏测）、F9（修正覆盖映射表的过期计数）。整改后主检出：npm run check 退出 0（src policy passed + acyclic + **244
+    用例 0 失败**）、npm run test:e2e 24/0。
+  started_at: '2026-09-27T08:39:11.169Z'
+  artifacts:
+    - docs/refactor-final-review.md
+    - docs/refactor-dispatch.md
+    - docs/test-coverage-map.md
+    - scripts/check-src-policy.mjs
+    - test/fix-config-wiring.test.js
+    - test/fix-gate-wiring.test.js
+    - test/fix-status-policy-shape.test.js
+  notes: 12 条发现全部有整改记录，无豁免项。整改未新增图节点：按本节点 DoD『发现的问题有对应整改记录』处理，未触及图结构。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T09:25:24.390Z'
+    note: >-
+      机械核对：四项 DoD 逐条有证据——8 条成功标准逐条对照表（复核报告 §2）、L2-L4 逐节点产物复核（§3）、派单审计独立核对（§4，含从 session 元数据独立解析的模型白名单与并发峰值
+      4）、复核者与执行者身份无交集（claim_by 无重复）。12 条发现全部闭环或记录，最高严重度为重要，无阻塞级。
+  completed_at: '2026-09-27T09:25:24.698Z'

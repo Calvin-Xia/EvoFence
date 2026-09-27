@@ -1,0 +1,49 @@
+id: l2_types
+type: task
+label: 共享类型契约层
+level: 2
+context: ctx_io
+status: passed
+plan:
+  description: 抽出零运行时依赖的共享类型契约层，定义 config、ledger 记录、门禁判定输入输出、执行结果、报告视图的公共类型，作为各领域模块的唯一类型底座。依赖方向单向指向最底层，不引用任何运行时代码。
+expected_outcome:
+  definition_of_done:
+    - 类型契约层模块只含类型与常量声明，不引用 dependencies 中的运行时依赖
+    - 执行 npx tsc --noEmit，退出码为 0
+    - 执行 npm run dep:check（模块依赖环检查），退出码为 0 且报告无环，不劣于 0.3.0 的有向无环基线
+    - 若改动 better-sqlite3 等原生依赖的加载时机，必须在执行报告中显式声明该契约变更并新增安装与加载测试
+    - 单文件行数 ≤350（逐文件行数清单列入执行报告）
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:01.040Z'
+updated_at: '2026-09-27T06:45:37.956Z'
+checkpoints:
+  - id: cp1
+    label: 类型契约抽取
+    status: passed
+    verifier: auto
+  - id: cp2
+    label: 依赖方向与无环核对
+    status: passed
+    verifier: auto
+assigned_to: herdr-base
+execution_report:
+  summary: >-
+    共享类型契约层落地：src/types/ 10 文件 1683 行（config 219 / evidence 125 / exec 304 / gate 257 / index 177 / ledger 169 /
+    proposal 118 / report 208 / shared 97 + README），全部 ≤350 行。四个并行域的共同底座已定形状：config（适配器配置 + v2
+    校验结果）、ledger（记录字段/事件常量/链校验结果）、gate（四门禁输入与判定结论 + 能力键）、exec（适配器结果/用量记账/worktree 元数据）、report（JSON
+    视图）。编排会话独立验证：src/types 下 import 全部为 import type 且零运行时依赖（grep 输出为证）；tsc --noEmit 0；build 后 dist/types/*.d.ts
+    存在；dep:check 27 模块 74 边 0 环；npm test 仍 152 通过 0 失败（未改变任何运行时行为）。
+  started_at: '2026-09-27T06:45:36.725Z'
+  artifacts:
+    - src/types/index.ts
+    - src/types/README.md
+    - dist/types/index.d.ts
+  notes: 类型形状从 0.3.0 实现抽取而非设计；payload_json 类弱类型处采用宽容类型并表示在类型层，避免伪造精度。
+  verification:
+    verdict: passed
+    checked_at: '2026-09-27T06:45:37.709Z'
+    note: >-
+      机械核对：单文件行数上限（实测最大 304）、零运行时依赖（grep import 全为 import type）、tsc 0、build 产出 d.ts、dep:check acyclic、npm test 152/0
+      未回归。DoD 四条逐条有实测证据。
+  completed_at: '2026-09-27T06:45:37.956Z'

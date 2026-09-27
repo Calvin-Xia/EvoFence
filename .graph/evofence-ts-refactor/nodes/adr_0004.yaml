@@ -1,0 +1,16 @@
+id: adr_0004
+type: adr
+label: TS 测试执行策略：编译后运行构建产物
+level: 1
+status: accepted
+attempts: 0
+max_attempts: 0
+created_at: '2026-09-27T06:17:29.019Z'
+updated_at: '2026-09-27T06:23:09.804Z'
+decision: npm test 以构建产物为被测对象：先执行构建产出 dist，再由 Node 内置测试 runner 运行编译后的测试产物；不依赖 Node 的实验性类型剥离，也不引入第三方 TS 运行器。
+background: TypeScript 测试有两条主流执行路径：Node 类型剥离直跑测试源码，或编译后跑构建产物。CI 矩阵覆盖 Node 22 与 24 且引擎下限为 22.13，执行策略必须在两个版本上行为一致。
+considered_options: >-
+  A Node 类型剥离直跑 TS 测试源码 → 落选：22.13 需实验性开关，行为随 Node 版本漂移，双版本矩阵难以一致；B 编译后跑构建产物 → 选中：与发布产物同源，Node 22 与 24 行为一致，零新增依赖；C 引入
+  tsx 等 TS 运行器作为 devDependency → 落选：多一条测试期工具链与版本耦合
+why: 被测对象与发布产物同源，测试顺带验证 dist 的可用性；不押注实验性能力，也不为测试再引一条工具链。
+consequences: npm test 前置构建步骤，CI 顺序固定为构建在测试之前；测试与源码的对应关系经由构建产物，排障依赖 source map 与 declarationMap。

@@ -1,0 +1,31 @@
+id: l2_config
+type: task
+label: config v2 校验与 fail-closed
+level: 2
+context: ctx_io
+status: pending
+plan:
+  description: >-
+    重新设计 config v2 格式（破坏性变更），实现严格校验与 fail-closed：未知字段、缺失必填项、类型不符一律报错退出，不猜测默认值。对照 docs/refactor-inventory-review.md
+    的复核结论锁定代码默认值边界。
+expected_outcome:
+  definition_of_done:
+    - 合法配置下执行 evofence status，退出码为 0 且输出与配置内容一致
+    - 含未知字段的配置下执行同一命令，退出码非 0 且错误信息列出被拒字段名
+    - 缺失必填项的配置下执行同一命令，退出码非 0 且错误信息列出缺失项
+    - 不为缺失字段新增代码默认值：仅保留 per_command_timeout_ms 与 max_output_bytes 两个现有代码默认，其余字段缺失即 INVALID_CONTRACT 报错
+    - 上述 2 个代码默认值与其余 fail-closed 字段的语义逐条有测试锁定（npm test 中配置用例 0 failures）
+    - config 模块单文件行数 ≤350，不引用执行域与账本域模块
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:14.273Z'
+updated_at: '2026-09-27T06:14:14.273Z'
+checkpoints:
+  - id: cp1
+    label: 格式与校验规则落地
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: fail-closed 与默认值边界核对
+    status: pending
+    verifier: auto

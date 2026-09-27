@@ -1,0 +1,30 @@
+id: l4_docs
+type: task
+label: 文档同步与 BREAKING 说明
+level: 4
+context: ctx_io
+status: pending
+plan:
+  description: >-
+    同步 README.md、README.en.md、AGENTS.md、CHANGELOG.md 与 0.4.0 实现：命令面、config 格式、ledger schema 的破坏性变更逐项写明。CHANGELOG 0.4.0
+    条目打 BREAKING 标记并声明旧 ledger 与旧 config 不兼容且不提供迁移。
+expected_outcome:
+  definition_of_done:
+    - README.md 与 README.en.md 中的命令示例逐条存在于新命令面（可由命令面清单复核）
+    - AGENTS.md 描述的项目结构、构建与测试命令与仓库现状一致（npm run build、npm test 等命令存在）
+    - CHANGELOG.md 的 0.4.0 条目含 BREAKING 标注，并写明旧 ledger 与旧 config 不兼容且不提供迁移
+    - 文档不出现未实现的功能描述（抽查命令面与文档条目一一对应）
+    - l2_gate 与 l2_config 的死键处置结论（删除或标注未生效）在文档中有对应说明
+attempts: 0
+max_attempts: 3
+created_at: '2026-09-27T06:14:58.805Z'
+updated_at: '2026-09-27T06:14:58.805Z'
+checkpoints:
+  - id: cp1
+    label: 文档逐项同步
+    status: pending
+    verifier: auto
+  - id: cp2
+    label: BREAKING 与死键说明核对
+    status: pending
+    verifier: auto
