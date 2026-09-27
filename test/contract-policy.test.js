@@ -2,8 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseYamlText, validateContract } from '../src/lib/contract.js';
-import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../src/lib/policy.js';
+import { parseYamlText, validateContract } from '../dist/lib/contract.js';
+import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../dist/lib/policy.js';
+import {
+  DEAD_CONTRACT_KEYS,
+  capabilitySetting,
+  decisionForCandidateCheck,
+  evaluateBudgetGate,
+  evaluateCapabilityGate,
+  evaluateContractGate,
+  evaluateEvidenceGate,
+  evaluateIsolationGate,
+  evaluatePolicyGate,
+  isCapabilityAllowed,
+  isDeadContractKey,
+  parseNumericBudget,
+  remainingTokenBudget,
+  usdFromMicros,
+  usdToMicros,
+  verdictForEvidence,
+  verdictForRisk,
+} from '../dist/lib/gate/index.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 
@@ -66,4 +85,179 @@ test('capability requests default to denied and risk grows with surface', async 
   const small = assessRisk(['src/a.js'], { requested_capabilities: [], expected_effect: { primary_metric: contract.objective.name } }, contract);
   const broad = assessRisk(Array.from({ length: 22 }, (_, index) => `src/${index}.js`), { requested_capabilities: [], expected_effect: { primary_metric: contract.objective.name } }, contract);
   assert.ok(broad.score > small.score);
+});
+
+/* l2_gate DoD evidence. ADDITIVE: the six tests above are unchanged apart from their import
+ * specifiers (`../src/...` -> `../dist/...`, L2 R4 / ADR-0004). */
+
+const templateContract = async () => parseYamlText(await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8'), 'contract.yaml');
+
+const caseSummary = (passed, score) => ({
+  command_sha256: 'a'.repeat(64), passed, result: passed ? 'PASS' : 'FAIL', exit_code: passed ? 0 : 1, duration_ms: 1,
+  stdout_sha256: 'b'.repeat(64), stderr_sha256: 'c'.repeat(64), stdout_bytes: 1, stderr_bytes: 1, hidden: false,
+  ...(score === undefined ? {} : { score }),
+});
+
+const evidenceBundle = (overrides = {}) => ({
+  schema_version: 1, run_id: 'run-1', iteration: 1, phase: 'candidate', candidate_sha: null,
+  started_at: '2026-01-01T00:00:00.000Z', duration_ms: 1, public: [caseSummary(true)],
+  private: { total: 0, passed: 0, failed: 0, cases: [] }, objective: null,
+  all_public_passed: true, all_private_within_tolerance: true, ...overrides,
+});
+
+const objectiveBundle = (score, overrides = {}) => evidenceBundle({ objective: { ...caseSummary(true, score), configured: true, valid_score: true }, ...overrides });
+
+const budgetLimits = { max_iterations: 20, max_wall_clock_ms: 3600000, max_failed_candidates: 5, max_consecutive_no_improvement: 3, max_tokens: null, max_usd: null };
+const budgetBase = { limits: budgetLimits, observed_tokens: null, observed_usd_micros: null, cost_total_unknown: false, deadline_at: 1000, failed_candidates: 0, consecutive_no_improvement: 0, can_terminate_process_tree: true };
+
+const metadata = { path: '/w/.git', contents: new Uint8Array([1]), sha256: 'a'.repeat(64) };
+const isolationBase = { expected_metadata: metadata, observed_metadata: { ...metadata }, holdout_ignored: undefined, unisolated_agent_accepted: false, readable_holdout_accepted: false, adapter_requires_sandbox: false };
+
+// DoD 3 — every judgement face refuses, and names the missing input, instead of passing.
+test('gate judgement entries fail closed and name the missing input', () => {
+  const policy = evaluatePolicyGate(undefined);
+  assert.deepEqual([policy.passed, policy.reason, policy.missing], [false, 'GATE_INPUT_MISSING', ['input']]);
+  const contract = evaluateContractGate(null);
+  assert.deepEqual([contract.passed, contract.drifted, contract.missing], [false, true, ['input']]);
+  assert.deepEqual(evaluateContractGate({ initial: { contract: 'a' }, current: { contract: 'a' } }).missing, ['initial.holdout', 'initial.config', 'current.holdout', 'current.config']);
+  const budget = evaluateBudgetGate(undefined);
+  assert.deepEqual([budget.passed, budget.exhausted, budget.missing], [false, false, ['input']]);
+  const isolation = evaluateIsolationGate(undefined);
+  assert.deepEqual([isolation.passed, isolation.isolated, isolation.missing], [false, false, ['input']]);
+  const evidence = evaluateEvidenceGate(null);
+  assert.deepEqual([evidence.passed, evidence.evidence_ok, evidence.objective_valid], [false, false, false]);
+  const capability = evaluateCapabilityGate({ proposal: { requested_capabilities: ['network'] }, contract: null });
+  assert.deepEqual([capability.passed, capability.allowed, capability.missing], [false, false, ['contract']]);
+  assert.deepEqual(capability.requests, [{ capability: 'network', allowed: false, scope: null, reason: 'not_allowed_by_contract' }]);
+});
+
+// DoD 1 + 3 — the contract gate is an independent entry point over the three policy digests.
+test('contract gate attributes drift to the changed policy document', () => {
+  const hashes = { contract: 'a'.repeat(64), holdout: 'b'.repeat(64), config: 'c'.repeat(64) };
+  const stable = evaluateContractGate({ initial: hashes, current: { ...hashes } }, 'PROPOSAL');
+  assert.deepEqual([stable.passed, stable.drifted, stable.changed], [true, false, null]);
+  const drifted = evaluateContractGate({ initial: hashes, current: { ...hashes, holdout: 'd'.repeat(64) } }, 'RUN');
+  assert.deepEqual([drifted.passed, drifted.changed, drifted.reason], [false, 'holdout', 'POLICY_CHANGED_DURING_RUN']);
+});
+
+// DoD 4 — `capabilities.external_api` is a live gate reached through the dynamic contract table.
+test('capabilities.external_api is a live dynamic-table capability gate', async () => {
+  const template = await templateContract();
+  assert.equal(template.capabilities.external_api, 'deny');
+  assert.equal(capabilitySetting('external_api', template), 'deny');
+  assert.equal(isCapabilityAllowed(capabilitySetting('external_api', template)), false);
+  const denied = assessCapabilities({ requested_capabilities: [{ capability: 'external_api', scope: 'openai' }] }, template);
+  assert.equal(denied.allowed, false);
+  assert.deepEqual(denied.requests, [{ capability: 'external_api', allowed: false, scope: 'openai', reason: 'not_allowed_by_contract' }]);
+  const permissive = { ...template, capabilities: { ...template.capabilities, external_api: 'allow' } };
+  assert.equal(assessCapabilities({ requested_capabilities: ['external_api'] }, permissive).requests[0].reason, 'policy_allow');
+  assert.equal(evaluateCapabilityGate({ proposal: { requested_capabilities: ['external_api'] }, contract: permissive }).passed, true);
+  assert.equal(evaluateCapabilityGate({ proposal: { requested_capabilities: ['external_api'] }, contract: template }).reason, 'CAPABILITY_DENIED');
+});
+
+// DoD 5 — the three template-only keys are documented as unwired, not left as fake gates.
+test('template-only contract keys are documented as unwired, not left as fake gates', async () => {
+  const text = await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8');
+  assert.match(text, /require_proposal: true/);
+  assert.match(text, /require_claims: true/);
+  assert.match(text, /mode: evidence_commands_only/);
+  assert.deepEqual(DEAD_CONTRACT_KEYS.map((entry) => entry.path), ['acceptance.require_proposal', 'acceptance.require_claims', 'capabilities.shell.mode']);
+  assert.ok(DEAD_CONTRACT_KEYS.every((entry) => entry.evidence.length > 0));
+  assert.equal(isDeadContractKey('capabilities.shell.mode'), true);
+  assert.equal(isDeadContractKey('capabilities.external_api'), false);
+  const template = await templateContract();
+  const flipped = { ...template, acceptance: { ...template.acceptance, require_proposal: false, require_claims: false }, capabilities: { ...template.capabilities, shell: { mode: 'evidence_commands_only_disabled' } } };
+  assert.doesNotThrow(() => validateContract(flipped));
+  assert.equal(assessCapabilities({ requested_capabilities: ['shell'] }, template).allowed, false);
+  assert.equal(assessCapabilities({ requested_capabilities: ['shell'] }, flipped).allowed, false);
+});
+
+// DoD 1 — the budget thresholds are pure, and accounting stays in the exec domain.
+test('budget judgement keeps the 0.3.0 thresholds and fails closed on missing counters', () => {
+  assert.equal(parseNumericBudget(undefined, 20, '--iterations'), 20);
+  assert.equal(parseNumericBudget(null, 3600000, '--max-wall-clock-ms'), 3600000);
+  assert.equal(parseNumericBudget('3', 20, '--iterations'), 3);
+  assert.throws(() => parseNumericBudget(0, 20, '--iterations'), /positive integer/);
+  assert.throws(() => parseNumericBudget(21, 20, '--iterations'), /cannot exceed the contract limit/);
+  assert.equal(usdToMicros(0.000001), 1);
+  assert.equal(usdToMicros(1.2345675), 1234567);
+  assert.equal(usdToMicros(1.2345675, 'ceil'), 1234568);
+  assert.equal(usdToMicros(0.1 + 0.2), 300000);
+  assert.equal(usdFromMicros(1500000), 1.5);
+  assert.throws(() => usdToMicros(-1), /finite and non-negative/);
+  assert.throws(() => usdToMicros(1e21), /safe accounting range/);
+  assert.equal(remainingTokenBudget(null, 5), null);
+  assert.equal(remainingTokenBudget(10, 4), 6);
+
+  assert.equal(evaluateBudgetGate(budgetBase, 500).passed, true);
+  const tokens = evaluateBudgetGate({ ...budgetBase, limits: { ...budgetLimits, max_tokens: 10 }, observed_tokens: 10 }, 500);
+  assert.deepEqual([tokens.exhausted, tokens.metric, tokens.reason], [true, 'tokens', 'TOKEN_BUDGET_REACHED']);
+  const usd = evaluateBudgetGate({ ...budgetBase, limits: { ...budgetLimits, max_usd: 1.5 }, observed_usd_micros: usdToMicros(1.5) }, 500);
+  assert.deepEqual([usd.metric, usd.reason], ['estimated_usd', 'USD_LIMIT_REACHED']);
+  assert.equal(evaluateBudgetGate(budgetBase, 1000).metric, 'wall_clock_ms');
+  assert.equal(evaluateBudgetGate({ ...budgetBase, failed_candidates: 5 }, 500).reason, 'MAX_FAILED_CANDIDATES');
+  assert.equal(evaluateBudgetGate({ ...budgetBase, consecutive_no_improvement: 3 }, 500).reason, 'MAX_CONSECUTIVE_NO_IMPROVEMENT');
+
+  const noProcessControl = evaluateBudgetGate({ ...budgetBase, limits: { ...budgetLimits, max_tokens: 10 }, observed_tokens: 0, can_terminate_process_tree: false }, 500);
+  assert.deepEqual([noProcessControl.reason, noProcessControl.exhausted], ['UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', false]);
+  const missingCounter = evaluateBudgetGate({ ...budgetBase, limits: { ...budgetLimits, max_tokens: 10 } }, 500);
+  assert.deepEqual([missingCounter.passed, missingCounter.reason, missingCounter.missing], [false, 'GATE_INPUT_MISSING', ['observed_tokens']]);
+  const unknownCost = evaluateBudgetGate({ ...budgetBase, limits: { ...budgetLimits, max_usd: 1 }, observed_usd_micros: 0, cost_total_unknown: true }, 500);
+  assert.equal(unknownCost.reason, 'USD_USAGE_UNAVAILABLE');
+});
+
+// DoD 1 + 3 — the isolation gate compares pointer digests and refuses one-sided metadata.
+test('isolation gate fails closed on worktree metadata and holdout opt-ins', () => {
+  assert.equal(evaluateIsolationGate(isolationBase).passed, true);
+  const changed = evaluateIsolationGate({ ...isolationBase, observed_metadata: { ...metadata, sha256: 'b'.repeat(64) } });
+  assert.deepEqual([changed.passed, changed.reason, changed.metadata_restored], [false, 'WORKTREE_METADATA_CHANGED', true]);
+  assert.equal(evaluateIsolationGate({ ...isolationBase, observed_metadata: null }).reason, 'WORKTREE_METADATA_CHANGED');
+  assert.equal(evaluateIsolationGate({ ...isolationBase, expected_metadata: null }).reason, 'WORKTREE_METADATA_UNEXPECTED');
+  const unreadable = evaluateIsolationGate({ ...isolationBase, observed_metadata: { path: '/w/.git', sha256: '' } });
+  assert.deepEqual([unreadable.passed, unreadable.missing], [false, ['observed_metadata']]);
+  assert.equal(evaluateIsolationGate({ ...isolationBase, adapter_requires_sandbox: true }).reason, 'SANDBOX_REQUIRED');
+  assert.equal(evaluateIsolationGate({ ...isolationBase, holdout_ignored: true }).reason, 'PRIVATE_ORACLE_READABLE');
+  assert.equal(evaluateIsolationGate({ ...isolationBase, holdout_ignored: false, readable_holdout_accepted: true }).reason, 'HOLDOUT_NOT_IGNORED');
+});
+
+// DoD 1 + 3 — the evidence gate recomputes the public verdict instead of trusting the bundle flag.
+test('evidence gate recomputes public pass and refuses unreadable objective scores', () => {
+  const input = (baseline, candidate, overrides = {}) => ({ baseline, candidate, tolerance: 0, direction: 'maximize', min_delta: 0.01, ...overrides });
+  const passing = evaluateEvidenceGate(input(objectiveBundle(0.5), objectiveBundle(0.6)));
+  assert.deepEqual([passing.passed, passing.evidence_ok], [true, true]);
+  assert.ok(Math.abs(passing.comparison.improvement - 0.1) < 1e-9);
+
+  const inconsistent = evaluateEvidenceGate(input(objectiveBundle(0.5), { ...objectiveBundle(0.6), public: [caseSummary(false)] }));
+  assert.deepEqual([inconsistent.passed, inconsistent.reason], [false, 'EVIDENCE_BUNDLE_INCONSISTENT']);
+  assert.equal(evaluateEvidenceGate(input(objectiveBundle(0.5), evidenceBundle({ public: [caseSummary(false)], all_public_passed: false }))).reason, 'PUBLIC_TEST_FAILURE');
+  const privateFailure = evaluateEvidenceGate(input(objectiveBundle(0.5), objectiveBundle(0.6, { private: { total: 1, passed: 0, failed: 1, cases: [{ case: 1, result: 'FAIL', exit_code: 1, passed: false, duration_ms: 1 }] } })));
+  assert.equal(privateFailure.reason, 'HIDDEN_REGRESSION');
+  const invalidScore = evaluateEvidenceGate(input(objectiveBundle(0.5), objectiveBundle(0.6, { objective: { ...caseSummary(true, 0.6), configured: true, valid_score: false } })));
+  assert.deepEqual([invalidScore.reason, invalidScore.objective_valid], ['OBJECTIVE_SCORE_INVALID', false]);
+  assert.equal(evaluateEvidenceGate(input(objectiveBundle(0.6), objectiveBundle(0.6001))).reason, 'NO_PRACTICAL_IMPROVEMENT');
+
+  const missing = verdictForEvidence(evaluateEvidenceGate(undefined), { score: 0.1, band: 'LOW', reasons: [] });
+  assert.deepEqual([missing.decision, missing.reason], ['QUARANTINE', 'GATE_INPUT_MISSING']);
+  const high = verdictForEvidence(passing, { score: 0.8, band: 'HIGH', reasons: [] });
+  assert.deepEqual([high.decision, high.reason], ['ESCALATE', 'HIGH_CHANGE_RISK']);
+  assert.equal(verdictForEvidence(passing, null).reason, 'RISK_ASSESSMENT_MISSING');
+  assert.equal(verdictForEvidence(passing, { score: 0.05, band: 'LOW', reasons: [] }).reason, 'ALL_REQUIRED_EVIDENCE_PASSED');
+});
+
+// DoD 1 — the path-policy and refusal-to-decision tables are independent entry points.
+test('policy gate and candidate-check verdicts keep the 0.3.0 mapping', async () => {
+  const contract = await templateContract();
+  const clean = evaluatePolicyGate({ contract, changed_paths: ['src/feature.js'] });
+  assert.deepEqual([clean.passed, clean.violations], [true, []]);
+  const dirty = evaluatePolicyGate({ contract, changed_paths: ['src/feature.js', 'test/gate.test.js'] });
+  assert.deepEqual([dirty.passed, dirty.reason], [false, 'POLICY_VIOLATION']);
+  assert.deepEqual(dirty.violations, [{ path: 'test/gate.test.js', category: 'protected_path' }]);
+  assert.equal(decisionForCandidateCheck('CAPABILITY_VIOLATION'), 'ESCALATE');
+  assert.equal(decisionForCandidateCheck('POLICY_VIOLATION'), 'QUARANTINE');
+  assert.equal(decisionForCandidateCheck('EVIDENCE_MODIFIED_CANDIDATE'), 'QUARANTINE');
+  assert.equal(decisionForCandidateCheck('UNDECLARED_CHANGE'), 'REJECT');
+  assert.equal(verdictForRisk('CRITICAL').decision, 'QUARANTINE');
+  assert.equal(verdictForRisk('HIGH').decision, 'ESCALATE');
+  assert.equal(verdictForRisk('MEDIUM').decision, 'ACCEPT');
+  assert.equal(verdictForRisk('LOW').reason, 'ALL_REQUIRED_EVIDENCE_PASSED');
 });
