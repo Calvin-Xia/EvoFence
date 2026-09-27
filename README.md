@@ -141,7 +141,7 @@ evofence diff <generation-id> [--json]
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
 
-`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true，文本输出会显式标注截断）。输出前会先校验账本哈希链，并将 `generations` 行与哈希链上的 `generation.accepted` / `candidate.accepted` 记录交叉比对，链断裂或元数据不一致时以 `LEDGER_CORRUPT` 失败。展示的证据与提案绑定到验收记录的 `evidence_artifact` 与 `proposal_sha256`（验收需有唯一的前置 ACCEPT gate.decision 且绑定与基线证据通过其门（分数有效、增量达到契约 `min_delta`）；目标分数与增量绑定到重算的门证据，提案摘要会对其内容重算，增量基线取自已校验且与当前父提交成链的前置证据；验收之后追加的记录不会被当作其门证据、提案、基线或契约，重复、缺失或不可验证的链接视为歧义拒绝，且所有关联记录的 `base_sha` 必须等于已接受的父提交），链接断裂或有歧义时同样以 `LEDGER_CORRUPT` 失败（无这两个字段的历史验收记录保留 run/iteration 回退）。`diff_sha256` 由 Git 现场重算（口径为 `git diff --binary parent_sha..sha`，diff 属性钉在新一代的树上，主工作树的 `.gitattributes` 不会帩曲 diff 与哈希；属性钉住需要 Git 2.42 或更新版本，旧版 Git 会明确报错而不是静默跳过），与账本记录的 `diff_sha256_recorded` 比对，结果记入 `diff_sha256_matches`（账本无记录时为 `null`），不一致会在文本输出中标注。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现（没有 `candidate.accepted` 事件的新一代会标注 `not accepted`），证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
+`evofence diff <generation-id>` 输出某个新一代的审计视图：新一代标识、短 SHA 与目标增量、变更路径列表、逐条证据检查（`id kind result`），最后是 `parent_sha..sha` 的统一 diff（上限 200 KiB，截断时 `diff_truncated` 为 true，文本输出会显式标注截断）。输出前会先校验账本哈希链，并将 `generations` 行与哈希链上的 `generation.accepted` / `candidate.accepted` 记录交叉比对，链断裂或元数据不一致时以 `LEDGER_CORRUPT` 失败。展示的证据与提案绑定到验收记录的 `evidence_artifact` 与 `proposal_sha256`（验收需有唯一的前置 ACCEPT gate.decision 且绑定与基线证据通过其门（分数有效、增量达到契约 `min_delta`）；目标分数与增量绑定到重算的门证据，提案摘要会对其内容重算，增量基线取自已校验且与当前父提交成链的前置证据；验收之后追加的记录不会被当作其门证据、提案、基线或契约，重复、缺失或不可验证的链接视为歧义拒绝，且所有关联记录的 `base_sha` 必须等于已接受的父提交），链接断裂或有歧义时同样以 `LEDGER_CORRUPT` 失败（无这两个字段的历史验收记录保留 run/iteration 回退）。`diff_sha256` 由 Git 现场重算（口径为 `git diff --binary parent_sha..sha`，diff 属性钉在新一代的树上，主工作树的 `.gitattributes` 不会扭曲 diff 与哈希；属性钉住需要 Git 2.42 或更新版本，旧版 Git 会明确报错而不是静默跳过），与账本记录的 `diff_sha256_recorded` 比对，结果记入 `diff_sha256_matches`（账本无记录时为 `null`），不一致会在文本输出中标注。加 `--json` 会以格式化 JSON 输出同一份报告；`objective` 与 `evidence` 仅在 ledger 中存在对应记录时出现（没有 `candidate.accepted` 事件的新一代会标注 `not accepted`），证据只包含检查 id、类型和结果，不包含命令文本或输出内容。
 
 ```sh
 evofence diff g-run-20260101120000-abcd1234-i01
@@ -236,6 +236,14 @@ npm pack --dry-run   # 查看发布内容
 消费者拿到类型的方式：`import { runEvolution, Ledger } from 'evofence'` 由 `exports["."].types` 解析到 `dist/index.d.ts`；公共 API 就是 `src/index.ts` 重新导出的 18 个符号。`npm pack --dry-run` 可确认 tarball 内只有 dist 形态。
 
 研究报告源文件 `docs/deep-research-report.md` 不会包含在 npm 包中。
+
+### 拓扑驱动的开发方式
+
+0.4.0 这次重构由 [Super Plumber](https://github.com/LUKAWI/super-plumber) 驱动：它把需求拆成带依赖、门禁与 ADR 管辖的拓扑图，本仓库的 19 个工作流节点、5 份 ADR 和全部验收记录都在 `.graph/` 里。
+
+- `.graph/` 是真相源。根目录的 `CONTEXT-MAP.md`、`DECISIONS.md`，以及 `docs/adr/`、`docs/contexts/`、`docs/topology.mmd` 都是它的**生成视图**，手改会被下一次导出覆盖。
+- 重新导出：`graph export --docs --graph evofence-ts-refactor`；只检查是否漂移：`graph export --docs --check --graph evofence-ts-refactor`。
+- 这些命令需要单独安装的 Super Plumber CLI（`npm install --global @lukawi/super-plumber`）。它不是本仓库的依赖，`npm run check` 与 CI 都不需要它。
 
 ## 发布
 

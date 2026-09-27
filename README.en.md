@@ -235,6 +235,14 @@ Consumers get types through `exports["."].types`, which resolves to `dist/index.
 
 The research source document `docs/deep-research-report.md` is not included in the npm package.
 
+### Topology-driven development
+
+The 0.4.0 rewrite was driven by [Super Plumber](https://github.com/LUKAWI/super-plumber), which turns a requirement into a topology graph with dependencies, gates and ADR jurisdiction. This repository's 19 workflow nodes, 5 ADRs and the whole acceptance record live in `.graph/`.
+
+- `.graph/` is the source of truth. `CONTEXT-MAP.md`, `DECISIONS.md` at the repository root, plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd`, are **generated views** of it — editing them by hand is overwritten on the next export.
+- Re-export with `graph export --docs --graph evofence-ts-refactor`; drift-check only with `graph export --docs --check --graph evofence-ts-refactor`.
+- Those commands need the separately installed Super Plumber CLI (`npm install --global @lukawi/super-plumber`). It is not a dependency of this repository, and neither `npm run check` nor CI requires it.
+
 ## Publishing
 
 The npm package `evofence` uses GitHub Actions Trusted Publishing (OIDC). Its trusted publisher is configured for owner `Calvin-Xia`, repository `EvoFence`, workflow file `publish.yml`, with no GitHub Environment. No `NPM_TOKEN` is needed.
