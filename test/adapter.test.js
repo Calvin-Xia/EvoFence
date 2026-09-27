@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, piArgs, runAgentAdapter } from '../src/lib/adapter.js';
+import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, piArgs, runAgentAdapter } from '../dist/lib/adapter.js';
 
 test('Pi strategy loads one explicit EvoFence extension while keeping extension discovery disabled', () => {
   const extensionPath = 'C:/evofence/src/lib/pi-tool-strategy-extension.js';

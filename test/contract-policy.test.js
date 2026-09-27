@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseYamlText, validateContract } from '../src/lib/contract.js';
-import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../src/lib/policy.js';
+import { parseYamlText, validateContract } from '../dist/lib/contract.js';
+import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../dist/lib/policy.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 

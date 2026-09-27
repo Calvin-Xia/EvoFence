@@ -1,9 +1,22 @@
+/**
+ * `evofence init`: repository scaffolding.
+ *
+ * Converted from `src/lib/init.js` (L2 io domain, node `l2_config`). The only export,
+ * `initializeRepository`, keeps its signature, return shape, and the "never overwrite an
+ * existing file" behavior.
+ *
+ * WHAT IS NEW HERE (node `l2_config`): after the scaffolding exists, both policy files are run
+ * through the v2 validator. `init` therefore cannot leave a repository whose own
+ * `contract.yaml` / `config.yaml` would be rejected on the next `status` — a broken template
+ * fails at creation time instead of at the first read.
+ */
 import { copyFile, constants, mkdir, lstat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { repositoryRoot } from './git.js';
-import { EvoFenceError, invariant } from './errors.js';
+import { invariant } from './errors.js';
 import { Ledger, ledgerPath } from './ledger.js';
+import { POLICY_FILES, assertValidReport, validatePolicyFileSync } from './config/index.js';
 
 const templates = fileURLToPath(new URL('../../templates/', import.meta.url));
 
@@ -25,7 +38,7 @@ adapters:
     model: null
 `;
 
-const schemaFiles = {
+const schemaFiles: Record<string, unknown> = {
   'proposal.schema.json': {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     title: 'EvoFence Proposal',
@@ -74,26 +87,57 @@ const schemaFiles = {
   },
 };
 
-async function ensureDirectorySafe(root, directory) {
+/** `err.code` for a non-`Error` throw. */
+function errorCode(error: unknown): string | undefined {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === 'string' ? code : undefined;
+  }
+  return undefined;
+}
+
+async function ensureDirectorySafe(root: string, directory: string): Promise<void> {
   await mkdir(directory, { recursive: true });
   const info = await lstat(directory);
   invariant(info.isDirectory() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to initialize through a symbolic link: ${directory}`);
   invariant(path.resolve(directory).startsWith(`${path.resolve(root)}${path.sep}`), 'PATH_ESCAPE', `Initialization path escapes repository: ${directory}`);
 }
 
-async function copyIfMissing(source, destination) {
+async function copyIfMissing(source: string, destination: string): Promise<boolean> {
   try {
     const info = await lstat(destination);
     invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${destination}`);
     return false;
   } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
+    if (errorCode(error) !== 'ENOENT') throw error;
   }
   await copyFile(source, destination, constants.COPYFILE_EXCL);
   return true;
 }
 
-export async function initializeRepository(cwd) {
+/** Ensure one initialization file exists and is a regular file; returns `true` when created. */
+async function ensureFile(destination: string, contents: string): Promise<boolean> {
+  try {
+    const info = await lstat(destination);
+    invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${destination}`);
+    return false;
+  } catch (error) {
+    if (errorCode(error) !== 'ENOENT') throw error;
+  }
+  await writeFile(destination, contents, { flag: 'wx', mode: 0o600 });
+  return true;
+}
+
+export interface InitializationResult {
+  /** Absolute repository root. */
+  root: string;
+  /** Repository-relative paths created by this call. */
+  created: string[];
+  /** `true` when every control-plane file already existed. */
+  existing: boolean;
+}
+
+export async function initializeRepository(cwd: string): Promise<InitializationResult> {
   const root = await repositoryRoot(cwd);
   const directory = path.join(root, '.evofence');
   await ensureDirectorySafe(root, directory);
@@ -101,8 +145,8 @@ export async function initializeRepository(cwd) {
     await ensureDirectorySafe(root, path.join(directory, name));
   }
 
-  const created = [];
-  const files = [
+  const created: string[] = [];
+  const files: Array<[string, string]> = [
     ['contract.yaml', path.join(templates, 'contract.yaml')],
     ['private/holdout.yaml', path.join(templates, 'private-holdout.yaml')],
     ['prompts/proposer.md', path.join(templates, 'proposer.md')],
@@ -111,35 +155,12 @@ export async function initializeRepository(cwd) {
   for (const [relative, source] of files) {
     if (await copyIfMissing(source, path.join(directory, relative))) created.push(path.join('.evofence', relative));
   }
-  const config = path.join(directory, 'config.yaml');
-  try {
-    const info = await lstat(config);
-    invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${config}`);
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-    await writeFile(config, configTemplate, { flag: 'wx', mode: 0o600 });
-    created.push('.evofence/config.yaml');
-  }
-  const ignore = path.join(directory, '.gitignore');
+  if (await ensureFile(path.join(directory, 'config.yaml'), configTemplate)) created.push('.evofence/config.yaml');
   const ignoreContent = 'ledger.sqlite*\nartifacts/\nprivate/\nout/\nactive-run.json\n';
-  try {
-    const info = await lstat(ignore);
-    invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${ignore}`);
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-    await writeFile(ignore, ignoreContent, { flag: 'wx', mode: 0o600 });
-    created.push('.evofence/.gitignore');
-  }
+  if (await ensureFile(path.join(directory, '.gitignore'), ignoreContent)) created.push('.evofence/.gitignore');
   for (const [name, schema] of Object.entries(schemaFiles)) {
     const destination = path.join(directory, 'schemas', name);
-    try {
-      const info = await lstat(destination);
-      invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${destination}`);
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-      await writeFile(destination, `${JSON.stringify(schema, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-      created.push(path.join('.evofence', 'schemas', name));
-    }
+    if (await ensureFile(destination, `${JSON.stringify(schema, null, 2)}\n`)) created.push(path.join('.evofence', 'schemas', name));
   }
 
   const ledgerFile = ledgerPath(root);
@@ -147,11 +168,17 @@ export async function initializeRepository(cwd) {
     const info = await lstat(ledgerFile);
     invariant(info.isFile() && !info.isSymbolicLink(), 'UNSAFE_PATH', `Refusing to follow a non-regular initialization file: ${ledgerFile}`);
   } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
+    if (errorCode(error) !== 'ENOENT') throw error;
     const ledger = new Ledger(ledgerFile);
     ledger.close();
     created.push(path.join('.evofence', 'ledger.sqlite'));
   }
+
+  // Fail closed on a scaffolding this control plane itself would refuse to load.
+  const contractReport = validatePolicyFileSync('contract', root, POLICY_FILES.contract);
+  if (contractReport) assertValidReport(contractReport);
+  const configReport = validatePolicyFileSync('config', root, POLICY_FILES.config);
+  if (configReport) assertValidReport(configReport);
 
   return { root, created, existing: created.length === 0 };
 }

@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Ledger, ledgerPath } from '../src/lib/ledger.js';
-import { initializeRepository } from '../src/lib/init.js';
-import { checkFinalCandidate, runEvolution } from '../src/lib/runner.js';
-import { canTerminateProcessTree, runProcess } from '../src/lib/process.js';
-import { setActiveGenerationRef } from '../src/lib/git.js';
-import { parseYamlText, validateContract } from '../src/lib/contract.js';
+import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
+import { initializeRepository } from '../dist/lib/init.js';
+import { checkFinalCandidate, runEvolution } from '../dist/lib/runner.js';
+import { canTerminateProcessTree, runProcess } from '../dist/lib/process.js';
+import { setActiveGenerationRef } from '../dist/lib/git.js';
+import { parseYamlText, validateContract } from '../dist/lib/contract.js';
 
 test('final candidate validation honors approved capabilities and detects evidence mutations', async () => {
   const template = await readFile(path.resolve(import.meta.dirname, '..', 'templates', 'contract.yaml'), 'utf8');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import process from 'node:process';
-import { canTerminateProcessTree, finalNumericLine, runProcess, sanitizedEnvironment } from '../src/lib/process.js';
+import { canTerminateProcessTree, finalNumericLine, runProcess, sanitizedEnvironment } from '../dist/lib/process.js';
 
 test('process runner captures bounded output and exit status', async () => {
   const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("hello\\n")'], { timeoutMs: 5000 });

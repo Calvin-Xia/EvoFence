@@ -141,10 +141,10 @@ async function buildFixture() {
 
   await mkdir(path.join(root, '.evofence'), { recursive: true });
   await writeFile(path.join(root, '.evofence', 'contract.yaml'), CONTRACT_TEXT);
-  const { parseYamlText, validateContract } = await repoImport('src/lib/contract.js');
+  const { parseYamlText, validateContract } = await repoImport('dist/lib/contract.js');
   validateContract(parseYamlText(CONTRACT_TEXT, 'contract.yaml'));
 
-  const { Ledger, ledgerPath } = await repoImport('src/lib/ledger.js');
+  const { Ledger, ledgerPath } = await repoImport('dist/lib/ledger.js');
   const ledgerFile = ledgerPath(root);
   const startedAt = {};
   const ledger = new Ledger(ledgerFile);
@@ -268,7 +268,7 @@ async function buildFixture() {
 }
 
 before(async () => {
-  cliPath = path.resolve('src/cli.js');
+  cliPath = path.resolve('dist/cli.js');
   fixture = await buildFixture();
 });
 
@@ -277,8 +277,8 @@ after(async () => {
 });
 
 async function callBuildEvolutionReport(ledgerFile) {
-  const { buildEvolutionReport } = await repoImport('src/lib/report.js');
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { buildEvolutionReport } = await repoImport('dist/lib/report.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(ledgerFile);
   try {
     // The documented signature receives an open ledger; tolerate an implementation that
@@ -308,7 +308,7 @@ async function scratchLedger(name, writeEvents) {
   const scratchRoot = path.join(fixture.directory, 'scratch');
   await mkdir(scratchRoot, { recursive: true });
   const ledgerFile = path.join(scratchRoot, `${name}.sqlite`);
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(ledgerFile);
   try {
     writeEvents(ledger);
@@ -342,7 +342,7 @@ function acceptScratchGeneration(ledger, runId, iteration, generationId, score, 
 // Mirrors Ledger's unkeyed eventHash so a scratch ledger can carry a forged (recomputed)
 // hash chain around a payload that is not valid JSON.
 async function forgeEventHashChain(ledger) {
-  const { sha256, stableStringify } = await repoImport('src/lib/fs.js');
+  const { sha256, stableStringify } = await repoImport('dist/lib/fs.js');
   ledger.db.exec('DROP TRIGGER IF EXISTS events_no_update');
   const rows = ledger.db.prepare('SELECT * FROM events ORDER BY seq').all();
   let previous = '0'.repeat(64);
@@ -483,7 +483,7 @@ test('buildEvolutionReport reports zero counts and nulls for an empty ledger', a
 });
 
 test('formatEvolutionReport renders Markdown headings, summary bullets and both tables', async () => {
-  const { formatEvolutionReport } = await repoImport('src/lib/report.js');
+  const { formatEvolutionReport } = await repoImport('dist/lib/report.js');
   const report = await callBuildEvolutionReport(fixture.ledgerFile);
   const markdown = formatEvolutionReport(report);
 
@@ -760,7 +760,7 @@ test('buildEvolutionReport refuses to summarize payloads behind a forged hash ch
     ledger.append('run.started', 'run-f2-forged', { adapter: 'codex', contract_snapshot: CONTRACT_SNAPSHOT });
     ledger.append('run.finished', 'run-f2-forged', { status: 'PLATEAU', iterations: 0 });
   });
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const tamperer = new Ledger(ledgerFile);
   try {
     tamperer.db.exec('DROP TRIGGER IF EXISTS events_no_update');
@@ -800,7 +800,7 @@ test('CLI report refuses to write the report over protected EvoFence state', asy
   const absoluteAttempt = spawnCli(['report', fixture.ledgerFile]);
   assert.notEqual(absoluteAttempt.status, 0, 'writing onto the ledger must be rejected');
   assert.match(absoluteAttempt.stderr, /^\[PROTECTED_PATH\]/, absoluteAttempt.stderr);
-  const ledgerProof = new (await repoImport('src/lib/ledger.js')).Ledger(fixture.ledgerFile);
+  const ledgerProof = new (await repoImport('dist/lib/ledger.js')).Ledger(fixture.ledgerFile);
   try {
     assert.equal(ledgerProof.verify().valid, true, 'the ledger must be untouched after the rejected write');
   } finally {
@@ -1022,7 +1022,7 @@ test('Ledger.readSnapshot returns integrity, events and generations from one tra
     ledger.append('run.finished', 'run-f2-snapshot', { status: 'ACCEPTED', iterations: 1 });
   });
 
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(ledgerFile);
   try {
     const snapshot = ledger.readSnapshot();
@@ -1043,7 +1043,7 @@ test('Ledger.readSnapshot returns integrity, events and generations from one tra
 });
 
 test('buildEvolutionReport reads integrity, events and generations through one atomic snapshot', async () => {
-  const { buildEvolutionReport } = await repoImport('src/lib/report.js');
+  const { buildEvolutionReport } = await repoImport('dist/lib/report.js');
   const refuse = (method) => () => {
     throw new Error(`buildEvolutionReport must not call ${method}() directly; use one readSnapshot()`);
   };

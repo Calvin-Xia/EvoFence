@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Ledger, ledgerPath } from '../src/lib/ledger.js';
-import { runProcess } from '../src/lib/process.js';
+import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
+import { runProcess } from '../dist/lib/process.js';
 
 test('SQLite ledger appends hash-chained events and keeps generation history', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-'));
@@ -31,7 +31,7 @@ test('ledger CLI recent returns sanitized run summaries and read-only commands d
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-cli-'));
   const root = path.join(directory, 'repo');
   const policyDirectory = path.join(root, '.evofence');
-  const cliPath = path.resolve(import.meta.dirname, '../src/cli.js');
+  const cliPath = path.resolve(import.meta.dirname, '../dist/cli.js');
   await mkdir(policyDirectory, { recursive: true });
   try {
     const initialized = await runProcess('git', ['init', '--quiet'], { cwd: root, timeoutMs: 10000, maxOutputBytes: 10000 });
