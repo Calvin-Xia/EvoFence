@@ -4,9 +4,9 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { assertGitVersionAtLeast, commitCandidate, diffHash, gitVersionAtLeast, headSha, requireGitVersion } from '../src/lib/git.js';
-import { EvoFenceError } from '../src/lib/errors.js';
-import { runProcess } from '../src/lib/process.js';
+import { assertGitVersionAtLeast, commitCandidate, diffHash, gitVersionAtLeast, headSha, requireGitVersion } from '../dist/lib/git.js';
+import { EvoFenceError } from '../dist/lib/errors.js';
+import { runProcess } from '../dist/lib/process.js';
 
 test('diff hash includes an addition-only candidate and matches its committed generation', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'evofence-diff-'));
