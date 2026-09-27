@@ -10,11 +10,12 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COMMAND_GROUPS, COMMANDS, SMOKE } from '../dist/lib/cli/commands.js';
+import { JSON_WRITE_SMOKES } from '../dist/lib/cli/catalog.js';
 import { HANDLERS } from '../dist/lib/cli/handlers/index.js';
 import { diffHash } from '../dist/lib/git.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
@@ -285,6 +286,53 @@ test('every subcommand emits a parseable JSON object on stdout with --json (DoD 
     }
   }
   assert.deepEqual(problems, [], `--json problems:\n${problems.join('\n')}`);
+});
+
+// F8c regression guard: `report <file> --json` used to print `Report written to <file>` on stdout
+// instead of JSON. `CommandSpec` holds a single `jsonSmoke`, so the write-file shapes live in the
+// manifest's `JSON_WRITE_SMOKES` table instead of a second copy here.
+test('every write-file --json form prints a bare JSON envelope and really writes the file (DoD 2)', async () => {
+  // Structural guard: a command with a `file` positional writes a file, so it must pin its
+  // write-file `--json` shape in the table. A new such command without a row fails right here.
+  const fileCommands = COMMANDS
+    .filter((spec) => spec.positionals.some((entry) => entry.name === 'file'))
+    .map((spec) => spec.name)
+    .sort();
+  assert.deepEqual(
+    JSON_WRITE_SMOKES.map((row) => row.command).sort(),
+    fileCommands,
+    'JSON_WRITE_SMOKES must cover exactly the commands with a file positional',
+  );
+
+  const problems = [];
+  for (const row of JSON_WRITE_SMOKES) {
+    const root = fixtureRoot(row.fixture);
+    const result = spawnCli(row.args, root);
+    if (result.status !== 0) {
+      problems.push(`${row.command}: expected exit 0, got ${result.status} | stderr: ${result.stderr.trim().slice(0, 200)}`);
+      continue;
+    }
+    let envelope;
+    try {
+      envelope = JSON.parse(result.stdout);
+    } catch (error) {
+      problems.push(`${row.command}: stdout is not JSON (${error.message}) | stdout: ${result.stdout.slice(0, 160)}`);
+      continue;
+    }
+    // stdout must carry the JSON document and nothing else — no human-readable line around it.
+    if (result.stdout.trim() !== JSON.stringify(envelope, null, 2)) {
+      problems.push(`${row.command}: stdout carries more than the JSON envelope | stdout: ${result.stdout.slice(0, 160)}`);
+    }
+    if (envelope[row.pathKey] !== row.path) {
+      problems.push(`${row.command}: ${row.pathKey} is ${JSON.stringify(envelope[row.pathKey])}, want ${row.path}`);
+    }
+    try {
+      JSON.parse(await readFile(path.join(root, row.path), 'utf8'));
+    } catch (error) {
+      problems.push(`${row.command}: ${row.path} is not the written JSON file (${error.message})`);
+    }
+  }
+  assert.deepEqual(problems, [], `write-file --json problems:\n${problems.join('\n')}`);
 });
 
 test('an unknown flag fails closed with a stack-free usage error for every subcommand (DoD 3)', () => {

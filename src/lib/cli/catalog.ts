@@ -24,7 +24,7 @@
  *   5. Exit codes are frozen at 0/1 (0.3.0 already behaved that way; the convention is now
  *      declared instead of emergent) and `supports`/`flags`/`exits` are machine-readable.
  */
-import type { CommandSpec, FlagSpec, SmokeSpec } from './spec.js';
+import type { CommandSpec, FlagSpec, SmokeFixture, SmokeSpec } from './spec.js';
 
 /**
  * Fixture data the smoke invocations refer to. `test/cli-surface.test.js` seeds repositories
@@ -41,12 +41,22 @@ export const SMOKE = {
   goalFile: 'goal.md',
   /** Experiment manifest inside the `agentless` fixture. */
   experimentFile: 'experiment.yaml',
-  /** Output paths, kept distinct so no two smoke runs collide on an existing file. */
+  /** Text-mode output paths, kept distinct so no two smoke runs collide on an existing file. */
   ledgerExport: 'export-ledger.json',
-  ledgerExportJson: 'export-ledger-json.json',
   experimentExport: 'export-experiment.json',
-  experimentExportJson: 'export-experiment-json.json',
   reportFile: 'smoke-report.md',
+  /** `--json` output paths used by the manifest's own `jsonSmoke` invocations. */
+  ledgerExportJson: 'export-ledger-json.json',
+  experimentExportJson: 'export-experiment-json.json',
+  reportJsonFile: 'smoke-report.json',
+  /**
+   * Extra `--json` output paths owned by `JSON_WRITE_SMOKES`. They are kept distinct from the
+   * `*Json` names above because `ledger/experiment export` refuse to overwrite (`wx`) and the two
+   * tables run against the same fixture in one test process.
+   */
+  writeLedgerJson: 'write-ledger-json.json',
+  writeExperimentJson: 'write-experiment-json.json',
+  writeReportJson: 'write-report-json.json',
 } as const;
 
 /** `0` on success, `1` for every failure, with the command's own failure trigger appended. */
@@ -256,7 +266,7 @@ export const COMMANDS: readonly CommandSpec[] = [
     json: 'flag',
     exits: exits('the report was rendered/written', 'usage error, or PROTECTED_PATH when the output would overwrite control-plane state'),
     smoke: inLedger(['report', SMOKE.reportFile], 0),
-    jsonSmoke: inLedger(['report', '--json'], 0),
+    jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
   },
   {
     name: 'status',
@@ -269,5 +279,55 @@ export const COMMANDS: readonly CommandSpec[] = [
     exits: exits('the overview was printed', 'usage error, LEDGER_UNAVAILABLE, or an integrity check that failed'),
     smoke: inLedger(['status'], 0),
     jsonSmoke: inLedger(['status', '--json'], 0),
+  },
+];
+
+/**
+ * `--json` invocations that also WRITE a file. `CommandSpec` carries exactly one `jsonSmoke`, so a
+ * command with two `--json` shapes (with and without the output path) can pin only one of them
+ * there. Every row here is driven by `test/cli-surface.test.js`, which asserts the invocation's
+ * stdout is a BARE JSON envelope (nothing else) and that the named file really exists.
+ *
+ * That makes this table the regression guard for the F8c gap: `report <file> --json` used to print
+ * `Report written to <file>` on stdout. Adding a new write-file `--json` form without a row here
+ * fails the test, because it also asserts the table covers exactly the commands with a `file`
+ * positional.
+ *
+ * The envelope key holding the repo-relative output path is part of the contract and differs per
+ * command: `report` -> `{"written": "<path>", "bytes": <n>}`; `ledger export` and
+ * `experiment export` -> `{"exported": "<path>"}` (their pre-existing shape).
+ */
+export interface JsonWriteSmokeSpec {
+  /** Canonical command name; must also exist in `COMMANDS`. */
+  readonly command: string;
+  readonly args: readonly string[];
+  readonly fixture: SmokeFixture;
+  /** Envelope key that must hold the repo-relative path of the written file. */
+  readonly pathKey: string;
+  /** The exact value that key must hold (equals the path given on the command line). */
+  readonly path: string;
+}
+
+export const JSON_WRITE_SMOKES: readonly JsonWriteSmokeSpec[] = [
+  {
+    command: 'report',
+    args: ['report', SMOKE.writeReportJson, '--json'],
+    fixture: LEDGER,
+    pathKey: 'written',
+    path: SMOKE.writeReportJson,
+  },
+  {
+    command: 'ledger export',
+    args: ['ledger', 'export', SMOKE.writeLedgerJson, '--json'],
+    fixture: LEDGER,
+    pathKey: 'exported',
+    path: SMOKE.writeLedgerJson,
+  },
+  {
+    command: 'experiment export',
+    args: ['experiment', 'export', SMOKE.writeExperimentJson, '--json'],
+    fixture: LEDGER,
+    pathKey: 'exported',
+    path: SMOKE.writeExperimentJson,
   },
 ];

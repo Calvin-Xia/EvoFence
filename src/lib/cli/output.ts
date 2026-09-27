@@ -19,6 +19,24 @@ export function jsonDocument(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+/**
+ * The documented `--json` SUCCESS envelope for a command that writes a file to disk (F8c).
+ *
+ * In `--json` mode stdout carries the JSON document and NOTHING else — the human-readable
+ * `Written to <path>` line is text-mode only — so a write-file command says where it landed in an
+ * envelope instead. `written` is the repo-relative POSIX path; `bytes` is the UTF-8 byte length of
+ * the content written.
+ */
+export interface CliWritePayload {
+  readonly written: string;
+  readonly bytes: number;
+}
+
+/** Build the `{written, bytes}` envelope for a file that was just written. */
+export function writePayload(written: string, content: string): CliWritePayload {
+  return { written, bytes: Buffer.byteLength(content, 'utf8') };
+}
+
 /** The documented `--json` failure envelope. */
 export interface CliErrorPayload {
   readonly error: {

@@ -580,12 +580,18 @@ test('CLI report <file> writes Markdown, creates parent directories and prints t
   assert.equal(written.includes(EVIDENCE_SECRET), false, 'written report must never embed evidence output');
 });
 
-test('CLI report <file> --json writes the JSON report', async () => {
+test('CLI report <file> --json writes the JSON report and prints the {written,bytes} envelope', async () => {
   const relative = 'reports/nested/evolution.json';
   const result = spawnCli(['report', relative, '--json']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.trim(), `Report written to ${relative}`);
+  // F8c: `--json` stdout is the JSON envelope in every shape; `Report written to <path>` is the
+  // text-mode form only (still asserted by the sibling test above). Parsing here is strictly
+  // stronger than the old string equality: it pins the shape instead of one human line.
+  const envelope = JSON.parse(result.stdout);
+  assert.equal(envelope.written, relative);
+  assert.equal(typeof envelope.bytes, 'number');
+  assert.ok(envelope.bytes > 0);
   const written = await readFile(path.join(fixture.root, 'reports', 'nested', 'evolution.json'), 'utf8');
   const report = JSON.parse(written);
   assert.equal(report.schema_version, 1);
