@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createPiToolStrategy, summarizePiToolStrategyTelemetry } from '../src/lib/pi-tool-strategy.js';
-import { installPiToolStrategy } from '../src/lib/pi-tool-strategy-extension.js';
+import { createPiToolStrategy, summarizePiToolStrategyTelemetry } from '../dist/lib/pi-tool-strategy.js';
+import { installPiToolStrategy } from '../dist/lib/pi-tool-strategy-extension.js';
 
 async function withTelemetry(callback) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-pi-tool-strategy-'));

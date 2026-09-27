@@ -7,4 +7,15 @@ node_modules/
 .npm-cache/
 coverage/
 *.tgz
+dist/
 docs/deep-research-report.md
+
+# graph CLI transient locks
+# Super Plumber topology state: process state that drove the 0.4.0 refactor, not product
+# source. It travels with this developer's workspace and is not part of the package; the
+# readable exports of it (CONTEXT-MAP.md, DECISIONS.md, docs/adr, docs/contexts) are tracked.
+.graph/
+
+# pi goal-tracking state (machine-local)
+.pi/goals/
+.pi/.goals-pool-snapshot.json*
