@@ -78,9 +78,9 @@ async function buildFixture() {
   runGit(root, ['commit', '--quiet', '-m', 'accept generation']);
   const sha = runGit(root, ['rev-parse', 'HEAD']);
 
-  const { Ledger, ledgerPath } = await repoImport('src/lib/ledger.js');
-  const { changedPathsBetween, diffHash } = await repoImport('src/lib/git.js');
-  const { sha256, stableStringify } = await repoImport('src/lib/fs.js');
+  const { Ledger, ledgerPath } = await repoImport('dist/lib/ledger.js');
+  const { changedPathsBetween, diffHash } = await repoImport('dist/lib/git.js');
+  const { sha256, stableStringify } = await repoImport('dist/lib/fs.js');
   const ledgerFile = ledgerPath(root);
   const recordedDiffHash = await diffHash(root, parentSha, sha);
   const recordedChangedPaths = [...(await changedPathsBetween(root, parentSha, sha))].sort();
@@ -344,9 +344,9 @@ async function buildAuditFixture({
   runGit(root, ['commit', '--quiet', '-m', 'accept']);
   const sha = runGit(root, ['rev-parse', 'HEAD']);
 
-  const { Ledger, ledgerPath } = await repoImport('src/lib/ledger.js');
-  const { diffHash } = await repoImport('src/lib/git.js');
-  const { sha256, stableStringify } = await repoImport('src/lib/fs.js');
+  const { Ledger, ledgerPath } = await repoImport('dist/lib/ledger.js');
+  const { diffHash } = await repoImport('dist/lib/git.js');
+  const { sha256, stableStringify } = await repoImport('dist/lib/fs.js');
   const ledgerFile = ledgerPath(root);
   const recordedDiffHash = recordedDiffHashOverride ?? (await diffHash(root, parentSha, sha));
   if (gitattributesShift) {
@@ -554,8 +554,8 @@ async function buildAuditFixture({
 }
 
 async function callGenerationDiffAt(auditFixture, generationId) {
-  const { generationDiff } = await repoImport('src/lib/audit.js');
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { generationDiff } = await repoImport('dist/lib/audit.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(auditFixture.ledgerFile);
   try {
     return await generationDiff({ root: auditFixture.root, ledger, generationId });
@@ -597,7 +597,7 @@ function tamperGenerationRow(ledgerFile, mutate) {
 }
 
 before(async () => {
-  cliPath = path.resolve('src/cli.js');
+  cliPath = path.resolve('dist/cli.js');
   fixture = await buildFixture();
 });
 
@@ -606,8 +606,8 @@ after(async () => {
 });
 
 async function callGenerationDiff(generationId) {
-  const { generationDiff } = await repoImport('src/lib/audit.js');
-  const { Ledger } = await repoImport('src/lib/ledger.js');
+  const { generationDiff } = await repoImport('dist/lib/audit.js');
+  const { Ledger } = await repoImport('dist/lib/ledger.js');
   const ledger = new Ledger(fixture.ledgerFile);
   try {
     // The documented signature receives an open ledger; tolerate an implementation that
@@ -703,13 +703,13 @@ test('generationDiff reports null links for a generation without candidate event
   assert.equal(report.proposal_id, null);
   assert.equal(typeof report.accepted_at, 'string');
   assert.equal(Number.isNaN(Date.parse(report.accepted_at)), false);
-  const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+  const { formatGenerationDiff } = await repoImport('dist/lib/audit.js');
   const text = formatGenerationDiff(report);
   assert.ok(text.includes('not accepted'), `text output must label the generation as not accepted:\n${text}`);
 });
 
 test('generationDiff rejects an unknown generation with EvoFenceError GENERATION_NOT_FOUND', async () => {
-  const { EvoFenceError } = await repoImport('src/lib/errors.js');
+  const { EvoFenceError } = await repoImport('dist/lib/errors.js');
 
   await assert.rejects(callGenerationDiff('g-does-not-exist'), (error) => {
     assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
@@ -721,7 +721,7 @@ test('generationDiff rejects an unknown generation with EvoFenceError GENERATION
 });
 
 test('formatGenerationDiff renders the audit view without leaking evidence output', async () => {
-  const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+  const { formatGenerationDiff } = await repoImport('dist/lib/audit.js');
   const report = await callGenerationDiff(GENERATION_ID);
   const text = formatGenerationDiff(report);
 
@@ -783,8 +783,8 @@ test('generationDiff rejects a tampered ledger with EvoFenceError LEDGER_CORRUPT
       payload.objective_score = 0.99;
       payload.improvement = 0.49;
     });
-    const { Ledger } = await repoImport('src/lib/ledger.js');
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { Ledger } = await repoImport('dist/lib/ledger.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     const probe = new Ledger(auditFixture.ledgerFile);
     try {
       assert.equal(probe.verify().valid, false, 'the tampered fixture must break the hash chain');
@@ -831,7 +831,7 @@ test('generationDiff caps an oversized diff and formatGenerationDiff marks the t
       Buffer.byteLength(report.diff, 'utf8') > 200 * 1024 - 1024,
       'the cap should keep nearly 200 KiB of the oversized diff',
     );
-    const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+    const { formatGenerationDiff } = await repoImport('dist/lib/audit.js');
     const text = formatGenerationDiff(report);
     assert.match(text, /\[diff truncated at 204800 bytes;/, `text output must announce the truncation:\n${text.slice(-200)}`);
     assert.ok(text.endsWith('[... diff truncated ...]'), 'text output must end with a truncation marker');
@@ -849,13 +849,13 @@ test('generationDiff recomputes diff_sha256 and flags a ledger claim that does n
   const auditFixture = await buildAuditFixture({ recordedDiffHashOverride: bogus });
   try {
     const report = await callGenerationDiffAt(auditFixture, auditFixture.generationId);
-    const { diffHash } = await repoImport('src/lib/git.js');
+    const { diffHash } = await repoImport('dist/lib/git.js');
     const expected = await diffHash(auditFixture.root, auditFixture.parentSha, auditFixture.sha);
     assert.equal(report.diff_sha256, expected, 'diff_sha256 must be recomputed from git at report time');
     assert.notEqual(report.diff_sha256, bogus);
     assert.equal(report.diff_sha256_recorded, bogus);
     assert.equal(report.diff_sha256_matches, false);
-    const { formatGenerationDiff } = await repoImport('src/lib/audit.js');
+    const { formatGenerationDiff } = await repoImport('dist/lib/audit.js');
     const text = formatGenerationDiff(report);
     assert.ok(text.includes('[diff hash mismatch:'), `text output must mark the mismatch:\n${text.split('\n')[0]}`);
     assert.ok(text.includes(bogus) && text.includes(expected), 'the mismatch marker must show both hashes');
@@ -871,8 +871,8 @@ test('generationDiff rejects a generation row that disagrees with its hash-chain
       row.run_id = 'run-forged';
       row.created_at = '2099-01-01T00:00:00.000Z';
     });
-    const { Ledger } = await repoImport('src/lib/ledger.js');
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { Ledger } = await repoImport('dist/lib/ledger.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     const probe = new Ledger(auditFixture.ledgerFile);
     try {
       assert.equal(probe.verify().valid, true, 'the hash chain alone cannot detect a modified generations row');
@@ -893,7 +893,7 @@ test('generationDiff rejects a generation row that disagrees with its hash-chain
 test('generationDiff rejects candidate.accepted evidence that disagrees with the generation row', async () => {
   const auditFixture = await buildAuditFixture({ acceptedShaMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -908,7 +908,7 @@ test('generationDiff rejects candidate.accepted evidence that disagrees with the
 test('generationDiff rejects candidate.accepted evidence recorded under a different run', async () => {
   const auditFixture = await buildAuditFixture({ acceptedForeignRun: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -923,7 +923,7 @@ test('generationDiff rejects candidate.accepted evidence recorded under a differ
 test('generationDiff rejects evidence bound to a different artifact than the acceptance record', async () => {
   const auditFixture = await buildAuditFixture({ evidenceArtifactMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -938,7 +938,7 @@ test('generationDiff rejects evidence bound to a different artifact than the acc
 test('generationDiff rejects ambiguous evidence candidates for the accepted artifact', async () => {
   const auditFixture = await buildAuditFixture({ evidenceAmbiguous: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -953,7 +953,7 @@ test('generationDiff rejects ambiguous evidence candidates for the accepted arti
 test('generationDiff rejects an acceptance record whose proposal digest matches no proposal', async () => {
   const auditFixture = await buildAuditFixture({ proposalDigestMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -995,7 +995,7 @@ test('generationDiff pins diff attributes to the generation despite a divergent 
 test('generationDiff rejects ambiguous acceptance records for a generation', async () => {
   const auditFixture = await buildAuditFixture({ acceptedDuplicate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1010,7 +1010,7 @@ test('generationDiff rejects ambiguous acceptance records for a generation', asy
 test('generationDiff rejects an acceptance score that disagrees with its bound evidence', async () => {
   const auditFixture = await buildAuditFixture({ acceptedScoreMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1025,7 +1025,7 @@ test('generationDiff rejects an acceptance score that disagrees with its bound e
 test('generationDiff rejects ambiguous proposal digest matches', async () => {
   const auditFixture = await buildAuditFixture({ proposalDuplicate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1040,7 +1040,7 @@ test('generationDiff rejects ambiguous proposal digest matches', async () => {
 test('generationDiff rejects ambiguous proposal links in the legacy fallback', async () => {
   const auditFixture = await buildAuditFixture({ proposalDuplicate: true, legacyAccepted: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1055,7 +1055,7 @@ test('generationDiff rejects ambiguous proposal links in the legacy fallback', a
 test('generationDiff rejects an improvement that disagrees with the ledger evidence', async () => {
   const auditFixture = await buildAuditFixture({ improvementMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1070,7 +1070,7 @@ test('generationDiff rejects an improvement that disagrees with the ledger evide
 test('generationDiff rejects a proposal digest claim that does not match its proposal content', async () => {
   const auditFixture = await buildAuditFixture({ proposalContentMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1085,7 +1085,7 @@ test('generationDiff rejects a proposal digest claim that does not match its pro
 test('generationDiff rejects an improvement baseline from an unsupported prior acceptance', async () => {
   const auditFixture = await buildAuditFixture({ priorAccepted: true, priorEvidenceScoreMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1111,7 +1111,7 @@ test('generationDiff derives improvement from a validated prior acceptance', asy
 test('generationDiff rejects an improvement baseline from a different branch', async () => {
   const auditFixture = await buildAuditFixture({ priorAccepted: true, priorDisconnected: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1126,7 +1126,7 @@ test('generationDiff rejects an improvement baseline from a different branch', a
 test('generationDiff rejects an ambiguous baseline preceding the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ evidenceBaselineDuplicate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1152,7 +1152,7 @@ test('generationDiff ignores baseline evidence that follows the acceptance', asy
 test('generationDiff rejects a digest claim with no proposal object', async () => {
   const auditFixture = await buildAuditFixture({ proposalMissing: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1167,7 +1167,7 @@ test('generationDiff rejects a digest claim with no proposal object', async () =
 test('generationDiff rejects gate evidence that follows the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ evidenceLate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1182,7 +1182,7 @@ test('generationDiff rejects gate evidence that follows the acceptance', async (
 test('generationDiff rejects a proposal that follows the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ proposalLate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1197,7 +1197,7 @@ test('generationDiff rejects a proposal that follows the acceptance', async () =
 test('generationDiff rejects a contract snapshot that follows the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ runStartedLate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1212,7 +1212,7 @@ test('generationDiff rejects a contract snapshot that follows the acceptance', a
 test('generationDiff rejects ambiguous run started events before the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ runStartedDuplicate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1227,7 +1227,7 @@ test('generationDiff rejects ambiguous run started events before the acceptance'
 test('generationDiff rejects a generation with no ACCEPT gate decision', async () => {
   const auditFixture = await buildAuditFixture({ gateDecisionMissing: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1242,7 +1242,7 @@ test('generationDiff rejects a generation with no ACCEPT gate decision', async (
 test('generationDiff rejects a generation whose gate decision is not ACCEPT', async () => {
   const auditFixture = await buildAuditFixture({ gateDecisionReject: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1257,7 +1257,7 @@ test('generationDiff rejects a generation whose gate decision is not ACCEPT', as
 test('generationDiff rejects bound evidence that failed its gate', async () => {
   const auditFixture = await buildAuditFixture({ evidenceFailedGate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1272,7 +1272,7 @@ test('generationDiff rejects bound evidence that failed its gate', async () => {
 test('generationDiff rejects ambiguous legacy evidence links', async () => {
   const auditFixture = await buildAuditFixture({ legacyAccepted: true, evidenceLegacyDuplicate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1287,7 +1287,7 @@ test('generationDiff rejects ambiguous legacy evidence links', async () => {
 test('generationDiff rejects bound evidence with an invalid objective score', async () => {
   const auditFixture = await buildAuditFixture({ evidenceInvalidScore: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1302,7 +1302,7 @@ test('generationDiff rejects bound evidence with an invalid objective score', as
 test('generationDiff rejects an improvement below the contract min_delta', async () => {
   const auditFixture = await buildAuditFixture({ minDeltaAboveImprovement: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1317,7 +1317,7 @@ test('generationDiff rejects an improvement below the contract min_delta', async
 test('generationDiff rejects an acceptance without a numeric score and improvement', async () => {
   const auditFixture = await buildAuditFixture({ acceptedMissingScore: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1332,7 +1332,7 @@ test('generationDiff rejects an acceptance without a numeric score and improveme
 test('generationDiff rejects an improvement baseline that failed its gate', async () => {
   const auditFixture = await buildAuditFixture({ baselineFailedGate: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1347,7 +1347,7 @@ test('generationDiff rejects an improvement baseline that failed its gate', asyn
 test('generationDiff rejects an improvement baseline with an invalid objective score', async () => {
   const auditFixture = await buildAuditFixture({ baselineInvalidScore: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1362,7 +1362,7 @@ test('generationDiff rejects an improvement baseline with an invalid objective s
 test('generationDiff rejects an ACCEPT gate decision whose evidence_ok is not true', async () => {
   const auditFixture = await buildAuditFixture({ gateEvidenceOkFalse: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1377,7 +1377,7 @@ test('generationDiff rejects an ACCEPT gate decision whose evidence_ok is not tr
 test('generationDiff rejects a gate decision whose improvement disagrees with the acceptance', async () => {
   const auditFixture = await buildAuditFixture({ gateImprovementMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
@@ -1390,7 +1390,7 @@ test('generationDiff rejects a gate decision whose improvement disagrees with th
 });
 
 test('generationDiff rejects linked records from a different parent', async () => {
-  const { EvoFenceError } = await repoImport('src/lib/errors.js');
+  const { EvoFenceError } = await repoImport('dist/lib/errors.js');
   const labels = { proposal: 'proposal.created', evidence: 'evidence.candidate', gate: 'gate.decision' };
   for (const target of ['gate', 'evidence', 'proposal']) {
     const auditFixture = await buildAuditFixture({ linkBaseShaTarget: target });
@@ -1410,7 +1410,7 @@ test('generationDiff rejects linked records from a different parent', async () =
 test('generationDiff rejects a proposal whose embedded base_sha disagrees with the accepted parent', async () => {
   const auditFixture = await buildAuditFixture({ proposalEmbedBaseMismatch: true });
   try {
-    const { EvoFenceError } = await repoImport('src/lib/errors.js');
+    const { EvoFenceError } = await repoImport('dist/lib/errors.js');
     await assert.rejects(callGenerationDiffAt(auditFixture, auditFixture.generationId), (error) => {
       assert.ok(error instanceof EvoFenceError, 'error must be an EvoFenceError');
       assert.equal(error.code, 'LEDGER_CORRUPT');
