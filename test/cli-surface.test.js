@@ -10,7 +10,7 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +20,7 @@ import { HANDLERS } from '../dist/lib/cli/handlers/index.js';
 import { diffHash } from '../dist/lib/git.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 import { sha256, stableStringify } from '../dist/lib/fs.js';
+import { repoRelativePath } from '../dist/lib/cli/output.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const BASELINE_SCORE = 0.5;
@@ -326,6 +327,13 @@ test('every write-file --json form prints a bare JSON envelope and really writes
     if (envelope[row.pathKey] !== row.path) {
       problems.push(`${row.command}: ${row.pathKey} is ${JSON.stringify(envelope[row.pathKey])}, want ${row.path}`);
     }
+    // Spelling-independent invariant: a repo-relative envelope path must stay inside the repo.
+    // A bare lexical `path.relative` under a short-named or symlinked cwd still yields a path
+    // that resolves — but outside the repo — which is the shape CI hit on windows-latest.
+    const reported = envelope[row.pathKey];
+    if (typeof reported !== 'string' || path.isAbsolute(reported) || reported.startsWith('..')) {
+      problems.push(`${row.command}: ${row.pathKey} is not an in-repo relative path: ${JSON.stringify(reported)}`);
+    }
     try {
       JSON.parse(await readFile(path.join(root, row.path), 'utf8'));
     } catch (error) {
@@ -333,6 +341,59 @@ test('every write-file --json form prints a bare JSON envelope and really writes
     }
   }
   assert.deepEqual(problems, [], `write-file --json problems:\n${problems.join('\n')}`);
+});
+
+test('the envelope path survives a root spelled differently from the target (symlink / 8.3 alias)', async (t) => {
+  // `path.relative` is purely lexical, so a root and a target that name the same directory
+  // through different spellings cannot be related: it returns a `../..` chain. CI temp dirs
+  // carry 8.3 short names (`C:\Users\RUNNER~1\...`) while git reports the long spelling, which
+  // is how windows-latest exposed this in `ledger export`. A link reproduces the same mismatch
+  // deterministically on every platform instead of waiting for a short-named temp directory.
+  const base = await mkdtemp(path.join(os.tmpdir(), 'evofence-repo-rel-'));
+  try {
+    const real = path.join(base, 'real');
+    const link = path.join(base, 'link');
+    await mkdir(real);
+    try {
+      await symlink(real, link, process.platform === 'win32' ? 'junction' : 'dir');
+    } catch (error) {
+      t.skip(`cannot create a directory link here: ${error.code ?? error.message}`);
+      return;
+    }
+    const file = path.join(real, 'out.json');
+    await writeFile(file, '{}\n');
+
+    assert.equal(repoRelativePath(link, file), 'out.json');
+    // The bare lexical call is the regression this guards: it must not be what the envelope uses.
+    assert.notEqual(path.relative(link, file), 'out.json');
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
+});
+
+test('the write-file envelope reports an in-repo path when the cwd is spelled differently from the git root', async (t) => {
+  // `git rev-parse --show-toplevel` resolves a directory link to its real path while
+  // `process.cwd()` keeps the link spelling, so root and target disagree lexically — the same
+  // mismatch a CI temp directory causes through its 8.3 short name (`C:\Users\RUNNER~1\...`),
+  // which is how windows-latest caught the bare `path.relative` in `ledger export`.
+  const { directory, root } = await makeRepo('envelope-link');
+  try {
+    spawnCli(['init'], root);
+    const link = path.join(directory, 'link');
+    try {
+      await symlink(root, link, process.platform === 'win32' ? 'junction' : 'dir');
+    } catch (error) {
+      t.skip(`cannot create a directory link here: ${error.code ?? error.message}`);
+      return;
+    }
+    const result = spawnCli(['ledger', 'export', 'write-link.json', '--json'], link);
+    assert.equal(result.status, 0, `ledger export failed: ${result.stderr.slice(0, 300)}`);
+    assert.equal(JSON.parse(result.stdout).exported, 'write-link.json');
+    const written = await readFile(path.join(root, 'write-link.json'), 'utf8');
+    assert.doesNotThrow(() => JSON.parse(written), 'the exported bundle must be JSON');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('an unknown flag fails closed with a stack-free usage error for every subcommand (DoD 3)', () => {

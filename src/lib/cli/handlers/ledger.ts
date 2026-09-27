@@ -9,7 +9,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { repositoryRoot } from '../../git.js';
 import { Ledger, ledgerPath } from '../../ledger.js';
-import { jsonDocument } from '../output.js';
+import { jsonDocument, repoRelativePath } from '../output.js';
 import { positional, type CommandContext } from './context.js';
 
 const READ_ONLY_ACTIONS = new Set(['show', 'verify', 'recent']);
@@ -58,7 +58,7 @@ export async function exportLedger(context: CommandContext, value: string | unde
   return withLedger(context, 'export', async (ledger, root) => {
     const output = path.resolve(context.cwd, value ?? `.evofence/experiment-${new Date().toISOString().slice(0, 10)}.json`);
     await writeFile(output, `${JSON.stringify(ledger.export(), null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-    const relative = path.relative(root, output).replaceAll('\\', '/');
+    const relative = repoRelativePath(root, output);
     if (context.json) context.stdout(jsonDocument({ exported: relative }));
     else context.stdout(`Experiment evidence exported to ${relative}\n`);
     return 0;

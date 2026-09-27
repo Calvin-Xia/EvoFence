@@ -1,9 +1,0 @@
-id: ctx_gate
-type: context
-label: 门禁判定域
-level: 1
-status: pending
-attempts: 0
-max_attempts: 3
-created_at: '2026-09-27T06:09:13.166Z'
-updated_at: '2026-09-27T06:09:13.166Z'

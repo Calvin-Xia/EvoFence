@@ -10,6 +10,8 @@
  *
  * `code` is `null` only for a thrown value that is not an `EvoFenceError`.
  */
+import { realpathSync } from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
 export type Write = (text: string) => void;
@@ -35,6 +37,22 @@ export interface CliWritePayload {
 /** Build the `{written, bytes}` envelope for a file that was just written. */
 export function writePayload(written: string, content: string): CliWritePayload {
   return { written, bytes: Buffer.byteLength(content, 'utf8') };
+}
+
+/**
+ * Repo-relative POSIX path for a file that already exists, canonicalising BOTH sides first.
+ *
+ * `path.relative` is purely lexical, so a root and a target that name the same directory through
+ * different spellings — an 8.3 short name (`RUNNER~1`), a symlink or a junction — cannot be
+ * related, and it returns a bogus `../..` chain instead of the in-repo path. CI temp directories
+ * carry short names, so a short/long mismatch is the normal case there rather than an exotic one.
+ *
+ * Both sides must exist to be canonicalised, which holds for every caller: the file has just been
+ * written. Never compute an envelope path with a bare `path.relative` — this helper is the single
+ * implementation for `written` and `exported`.
+ */
+export function repoRelativePath(root: string, target: string): string {
+  return path.relative(realpathSync.native(root), realpathSync.native(target)).replaceAll('\\', '/');
 }
 
 /** The documented `--json` failure envelope. */

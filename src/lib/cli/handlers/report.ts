@@ -10,13 +10,12 @@
  * `Report written to <path>` line stays text-mode only).
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import { repositoryRoot } from '../../git.js';
 import { Ledger, ledgerPath } from '../../ledger.js';
 import { buildEvolutionReport, formatEvolutionReport } from '../../report.js';
 import { assertReportOutputOutsideState } from '../report-output.js';
-import { jsonDocument, writePayload } from '../output.js';
+import { jsonDocument, repoRelativePath, writePayload } from '../output.js';
 import { positional, type CommandContext } from './context.js';
 
 export async function commandReport(context: CommandContext): Promise<number> {
@@ -35,7 +34,7 @@ export async function commandReport(context: CommandContext): Promise<number> {
     }
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, content, { mode: 0o600 });
-    const relative = path.relative(realpathSync.native(root), realpathSync.native(output)).replaceAll('\\', '/');
+    const relative = repoRelativePath(root, output);
     context.stdout(context.json ? jsonDocument(writePayload(relative, content)) : `Report written to ${relative}\n`);
     return 0;
   } finally {
