@@ -1,36 +1,73 @@
+/**
+ * Pi tool strategy — the extension sidecar loaded by `evofence run --adapter pi`.
+ *
+ * DOMAIN: ctx_ext (the repository's own "extension loading surface" group). R1 conversion of
+ * `src/lib/pi-tool-strategy-extension.js`: same path, same export names and semantics.
+ *
+ * RUNTIME NOTE: nothing imports this module statically. `src/lib/adapter.ts` resolves it as
+ * `<dir of the running adapter.js>/pi-tool-strategy-extension.js` and passes it to the Pi
+ * subprocess as `--extension <path>`. In the published package that resolves to
+ * `dist/lib/pi-tool-strategy-extension.js`, i.e. the compiled JavaScript — Node never has to
+ * load a `.ts` file at runtime. The project-level `.pi/extensions/evofence.js` entry is a
+ * separate, untouched `.js` shell that re-exports `integrations/pi/evofence.js`.
+ *
+ * Every callback is fail-open: a controller or Pi-API error disables the strategy, restores the
+ * original tool order and leaves Pi running with its normal tools.
+ */
 import { appendFile } from 'node:fs/promises';
 import { createPiToolStrategy, PI_TOOL_STRATEGY_VERSION } from './pi-tool-strategy.js';
+import type { PiToolStrategy } from './pi-tool-strategy.js';
+import type { AdapterPhase } from '../types/index.js';
 
 const MAX_TELEMETRY_RECORDS = 512;
 
-function sameOrder(left, right) {
+/** The subset of the Pi extension API this sidecar uses. */
+export interface PiExtensionHost {
+  on(eventName: string, handler: (event: unknown) => unknown): unknown;
+  getActiveTools(): string[];
+  setActiveTools(toolNames: readonly string[]): void;
+}
+
+/** Options for {@link installPiToolStrategy}; both default to the adapter's env vars. */
+export interface PiToolStrategyInstallOptions {
+  phase?: string;
+  logPath?: string;
+}
+
+function sameOrder(left: unknown, right: unknown): boolean {
   return Array.isArray(left) && Array.isArray(right)
     && left.length === right.length
     && left.every((name, index) => name === right[index]);
 }
 
-function validOrder(value) {
+function validOrder(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((name) => typeof name === 'string');
 }
 
-export function installPiToolStrategy(pi, {
+/** Register the strategy hooks on a Pi extension host. Never throws. */
+export function installPiToolStrategy(pi: PiExtensionHost, {
   phase = process.env.EVOFENCE_PI_TOOL_STRATEGY_PHASE,
   logPath = process.env.EVOFENCE_PI_TOOL_STRATEGY_LOG,
-} = {}) {
-  let controller;
+}: PiToolStrategyInstallOptions = {}): void {
+  let controller: PiToolStrategy | null;
   try {
-    controller = createPiToolStrategy(phase);
+    controller = createPiToolStrategy(phase ?? 'implementation');
   } catch {
     controller = null;
   }
   let disabled = controller === null;
-  let initialActiveTools = null;
+  let initialActiveTools: string[] | null = null;
   let telemetryRecords = 0;
-  let telemetryAvailable = typeof logPath === 'string' && logPath.length > 0;
-  const disposers = [];
+  const telemetryTarget = typeof logPath === 'string' && logPath.length > 0 ? logPath : null;
+  let telemetryAvailable = telemetryTarget !== null;
+  const disposers: Array<() => void> = [];
 
-  async function emit(type, fields = {}) {
-    if (!telemetryAvailable) return false;
+  function currentPhase(): AdapterPhase {
+    return controller?.phase ?? 'implementation';
+  }
+
+  async function emit(type: string, fields: Record<string, unknown> = {}): Promise<boolean> {
+    if (!telemetryAvailable || telemetryTarget === null) return false;
     if (telemetryRecords >= MAX_TELEMETRY_RECORDS) {
       telemetryAvailable = false;
       return false;
@@ -38,11 +75,11 @@ export function installPiToolStrategy(pi, {
     if (telemetryRecords === MAX_TELEMETRY_RECORDS - 1 && type !== 'telemetry_truncated') {
       const truncatedRecord = {
         schema_version: PI_TOOL_STRATEGY_VERSION,
-        phase: controller?.phase ?? 'implementation',
+        phase: currentPhase(),
         type: 'telemetry_truncated',
       };
       try {
-        await appendFile(logPath, JSON.stringify(truncatedRecord) + '\n', 'utf8');
+        await appendFile(telemetryTarget, JSON.stringify(truncatedRecord) + '\n', 'utf8');
         telemetryRecords = MAX_TELEMETRY_RECORDS;
       } catch {
         telemetryAvailable = false;
@@ -53,12 +90,12 @@ export function installPiToolStrategy(pi, {
     }
     const record = {
       schema_version: PI_TOOL_STRATEGY_VERSION,
-      phase: controller?.phase ?? 'implementation',
+      phase: currentPhase(),
       type,
       ...fields,
     };
     try {
-      await appendFile(logPath, JSON.stringify(record) + '\n', 'utf8');
+      await appendFile(telemetryTarget, JSON.stringify(record) + '\n', 'utf8');
       telemetryRecords += 1;
       return true;
     } catch {
@@ -67,7 +104,7 @@ export function installPiToolStrategy(pi, {
     }
   }
 
-  async function restoreOriginalOrder() {
+  async function restoreOriginalOrder(): Promise<void> {
     if (!initialActiveTools || !validOrder(initialActiveTools)) return;
     try {
       pi.setActiveTools(initialActiveTools);
@@ -76,7 +113,7 @@ export function installPiToolStrategy(pi, {
     }
   }
 
-  async function disable(eventName, { logError = true } = {}) {
+  async function disable(eventName: string, { logError = true }: { logError?: boolean } = {}): Promise<void> {
     if (disabled) return;
     disabled = true;
     if (logError) {
@@ -85,9 +122,9 @@ export function installPiToolStrategy(pi, {
     await restoreOriginalOrder();
   }
 
-  function register(eventName, handler) {
+  function register(eventName: string, handler: (event: unknown) => unknown): void {
     const dispose = pi.on(eventName, handler);
-    if (typeof dispose === 'function') disposers.push(dispose);
+    if (typeof dispose === 'function') disposers.push(dispose as () => void);
   }
 
   try {
@@ -111,7 +148,8 @@ export function installPiToolStrategy(pi, {
           await disable('telemetry_unavailable', { logError: false });
           return;
         }
-        const sections = event?.systemPromptOptions?.sections;
+        const promptEvent = event as { systemPromptOptions?: { sections?: Record<string, string> } } | null | undefined;
+        const sections = promptEvent?.systemPromptOptions?.sections;
         if (!sections || typeof sections !== 'object') throw new TypeError('Pi did not expose mutable system prompt sections.');
         sections.evofence_tool_strategy = controller.guidance;
       } catch {
@@ -123,7 +161,7 @@ export function installPiToolStrategy(pi, {
       if (disabled || !controller) return;
       try {
         const decision = controller.onToolCall(event);
-        let orderedTools = null;
+        let orderedTools: string[] | null = null;
         let orderChanged = false;
         if (decision.blocked) {
           const activeTools = pi.getActiveTools();
@@ -153,7 +191,7 @@ export function installPiToolStrategy(pi, {
       if (disabled || !controller) return;
       try {
         const observation = controller.onToolResult(event);
-        let orderedTools = null;
+        let orderedTools: string[] | null = null;
         let orderChanged = false;
         if (observation.toolName) {
           const activeTools = pi.getActiveTools();
@@ -174,10 +212,11 @@ export function installPiToolStrategy(pi, {
           return;
         }
         if (observation.feedback) {
-          if (!Array.isArray(event.content)) throw new TypeError('Pi returned an invalid tool result.');
+          const resultEvent = event as { content: unknown };
+          if (!Array.isArray(resultEvent.content)) throw new TypeError('Pi returned an invalid tool result.');
           return {
             content: [
-              ...event.content,
+              ...resultEvent.content,
               { type: 'text', text: observation.feedback },
             ],
           };
@@ -200,6 +239,6 @@ export function installPiToolStrategy(pi, {
   }
 }
 
-export default function evoFencePiToolStrategy(pi) {
+export default function evoFencePiToolStrategy(pi: PiExtensionHost): void {
   installPiToolStrategy(pi);
 }

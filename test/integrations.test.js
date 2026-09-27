@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { COMMANDS } from '../dist/lib/cli/catalog.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const readJson = async (relativePath) => JSON.parse(await readFile(path.join(root, relativePath), 'utf8'));
 const exists = (relativePath) => access(path.join(root, relativePath));
+const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 test('Codex and Claude marketplaces point to complete, namespaced plugins', async () => {
   const rootPackage = await readJson('package.json');
@@ -54,4 +56,57 @@ test('OpenCode and Pi integration packages declare the modules their extensions 
   await exists('.pi/extensions/evofence.js');
   const piProjectEntry = await readFile(path.join(root, '.pi/extensions/evofence.js'), 'utf8');
   assert.match(piProjectEntry, /export\s+\{\s*default\s*\}\s+from\s+['"]\.\.\/\.\.\/integrations\/pi\/evofence\.js['"]/);
+});
+
+const INTEGRATION_COMMAND_FILES = [
+  'integrations/claude-code/commands/inspect-ledger.md',
+  'integrations/claude-code/commands/run-evolution.md',
+  'integrations/codex/skills/inspect-ledger/SKILL.md',
+  'integrations/codex/skills/run-evolution/SKILL.md',
+  'integrations/opencode/README.md',
+];
+
+test('every EvoFence CLI invocation shipped with an integration exists in the command catalog', async () => {
+  const catalogNames = new Set(COMMANDS.map((command) => command.name));
+  const invocation = /evofence ([a-z][a-z-]*)( [a-z][a-z-]*)?/g;
+  for (const file of INTEGRATION_COMMAND_FILES) {
+    const text = await read(file);
+    const referenced = [...text.matchAll(invocation)].map((match) => (match[2] ? `${match[1]} ${match[2].trim()}` : match[1]));
+    assert.ok(referenced.length > 0, `${file} references no EvoFence command`);
+    for (const name of new Set(referenced)) {
+      assert.ok(catalogNames.has(name), `${file} invokes "${name}", which is not in the command catalog`);
+    }
+  }
+
+  // The two JS plugins build argv arrays directly instead of quoting a command line.
+  for (const file of ['integrations/pi/evofence.js', 'integrations/opencode/plugins/evofence.js']) {
+    const source = await read(file);
+    const argv = [...source.matchAll(/\['([a-z-]+)', '([a-z-]+)'(?:, '([0-9]+)')?\]/g)].map((match) => `${match[1]} ${match[2]}`);
+    assert.deepEqual(new Set(argv), new Set(['ledger verify', 'ledger recent']), `${file} must read the ledger through the catalog commands`);
+    for (const name of argv) assert.ok(catalogNames.has(name), `${file} runs "${name}", which is not in the command catalog`);
+  }
+
+  // The one library consumer pins the package whose public API it imports.
+  const rootPackage = await readJson('package.json');
+  const harness = await readJson('integrations/deepseek-harness/package.json');
+  assert.equal(harness.dependencies.evofence, rootPackage.version);
+  const harnessReadme = await read('integrations/deepseek-harness/README.md');
+  assert.ok(harnessReadme.includes(`evofence@${rootPackage.version}`), 'the harness README must document the pinned package version');
+});
+
+test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {
+  const entry = await read('.pi/extensions/evofence.js');
+  const specifier = entry.match(/export\s+\{\s*default\s*\}\s+from\s+['"]([^'"]+)['"]/)?.[1];
+  assert.ok(specifier, 'the project-level entry must re-export a default binding');
+  assert.match(specifier, /\.js$/, 'Node cannot load a .ts extension at runtime');
+  await exists(path.join('.pi/extensions', specifier));
+
+  // `src/lib/adapter.ts` resolves the sidecar next to the running adapter module, so the CLI
+  // adapter loads the compiled dist twin; a .ts-only source would break `run --adapter pi`.
+  for (const file of ['src/lib/pi-tool-strategy.ts', 'src/lib/pi-tool-strategy-extension.ts']) await exists(file);
+  for (const file of ['dist/lib/pi-tool-strategy.js', 'dist/lib/pi-tool-strategy-extension.js']) await exists(file);
+
+  const sourceFiles = await readdir(path.join(root, 'src'), { recursive: true });
+  const jsResidue = sourceFiles.filter((file) => file.endsWith('.js'));
+  assert.deepEqual(jsResidue, [], 'src/ must hold no .js twin after the TypeScript conversion');
 });
