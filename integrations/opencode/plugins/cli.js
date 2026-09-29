@@ -1,9 +1,18 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 const LOCAL_CLI = path.resolve(import.meta.dirname, '../../../dist/cli.js');
-const LOCAL_PACKAGE_CLI = path.resolve(import.meta.dirname, '../../../node_modules/evofence/dist/cli.js');
+const LOCAL_PACKAGE_ROOT = path.resolve(import.meta.dirname, '../../../node_modules/evofence');
+
+function packageCli(packageRoot) {
+  const packageJson = path.join(packageRoot, 'package.json');
+  if (!existsSync(packageJson)) return null;
+  const metadata = JSON.parse(readFileSync(packageJson, 'utf8'));
+  if (metadata.name !== 'evofence') return null;
+  const cli = path.join(packageRoot, 'dist', 'cli.js');
+  return existsSync(cli) ? cli : null;
+}
 
 /**
  * Resolution order: explicit JS entry, this checkout or nearby local package, then PATH.
@@ -13,13 +22,11 @@ function resolveCliInvocation(cwd) {
   if (override) return { command: process.execPath, prefix: [path.resolve(override)] };
 
   const localCli = [
-    LOCAL_CLI,
-    LOCAL_PACKAGE_CLI,
-    path.resolve(process.cwd(), 'dist', 'cli.js'),
-    path.resolve(cwd, 'dist', 'cli.js'),
-    path.resolve(cwd, 'node_modules', 'evofence', 'dist', 'cli.js'),
-    path.resolve(cwd, '..', 'node_modules', 'evofence', 'dist', 'cli.js'),
-  ].find((candidate) => existsSync(candidate));
+    existsSync(LOCAL_CLI) ? LOCAL_CLI : null,
+    packageCli(LOCAL_PACKAGE_ROOT),
+    packageCli(path.resolve(cwd, 'node_modules', 'evofence')),
+    packageCli(path.resolve(cwd, '..', 'node_modules', 'evofence')),
+  ].find(Boolean);
   if (localCli) return { command: process.execPath, prefix: [localCli] };
   if (process.platform !== 'win32') return { command: 'evofence', prefix: [] };
 
@@ -31,9 +38,9 @@ function resolveCliInvocation(cwd) {
   if (commandPath?.toLowerCase().endsWith('.cmd')) {
     const directory = path.dirname(commandPath);
     const cliPath = [
-      path.resolve(directory, 'node_modules', 'evofence', 'dist', 'cli.js'),
-      path.resolve(directory, '..', 'evofence', 'dist', 'cli.js'),
-    ].find((candidate) => existsSync(candidate));
+      packageCli(path.resolve(directory, 'node_modules', 'evofence')),
+      packageCli(path.resolve(directory, '..', 'evofence')),
+    ].find(Boolean);
     if (cliPath) return { command: process.execPath, prefix: [cliPath] };
   }
   return { command: commandPath ?? 'evofence', prefix: [] };
@@ -58,10 +65,25 @@ export function parseCliFailure(stderr, fallbackMessage) {
   return { error: fallbackMessage };
 }
 
-export function parseCliResult(result, messages) {
+function parseBundleVerificationFailure(stdout) {
+  try {
+    const payload = JSON.parse(stdout);
+    return payload?.valid === false ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
+export function parseCliResult(result, messages, expectsBundleVerification) {
   if (result.error?.code === 'ENOENT') return { error: messages.missingMessage };
   if (result.error) return { error: messages.processErrorMessage };
-  if (result.status !== 0) return parseCliFailure(result.stderr, messages.failureMessage);
+  if (result.status !== 0) {
+    if (expectsBundleVerification) {
+      const verification = parseBundleVerificationFailure(result.stdout);
+      if (verification) return verification;
+    }
+    return parseCliFailure(result.stderr, messages.failureMessage);
+  }
   try {
     return JSON.parse(result.stdout);
   } catch {
@@ -79,5 +101,8 @@ export function runEvoFence(args, cwd, messages) {
     timeout: 15_000,
     windowsHide: true,
   });
-  return parseCliResult(result, messages);
+  const expectsBundleVerification = args[0] === 'ledger'
+    && args[1] === 'verify'
+    && args.some((arg) => arg === '--bundle' || arg.startsWith('--bundle='));
+  return parseCliResult(result, messages, expectsBundleVerification);
 }

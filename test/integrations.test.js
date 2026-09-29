@@ -4,6 +4,7 @@ import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:f
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { COMMANDS } from '../dist/lib/cli/catalog.js';
 import * as publicApi from '../dist/index.js';
 import {
@@ -474,6 +475,104 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
     await assert.rejects(access(injectedMarker));
   } finally {
     await rm(repository, { recursive: true, force: true });
+  }
+});
+
+test('copied OpenCode plugin ignores an unrelated target dist CLI', async () => {
+  const messages = {
+    missingMessage: 'missing',
+    processErrorMessage: 'process',
+    failureMessage: 'fallback',
+    invalidMessage: 'invalid',
+  };
+  const workspace = await mkdtemp(path.join(tmpdir(), 'evofence-opencode-copy-'));
+  const repository = path.join(workspace, 'target');
+  const originalCwd = process.cwd();
+  const originalPath = process.env.PATH;
+  const originalOverride = process.env.EVOFENCE_CLI_PATH;
+  try {
+    await mkdir(path.join(repository, '.evofence'), { recursive: true });
+    const marker = path.join(repository, 'unrelated-cli-marker.txt');
+    await mkdir(path.join(repository, 'dist'), { recursive: true });
+    await writeFile(
+      path.join(repository, 'dist', 'cli.js'),
+      `import { writeFileSync } from 'node:fs'; writeFileSync(${JSON.stringify(marker)}, 'executed');\n`,
+    );
+
+    const binDirectory = path.join(repository, 'bin');
+    const packageRoot = path.join(repository, 'evofence');
+    const packageCli = path.join(packageRoot, 'dist', 'cli.js');
+    const rootCliUrl = pathToFileURL(path.join(root, 'dist', 'cli.js')).href;
+    await mkdir(path.dirname(packageCli), { recursive: true });
+    await mkdir(binDirectory, { recursive: true });
+    await writeFile(path.join(packageRoot, 'package.json'), JSON.stringify({ name: 'evofence', type: 'module' }));
+    await writeFile(packageCli, `await import(${JSON.stringify(rootCliUrl)});\n`);
+    await writeFile(
+      path.join(binDirectory, 'evofence'),
+      `#!/usr/bin/env node\nawait import(${JSON.stringify(rootCliUrl)});\n`,
+      { mode: 0o755 },
+    );
+    await writeFile(
+      path.join(binDirectory, 'evofence.cmd'),
+      `@echo off\r\n"${process.execPath}" "${packageCli}" %*\r\n`,
+    );
+
+    const pluginPath = path.join(repository, '.opencode', 'plugins', 'cli.js');
+    await mkdir(path.dirname(pluginPath), { recursive: true });
+    await writeFile(path.join(repository, '.opencode', 'package.json'), JSON.stringify({ type: 'module' }));
+    await writeFile(pluginPath, await read('integrations/opencode/plugins/cli.js'));
+
+    process.chdir(repository);
+    process.env.PATH = `${binDirectory}${path.delimiter}${originalPath}`;
+    delete process.env.EVOFENCE_CLI_PATH;
+    const { runEvoFence } = await import(`${pathToFileURL(pluginPath).href}?unrelated-target-dist`);
+    const result = runEvoFence(['ledger', 'verify'], repository, messages);
+    assert.equal(typeof result.error?.code, 'string', JSON.stringify(result));
+    assert.notEqual(result.error.message, messages.failureMessage);
+    await assert.rejects(access(marker));
+  } finally {
+    process.chdir(originalCwd);
+    process.env.PATH = originalPath;
+    if (originalOverride === undefined) delete process.env.EVOFENCE_CLI_PATH;
+    else process.env.EVOFENCE_CLI_PATH = originalOverride;
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('JS integrations preserve tampered bundle verification details from stdout', async () => {
+  const messages = {
+    missingMessage: 'missing',
+    processErrorMessage: 'process',
+    failureMessage: 'fallback',
+    invalidMessage: 'invalid',
+  };
+  const workspace = await mkdtemp(path.join(tmpdir(), 'evofence-bundle-integration-'));
+  try {
+    const ledger = new publicApi.Ledger(path.join(workspace, 'source.sqlite'));
+    let bundle;
+    try {
+      ledger.append('run.started', 'run-bundle-integration', { adapter: 'codex' });
+      ledger.append('run.finished', 'run-bundle-integration', { status: 'PLATEAU', iterations: 1 });
+      bundle = ledger.export();
+    } finally {
+      ledger.close();
+    }
+    bundle.events[1].event_hash = 'b'.repeat(64);
+    const bundlePath = path.join(workspace, 'tampered-bundle.json');
+    await writeFile(bundlePath, `${JSON.stringify(bundle)}\n`);
+
+    const piResult = runPiEvoFence(['ledger', 'verify', '--bundle', bundlePath], workspace, messages);
+    const opencodeResult = runOpenCodeEvoFence(
+      ['ledger', 'verify', `--bundle=${bundlePath}`],
+      workspace,
+      messages,
+    );
+    assert.equal(piResult.valid, false, JSON.stringify(piResult));
+    assert.equal(piResult.sequence, 2, JSON.stringify(piResult));
+    assert.equal(opencodeResult.valid, false, JSON.stringify(opencodeResult));
+    assert.equal(opencodeResult.sequence, 2, JSON.stringify(opencodeResult));
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
   }
 });
 
