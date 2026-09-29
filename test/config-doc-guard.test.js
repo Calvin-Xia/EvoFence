@@ -36,6 +36,24 @@ test('the guard reports a required-field removal or rename from the document', (
   assert.ok(errors.some((error) => error.includes('Required fields/contract') && error.includes('renamed_invariants')));
 });
 
+test('the guard reports open and closed map drift from the schema', () => {
+  const capabilitiesClosed = structuredClone(solved);
+  capabilitiesClosed.documents.contract.map_paths.find((map) => map.path === 'capabilities').open = false;
+  const closedErrors = compareConfigContract(capabilitiesClosed, docs);
+  assert.ok(closedErrors.some((error) => error.includes('Open map paths') && error.includes('capabilities')));
+
+  const adaptersOpen = structuredClone(solved);
+  adaptersOpen.documents.config.map_paths.find((map) => map.path === 'adapters').open = true;
+  const openErrors = compareConfigContract(adaptersOpen, docs);
+  assert.ok(openErrors.some((error) => error.includes('Open map paths') && error.includes('adapters')));
+  assert.ok(openErrors.some((error) => error.includes('documented closed map open') && error.includes('adapters')));
+
+  const newOpenMap = structuredClone(solved);
+  newOpenMap.documents.contract.map_paths.push({ path: 'new_open_map', open: true });
+  const newMapErrors = compareConfigContract(newOpenMap, docs);
+  assert.ok(newMapErrors.some((error) => error.includes('Open map paths') && error.includes('new_open_map')));
+});
+
 test('the guard reports code-default value and failure-code drift', () => {
   const defaultDrift = structuredClone(solved);
   defaultDrift.code_defaults['evidence.max_output_bytes'] = 2048;
@@ -45,6 +63,14 @@ test('the guard reports code-default value and failure-code drift', () => {
   const failureDrift = docs.replace('`INVALID_HOLDOUT`', '`INVALID_CONFIG`');
   const failureErrors = compareConfigContract(solved, failureDrift);
   assert.ok(failureErrors.some((error) => error.includes('failure-code table') && error.includes('holdout')));
+});
+
+test('the guard derives and checks the contract-version exception code', () => {
+  assert.equal(solved.documents.contract.failure_code_exceptions.contract_version_present_but_wrong, 'UNSUPPORTED_CONTRACT');
+  const failureDrift = docs.replace('keeps `UNSUPPORTED_CONTRACT`', 'keeps `INVALID_CONFIG`');
+  const errors = compareConfigContract(solved, failureDrift);
+  assert.ok(errors.some((error) => error.includes('failure-code table') && error.includes('contract codes drift')));
+  assert.ok(errors.some((error) => error.includes('UNSUPPORTED_CONTRACT')));
 });
 
 test('the standalone guard exits zero after reading the built dist schema', () => {

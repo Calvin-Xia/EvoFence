@@ -44,19 +44,39 @@ const DOCUMENTS = {
   },
 };
 
-function failureCode(kind) {
+function failureCodes(kind) {
   const report = validateDocument(kind, null, '<config-doc-guard>');
-  return report.rejected_fields[0].code;
+  const codes = { default: report.rejected_fields[0].code };
+  if (kind === 'contract') {
+    const versionReport = validateDocument(kind, { contract_version: 2 }, '<config-doc-guard>');
+    const versionIssue = versionReport.rejected_fields.find((issue) => issue.path === 'contract_version');
+    codes.contract_version_present_but_wrong = versionIssue.code;
+  }
+  return codes;
+}
+
+function mapPaths(spec, prefix = '') {
+  const paths = [];
+  for (const [key, child] of Object.entries(spec.fields ?? {})) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (child.kind !== 'object') continue;
+    paths.push({ path, open: child.open === true });
+    paths.push(...mapPaths(child, path));
+  }
+  return paths;
 }
 
 export function solveConfigContract() {
   const documents = Object.fromEntries(
     DOCUMENT_KINDS.map((kind) => {
       const schema = documentSchema(kind);
+      const codes = failureCodes(kind);
       return [kind, {
         required: requiredFieldPaths(schema),
         defaulted: defaultedFieldPaths(schema),
-        failure_code: failureCode(kind),
+        failure_code: codes.default,
+        failure_code_exceptions: Object.fromEntries(Object.entries(codes).filter(([key]) => key !== 'default')),
+        map_paths: mapPaths(schema),
       }];
     }),
   );
@@ -165,8 +185,8 @@ function parseFailureTable(source, errors) {
     const label = stripCode(row[0]);
     const kind = Object.entries(DOCUMENTS).find(([, document]) => document.label === label)?.[0];
     if (!kind) continue;
-    const code = row[2].match(/\b[A-Z][A-Z_]+\b/)?.[0] ?? null;
-    parsed[kind] = { path: stripCode(row[1]), code };
+    const codes = [...row[2].matchAll(/\b[A-Z][A-Z_]+\b/g)].map(([code]) => code);
+    parsed[kind] = { path: stripCode(row[1]), codes };
   }
   for (const kind of DOCUMENT_KINDS) {
     if (!parsed[kind]) errors.push(`[failure-code table] missing declaration for ${kind}`);
@@ -189,6 +209,19 @@ function parseDefaults(source, errors) {
     parsed[field] = value;
   }
   return parsed;
+}
+
+function parseMapFacts(source, errors) {
+  const body = section(source, 'Open maps vs. closed maps');
+  if (body === null) {
+    errors.push('[Open maps vs. closed maps] section is missing');
+    return { open: [], closed: [] };
+  }
+  const text = normalized(body);
+  return {
+    open: [...text.matchAll(/`([^`]+)` is the one open map \(`open: true`\)/g)].map(([, path]) => path),
+    closed: [...text.matchAll(/`([^`]+)` is closed:/g)].map(([, path]) => path),
+  };
 }
 
 function compareSets(errors, scope, expected, actual) {
@@ -221,8 +254,12 @@ export function compareConfigContract(contract, source) {
     const row = failureRows[kind];
     if (!row) continue;
     if (row.path !== document.path) errors.push(`[failure-code table] ${kind} path drift: expected ${document.path}, docs=${row.path}`);
-    if (row.code !== contract.documents[kind].failure_code) {
-      errors.push(`[failure-code table] ${kind} code drift: schema=${contract.documents[kind].failure_code} docs=${row.code}`);
+    const documentCodes = [
+      contract.documents[kind].failure_code,
+      ...Object.values(contract.documents[kind].failure_code_exceptions),
+    ];
+    if (row.codes.length !== documentCodes.length || row.codes.some((code, index) => code !== documentCodes[index])) {
+      errors.push(`[failure-code table] ${kind} codes drift: schema=${documentCodes.join(',')} docs=${row.codes.join(',')}`);
     }
   }
 
@@ -236,6 +273,15 @@ export function compareConfigContract(contract, source) {
   compareSets(errors, 'Schema default declarations', Object.keys(contract.code_defaults), contract.documents.contract.defaulted);
   if (Object.keys(contract.code_defaults).length !== 2) {
     errors.push(`[Code defaults (exactly two)] schema declares ${Object.keys(contract.code_defaults).length} defaults`);
+  }
+
+  const mapFacts = parseMapFacts(source, errors);
+  const schemaMaps = Object.values(contract.documents).flatMap((document) => document.map_paths);
+  compareSets(errors, 'Open map paths', schemaMaps.filter((map) => map.open).map((map) => map.path), mapFacts.open);
+  for (const path of mapFacts.closed) {
+    const map = schemaMaps.find((candidate) => candidate.path === path);
+    if (!map) errors.push(`[Open maps vs. closed maps] documented map is not in schema: ${path}`);
+    else if (map.open) errors.push(`[Open maps vs. closed maps] schema marks documented closed map open: ${path}`);
   }
 
   addFactChecks(errors, source, 'What "v2" means here', [
