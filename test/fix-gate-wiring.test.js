@@ -170,7 +170,7 @@ test('runner-budgeted refuses before launching the adapter once the remaining al
   await assert.rejects(runBudgetedAdapter(usdAtLimit.ctx, budgetedOptions), { code: 'RESOURCE_EXHAUSTED' });
   assert.equal(usdAtLimit.launches(), 0);
   assert.deepEqual(usdAtLimit.ledger.events[0].payload, {
-    metric: 'estimated_usd', phase: 'proposal', iteration: 1, limit_usd: 1, observed_total_usd: 1,
+    metric: 'estimated_usd', phase: 'proposal', iteration: 1, limit_usd: 1, observed_total_usd: 1, over_limit_usd: 0,
   });
 
   const usdBelowLimit = budgetedCtx({ costLimitMicros: USD_LIMIT_MICROS, observedCostMicros: USD_LIMIT_MICROS - 1 });

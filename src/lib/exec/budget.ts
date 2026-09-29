@@ -138,13 +138,13 @@ export function recordCostUsage(result: AdapterResultLike, { maxUsdMicros, total
   if (result.tree_termination_failed) {
     const failure = { ...details, cost_usage_unknown: true, reason: 'process_tree_termination_failed' };
     ledger.append('budget.termination_failed', runId, failure);
-    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'EvoFence could not confirm that the Claude process tree stopped. The candidate will not be evaluated or accepted.', failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'EvoFence could not confirm that the agent process tree stopped. The candidate will not be evaluated or accepted.', failure);
   }
 
   if (result.timed_out) {
     const failure = { ...details, cost_usage_unknown: !observedTotalSafe, reason: 'agent_timeout' };
     ledger.append('budget.exhausted', runId, failure);
-    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The wall-clock budget stopped Claude. The in-flight candidate will not be evaluated or accepted.', failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The wall-clock budget stopped the agent. The in-flight candidate will not be evaluated or accepted.', failure);
   }
 
   if (!usageComplete || !observedTotalSafe) {
@@ -158,7 +158,7 @@ export function recordCostUsage(result: AdapterResultLike, { maxUsdMicros, total
       throw new EvoFenceError('RESOURCE_EXHAUSTED', 'Claude reached its native USD cap, but EvoFence could not verify the final cost estimate. The run stopped before candidate evaluation.', failure);
     }
     ledger.append('budget.cost_usage_unavailable', runId, failure);
-    throw new EvoFenceError('USD_USAGE_UNAVAILABLE', 'Claude did not provide a complete USD cost estimate. EvoFence stopped before continuing or evaluating the candidate.', failure);
+    throw new EvoFenceError('USD_USAGE_UNAVAILABLE', 'The adapter did not provide a complete USD cost estimate. EvoFence stopped before continuing or evaluating the candidate.', failure);
   }
 
   const event = {
@@ -177,7 +177,10 @@ export function recordCostUsage(result: AdapterResultLike, { maxUsdMicros, total
       over_limit_usd: usdFromMicros(Math.max(0, (observedTotalMicros as number) - maxUsdMicros)),
     };
     ledger.append('budget.exhausted', runId, failure);
-    throw new EvoFenceError('RESOURCE_EXHAUSTED', `The Claude USD cost estimate reached the run limit ($${estimatedTotal} / $${usdFromMicros(maxUsdMicros)}). The candidate will not continue to evaluation or acceptance.`, failure);
+    const message = result.cost_budget_reached
+      ? `The Claude USD cost estimate reached the run limit ($${estimatedTotal} / $${usdFromMicros(maxUsdMicros)}). The candidate will not continue to evaluation or acceptance.`
+      : `The USD cost estimate reached the run limit ($${estimatedTotal} / $${usdFromMicros(maxUsdMicros)}). The candidate will not continue to evaluation or acceptance.`;
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', message, failure);
   }
   return observedTotalMicros as number;
 }
