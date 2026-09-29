@@ -265,6 +265,30 @@ test('doctor --fix adds the holdout ignore entry, rechecks it, and is idempotent
   }
 });
 
+test('doctor --fix restores .gitignore when the post-fix ignore check fails', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.gitignore'), 'node_modules/\n');
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    const holdout = path.join(root, '.evofence', 'private', 'holdout.yaml');
+    await writeFile(holdout, 'regressions: []\n');
+    runGit(root, ['add', holdout]);
+    const original = await readFile(path.join(root, '.gitignore'), 'utf8');
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+      const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+      assert.equal(check.action.status, 'unfixable');
+      assert.equal(await readFile(path.join(root, '.gitignore'), 'utf8'), original);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('doctor --fix refuses a hard-linked .gitignore without changing the shared target', async () => {
   const { directory, root } = await makeRepo();
   try {

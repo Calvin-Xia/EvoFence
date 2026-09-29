@@ -191,14 +191,14 @@ export function buildBudgetForecast(snapshot: LedgerSnapshot): BudgetForecastVie
     schema_version: 1,
     basis: 'historical_mean',
     explanation: FORECAST_EXPLANATION,
-    run_count: runs.length,
+    run_count: completed.length,
     rounds_used: roundsUsed,
     rounds_limit: roundsLimit,
     used_ratio: ratio(roundsUsed, roundsLimit),
     historical_mean_rounds_per_run: historicalMeanRounds,
     remaining_rounds_estimate: estimate(roundsUsed, roundsLimit, historicalMeanRounds),
-    tokens: metric(runs, 'tokens_used', 'tokens_limit'),
-    usd: metric(runs, 'usd_used', 'usd_limit'),
+    tokens: metric(completed, 'tokens_used', 'tokens_limit'),
+    usd: metric(completed, 'usd_used', 'usd_limit'),
     runs,
   };
 }
@@ -208,14 +208,14 @@ export function formatBudgetForecast(view: BudgetForecastView): string {
   const lines = [
     'EvoFence Budget Forecast',
     `- Basis: ${view.basis} (historical mean; not a prediction commitment)`,
-    `- Runs: ${view.run_count}`,
+    `- Completed runs: ${view.run_count}`,
     `- Rounds: used=${view.rounds_used} limit=${display(view.rounds_limit)} ratio=${displayRatio(view.used_ratio)}`,
     `- Historical mean rounds per run: ${display(view.historical_mean_rounds_per_run)}`,
     `- Remaining rounds estimate: ${display(view.remaining_rounds_estimate)}`,
     `- Tokens: used=${display(view.tokens.used)} limit=${display(view.tokens.limit)} ratio=${displayRatio(view.tokens.used_ratio)} remaining_rounds_estimate=${display(view.tokens.remaining_rounds_estimate)}`,
     `- USD: used=${display(view.usd.used)} limit=${display(view.usd.limit)} ratio=${displayRatio(view.usd.used_ratio)} remaining_rounds_estimate=${display(view.usd.remaining_rounds_estimate)}`,
     '',
-    'Runs:',
+    'Runs (including incomplete):',
   ];
   for (const run of view.runs) {
     lines.push(`  ${run.run_id}  ${run.status}  iterations=${run.iterations}/${display(run.iteration_limit)}  tokens=${display(run.tokens_used)}/${display(run.tokens_limit)}  usd=${display(run.usd_used)}/${display(run.usd_limit)}`);

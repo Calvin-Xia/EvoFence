@@ -4,7 +4,7 @@
  * DOMAIN: CLI handler (node `l2_doctor_align`). The checks call the same loaders and judgement
  * functions as `run`; this handler only turns their original errors into the stable view.
  */
-import { lstat, readFile, writeFile } from 'node:fs/promises';
+import { lstat, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { EvoFenceContract } from '../../../types/index.js';
 import { EvoFenceError } from '../../errors.js';
@@ -52,6 +52,11 @@ const PROCESS_REMEDIATION = 'Use a host that can terminate the agent process tre
 const LEDGER_REMEDIATION = 'Restore or repair the ledger, then rerun doctor.';
 const HOLDOUT_IGNORE_ENTRY = '.evofence/private/holdout.yaml';
 type IgnoreFileStat = Awaited<ReturnType<typeof lstat>>;
+
+interface HoldoutFix {
+  readonly action: DoctorAction;
+  readonly rollback: () => Promise<void>;
+}
 
 type CheckAction = () => void | null | PreflightRefusal | Promise<void | null | PreflightRefusal>;
 
@@ -138,7 +143,7 @@ async function doctorChecksOnce(root: string, adapter: string): Promise<DoctorCh
   return checks;
 }
 
-async function addHoldoutIgnoreEntry(root: string): Promise<DoctorAction> {
+async function addHoldoutIgnoreEntry(root: string): Promise<HoldoutFix> {
   const file = path.join(root, '.gitignore');
   const lstatIfPresent = async (): Promise<IgnoreFileStat | null> => {
     try {
@@ -184,52 +189,96 @@ async function addHoldoutIgnoreEntry(root: string): Promise<DoctorAction> {
       assertSafeTarget(after);
     }
     await writeFile(file, `${contents}${prefix}${HOLDOUT_IGNORE_ENTRY}\n`, { encoding: 'utf8', flag: before === null ? 'wx' : 'w' });
+    const written = await lstatIfPresent();
+    if (written === null || (before !== null && !sameIdentity(before, written))) {
+      throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: its identity changed after it was written.`);
+    }
+    assertSafeTarget(written);
+    return {
+      action: {
+        status: 'fixed',
+        message: `Added ${HOLDOUT_IGNORE_ENTRY} to .gitignore; rechecked Git ignore status.`,
+        original_code: 'HOLDOUT_NOT_IGNORED',
+      },
+      rollback: async () => {
+        const current = await lstatIfPresent();
+        if (current === null || !sameIdentity(written, current)) {
+          throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot restore ${file}: its identity changed after the fix.`);
+        }
+        assertSafeTarget(current);
+        if (before === null) await rm(file);
+        else await writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
+      },
+    };
   } catch (error) {
     if (error instanceof EvoFenceError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot update ${file}: ${message}`);
   }
-  return {
-    status: 'fixed',
-    message: `Added ${HOLDOUT_IGNORE_ENTRY} to .gitignore; rechecked Git ignore status.`,
-    original_code: 'HOLDOUT_NOT_IGNORED',
-  };
 }
 
 async function doctorChecks(root: string, adapter: string, fix: boolean): Promise<DoctorCheck[]> {
   const initial = await doctorChecksOnce(root, adapter);
   if (!fix) return initial;
 
-  const actions = new Map<string, DoctorAction>();
+  const actions = new Map<string, { action: DoctorAction; rollback?: () => Promise<void> }>();
   let recheck = false;
   for (const check of initial) {
     if (check.status === 'ok') {
-      actions.set(check.id, { status: 'not-needed', message: 'No action required.' });
+      actions.set(check.id, { action: { status: 'not-needed', message: 'No action required.' } });
       continue;
     }
     if (check.id === 'holdout-exposure' && check.code === 'HOLDOUT_NOT_IGNORED') {
+      let fix: HoldoutFix | null = null;
       try {
-        actions.set(check.id, await addHoldoutIgnoreEntry(root));
+        fix = await addHoldoutIgnoreEntry(root);
         await ensurePrivateIgnored(root);
+        actions.set(check.id, fix);
         recheck = true;
       } catch (error) {
+        let restoreFailure = '';
+        if (fix !== null) {
+          try {
+            await fix.rollback();
+          } catch (restoreError) {
+            const message = restoreError instanceof Error ? restoreError.message : String(restoreError);
+            restoreFailure = ` Restore failed: ${message}`;
+          }
+        }
         const originalCode = check.code!;
         const message = error instanceof Error ? error.message : String(error);
-        actions.set(check.id, { status: 'unfixable', message: `Automatic fix failed: ${message}`, original_code: originalCode });
+        actions.set(check.id, { action: { status: 'unfixable', message: `Automatic fix failed: ${message}.${restoreFailure}`, original_code: originalCode } });
       }
       continue;
     }
-    actions.set(check.id, {
+    actions.set(check.id, { action: {
       status: 'unfixable',
       message: `No safe automatic fix for ${check.code!}.`,
       original_code: check.code!,
-    });
+    } });
   }
 
   const observed = recheck ? await doctorChecksOnce(root, adapter) : initial;
+  const observedHoldout = observed.find((check) => check.id === 'holdout-exposure');
+  const fixedHoldout = actions.get('holdout-exposure');
+  if (observedHoldout?.status === 'refused' && fixedHoldout?.action.status === 'fixed' && fixedHoldout.rollback) {
+    let restoreFailure = '';
+    try {
+      await fixedHoldout.rollback();
+    } catch (restoreError) {
+      const message = restoreError instanceof Error ? restoreError.message : String(restoreError);
+      restoreFailure = ` Restore failed: ${message}`;
+    }
+    actions.set('holdout-exposure', { action: {
+      status: 'unfixable',
+      message: `Automatic fix did not pass recheck: ${observedHoldout.code!}.${restoreFailure}`,
+      original_code: 'HOLDOUT_NOT_IGNORED',
+    } });
+  }
   return observed.map((check) => {
-    const action = actions.get(check.id);
-    if (!action) return check;
+    const entry = actions.get(check.id);
+    if (!entry) return check;
+    const action = entry.action;
     if (action.status === 'unfixable') {
       return { ...check, status: 'refused', code: 'DOCTOR_UNFIXABLE', action };
     }

@@ -256,7 +256,15 @@ test('budget forecast excludes an only-started run from historical aggregates', 
 
   assert.equal(forecast.rounds_used, 1);
   assert.equal(forecast.tokens.used, 30);
+  assert.equal(forecast.run_count, 1);
+  assert.equal(forecast.runs.length, 2);
+  assert.equal(forecast.tokens.limit, 100);
+  assert.equal(forecast.tokens.used_ratio, 0.3);
+  assert.equal(forecast.tokens.remaining_rounds_estimate, 70 / 30);
   assert.equal(forecast.usd.used, 0.3);
+  assert.equal(forecast.usd.limit, 1);
+  assert.equal(forecast.usd.used_ratio, 0.3);
+  assert.equal(forecast.usd.remaining_rounds_estimate, 0.7 / 0.3);
   assert.equal(forecast.runs.find((run) => run.run_id === 'run-partial').status, 'INCOMPLETE');
   assert.equal(forecast.runs.find((run) => run.run_id === 'run-partial').tokens_used, null);
 });
