@@ -133,7 +133,7 @@ evofence diff <generation-id> [--json]
 
 ### 只读预检
 
-`evofence doctor [--adapter <name>] [--json]` 只读呈现运行前置检查：默认逐项输出可读文本，使用 `--json` 输出带有 `id`、`label`、`status`、原始错误码和修复建议的检查对象。它不创建运行、临时目录、worktree 或 ledger 事件；所有检查通过时退出 0，任一检查拒绝时输出完整结果并退出 1。
+`evofence doctor [--adapter <name>] [--json]` 只读呈现 `run` 已使用的前置判定：默认逐项输出可读文本，使用 `--json` 输出带有 `id`、`label`、`status`、原始错误码和修复建议的检查对象。它不另建一套独立体检规则，不创建运行、临时目录、worktree 或 ledger 事件；所有检查通过时退出 0，任一检查拒绝时输出完整结果并退出 1。
 
 ### 命令面约定（0.4.0）
 
