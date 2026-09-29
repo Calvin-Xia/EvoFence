@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import test from 'node:test';
@@ -50,4 +51,13 @@ test('the standalone guard exits zero after reading the built dist schema', () =
   const result = spawnSync(process.execPath, [guard], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), 'config-doc guard passed');
+});
+
+test('npm and CI expose the guard as an independent gate', () => {
+  const packageJson = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(packageJson.scripts['config:doc'], 'npm run build && node scripts/check-config-doc.mjs');
+  assert.doesNotMatch(packageJson.scripts.check, /config:doc/);
+
+  const ci = readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
+  assert.match(ci, /name: config:doc\s+run: npm run config:doc/);
 });
