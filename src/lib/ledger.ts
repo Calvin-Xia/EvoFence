@@ -56,6 +56,7 @@ import {
 import { summarizeRuns } from './ledger/summaries.js';
 
 export { LEDGER_SCHEMA_VERSION, LEDGER_SCHEMA_VERSION_KEY } from './ledger/schema.js';
+export { verifyBundle } from './ledger/bundle.js';
 
 /** Row shape of the `(seq, event_hash)` lookup that seeds the next event. */
 interface LatestEventRow {
