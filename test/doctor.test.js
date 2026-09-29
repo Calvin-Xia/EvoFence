@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { runAgentAdapter } from '../dist/lib/adapter.js';
 import { initializeRepository } from '../dist/lib/init.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 
@@ -47,6 +48,15 @@ function spawnRun(cwd, adapter = 'codex') {
   });
 }
 
+function doctorFailure(result) {
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  const payload = JSON.parse(result.stderr);
+  assert.deepEqual(Object.keys(payload), ['error']);
+  assert.ok(Array.isArray(payload.error.details.checks));
+  return payload.error;
+}
+
 async function directoryInventory(root) {
   const directories = [];
   async function visit(current) {
@@ -66,11 +76,11 @@ async function assertDoctorMatchesRun(configure, checkId, adapter = 'codex') {
   try {
     await configure(root);
     const doctor = spawnDoctor(['--adapter', adapter, '--json'], root);
-    assert.equal(doctor.status, 1, doctor.stderr);
-    const document = JSON.parse(doctor.stdout);
-    const refused = document.checks.filter((check) => check.status === 'refused');
+    const error = doctorFailure(doctor);
+    const refused = error.details.checks.filter((check) => check.status === 'refused');
     assert.equal(refused.length, 1);
     assert.equal(refused[0].id, checkId);
+    assert.equal(error.code, refused[0].code);
 
     const run = spawnRun(root, adapter);
     assert.equal(run.status, 1);
@@ -133,11 +143,10 @@ test('doctor preserves the config loader error code', async () => {
     const config = await readFile(configFile, 'utf8');
     await writeFile(configFile, `${config}unknown: refused\n`);
     const result = spawnDoctor(['--json'], root);
-    assert.equal(result.status, 1);
-    const check = JSON.parse(result.stdout).checks.find((item) => item.id === 'contract-config');
+    const error = doctorFailure(result);
+    const check = error.details.checks.find((item) => item.id === 'contract-config');
     assert.equal(check.status, 'refused');
     assert.equal(check.code, 'INVALID_CONFIG');
-    assert.equal(result.stderr, '');
     const run = spawnRun(root);
     assert.equal(run.status, 1);
     assert.equal(JSON.parse(run.stderr).error.code, check.code);
@@ -191,6 +200,37 @@ test('doctor and run agree on a holdout refusal', async () => {
   }, 'holdout-exposure');
 });
 
+test('doctor JSON refusals use the CLI failure envelope', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions:\n  - id: hidden\n    command: "node --version"\n');
+    const error = doctorFailure(spawnDoctor(['--json'], root));
+    assert.equal(error.code, 'PRIVATE_ORACLE_READABLE');
+    assert.equal(error.message, 'Doctor preflight refused.');
+    const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+    assert.deepEqual(check, {
+      id: 'holdout-exposure',
+      label: 'Private holdout exposure',
+      status: 'refused',
+      code: 'PRIVATE_ORACLE_READABLE',
+      remediation: 'Keep .evofence/private/holdout.yaml excluded from Git; pass --allow-readable-holdout only if you accept possible oracle exposure, or use a container or VM with restricted mounts.',
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor and run agree when the private holdout is not ignored', async () => {
+  await assertDoctorMatchesRun(async (root) => {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
+  }, 'holdout-exposure');
+});
+
 test('doctor and run agree on an adapter budget refusal', async () => {
   await assertDoctorMatchesRun(async (root) => {
     const file = path.join(root, '.evofence', 'contract.yaml');
@@ -211,6 +251,34 @@ test('doctor and run agree on an adapter isolation refusal', async () => {
   await assertDoctorMatchesRun(async () => {}, 'budget-adapter', 'claude');
 });
 
+test('doctor and the adapter guard agree on OpenCode isolation refusal', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const error = doctorFailure(spawnDoctor(['--adapter', 'opencode', '--json'], root));
+    assert.equal(error.code, 'OPEN_CODE_SANDBOX_REQUIRED');
+    assert.equal(error.details.checks.find((item) => item.id === 'budget-adapter').code, error.code);
+    await assert.rejects(runAgentAdapter({
+      name: 'opencode', command: 'must-not-launch', cwd: root, timeoutMs: 1000, maxOutputBytes: 1000,
+    }), { code: error.code });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor rejects an unknown adapter with the adapter guard code', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const error = doctorFailure(spawnDoctor(['--adapter', 'not-an-adapter', '--json'], root));
+    assert.equal(error.code, 'UNKNOWN_ADAPTER');
+    assert.equal(error.details.checks.find((item) => item.id === 'budget-adapter').code, error.code);
+    await assert.rejects(runAgentAdapter({
+      name: 'not-an-adapter', command: 'must-not-launch', cwd: root, timeoutMs: 1000, maxOutputBytes: 1000,
+    }), { code: error.code });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('doctor and run agree on a ledger refusal', async () => {
   await assertDoctorMatchesRun(async (root) => {
     const ledger = new Ledger(ledgerPath(root));
@@ -227,4 +295,23 @@ test('doctor and run agree on a ledger refusal', async () => {
       tampered.close();
     }
   }, 'ledger-integrity');
+});
+
+test('doctor reports missing and unreadable ledgers as ledger-integrity refusals', async () => {
+  for (const [label, configure] of [
+    ['missing', async (root) => { await rm(ledgerPath(root)); }],
+    ['not-sqlite', async (root) => { await writeFile(ledgerPath(root), 'not a sqlite database\n'); }],
+  ]) {
+    const { directory, root } = await makeRepo();
+    try {
+      await configure(root);
+      const error = doctorFailure(spawnDoctor(['--json'], root));
+      assert.equal(error.code, 'LEDGER_UNAVAILABLE', label);
+      const check = error.details.checks.find((item) => item.id === 'ledger-integrity');
+      assert.equal(check.status, 'refused');
+      assert.equal(check.code, 'LEDGER_UNAVAILABLE');
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  }
 });

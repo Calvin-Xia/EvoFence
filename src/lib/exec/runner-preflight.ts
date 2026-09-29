@@ -63,7 +63,7 @@ export async function prepareRun(options: RunEvolutionOptions): Promise<RunConte
     throw new EvoFenceError(costPolicy.refusal.code, costPolicy.refusal.message);
   }
   costLimitMicros = costPolicy.costLimitMicros;
-  const isolationRefusal = checkAdapterIsolation(adapter, allowUnisolatedAgent);
+  const isolationRefusal = checkAdapterIsolation(adapter, allowUnisolatedAgent, 'preflight');
   if (isolationRefusal) {
     throw new EvoFenceError(isolationRefusal.code, isolationRefusal.message);
   }

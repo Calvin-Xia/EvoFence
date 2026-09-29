@@ -1,4 +1,5 @@
 import { usdToMicros } from './budget.js';
+import { ADAPTER_NAMES } from '../../types/index.js';
 
 export interface PreflightRefusal {
   readonly code: string;
@@ -8,6 +9,13 @@ export interface PreflightRefusal {
 export interface CostBudgetPolicy {
   readonly costLimitMicros: number | null;
   readonly refusal: PreflightRefusal | null;
+}
+
+export function checkAdapterName(adapter: string): PreflightRefusal | null {
+  if (!ADAPTER_NAMES.includes(adapter as (typeof ADAPTER_NAMES)[number])) {
+    return refusal('UNKNOWN_ADAPTER', `Unsupported adapter: ${adapter}`);
+  }
+  return null;
 }
 
 function refusal(code: string, message: string): PreflightRefusal {
@@ -55,7 +63,14 @@ export function checkCostBudget(maxUsd: number | null, adapter: string): CostBud
 export function checkAdapterIsolation(
   adapter: string,
   allowUnisolatedAgent: boolean,
+  stage: 'preflight' | 'dispatch',
 ): PreflightRefusal | null {
+  if (stage === 'dispatch' && adapter === 'opencode' && !allowUnisolatedAgent) {
+    return refusal(
+      'OPEN_CODE_SANDBOX_REQUIRED',
+      'OpenCode does not provide an OS security sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or launch OpenCode in a Docker/VM sandbox.',
+    );
+  }
   if (adapter === 'claude' && !allowUnisolatedAgent) {
     return refusal(
       'CLAUDE_SANDBOX_REQUIRED',

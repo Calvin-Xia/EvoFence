@@ -135,7 +135,7 @@ evofence diff <generation-id> [--json]
 
 ### Read-only preflight
 
-`evofence doctor [--adapter <name>] [--json]` presents the same pre-dispatch judgements already used by `run`; it does not introduce a separate health-check rule set. It writes no run, temporary directory, worktree, or ledger event. Text mode prints one readable line per check; `--json` prints check objects with `id`, `label`, `status`, the original error code, and a remediation. It exits 0 when all checks pass and 1 when any check is refused.
+`evofence doctor [--adapter <name>] [--json]` presents the same pre-dispatch judgements already used by `run`; it does not introduce a separate health-check rule set. It writes no run, temporary directory, worktree, or ledger event. Text mode prints one readable line per check; `--json` prints the check object when all checks pass. When any check is refused, stdout stays empty, stderr carries one failure object, and the individual checks are available under `error.details.checks`. It exits 0 when all checks pass and 1 when any check is refused.
 
 ### Command-surface conventions (0.4.0)
 

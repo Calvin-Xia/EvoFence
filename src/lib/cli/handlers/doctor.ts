@@ -14,12 +14,14 @@ import { canTerminateProcessTree } from '../../process.js';
 import { repositoryRoot } from '../../git.js';
 import {
   checkAdapterIsolation,
+  checkAdapterName,
   checkClaudeTokenBudget,
   checkCostBudget,
   checkHoldoutExposure,
   checkProcessTree,
   type PreflightRefusal,
 } from '../../exec/preflight-policy.js';
+import { ensurePrivateIgnored } from '../../exec/runner-candidate.js';
 import { jsonDocument, type Write } from '../output.js';
 import type { CommandContext } from './context.js';
 import { stringOption } from './context.js';
@@ -35,7 +37,7 @@ export interface DoctorCheck {
 const NO_ACTION = 'No action required.';
 const POLICY_REMEDIATION = 'Fix the reported contract.yaml or config.yaml problem, then rerun doctor.';
 const EVIDENCE_REMEDIATION = 'Add a hard invariant or public evidence command, or configure objective.command when improvement is required.';
-const HOLDOUT_REMEDIATION = 'Pass --allow-readable-holdout only if you accept possible oracle exposure, or use a container or VM with restricted mounts.';
+const HOLDOUT_REMEDIATION = 'Keep .evofence/private/holdout.yaml excluded from Git; pass --allow-readable-holdout only if you accept possible oracle exposure, or use a container or VM with restricted mounts.';
 const ADAPTER_REMEDIATION = 'Set the incompatible budget to null, choose a compatible adapter, or pass the required isolation opt-in.';
 const PROCESS_REMEDIATION = 'Use a host that can terminate the agent process tree, or remove the live token/USD budget.';
 const LEDGER_REMEDIATION = 'Restore or repair the ledger, then rerun doctor.';
@@ -78,14 +80,18 @@ async function doctorChecks(root: string, adapter: string): Promise<DoctorCheck[
   }));
   checks.push(await presentCheck('holdout-exposure', 'Private holdout exposure', HOLDOUT_REMEDIATION, async () => {
     const holdout = await loadPrivateHoldout(root);
-    return checkHoldoutExposure(holdout.length, false);
+    const exposureRefusal = checkHoldoutExposure(holdout.length, false);
+    if (exposureRefusal) return exposureRefusal;
+    await ensurePrivateIgnored(root);
   }));
   checks.push(await presentCheck('budget-adapter', 'Budget and adapter compatibility', ADAPTER_REMEDIATION, () => {
     const policy = contractForCheck();
     const costPolicy = checkCostBudget(policy.budgets.max_usd, adapter);
     costLimitMicros = costPolicy.costLimitMicros;
     if (costPolicy.refusal) return costPolicy.refusal;
-    const isolationRefusal = checkAdapterIsolation(adapter, false);
+    const adapterRefusal = checkAdapterName(adapter);
+    if (adapterRefusal) return adapterRefusal;
+    const isolationRefusal = checkAdapterIsolation(adapter, false, 'dispatch');
     if (isolationRefusal) return isolationRefusal;
     return checkClaudeTokenBudget(adapter, policy.budgets.max_tokens);
   }));
@@ -98,19 +104,31 @@ async function doctorChecks(root: string, adapter: string): Promise<DoctorCheck[
     );
   }));
   checks.push(await presentCheck('ledger-integrity', 'Ledger integrity', LEDGER_REMEDIATION, () => {
-    const ledger = new Ledger(ledgerPath(root), { readOnly: true });
     try {
-      const integrity = ledger.verify();
-      if (!integrity.valid) throw new EvoFenceError('LEDGER_CORRUPT', `SQLite ledger hash chain failed at event ${integrity.sequence}.`);
-    } finally {
-      ledger.close();
+      const ledger = new Ledger(ledgerPath(root), { readOnly: true });
+      try {
+        const integrity = ledger.verify();
+        if (!integrity.valid) throw new EvoFenceError('LEDGER_CORRUPT', `SQLite ledger hash chain failed at event ${integrity.sequence}.`);
+      } finally {
+        ledger.close();
+      }
+    } catch (error) {
+      if (error instanceof EvoFenceError) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      throw new EvoFenceError('LEDGER_UNAVAILABLE', `Cannot read the ledger at ${ledgerPath(root)}: ${message}`);
     }
   }));
   return checks;
 }
 
 export function renderDoctor(checks: readonly DoctorCheck[], json: boolean, stdout: Write): number {
-  if (json) stdout(jsonDocument({ checks }));
+  if (json) {
+    const refused = checks.filter((check) => check.status === 'refused');
+    if (refused.length > 0) {
+      throw new EvoFenceError(refused[0].code!, 'Doctor preflight refused.', { checks });
+    }
+    stdout(jsonDocument({ checks }));
+  }
   else {
     for (const check of checks) {
       const code = check.code === null ? '' : ` (${check.code})`;
