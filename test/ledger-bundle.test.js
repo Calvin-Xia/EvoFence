@@ -4,18 +4,30 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { Ledger, verifyBundle } from '../dist/lib/ledger.js';
+import { eventHash, verifyChain } from '../dist/lib/ledger/chain.js';
+
+const ZERO_HASH = '0'.repeat(64);
 
 async function withLedger(body) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-bundle-'));
   const ledger = new Ledger(path.join(directory, 'ledger.sqlite'));
   try {
     ledger.append('run.started', 'run-bundle', { adapter: 'codex' });
+    ledger.append('candidate.accepted', 'run-bundle', { iteration: 1, generation_id: 'g1' });
     ledger.append('run.finished', 'run-bundle', { status: 'PLATEAU', iterations: 1 });
     return await body(ledger);
   } finally {
     ledger.close();
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+function copyBundle(bundle) {
+  return {
+    ...bundle,
+    integrity: { ...bundle.integrity },
+    events: bundle.events.map((event) => ({ ...event })),
+  };
 }
 
 test('offline bundle verification matches the online chain result', async () => {
@@ -36,5 +48,73 @@ test('offline verification rejects an unsupported bundle schema version explicit
       () => verifyBundle({ ...bundle, schema_version: 2 }),
       (error) => error?.code === 'LEDGER_BUNDLE_INCOMPATIBLE' && /schema_version 2/.test(error.message),
     );
+  });
+});
+
+test('offline verification localizes bundle tampering like the online verifier', async () => {
+  await withLedger((ledger) => {
+    const source = ledger.export();
+    const cases = [
+      {
+        name: 'payload_json',
+        sequence: 2,
+        expected_previous_hash: source.events[0].event_hash,
+        observed_hash: source.events[1].event_hash,
+        mutate(bundle) {
+          bundle.events[1].payload_json = '{"status":"FORGED"}';
+        },
+      },
+      {
+        name: 'event_hash',
+        sequence: 2,
+        expected_previous_hash: source.events[0].event_hash,
+        observed_hash: 'b'.repeat(64),
+        mutate(bundle) {
+          bundle.events[1].event_hash = 'b'.repeat(64);
+        },
+      },
+      {
+        name: 'deleted middle event',
+        sequence: 3,
+        expected_previous_hash: source.events[0].event_hash,
+        observed_hash: source.events[2].event_hash,
+        mutate(bundle) {
+          bundle.events.splice(1, 1);
+        },
+      },
+      {
+        name: 'reordered events',
+        sequence: 3,
+        expected_previous_hash: source.events[0].event_hash,
+        observed_hash: source.events[2].event_hash,
+        mutate(bundle) {
+          [bundle.events[1], bundle.events[2]] = [bundle.events[2], bundle.events[1]];
+        },
+      },
+      {
+        name: 'non-zero genesis previous_hash',
+        sequence: 1,
+        expected_previous_hash: ZERO_HASH,
+        mutate(bundle) {
+          const first = bundle.events[0];
+          first.previous_hash = 'a'.repeat(64);
+          first.event_hash = eventHash(first);
+          this.observed_hash = first.event_hash;
+        },
+      },
+    ];
+
+    for (const tamperCase of cases) {
+      const tampered = copyBundle(source);
+      tamperCase.mutate(tampered);
+      const online = verifyChain(tampered.events);
+      assert.deepEqual(online, {
+        valid: false,
+        sequence: tamperCase.sequence,
+        expected_previous_hash: tamperCase.expected_previous_hash,
+        observed_hash: tamperCase.observed_hash,
+      }, `${tamperCase.name} online location`);
+      assert.deepEqual(verifyBundle(tampered), online, `${tamperCase.name} offline location`);
+    }
   });
 });
