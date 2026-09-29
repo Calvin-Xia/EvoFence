@@ -102,6 +102,48 @@ export interface EvolutionReport {
 }
 
 /* ------------------------------------------------------------------ *
+ * budget forecast
+ * ------------------------------------------------------------------ */
+
+/** One sanitized run row used by the read-only budget forecast. */
+export interface BudgetForecastRun {
+  run_id: string;
+  started_at: string;
+  status: string;
+  iterations: number;
+  iteration_limit: number | null;
+  tokens_used: number | null;
+  tokens_limit: number | null;
+  usd_used: number | null;
+  usd_limit: number | null;
+}
+
+/** Aggregate usage/threshold facts and a historical-mean round estimate. */
+export interface BudgetForecastMetric {
+  used: number | null;
+  limit: number | null;
+  used_ratio: number | null;
+  historical_mean_per_round: number | null;
+  remaining_rounds_estimate: number | null;
+}
+
+/** JSON/text view behind `evofence budget`. */
+export interface BudgetForecastView {
+  schema_version: 1;
+  basis: 'historical_mean';
+  explanation: string;
+  run_count: number;
+  rounds_used: number;
+  rounds_limit: number | null;
+  used_ratio: number | null;
+  historical_mean_rounds_per_run: number | null;
+  remaining_rounds_estimate: number | null;
+  tokens: BudgetForecastMetric;
+  usd: BudgetForecastMetric;
+  runs: BudgetForecastRun[];
+}
+
+/* ------------------------------------------------------------------ *
  * status
  * ------------------------------------------------------------------ */
 

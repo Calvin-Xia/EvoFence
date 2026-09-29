@@ -22,6 +22,7 @@ export const COMMAND_GROUPS = [
   'rollback',
   'experiment',
   'report',
+  'budget',
   'status',
   'doctor',
 ] as const;
@@ -84,6 +85,11 @@ export interface CommandSpec {
   readonly summary: string;
   /** Usage line WITHOUT the `evofence ` prefix; also the text after `Use: evofence `. */
   readonly usage: string;
+  /**
+   * Optional 0.4.x usage spelling retained in usage errors/help compatibility text while the
+   * manifest's `usage` records an additive flag. This stays on the one manifest entry.
+   */
+  readonly legacyUsage?: string;
   readonly positionals: readonly PositionalSpec[];
   readonly flags: readonly FlagSpec[];
   readonly json: JsonMode;

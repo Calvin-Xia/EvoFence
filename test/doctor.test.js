@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -229,6 +229,108 @@ test('doctor and run agree when the private holdout is not ignored', async () =>
     await writeFile(path.join(root, '.evofence', '.gitignore'), '');
     await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
   }, 'holdout-exposure');
+});
+
+test('doctor --fix adds the holdout ignore entry, rechecks it, and is idempotent', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.gitignore'), 'node_modules/\n');
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
+
+    const first = spawnDoctor(['--fix', '--json'], root);
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(first.stderr, '');
+    const firstDocument = JSON.parse(first.stdout);
+    const firstCheck = firstDocument.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(firstCheck.status, 'ok');
+    assert.deepEqual(firstCheck.action, {
+      status: 'fixed',
+      message: 'Added .evofence/private/holdout.yaml to .gitignore; rechecked Git ignore status.',
+      original_code: 'HOLDOUT_NOT_IGNORED',
+    });
+    assert.equal(spawnSync('git', ['check-ignore', '-q', path.join(root, '.evofence', 'private', 'holdout.yaml')], { cwd: root }).status, 0);
+
+    const second = spawnDoctor(['--fix', '--json'], root);
+    assert.equal(second.status, 0, second.stderr);
+    const secondCheck = JSON.parse(second.stdout).checks.find((item) => item.id === 'holdout-exposure');
+    assert.deepEqual(secondCheck.action, { status: 'not-needed', message: 'No action required.' });
+    const ignoreFile = await readFile(path.join(root, '.gitignore'), 'utf8');
+    assert.equal(ignoreFile.split('\n').filter((line) => line === '.evofence/private/holdout.yaml').length, 1);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor --fix restores .gitignore when the post-fix ignore check fails', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.gitignore'), 'node_modules/\n');
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    const holdout = path.join(root, '.evofence', 'private', 'holdout.yaml');
+    await writeFile(holdout, 'regressions: []\n');
+    runGit(root, ['add', holdout]);
+    const original = await readFile(path.join(root, '.gitignore'), 'utf8');
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+      const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+      assert.equal(check.action.status, 'unfixable');
+      assert.equal(await readFile(path.join(root, '.gitignore'), 'utf8'), original);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor --fix refuses a hard-linked .gitignore without changing the shared target', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
+
+    const gitignore = path.join(root, '.gitignore');
+    const contract = path.join(root, '.evofence', 'contract.yaml');
+    const contractBefore = await readFile(contract, 'utf8');
+    await rm(gitignore, { force: true });
+    await link(contract, gitignore);
+
+    const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+    assert.equal(error.code, 'DOCTOR_UNFIXABLE');
+    const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(check.code, 'DOCTOR_UNFIXABLE');
+    assert.equal(check.action.status, 'unfixable');
+    assert.equal(await readFile(contract, 'utf8'), contractBefore);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor --fix reports unsafe readable holdouts as DOCTOR_UNFIXABLE', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions:\n  - id: hidden\n    command: "node --version"\n');
+    const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+    assert.equal(error.code, 'DOCTOR_UNFIXABLE');
+    const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(check.code, 'DOCTOR_UNFIXABLE');
+    assert.deepEqual(check.action, {
+      status: 'unfixable',
+      message: 'No safe automatic fix for PRIVATE_ORACLE_READABLE.',
+      original_code: 'PRIVATE_ORACLE_READABLE',
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('doctor and run agree on an adapter budget refusal', async () => {

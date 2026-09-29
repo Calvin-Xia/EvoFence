@@ -30,7 +30,12 @@ export interface Route {
 
 /** `evofence <usage>` — also the text every usage error reports after `Use: `. */
 export function usageLine(spec: CommandSpec): string {
-  return `evofence ${spec.usage}`;
+  return `evofence ${spec.legacyUsage ?? spec.usage}`;
+}
+
+function helpUsageLine(spec: CommandSpec): string {
+  const compatibility = spec.legacyUsage === undefined ? '' : ` (legacy: ${spec.legacyUsage})`;
+  return `evofence ${spec.usage}${compatibility}`;
 }
 
 function specsInGroup(group: CommandGroup): readonly CommandSpec[] {
@@ -67,7 +72,7 @@ export function routeCommand(argv: readonly string[]): Route {
 
 /** The `--help` text, generated from the manifest so it can never drift from the surface. */
 export function renderHelp(version: string): string {
-  const usage = COMMANDS.map((spec) => `  ${usageLine(spec)}`).join('\n');
+  const usage = COMMANDS.map((spec) => `  ${helpUsageLine(spec)}`).join('\n');
   return `EvoFence ${version} — evidence-carrying evolution control plane
 
 Usage:

@@ -8,7 +8,7 @@
  *
  * GROUPING (ADR-0003 keeps the 0.3.0 eleven-group skeleton, with the flag/JSON/exit conventions
  * unified inside it): `init`, `run`, `proposal`, `evidence`, `gate`, `ledger`, `diff`,
- * `rollback`, `experiment`, `report`, `status`. Groups with more than one operation carry an
+ * `rollback`, `experiment`, `report`, `budget`, `status`. Groups with more than one operation carry an
  * explicit action (`proposal inspect`, `evidence run`, `ledger show|verify|recent|export`,
  * `experiment run|export`).
  *
@@ -75,6 +75,8 @@ const WALL_CLOCK_FLAG: FlagSpec = { name: 'max-wall-clock-ms', key: 'max_wall_cl
 const UNISOLATED_FLAG: FlagSpec = { name: 'allow-unisolated-agent', key: 'allow_unisolated_agent', kind: 'boolean', description: 'Required for opencode/claude/pi; CLI controls are not an OS sandbox.' };
 const HOLDOUT_FLAG: FlagSpec = { name: 'allow-readable-holdout', key: 'allow_readable_holdout', kind: 'boolean', description: 'Required to run private checks when host read isolation is unavailable.' };
 const BUNDLE_FLAG: FlagSpec = { name: 'bundle', key: 'bundle', kind: 'value', description: 'Read and verify an exported ledger bundle instead of the local SQLite ledger.' };
+const REPORT_FORMAT_FLAG: FlagSpec = { name: 'format', key: 'format', kind: 'value', description: 'Report format: text (default), json, sarif or junit.' };
+const FIX_FLAG: FlagSpec = { name: 'fix', key: 'fix', kind: 'boolean', description: 'Apply safe, idempotent doctor remediations and rerun the checks.' };
 
 const LEDGER = 'ledger' as const;
 const AGENTLESS = 'agentless' as const;
@@ -260,14 +262,19 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'report',
     group: 'report',
-    summary: 'Print the cross-run evolution report (Markdown, or JSON with --json).',
-    usage: 'report [file] [--json]',
-    positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }],
-    flags: [JSON_FLAG],
-    json: 'flag',
-    exits: exits('the report was rendered/written', 'usage error, or PROTECTED_PATH when the output would overwrite control-plane state'),
-    smoke: inLedger(['report', SMOKE.reportFile], 0),
-    jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
+    summary: 'Print the cross-run evolution report as text, JSON, SARIF or JUnit.', usage: 'report [file] [--format <text|json|sarif|junit>] [--json]',
+    legacyUsage: 'report [file] [--json]',
+    positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }], flags: [REPORT_FORMAT_FLAG, JSON_FLAG], json: 'flag',
+    exits: exits('the report was rendered/written; --format json is the JSON view, while SARIF and JUnit are interoperable report formats', 'usage error, unsupported report format, conflicting --json/--format flags, or PROTECTED_PATH when the output would overwrite control-plane state'),
+    smoke: inLedger(['report', SMOKE.reportFile], 0), jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
+  },
+  {
+    name: 'budget',
+    group: 'budget',
+    summary: 'Read ledger usage and thresholds into a deterministic historical-mean forecast.', usage: 'budget [--json]',
+    positionals: [], flags: [JSON_FLAG], json: 'flag',
+    exits: exits('the read-only budget forecast was rendered; remaining rounds use the historical mean and are not a prediction commitment', 'usage error, an unreadable/incompatible ledger, or a failed ledger integrity check'),
+    smoke: inLedger(['budget'], 0), jsonSmoke: inLedger(['budget', '--json'], 0),
   },
   {
     name: 'status',
@@ -284,14 +291,10 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'doctor',
     group: 'doctor',
-    summary: 'Run read-only preflight checks before dispatching an agent.',
-    usage: 'doctor [--adapter <name>] [--json]',
-    positionals: [],
-    flags: [ADAPTER_FLAG, JSON_FLAG],
-    json: 'flag',
+    summary: 'Run preflight checks, optionally applying safe idempotent fixes.', usage: 'doctor [--adapter <name>] [--fix] [--json]',
+    positionals: [], flags: [ADAPTER_FLAG, FIX_FLAG, JSON_FLAG], json: 'flag',
     exits: exits('all checks are ok', 'usage error, or at least one check is refused'),
-    smoke: inLedger(['doctor'], 0),
-    jsonSmoke: inLedger(['doctor', '--json'], 0),
+    smoke: inLedger(['doctor'], 0), jsonSmoke: inLedger(['doctor', '--json'], 0),
   },
 ];
 
