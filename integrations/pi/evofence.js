@@ -23,7 +23,56 @@ function readLedger(action, cwd) {
   }
 }
 
+function runDoctor(cwd) {
+  const isWindows = process.platform === 'win32';
+  const result = spawnSync(isWindows ? 'evofence.cmd' : 'evofence', ['doctor', '--adapter', 'pi', '--json'], {
+    cwd,
+    encoding: 'utf8',
+    maxBuffer: 1_000_000,
+    timeout: 15_000,
+    windowsHide: true,
+    ...(isWindows ? { shell: true } : {}),
+  });
+
+  if (result.error?.code === 'ENOENT') return { error: 'EvoFence CLI was not found in PATH. Install EvoFence in the Pi environment.' };
+  if (result.error) return { error: 'EvoFence doctor could not complete within the time limit.' };
+  if (result.status !== 0) return { error: 'EvoFence doctor refused this host. Inspect the CLI result before starting an evolution run.' };
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    return { error: 'EvoFence doctor returned an invalid preflight response.' };
+  }
+}
+
+function doctorToolResult(cwd) {
+  return JSON.stringify(runDoctor(cwd));
+}
+
 export default function evofenceExtension(pi) {
+  const registerDoctor = () => {
+    const handler = async (_args, context) => {
+      context?.ui?.notify?.(doctorToolResult(context.cwd ?? process.cwd()), 'info');
+    };
+    if (typeof pi.registerCommand === 'function') {
+      pi.registerCommand('evofence-doctor', {
+        description: 'Run the read-only `evofence doctor` preflight for the Pi adapter.',
+        handler,
+      });
+      return;
+    }
+    pi.registerTool({
+      name: 'evofence_doctor',
+      label: 'Run EvoFence doctor',
+      description: 'Run the read-only `evofence doctor` preflight for the Pi adapter.',
+      parameters: Type.Object({}),
+      async execute(_toolCallId, _params, _signal, _onUpdate, context) {
+        return { content: [{ type: 'text', text: doctorToolResult(context.cwd ?? process.cwd()) }], details: {} };
+      },
+    });
+  };
+
+  registerDoctor();
+
   pi.registerTool({
     name: 'evofence_verify_ledger',
     label: 'Verify EvoFence ledger',

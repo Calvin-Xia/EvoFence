@@ -94,6 +94,36 @@ test('every EvoFence CLI invocation shipped with an integration exists in the co
   assert.ok(harnessReadme.includes(`evofence@${rootPackage.version}`), 'the harness README must document the pinned package version');
 });
 
+test('all five host integrations expose the read-only doctor preflight', async () => {
+  const doctor = COMMANDS.find((command) => command.name === 'doctor');
+  assert.ok(doctor, 'doctor must remain in the CLI catalog');
+  assert.equal(doctor.usage, 'doctor [--adapter <name>] [--json]');
+
+  const files = [
+    'integrations/claude-code/commands/run-evolution.md',
+    'integrations/codex/skills/run-evolution/SKILL.md',
+    'integrations/pi/evofence.js',
+    'integrations/opencode/plugins/evofence.js',
+    'integrations/deepseek-harness/README.md',
+  ];
+  for (const file of files) {
+    const source = await read(file);
+    assert.match(source, /evofence doctor/, `${file} must expose the doctor command`);
+    assert.match(source, /--json/, `${file} must request the machine-readable doctor result`);
+  }
+
+  const claudeRun = await read(files[0]);
+  const codexRun = await read(files[1]);
+  assert.ok(claudeRun.indexOf('evofence doctor') < claudeRun.indexOf('evofence run'), 'Claude must preflight before run');
+  assert.ok(codexRun.indexOf('evofence doctor') < codexRun.indexOf('evofence run'), 'Codex must preflight before run');
+  assert.match(claudeRun, /non-zero exit[^.]*refus/i);
+  assert.match(codexRun, /non-zero exit[^.]*refusal/i);
+  assert.match(await read(files[2]), /registerCommand\('evofence-doctor'/);
+  assert.match(await read(files[2]), /name: 'evofence_doctor'/);
+  assert.match(await read(files[3]), /evofence_doctor/);
+  assert.match(await read(files[4]), /Preflight is outside this library surface/);
+});
+
 test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {
   const entry = await read('.pi/extensions/evofence.js');
   const specifier = entry.match(/export\s+\{\s*default\s*\}\s+from\s+['"]([^'"]+)['"]/)?.[1];
