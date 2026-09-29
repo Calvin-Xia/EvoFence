@@ -3,10 +3,25 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 const LOCAL_CLI = path.resolve(import.meta.dirname, '../../../dist/cli.js');
+const LOCAL_PACKAGE_CLI = path.resolve(import.meta.dirname, '../../../node_modules/evofence/dist/cli.js');
 
-function resolveCliInvocation() {
+/**
+ * Resolution order: explicit JS entry, this checkout or nearby local package, then PATH.
+ */
+function resolveCliInvocation(cwd) {
+  const override = process.env.EVOFENCE_CLI_PATH;
+  if (override) return { command: process.execPath, prefix: [path.resolve(override)] };
+
+  const localCli = [
+    LOCAL_CLI,
+    LOCAL_PACKAGE_CLI,
+    path.resolve(process.cwd(), 'dist', 'cli.js'),
+    path.resolve(cwd, 'dist', 'cli.js'),
+    path.resolve(cwd, 'node_modules', 'evofence', 'dist', 'cli.js'),
+    path.resolve(cwd, '..', 'node_modules', 'evofence', 'dist', 'cli.js'),
+  ].find((candidate) => existsSync(candidate));
+  if (localCli) return { command: process.execPath, prefix: [localCli] };
   if (process.platform !== 'win32') return { command: 'evofence', prefix: [] };
-  if (existsSync(LOCAL_CLI)) return { command: process.execPath, prefix: [LOCAL_CLI] };
 
   const lookup = spawnSync('where.exe', ['evofence'], { encoding: 'utf8', windowsHide: true });
   const paths = lookup.stdout?.split(/\r?\n/).map((value) => value.trim()).filter(Boolean) ?? [];
@@ -56,7 +71,7 @@ export function parseCliResult(result, messages) {
 
 export function runEvoFence(args, cwd, messages) {
   const cliArgs = args.includes('--json') ? args : [...args, '--json'];
-  const invocation = resolveCliInvocation();
+  const invocation = resolveCliInvocation(cwd);
   const result = spawnSync(invocation.command, [...invocation.prefix, ...cliArgs], {
     cwd,
     encoding: 'utf8',
