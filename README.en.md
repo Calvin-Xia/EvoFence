@@ -139,6 +139,10 @@ evofence diff <generation-id> [--json]
 - Unknown flags are a usage error on every command (0.3.0 silently ignored an unknown value flag on `run`), and `--flag=value` is equivalent to `--flag value`.
 - There are only two exit codes: `0` (success) and `1` (any failure). Text mode prints `[CODE] message` on stderr; in `--json` mode stdout stays empty and stderr carries one `{"error":{"code","message","details"?}}` object.
 
+### Offline bundle verification
+
+The JSON evidence bundle produced by `evofence ledger export evidence.json` can be copied to an independent host without the local SQLite ledger. `evofence ledger verify --bundle evidence.json [--json]` reads only the specified file, recomputes the frozen event chain, and prints `valid`, `events`, and `head`, or the first failing sequence. It does not open the repository's local ledger, so a third party can verify exported evidence in a separate read-only environment.
+
 `evofence status` prints a one-screen operational overview: the active generation, ledger integrity, cumulative totals (runs, generations, accepted and rejected candidates), and the five most recent run summaries. Pass `--json` for the status object as pretty JSON. The status never embeds evidence command output content. A missing ledger, a zero-byte ledger file, or a ledger without schema is reported as the documented empty state. `evofence status` exits 0 when the ledger is healthy or empty, and exits 1 when ledger integrity fails or the ledger cannot be read.
 
 Rollback changes EvoFence's active-generation pointer and Git ref. It does not rewrite the primary working tree; the next candidate starts from the selected generation. Every accepted generation is a Git commit reachable through `refs/evofence/generations/*`.

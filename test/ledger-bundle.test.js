@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { Ledger, verifyBundle } from '../dist/lib/ledger.js';
 import { eventHash, verifyChain } from '../dist/lib/ledger/chain.js';
+import { runProcess } from '../dist/lib/process.js';
 
 const ZERO_HASH = '0'.repeat(64);
 
@@ -48,6 +49,39 @@ test('offline verification rejects an unsupported bundle schema version explicit
       () => verifyBundle({ ...bundle, schema_version: 2 }),
       (error) => error?.code === 'LEDGER_BUNDLE_INCOMPATIBLE' && /schema_version 2/.test(error.message),
     );
+  });
+});
+
+test('ledger verify --bundle reads only the bundle and preserves failure output', async () => {
+  await withLedger(async (ledger) => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-bundle-cli-'));
+    try {
+      const bundle = ledger.export();
+      await writeFile(path.join(root, 'bundle.json'), `${JSON.stringify(bundle)}\n`);
+      const cliPath = path.resolve(import.meta.dirname, '..', 'dist', 'cli.js');
+      const healthy = await runProcess(
+        process.execPath,
+        [cliPath, 'ledger', 'verify', '--bundle', 'bundle.json', '--json'],
+        { cwd: root, timeoutMs: 10000, maxOutputBytes: 100000 },
+      );
+      assert.equal(healthy.code, 0, healthy.stderr);
+      assert.deepEqual(JSON.parse(healthy.stdout), bundle.integrity);
+      assert.equal(healthy.stderr, '');
+
+      const broken = copyBundle(bundle);
+      broken.events[1].event_hash = 'b'.repeat(64);
+      await writeFile(path.join(root, 'broken.json'), `${JSON.stringify(broken)}\n`);
+      const invalid = await runProcess(
+        process.execPath,
+        [cliPath, 'ledger', 'verify', '--bundle=broken.json'],
+        { cwd: root, timeoutMs: 10000, maxOutputBytes: 100000 },
+      );
+      assert.equal(invalid.code, 1);
+      assert.deepEqual(JSON.parse(invalid.stdout), verifyChain(broken.events));
+      assert.equal(invalid.stderr, '');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 

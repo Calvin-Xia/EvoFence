@@ -74,6 +74,7 @@ const ITERATIONS_FLAG: FlagSpec = { name: 'iterations', key: 'iterations', kind:
 const WALL_CLOCK_FLAG: FlagSpec = { name: 'max-wall-clock-ms', key: 'max_wall_clock_ms', kind: 'value', description: 'Wall-clock cap in milliseconds; must not exceed the contract budget.' };
 const UNISOLATED_FLAG: FlagSpec = { name: 'allow-unisolated-agent', key: 'allow_unisolated_agent', kind: 'boolean', description: 'Required for opencode/claude/pi; CLI controls are not an OS sandbox.' };
 const HOLDOUT_FLAG: FlagSpec = { name: 'allow-readable-holdout', key: 'allow_readable_holdout', kind: 'boolean', description: 'Required to run private checks when host read isolation is unavailable.' };
+const BUNDLE_FLAG: FlagSpec = { name: 'bundle', key: 'bundle', kind: 'value', description: 'Read and verify an exported ledger bundle instead of the local SQLite ledger.' };
 
 const LEDGER = 'ledger' as const;
 const AGENTLESS = 'agentless' as const;
@@ -172,11 +173,11 @@ export const COMMANDS: readonly CommandSpec[] = [
     group: 'ledger',
     action: 'verify',
     summary: 'Verify the ledger hash chain. Referenced by the downstream DoD.',
-    usage: 'ledger verify [--json]',
+    usage: 'ledger verify [--bundle <file>] [--json]',
     positionals: [],
-    flags: [JSON_FLAG],
+    flags: [BUNDLE_FLAG, JSON_FLAG],
     json: 'always',
-    exits: exits('the hash chain verified', 'usage error, or the chain failed verification'),
+    exits: exits('the local ledger or bundle hash chain verified', 'usage error, input/ledger read failure, or the chain failed verification'),
     smoke: inLedger(['ledger', 'verify'], 0),
     jsonSmoke: inLedger(['ledger', 'verify', '--json'], 0),
   },

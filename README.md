@@ -137,6 +137,10 @@ evofence diff <generation-id> [--json]
 - 未知 flag 在任何命令上都是用法错误（0.3.0 会静默忽略 `run` 上的未知取值 flag）；`--flag=value` 与 `--flag value` 等价。
 - 退出码只有 `0`（成功）与 `1`（任何失败）。文本模式在 stderr 打印 `[CODE] message`；`--json` 模式下 stdout 保持为空，stderr 打印单个 `{"error":{"code","message","details"?}}` 对象。
 
+### 导出 bundle 的离线校验
+
+`evofence ledger export evidence.json` 导出的证据 bundle 可以复制到没有本地 SQLite ledger 的独立主机上校验：`evofence ledger verify --bundle evidence.json [--json]` 只读取指定 JSON 文件，复算冻结的事件链并输出 `valid`、`events`、`head`，或输出首个失败序号。该命令不会打开当前目录的本地 ledger；因此第三方可以在隔离的只读环境中核对导出证据。
+
 `evofence status` 在一屏内展示控制面当前状态：当前新一代、ledger 完整性、累计总数（运行次数、新一代数、接受与拒绝的候选数）以及最近 5 次运行摘要。加 `--json` 输出结构化 JSON。状态输出不包含任何证据命令的输出内容。尚无 ledger、ledger 文件为 0 字节或尚未建表时，`evofence status` 输出上述空状态。ledger 健康或为空时退出码为 0，完整性校验失败或 ledger 无法读取时退出码为 1。
 
 回滚会切换 EvoFence 的当前新一代指针和 Git 引用，不会改写主工作树。下一个候选将从选定的新一代开始。每个已接受的新一代都是 Git commit，可通过 `refs/evofence/generations/*` 找到。
