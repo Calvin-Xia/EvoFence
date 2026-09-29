@@ -7,6 +7,20 @@
   request-time hard cap, and the crossing response may put the estimate over the threshold.
   Claude Code continues to use its native `--max-budget-usd` cap, while Codex and OpenCode remain
   rejected when `max_usd` is non-null.
+- New: `evofence doctor [--adapter <name>] [--json]` — a read-only preflight that presents the same
+  pre-dispatch judgements `run` already applies (policy validity, evidence configuration, holdout
+  exposure, budget/adapter compatibility, process-tree capability, ledger integrity), so an
+  environment problem surfaces before an agent spends budget. It adds no separate health-check
+  rules: the pre-dispatch policy now lives in one module (`src/lib/exec/preflight-policy.ts`) that
+  `run` and `doctor` both call, so the two cannot disagree.
+- New: `ledger verify --bundle <file>` verifies an exported ledger bundle **offline** — it
+  recomputes the frozen SHA-256 chain recipe over the bundle's events and compares the result with
+  the bundle's recorded `integrity`. Exported evidence can therefore be checked on a host that does
+  not hold the local database, which the previous surface could not do.
+- New: the configuration surface documented in `docs/config.md` is now machine-guarded. A
+  zero-dependency script solves the required paths, the two code defaults and the per-document
+  failure codes from `src/lib/config/schema.ts` and fails CI on any drift, so the documented
+  surface cannot fall out of sync silently.
 
 ## 0.4.0 — BREAKING
 
