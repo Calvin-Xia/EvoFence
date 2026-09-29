@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Non-breaking: `budgets.max_usd` now supports Pi's complete USD model-price estimates. Pi
+  accumulates cost after each invocation and stops at the run-wide threshold; it is not a
+  request-time hard cap, and the crossing response may put the estimate over the threshold.
+  Claude Code continues to use its native `--max-budget-usd` cap, while Codex and OpenCode remain
+  rejected when `max_usd` is non-null.
+
 ## 0.4.0 — BREAKING
 
 A breaking refactor of the 0.3.0 codebase: the source language, the published shape, the CLI

@@ -105,3 +105,23 @@ machine-readable registry and a test pins that a permissive value changes no jud
 
 To check a document by hand, run `evofence status` and read the reported paths, or add
 `--json` to get `details.rejected_fields` / `details.missing_fields`.
+
+## budgets.max_usd
+
+`budgets.max_usd` is a run-wide estimated USD budget. A non-null value is supported by Claude
+Code and Pi, but the enforcement semantics differ:
+
+- Claude Code receives the remaining budget through its native `--max-budget-usd` option and
+  reports the complete `result.total_cost_usd` estimate.
+- Pi has no request-time hard cap. After each invocation, EvoFence requires complete USD
+  telemetry from Pi's model-price estimate, adds it through the existing micros accounting path,
+  and stops later invocations when the run-wide threshold is reached.
+- Codex remains rejected because it does not report complete verifiable USD telemetry. OpenCode
+  remains rejected because its reported cost has no verified currency; EvoFence must not infer
+  that it is USD.
+
+The response that reaches the threshold may already have completed, so the observed estimate can
+exceed `max_usd`; that value is not the provider's final bill. Missing or incomplete cost,
+timeouts, or unconfirmed process-tree termination fail closed and stop before candidate
+evaluation or acceptance. Claude's native cap and Pi's post-invocation estimate are therefore
+reported as different paths, not as the same kind of hard limit.
