@@ -63,7 +63,7 @@ for any other field: that would turn a fail-closed refusal into a silent default
 - `capabilities` is the one open map (`open: true`): `assessCapabilities` indexes it by the
   capability name a proposal requests, so an unknown key there is a capability name, not a typo.
   Open means the key name is open; each value still has a checked shape and value domain:
-  `true`/`false`, `'allow'`/`'deny'`, or `{ mode: 'allow' }`/`{ mode: 'deny' }`.
+  `true`/`false`, `'allow'`/`'deny'`, or an object with any non-empty `mode` string.
 - `adapters` is closed: only the four known adapter names are read, and v2 rejects an unknown one
   (`rejected field(s): adapters.gemini`).
 
@@ -84,7 +84,8 @@ registry and a test pins that a permissive value changes no judgement.
 | `capabilities.external_api` | **live gate** | Read through the dynamic capability table (`contract.capabilities[capability]`), so a proposal that requests `external_api` is judged by this value. The template sets it to `deny`, which denies the request. |
 
 `assessCapabilities` treats a capability as granted only when the configured value is `true`,
-`'allow'`, or an object with `mode: 'allow'`. An unconfigured capability is denied.
+`'allow'`, or an object with `mode: 'allow'`; other non-empty object modes are denied. An
+unconfigured capability is denied.
 
 ## Where validation runs
 

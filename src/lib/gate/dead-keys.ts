@@ -27,7 +27,7 @@
  */
 
 /** How a legacy contract key behaves at runtime. */
-export type DeadKeyStatus = 'dead' | 'compatibility_only' | 'validated_only' | 'request_path_gate' | 'task_file_only';
+export type DeadKeyStatus = 'compatibility_only' | 'validated_only';
 
 export interface ContractKeyDisposition {
   /** Dotted key path as documented in the current or legacy contract surface. */

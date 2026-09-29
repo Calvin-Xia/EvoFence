@@ -89,16 +89,16 @@ export interface AcceptanceConfig {
  * One `capabilities.<name>` entry.
  *
  * `assessCapabilities` (`src/lib/policy.js:148`) accepts exactly three allow-forms:
- * `true`, `'allow'`, or `{ mode: 'allow' }`. The config validator accepts those forms and their
- * explicit denials (`false`, `'deny'`, or `{ mode: 'deny' }`). `authority_ceiling` is a reserved
- * enum-valued member of the same open object; absent keys still deny at runtime.
+ * `true`, `'allow'`, or `{ mode: 'allow' }`. The config validator accepts those forms, their
+ * explicit denials, and any object with a non-empty `mode` string. `authority_ceiling` is a
+ * reserved enum-valued member of the same open object; only the allow forms grant at runtime.
  */
 export type CapabilitySetting =
   | boolean
   | 'allow'
   | 'deny'
   | AuthorityCeiling
-  | { mode: 'allow' | 'deny'; [key: string]: unknown }
+  | { mode: string; [key: string]: unknown }
   | undefined;
 
 export interface CapabilitiesConfig {

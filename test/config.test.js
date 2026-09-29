@@ -195,6 +195,15 @@ test('capability values accept the three allow forms and their explicit denials'
   assert.equal(contractReport(templateContract()).valid, true, 'template defaults must remain valid');
 });
 
+test('legacy non-empty capability mode strings remain accepted', () => {
+  for (const setting of [{ mode: 'evidence_commands_only' }, { mode: 'full_shell' }]) {
+    const value = templateContract();
+    value.capabilities.shell = setting;
+    const report = contractReport(value);
+    assert.equal(report.valid, true, `${JSON.stringify(setting)} must be accepted: ${JSON.stringify(report.rejected_fields)}`);
+  }
+});
+
 test('capability values reject malformed open-map entries with INVALID_CONTRACT', () => {
   const cases = [
     ['network', [1, 2, 3]],

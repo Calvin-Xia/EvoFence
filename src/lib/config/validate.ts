@@ -54,15 +54,10 @@ function isStringArray(value: unknown): boolean {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
-/** The six serialized capability-setting forms understood by the capability gate. */
+/** Serialized capability-setting forms; only mode `allow` grants at the capability gate. */
 function isCapabilitySetting(value: unknown): boolean {
   if (value === true || value === false || value === 'allow' || value === 'deny') return true;
-  return isObject(value) && (value.mode === 'allow' || value.mode === 'deny');
-}
-
-/** Keep the legacy nested mode object readable; the capability gate still denies it. */
-function isLegacyShellSetting(name: string, value: unknown): boolean {
-  return name === 'shell' && isObject(value) && value.mode === 'evidence_commands_only';
+  return isObject(value) && typeof value.mode === 'string' && value.mode.length > 0;
 }
 
 /** Reject a present, non-object container; absent containers are the shape walk's job. */
@@ -150,8 +145,7 @@ function contractIssues(root: Record<string, unknown>): Issues {
     leaf(capabilities.authority_ceiling, 'capabilities.authority_ceiling', INVALID_CONTRACT, issues, (v) => v === 'A0' || v === 'A1' || v === 'A2' || v === 'A3', 'authority_ceiling must be A0, A1, A2, or A3. A4 cannot be automatically granted.');
     for (const [name, setting] of Object.entries(capabilities)) {
       if (name === 'authority_ceiling') continue;
-      if (isLegacyShellSetting(name, setting)) continue;
-      leaf(setting, `capabilities.${name}`, INVALID_CONTRACT, issues, isCapabilitySetting, `capabilities.${name} must be true, false, allow, deny, or an object with mode allow or deny.`);
+      leaf(setting, `capabilities.${name}`, INVALID_CONTRACT, issues, isCapabilitySetting, `capabilities.${name} must be true, false, allow, deny, or an object with a non-empty mode string.`);
     }
   }
 
