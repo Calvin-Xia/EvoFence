@@ -1,4 +1,28 @@
+import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+
+const LOCAL_CLI = path.resolve(import.meta.dirname, '../../dist/cli.js');
+
+function resolveCliInvocation() {
+  if (process.platform !== 'win32') return { command: 'evofence', prefix: [] };
+  if (existsSync(LOCAL_CLI)) return { command: process.execPath, prefix: [LOCAL_CLI] };
+
+  const lookup = spawnSync('where.exe', ['evofence'], { encoding: 'utf8', windowsHide: true });
+  const paths = lookup.stdout?.split(/\r?\n/).map((value) => value.trim()).filter(Boolean) ?? [];
+  const commandPath = paths.find((value) => value.toLowerCase().endsWith('.exe'))
+    ?? paths.find((value) => value.toLowerCase().endsWith('.cmd'))
+    ?? paths[0];
+  if (commandPath?.toLowerCase().endsWith('.cmd')) {
+    const directory = path.dirname(commandPath);
+    const cliPath = [
+      path.resolve(directory, 'node_modules', 'evofence', 'dist', 'cli.js'),
+      path.resolve(directory, '..', 'evofence', 'dist', 'cli.js'),
+    ].find((candidate) => existsSync(candidate));
+    if (cliPath) return { command: process.execPath, prefix: [cliPath] };
+  }
+  return { command: commandPath ?? 'evofence', prefix: [] };
+}
 
 export function parseCliFailure(stderr, fallbackMessage) {
   const text = typeof stderr === 'string' ? stderr.trim() : '';
@@ -8,7 +32,9 @@ export function parseCliFailure(stderr, fallbackMessage) {
       const error = payload?.error;
       if (payload !== null && typeof payload === 'object' && error !== null && typeof error === 'object'
         && (typeof error.code === 'string' || error.code === null) && typeof error.message === 'string') {
-        return { error: { code: error.code, message: error.message } };
+        const projected = { code: error.code, message: error.message };
+        if (error.details !== undefined) projected.details = error.details;
+        return { error: projected };
       }
     } catch {
       // Fall through to the stable integration-level fallback below.
@@ -29,15 +55,14 @@ export function parseCliResult(result, messages) {
 }
 
 export function runEvoFence(args, cwd, messages) {
-  const isWindows = process.platform === 'win32';
   const cliArgs = args.includes('--json') ? args : [...args, '--json'];
-  const result = spawnSync(isWindows ? 'evofence.cmd' : 'evofence', cliArgs, {
+  const invocation = resolveCliInvocation();
+  const result = spawnSync(invocation.command, [...invocation.prefix, ...cliArgs], {
     cwd,
     encoding: 'utf8',
     maxBuffer: 1_000_000,
     timeout: 15_000,
     windowsHide: true,
-    ...(isWindows ? { shell: true } : {}),
   });
   return parseCliResult(result, messages);
 }

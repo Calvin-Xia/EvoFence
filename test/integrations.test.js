@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -371,6 +371,11 @@ test('all five host integrations expose the read-only doctor preflight', async (
   assert.ok(codexRun.indexOf('evofence doctor') < codexRun.indexOf('evofence run'), 'Codex must preflight before run');
   assert.match(claudeRun, /non-zero exit[^.]*refus/i);
   assert.match(codexRun, /non-zero exit[^.]*refusal/i);
+  for (const source of [claudeRun, codexRun]) {
+    assert.match(source, /CLAUDE_SANDBOX_REQUIRED/);
+    assert.match(source, /explicit authorization/i);
+    assert.match(source, /normal .*isolation gate/i);
+  }
   assert.match(await read(files[2]), /registerCommand\('evofence-doctor'/);
   assert.match(await read(files[2]), /name: 'evofence_doctor'/);
   assert.match(await read(files[3]), /evofence_doctor/);
@@ -434,34 +439,24 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
     failureMessage: 'fallback',
     invalidMessage: 'invalid',
   };
-  const stderr = JSON.stringify({ error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' } });
+  const details = { checks: [{ id: 'ledger', remediation: 'Run evofence init.' }] };
+  const stderr = JSON.stringify({ error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.', details } });
   assert.deepEqual(parsePiCliFailure(stderr, messages.failureMessage), {
-    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' },
+    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.', details },
   });
   assert.deepEqual(parseOpenCodeCliFailure(stderr, messages.failureMessage), {
-    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' },
+    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.', details },
   });
   assert.deepEqual(parsePiCliFailure('not JSON', messages.failureMessage), { error: 'fallback' });
   assert.deepEqual(parseOpenCodeCliFailure('not JSON', messages.failureMessage), { error: 'fallback' });
   assert.deepEqual(parsePiCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
   assert.deepEqual(parseOpenCodeCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
 
-  const shimRoot = await mkdtemp(path.join(tmpdir(), 'evofence-integration-cli-'));
   const repository = await mkdtemp(path.join(tmpdir(), 'evofence-integration-repo-'));
-  const originalPath = process.env.PATH;
   try {
     const initialized = spawnSync('git', ['init', '--quiet', repository], { encoding: 'utf8' });
     assert.equal(initialized.status, 0, initialized.stderr);
     await mkdir(path.join(repository, '.evofence'));
-    const cliPath = path.join(root, 'dist', 'cli.js');
-    const commandName = process.platform === 'win32' ? 'evofence.cmd' : 'evofence';
-    const commandPath = path.join(shimRoot, commandName);
-    const command = process.platform === 'win32'
-      ? `@echo off\r\n"${process.execPath}" "${cliPath}" %*\r\n`
-      : `#!/bin/sh\nexec "${process.execPath}" "${cliPath}" "$@"\n`;
-    await writeFile(commandPath, command, 'utf8');
-    if (process.platform !== 'win32') await chmod(commandPath, 0o755);
-    process.env.PATH = `${shimRoot}${path.delimiter}${originalPath}`;
 
     const piResult = runPiEvoFence(['ledger', 'verify'], repository, messages);
     const opencodeResult = runOpenCodeEvoFence(['ledger', 'verify'], repository, messages);
@@ -469,9 +464,15 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
     assert.equal(typeof opencodeResult.error?.code, 'string', JSON.stringify(opencodeResult));
     assert.equal(piResult.error.code, opencodeResult.error.code);
     assert.notEqual(piResult.error.message, messages.failureMessage);
+
+    const injectedMarker = path.join(repository, 'injected-marker.txt');
+    const bundlePath = `${path.join(repository, 'bundle with spaces')} & echo injected > ${injectedMarker}`;
+    const piBundleResult = runPiEvoFence(['ledger', 'verify', '--bundle', bundlePath], repository, messages);
+    const opencodeBundleResult = runOpenCodeEvoFence(['ledger', 'verify', '--bundle', bundlePath], repository, messages);
+    assert.equal(typeof piBundleResult.error?.code, 'string', JSON.stringify(piBundleResult));
+    assert.equal(typeof opencodeBundleResult.error?.code, 'string', JSON.stringify(opencodeBundleResult));
+    await assert.rejects(access(injectedMarker));
   } finally {
-    process.env.PATH = originalPath;
-    await rm(shimRoot, { recursive: true, force: true });
     await rm(repository, { recursive: true, force: true });
   }
 });
