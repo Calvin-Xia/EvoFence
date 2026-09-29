@@ -34,7 +34,7 @@ export function formatReportSarif(report: ReportView): string {
     locations: [{
       physicalLocation: {
         artifactLocation: { uri: '.evofence/ledger.sqlite' },
-        region: { startLine: Math.max(1, Math.floor(decision.seq)) },
+        region: { startLine: decision.seq },
       },
     }],
     properties: {
@@ -96,9 +96,10 @@ export function formatReportJunit(report: ReportView): string {
 
 /** Render a report without changing the existing Markdown renderer. */
 export function formatReport(report: ReportView, format: ReportFormat): string {
-  if (format === 'text') return formatEvolutionReport(report);
-  if (format === 'json') return reportJson(report);
-  if (format === 'sarif') return formatReportSarif(report);
-  if (format === 'junit') return formatReportJunit(report);
-  return formatEvolutionReport(report);
+  switch (format) {
+    case 'text': return formatEvolutionReport(report);
+    case 'json': return reportJson(report);
+    case 'sarif': return formatReportSarif(report);
+    case 'junit': return formatReportJunit(report);
+  }
 }

@@ -141,7 +141,7 @@ async function addHoldoutIgnoreEntry(root: string): Promise<DoctorAction> {
   const file = path.join(root, '.gitignore');
   try {
     const info = await lstat(file);
-    if (!info.isFile() || info.isSymbolicLink()) {
+    if (!info.isFile()) {
       throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: it is not a regular file.`);
     }
   } catch (error) {
@@ -188,7 +188,7 @@ async function doctorChecks(root: string, adapter: string, fix: boolean): Promis
         await ensurePrivateIgnored(root);
         recheck = true;
       } catch (error) {
-        const originalCode = check.code ?? 'UNKNOWN';
+        const originalCode = check.code!;
         const message = error instanceof Error ? error.message : String(error);
         actions.set(check.id, { status: 'unfixable', message: `Automatic fix failed: ${message}`, original_code: originalCode });
       }
@@ -196,8 +196,8 @@ async function doctorChecks(root: string, adapter: string, fix: boolean): Promis
     }
     actions.set(check.id, {
       status: 'unfixable',
-      message: `No safe automatic fix for ${check.code ?? 'the refused check'}.`,
-      original_code: check.code ?? 'UNKNOWN',
+      message: `No safe automatic fix for ${check.code!}.`,
+      original_code: check.code!,
     });
   }
 
@@ -215,8 +215,8 @@ async function doctorChecks(root: string, adapter: string, fix: boolean): Promis
         code: 'DOCTOR_UNFIXABLE',
         action: {
           status: 'unfixable',
-          message: `Automatic fix did not pass recheck: ${check.code ?? 'unknown refusal'}.`,
-          original_code: check.code ?? action.original_code,
+          message: `Automatic fix did not pass recheck: ${check.code!}.`,
+          original_code: check.code!,
         },
       };
     }

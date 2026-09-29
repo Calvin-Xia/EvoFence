@@ -16,10 +16,6 @@ interface MutableRun extends BudgetForecastRun {
   terminal: boolean;
 }
 
-function objectValue(value: JsonValue | undefined): Record<string, JsonValue> {
-  return payloadObject(value) ?? {};
-}
-
 function numberValue(value: JsonValue | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 }
@@ -34,8 +30,8 @@ function positiveInteger(value: JsonValue | undefined): number | null {
 }
 
 function snapshotBudgets(payload: Record<string, JsonValue>): Record<string, JsonValue> {
-  const snapshot = objectValue(payload.contract_snapshot);
-  return objectValue(snapshot.budgets);
+  const snapshot = payloadObject(payload.contract_snapshot) ?? {};
+  return payloadObject(snapshot.budgets) ?? {};
 }
 
 function iterationLimit(payload: Record<string, JsonValue>): number | null {

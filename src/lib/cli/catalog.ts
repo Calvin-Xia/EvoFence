@@ -252,6 +252,7 @@ export const COMMANDS: readonly CommandSpec[] = [
     group: 'report',
     summary: 'Print the cross-run evolution report as text, JSON, SARIF or JUnit.',
     usage: 'report [file] [--format <text|json|sarif|junit>] [--json]',
+    legacyUsage: 'report [file] [--json]',
     positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }],
     flags: [REPORT_FORMAT_FLAG, JSON_FLAG],
     json: 'flag',
