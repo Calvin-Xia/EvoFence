@@ -129,12 +129,18 @@ evofence experiment export evidence.json
 evofence rollback <generation-id> --json
 evofence report evolution-report.md
 evofence report evolution-report.json --json
+evofence budget --json
+evofence doctor --fix --json
 evofence diff <generation-id> [--json]
 ```
 
-### Read-only preflight
+### Preflight and optional fixes
 
-`evofence doctor [--adapter <name>] [--json]` presents the same pre-dispatch judgements already used by `run`; it does not introduce a separate health-check rule set. It writes no run, temporary directory, worktree, or ledger event. Text mode prints one readable line per check; `--json` prints the check object when all checks pass. When any check is refused, stdout stays empty, stderr carries one failure object, and the individual checks are available under `error.details.checks`. It exits 0 when all checks pass and 1 when any check is refused.
+`evofence doctor [--adapter <name>] [--fix] [--json]` presents the same pre-dispatch judgements already used by `run`; without `--fix` it remains strictly read-only. With `--fix`, it applies only safe, idempotent automatic remediations and reruns the checks. Items that cannot be fixed retain an explicit non-fixable code (for example, `DOCTOR_UNFIXABLE`) instead of being silently treated as successful. It does not introduce a separate health-check rule set. It writes no run, temporary directory, worktree, or ledger event unless an explicitly safe remediation updates its intended file. Text mode prints one readable line per check; `--json` prints the check object when all checks pass. When any check is refused, stdout stays empty, stderr carries one failure object, and the individual checks are available under `error.details.checks`. It exits 0 when all checks pass and 1 when any check is refused.
+
+### Read-only budget estimate
+
+`evofence budget [--json]` reads the ledger and reports the used share of configured budget thresholds, plus an estimate of remaining rounds based on the historical mean usage of completed runs/rounds. This is a reproducible historical-mean estimate, not a prediction commitment; the command does not start an agent or modify the ledger.
 
 ### Command-surface conventions (0.4.0)
 
@@ -159,12 +165,14 @@ evofence diff g-run-20260101120000-abcd1234-i01 --json
 
 `evofence evidence run <candidate-directory>` reruns the configured checks for a directory and exports their summary. It does not accept or commit that candidate.
 
-`evofence report [file] [--json]` summarizes the ledger into an evolution report: runs (`run.failed` runs are reported as FAILED with their failure code), accepted generations, objective score movement, observed token/USD usage, and the ledger hash-chain verification result. Objective metric and direction come from each run's own historical `contract_snapshot`: generations with incompatible objectives are never combined (the aggregate fields stay null and per-objective groups are listed), and an unknown direction is never assumed to be maximize. The integrity section reports the hash-chain check and the breaking sequence (`failed_at_seq`); the chain is unkeyed, so it detects accidental corruption and edits that did not recompute the hashes, but it is not tamper proof. The report also cross-checks the `generations` table against the hash-chained `generation.accepted` events and refuses to summarize on any disagreement (`generations_mismatch`). It prints Markdown by default, or machine-readable JSON with `--json`; when given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root; an output path inside `.evofence/` is rejected to protect control-plane state. For example:
+`evofence report [file] [--format <text|json|sarif|junit>] [--json]` summarizes the ledger into an evolution report: runs (`run.failed` runs are reported as FAILED with their failure code), accepted generations, objective score movement, observed token/USD usage, and the ledger hash-chain verification result. Objective metric and direction come from each run's own historical `contract_snapshot`: generations with incompatible objectives are never combined (the aggregate fields stay null and per-objective groups are listed), and an unknown direction is never assumed to be maximize. The integrity section reports the hash-chain check and the breaking sequence (`failed_at_seq`); the chain is unkeyed, so it detects accidental corruption and edits that did not recompute the hashes, but it is not tamper proof. The report also cross-checks the `generations` table against the hash-chained `generation.accepted` events and refuses to summarize on any disagreement (`generations_mismatch`). It prints Markdown by default; omitted `--format` and `--format text` are byte-for-byte compatible with the old text output, `--format json` is equivalent to the existing `--json` view and uses the same JSON error envelope on failure, and `sarif` and `junit` are interoperable report formats. When given a file path it writes the report there, creates parent directories as needed, and prints the path relative to the repository root; an output path inside `.evofence/` is rejected to protect control-plane state. For example:
 
 ```sh
 evofence report
 evofence report reports/evolution.md
-evofence report reports/evolution.json --json
+evofence report reports/evolution.json --format json
+evofence report reports/evolution.sarif --format sarif
+evofence report reports/evolution.xml --format junit
 ```
 
 ### Agent plugins and extensions

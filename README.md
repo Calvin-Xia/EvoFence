@@ -127,12 +127,18 @@ evofence experiment export evidence.json
 evofence rollback <generation-id> --json
 evofence report evolution-report.md
 evofence report evolution-report.json --json
+evofence budget --json
+evofence doctor --fix --json
 evofence diff <generation-id> [--json]
 ```
 
-### 只读预检
+### 预检与可选修复
 
-`evofence doctor [--adapter <name>] [--json]` 只读呈现 `run` 已使用的前置判定：默认逐项输出可读文本，使用 `--json` 且全部通过时输出带有 `id`、`label`、`status`、原始错误码和修复建议的检查对象；有拒绝时 stdout 保持为空，stderr 输出单个失败对象，逐条检查放在 `error.details.checks`。它不另建一套独立体检规则，不创建运行、临时目录、worktree 或 ledger 事件；所有检查通过时退出 0，任一检查拒绝时退出 1。
+`evofence doctor [--adapter <name>] [--fix] [--json]` 呈现 `run` 已使用的前置判定：默认（不带 `--fix`）严格只读，逐项输出可读文本；使用 `--fix` 时只对可安全、可幂等自动修复的项目执行修复并重新检查。不可自动修复的项目保留明确的不可修码（例如 `DOCTOR_UNFIXABLE`），不会被静默当作成功。使用 `--json` 且全部通过时输出带有 `id`、`label`、`status`、原始错误码和修复建议的检查对象；有拒绝时 stdout 保持为空，stderr 输出单个失败对象，逐条检查放在 `error.details.checks`。它不另建一套独立体检规则，不创建运行、临时目录、worktree 或 ledger 事件；所有检查通过时退出 0，任一检查拒绝时退出 1。
+
+### 只读预算估计
+
+`evofence budget [--json]` 只读汇总 ledger 的预算使用情况，报告已用量相对阈值的比例，并按已完成运行/轮次的历史平均用量估计剩余轮数。这个剩余轮数是可复算的历史均值估计，不是预测承诺；命令不会启动智能体或修改 ledger。
 
 ### 命令面约定（0.4.0）
 
@@ -157,12 +163,14 @@ evofence diff g-run-20260101120000-abcd1234-i01 --json
 
 `evofence evidence run <candidate-directory>` 会针对指定目录重新运行已配置的检查并导出摘要，但不会接受或提交该候选。
 
-`evofence report [file] [--json]` 会把 ledger 汇总为演化报告：运行记录（`run.failed` 记为 FAILED 并带出失败码）、已接受的新一代、目标得分变化、已观测的 token/USD 用量和 ledger 哈希链校验结果。目标的指标名与优化方向取自每个 run 自己的 `contract_snapshot` 历史快照：跨目标不可比的代不会被合并（聚合字段输出 null，并按目标分组列出），方向未知时不会默认按 maximize 计算。完整性一栏报告哈希链校验结果与断链位置（`failed_at_seq`）；哈希链不带密钥，只能发现意外损坏或未重算哈希的修改，不能作为防篡改证明。报告还会把 generations 表与哈希链上的 `generation.accepted` 事件交叉校验，不一致时拒绝汇总（`generations_mismatch`）。默认输出 Markdown（`--json` 输出机器可读的 JSON，同时适合写入文件）；传入文件路径时会写入该文件并自动创建父目录，然后打印相对于仓库根目录的路径；输出路径不得落在 `.evofence/` 内，否则拒绝写入以保护控制面状态。例如：
+`evofence report [file] [--format <text|json|sarif|junit>] [--json]` 会把 ledger 汇总为演化报告：运行记录（`run.failed` 记为 FAILED 并带出失败码）、已接受的新一代、目标得分变化、已观测的 token/USD 用量和 ledger 哈希链校验结果。目标的指标名与优化方向取自每个 run 自己的 `contract_snapshot` 历史快照：跨目标不可比的代不会被合并（聚合字段输出 null，并按目标分组列出），方向未知时不会默认按 maximize 计算。完整性一栏报告哈希链校验结果与断链位置（`failed_at_seq`）；哈希链不带密钥，只能发现意外损坏或未重算哈希的修改，不能作为防篡改证明。报告还会把 generations 表与哈希链上的 `generation.accepted` 事件交叉校验，不一致时拒绝汇总（`generations_mismatch`）。缺省或 `--format text` 的输出与旧文本逐字一致；`--format json` 等价于既有 `--json`，失败时同样使用 JSON 错误信封；`sarif` 与 `junit` 输出可供互操作工具消费。传入文件路径时会写入该文件并自动创建父目录，然后打印相对于仓库根目录的路径；输出路径不得落在 `.evofence/` 内，否则拒绝写入以保护控制面状态。例如：
 
 ```sh
 evofence report
 evofence report reports/evolution.md
-evofence report reports/evolution.json --json
+evofence report reports/evolution.json --format json
+evofence report reports/evolution.sarif --format sarif
+evofence report reports/evolution.xml --format junit
 ```
 
 ### Agent 插件与扩展
