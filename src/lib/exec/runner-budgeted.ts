@@ -32,9 +32,14 @@ export async function runBudgetedAdapter(ctx: RunContext, { iteration, phase, ..
   }
   const remainingUsdMicros = ctx.costLimitMicros === null ? null : ctx.costLimitMicros - ctx.state.observedCostMicros;
   if (remainingUsdMicros !== null && remainingUsdMicros < 1) {
-    const failure = { metric: 'estimated_usd', phase, iteration, limit_usd: usdFromMicros(ctx.costLimitMicros as number), observed_total_usd: usdFromMicros(ctx.state.observedCostMicros) };
+    const failure = {
+      metric: 'estimated_usd', phase, iteration,
+      limit_usd: usdFromMicros(ctx.costLimitMicros as number),
+      observed_total_usd: usdFromMicros(ctx.state.observedCostMicros),
+      over_limit_usd: usdFromMicros(Math.max(0, ctx.state.observedCostMicros - (ctx.costLimitMicros as number))),
+    };
     ledger.append('budget.exhausted', runId, failure);
-    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The Claude USD estimate limit was reached before another adapter invocation.', failure);
+    throw new EvoFenceError('RESOURCE_EXHAUSTED', 'The USD cost estimate limit was reached before another adapter invocation.', failure);
   }
   const result = await invokeAdapter({
     ...options, adapter, config, phase, iteration,

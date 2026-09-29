@@ -41,7 +41,9 @@ export async function runBaseline(ctx: RunContext): Promise<boolean> {
     private_holdout_host_readable: ctx.holdout.length > 0,
     token_budget: ctx.tokenLimit,
     cost_budget_usd: ctx.contract.budgets.max_usd,
-    cost_budget_source: ctx.costLimitMicros === null ? null : 'claude-cli --max-budget-usd; result.total_cost_usd estimate',
+    cost_budget_source: ctx.costLimitMicros === null ? null : ctx.adapter === 'claude'
+      ? 'claude-cli --max-budget-usd; result.total_cost_usd estimate'
+      : 'pi-cli usage.cost.total model-price estimate; post-invocation run-wide threshold',
   });
   ctx.onProgress({ type: 'run.started', run_id: ctx.runId, base_sha: state.activeSha, iterations: ctx.limitIterations });
 
