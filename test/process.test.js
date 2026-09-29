@@ -61,3 +61,22 @@ test('objective parser reads only a finite final score', () => {
   assert.equal(finalNumericLine('no score'), null);
   assert.equal(finalNumericLine('Infinity'), null);
 });
+
+test('shell-mode spawns fold argv into the command line without leaking Node DEP0190', async () => {
+  // Regression: runProcess used to hand spawn a non-empty argv with shell: true, which Node
+  // deprecates (DEP0190). The warning is emitted on the CLI's own stderr, breaking the
+  // "--json failures print exactly one error object on stderr" contract on every adapter dispatch.
+  const distUrl = new URL('../dist/lib/process.js', import.meta.url).href;
+  const script = [
+    `import { runProcess } from ${JSON.stringify(distUrl)};`,
+    `const result = await runProcess('echo', ['a', 'b'], { shell: true, timeoutMs: 10000 });`,
+    `process.stdout.write(JSON.stringify({ code: result.code, stdout: result.stdout }));`,
+  ].join('\n');
+  const probe = await runProcess(process.execPath, ['--input-type=module', '-e', script], { timeoutMs: 30000 });
+  assert.equal(probe.code, 0, probe.stderr);
+  assert.doesNotMatch(probe.stderr, /DEP0190/);
+  const result = JSON.parse(probe.stdout);
+  assert.equal(result.code, 0);
+  // Byte-parity with Node's own `command + ' ' + argv.join(' ')` assembly under shell: true.
+  assert.equal(result.stdout.trim(), 'a b');
+});

@@ -119,10 +119,16 @@ export function runProcess(command: string, args: readonly string[], options: Ru
   } = options;
 
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    // DEP0190: under `shell: true` Node concatenates (never escapes) argv into the command line
+    // and warns when argv is non-empty. Fold argv into the command line ourselves and hand spawn
+    // an empty argv: the spawned command line is byte-identical to Node's own assembly, and the
+    // deprecation warning can never leak onto stderr where the --json error contract lives.
+    const useShell = shell || (process.platform === 'win32' && /\.(cmd|bat)$/i.test(command));
+    const foldArgs = useShell && args.length > 0;
+    const child = spawn(foldArgs ? [command, ...args].join(' ') : command, foldArgs ? [] : args, {
       cwd,
       env: sanitizedEnvironment(env),
-      shell: shell || (process.platform === 'win32' && /\.(cmd|bat)$/i.test(command)),
+      shell: useShell,
       detached: process.platform !== 'win32',
       windowsHide: true,
       stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
