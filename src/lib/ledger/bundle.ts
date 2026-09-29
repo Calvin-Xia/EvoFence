@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { LedgerExport, LedgerVerification } from '../../types/ledger.js';
 import { EvoFenceError } from '../errors.js';
 import { verifyChain } from './chain.js';
@@ -13,6 +14,23 @@ export function verifyBundle(bundle: LedgerExport): LedgerVerification {
     );
   }
 
+  for (const event of bundle.events) {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(event.payload_json);
+    } catch {
+      throw new EvoFenceError(
+        'LEDGER_BUNDLE_PAYLOAD_MISMATCH',
+        `Bundle payload does not match payload_json at event sequence ${event.seq}: payload_json is not valid JSON.`,
+      );
+    }
+    if (!isDeepStrictEqual(event.payload, payload)) {
+      throw new EvoFenceError(
+        'LEDGER_BUNDLE_PAYLOAD_MISMATCH',
+        `Bundle payload does not match payload_json at event sequence ${event.seq}.`,
+      );
+    }
+  }
   const computed = verifyChain(bundle.events);
   if (!computed.valid) return computed;
   if (!bundle.integrity.valid) return bundle.integrity;

@@ -7,6 +7,7 @@
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { EvoFenceError } from '../../errors.js';
 import { repositoryRoot } from '../../git.js';
 import { Ledger, ledgerPath, verifyBundle } from '../../ledger.js';
 import { jsonDocument, repoRelativePath } from '../output.js';
@@ -37,7 +38,13 @@ export async function commandLedgerVerify(context: CommandContext): Promise<numb
   const bundle = stringOption(context, 'bundle');
   if (bundle !== undefined) {
     const content = await readFile(path.resolve(context.cwd, bundle), 'utf8');
-    const result = verifyBundle(JSON.parse(content));
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new EvoFenceError('LEDGER_BUNDLE_INVALID_JSON', 'Ledger bundle must contain valid JSON.');
+    }
+    const result = verifyBundle(parsed as Parameters<typeof verifyBundle>[0]);
     context.stdout(jsonDocument(result));
     return result.valid ? 0 : 1;
   }

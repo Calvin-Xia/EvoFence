@@ -52,6 +52,24 @@ test('offline verification rejects an unsupported bundle schema version explicit
   });
 });
 
+test('offline verification rejects a forged payload or invalid payload_json', async () => {
+  await withLedger((ledger) => {
+    const forgedPayload = copyBundle(ledger.export());
+    forgedPayload.events[1].payload = { iteration: 999, forged: true };
+    assert.throws(
+      () => verifyBundle(forgedPayload),
+      (error) => error?.code === 'LEDGER_BUNDLE_PAYLOAD_MISMATCH' && /sequence 2/.test(error.message),
+    );
+
+    const invalidPayloadJson = copyBundle(ledger.export());
+    invalidPayloadJson.events[1].payload_json = '{not valid json';
+    assert.throws(
+      () => verifyBundle(invalidPayloadJson),
+      (error) => error?.code === 'LEDGER_BUNDLE_PAYLOAD_MISMATCH' && /sequence 2/.test(error.message),
+    );
+  });
+});
+
 test('ledger verify --bundle reads only the bundle and preserves failure output', async () => {
   await withLedger(async (ledger) => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-bundle-cli-'));
@@ -79,6 +97,51 @@ test('ledger verify --bundle reads only the bundle and preserves failure output'
       assert.equal(invalid.code, 1);
       assert.deepEqual(JSON.parse(invalid.stdout), verifyChain(broken.events));
       assert.equal(invalid.stderr, '');
+
+      const forgedPayload = copyBundle(bundle);
+      forgedPayload.events[1].payload = { iteration: 999, forged: true };
+      await writeFile(path.join(root, 'forged-payload.json'), `${JSON.stringify(forgedPayload)}\n`);
+      const payloadMismatch = await runProcess(
+        process.execPath,
+        [cliPath, 'ledger', 'verify', '--bundle', 'forged-payload.json', '--json'],
+        { cwd: root, timeoutMs: 10000, maxOutputBytes: 100000 },
+      );
+      assert.equal(payloadMismatch.code, 1);
+      assert.equal(payloadMismatch.stdout, '');
+      const payloadError = JSON.parse(payloadMismatch.stderr);
+      assert.equal(payloadError.error.code, 'LEDGER_BUNDLE_PAYLOAD_MISMATCH');
+      assert.match(payloadError.error.message, /sequence 2/);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+test('ledger verify --bundle maps malformed JSON to the CLI failure contract', async () => {
+  await withLedger(async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'evofence-ledger-bundle-json-'));
+    try {
+      await writeFile(path.join(root, 'malformed.json'), '{not valid json');
+      const cliPath = path.resolve(import.meta.dirname, '..', 'dist', 'cli.js');
+      const textMode = await runProcess(
+        process.execPath,
+        [cliPath, 'ledger', 'verify', '--bundle', 'malformed.json'],
+        { cwd: root, timeoutMs: 10000, maxOutputBytes: 100000 },
+      );
+      assert.equal(textMode.code, 1);
+      assert.equal(textMode.stdout, '');
+      assert.equal(textMode.stderr, '[LEDGER_BUNDLE_INVALID_JSON] Ledger bundle must contain valid JSON.\n');
+
+      const jsonMode = await runProcess(
+        process.execPath,
+        [cliPath, 'ledger', 'verify', '--bundle', 'malformed.json', '--json'],
+        { cwd: root, timeoutMs: 10000, maxOutputBytes: 100000 },
+      );
+      assert.equal(jsonMode.code, 1);
+      assert.equal(jsonMode.stdout, '');
+      assert.deepEqual(JSON.parse(jsonMode.stderr), {
+        error: { code: 'LEDGER_BUNDLE_INVALID_JSON', message: 'Ledger bundle must contain valid JSON.' },
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -148,7 +211,15 @@ test('offline verification localizes bundle tampering like the online verifier',
         expected_previous_hash: tamperCase.expected_previous_hash,
         observed_hash: tamperCase.observed_hash,
       }, `${tamperCase.name} online location`);
-      assert.deepEqual(verifyBundle(tampered), online, `${tamperCase.name} offline location`);
+      if (tamperCase.name === 'payload_json') {
+        assert.throws(
+          () => verifyBundle(tampered),
+          (error) => error?.code === 'LEDGER_BUNDLE_PAYLOAD_MISMATCH' && /sequence 2/.test(error.message),
+          `${tamperCase.name} must report the payload mismatch before chain verification`,
+        );
+      } else {
+        assert.deepEqual(verifyBundle(tampered), online, `${tamperCase.name} offline location`);
+      }
     }
   });
 });
