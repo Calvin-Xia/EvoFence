@@ -5,12 +5,13 @@
  * only opens it read-only for those three actions, so `export` keeps the read-write open and the
  * "a missing ledger is created" behaviour). Exit code `1` when the chain fails verification.
  */
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { EvoFenceError } from '../../errors.js';
 import { repositoryRoot } from '../../git.js';
-import { Ledger, ledgerPath } from '../../ledger.js';
+import { Ledger, ledgerPath, verifyBundle } from '../../ledger.js';
 import { jsonDocument, repoRelativePath } from '../output.js';
-import { positional, type CommandContext } from './context.js';
+import { positional, stringOption, type CommandContext } from './context.js';
 
 const READ_ONLY_ACTIONS = new Set(['show', 'verify', 'recent']);
 
@@ -34,6 +35,20 @@ export async function commandLedgerShow(context: CommandContext): Promise<number
 
 /** `ledger verify` — hash-chain verification (a downstream DoD entry point). */
 export async function commandLedgerVerify(context: CommandContext): Promise<number> {
+  const bundle = stringOption(context, 'bundle');
+  if (bundle !== undefined) {
+    const content = await readFile(path.resolve(context.cwd, bundle), 'utf8');
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new EvoFenceError('LEDGER_BUNDLE_INVALID_JSON', 'Ledger bundle must contain valid JSON.');
+    }
+    const result = verifyBundle(parsed as Parameters<typeof verifyBundle>[0]);
+    context.stdout(jsonDocument(result));
+    return result.valid ? 0 : 1;
+  }
+
   return withLedger(context, 'verify', (ledger) => {
     const result = ledger.verify();
     context.stdout(jsonDocument(result));
