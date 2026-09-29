@@ -9,6 +9,14 @@ The Cordis ID is `evofence-tools`, the bundle package is `@local/evofence-deepse
 
 The plugin opens `.evofence/ledger.sqlite` under the current working directory in SQLite read-only mode. At runtime it reads only that ledger; it does not access the network, spawn processes, read credentials, start an evolution run, execute contract checks, accept candidates, or change Git state. The current working directory must be an initialized EvoFence repository. Missing ledgers return a clear error; ledger integrity failures are reported by the verification tool.
 
+Preflight is outside this library surface. Before dispatching an agent, use the EvoFence CLI directly: `evofence doctor --adapter <name> --json`. The command is read-only; a non-zero exit is a refusal that must be reported rather than bypassed. This bundle does not create a run directory, worktree, or ledger event.
+
+Offline bundle verification is also a CLI surface: `evofence ledger verify --bundle <file> --json` reads the supplied export without opening `.evofence/ledger.sqlite`. The package root exports `verifyBundle` for consumers that already hold a parsed bundle, but this library keeps the CLI choice because it receives file paths and the CLI owns file reading and its failure contract.
+
+## USD budgets
+
+The DeepSeek Harness library surface does not run an EvoFence adapter and therefore does not support or enforce `budgets.max_usd` itself. If the CLI is invoked for a Codex or OpenCode run, preflight uses `UNSUPPORTED_COST_BUDGET`; the exact adapter message is `Codex does not provide complete, verifiable USD telemetry. Set budgets.max_usd to null or use the Claude Code or Pi adapter.` or `OpenCode reports cost without a verified currency; EvoFence cannot infer USD. Set budgets.max_usd to null or use the Claude Code or Pi adapter.` The alternative is to set `budgets.max_usd` to `null`, or run the CLI with Claude Code or Pi and their documented USD semantics.
+
 ## Compatibility and dependencies
 
 - Node.js: `^22.19.0 || >=24.0.0`
