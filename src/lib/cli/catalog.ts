@@ -76,6 +76,7 @@ const UNISOLATED_FLAG: FlagSpec = { name: 'allow-unisolated-agent', key: 'allow_
 const HOLDOUT_FLAG: FlagSpec = { name: 'allow-readable-holdout', key: 'allow_readable_holdout', kind: 'boolean', description: 'Required to run private checks when host read isolation is unavailable.' };
 const BUNDLE_FLAG: FlagSpec = { name: 'bundle', key: 'bundle', kind: 'value', description: 'Read and verify an exported ledger bundle instead of the local SQLite ledger.' };
 const REPORT_FORMAT_FLAG: FlagSpec = { name: 'format', key: 'format', kind: 'value', description: 'Report format: text (default), json, sarif or junit.' };
+const FIX_FLAG: FlagSpec = { name: 'fix', key: 'fix', kind: 'boolean', description: 'Apply safe, idempotent doctor remediations and rerun the checks.' };
 
 const LEDGER = 'ledger' as const;
 const AGENTLESS = 'agentless' as const;
@@ -285,10 +286,10 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'doctor',
     group: 'doctor',
-    summary: 'Run read-only preflight checks before dispatching an agent.',
-    usage: 'doctor [--adapter <name>] [--json]',
+    summary: 'Run preflight checks, optionally applying safe idempotent fixes.',
+    usage: 'doctor [--adapter <name>] [--fix] [--json]',
     positionals: [],
-    flags: [ADAPTER_FLAG, JSON_FLAG],
+    flags: [ADAPTER_FLAG, FIX_FLAG, JSON_FLAG],
     json: 'flag',
     exits: exits('all checks are ok', 'usage error, or at least one check is refused'),
     smoke: inLedger(['doctor'], 0),

@@ -231,6 +231,58 @@ test('doctor and run agree when the private holdout is not ignored', async () =>
   }, 'holdout-exposure');
 });
 
+test('doctor --fix adds the holdout ignore entry, rechecks it, and is idempotent', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.gitignore'), 'node_modules/\n');
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
+
+    const first = spawnDoctor(['--fix', '--json'], root);
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(first.stderr, '');
+    const firstDocument = JSON.parse(first.stdout);
+    const firstCheck = firstDocument.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(firstCheck.status, 'ok');
+    assert.deepEqual(firstCheck.action, {
+      status: 'fixed',
+      message: 'Added .evofence/private/holdout.yaml to .gitignore; rechecked Git ignore status.',
+      original_code: 'HOLDOUT_NOT_IGNORED',
+    });
+    assert.equal(spawnSync('git', ['check-ignore', '-q', path.join(root, '.evofence', 'private', 'holdout.yaml')], { cwd: root }).status, 0);
+
+    const second = spawnDoctor(['--fix', '--json'], root);
+    assert.equal(second.status, 0, second.stderr);
+    const secondCheck = JSON.parse(second.stdout).checks.find((item) => item.id === 'holdout-exposure');
+    assert.deepEqual(secondCheck.action, { status: 'not-needed', message: 'No action required.' });
+    const ignoreFile = await readFile(path.join(root, '.gitignore'), 'utf8');
+    assert.equal(ignoreFile.split('\n').filter((line) => line === '.evofence/private/holdout.yaml').length, 1);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor --fix reports unsafe readable holdouts as DOCTOR_UNFIXABLE', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions:\n  - id: hidden\n    command: "node --version"\n');
+    const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+    assert.equal(error.code, 'DOCTOR_UNFIXABLE');
+    const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(check.code, 'DOCTOR_UNFIXABLE');
+    assert.deepEqual(check.action, {
+      status: 'unfixable',
+      message: 'No safe automatic fix for PRIVATE_ORACLE_READABLE.',
+      original_code: 'PRIVATE_ORACLE_READABLE',
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('doctor and run agree on an adapter budget refusal', async () => {
   await assertDoctorMatchesRun(async (root) => {
     const file = path.join(root, '.evofence', 'contract.yaml');
