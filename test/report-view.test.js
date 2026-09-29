@@ -225,6 +225,58 @@ test('budget forecast uses sorted runs, complete usage, and ledger thresholds on
   assert.equal(forecast.usd.historical_mean_per_round, 0.75 / 3);
 });
 
+test('budget forecast consumes complete adapter usage when terminal totals are null', () => {
+  const forecast = buildBudgetForecast({
+    integrity: { valid: true, events: 3, head: 'e'.repeat(64) },
+    generations: [],
+    events: [
+      { seq: 1, created_at: '2026-09-29T01:00:00.000Z', event_type: 'run.started', run_id: 'run-adapter', payload: { requested_iterations: 2, contract_snapshot: { budgets: { max_iterations: 2, max_tokens: 200, max_usd: 2 } } } },
+      { seq: 2, created_at: '2026-09-29T01:00:01.000Z', event_type: 'adapter.finished', run_id: 'run-adapter', payload: { reported_usage: { tokens_total: 123, tokens_complete: true, reported_cost: 0.42, cost_complete: true, cost_currency: 'USD' } } },
+      { seq: 3, created_at: '2026-09-29T01:00:02.000Z', event_type: 'run.finished', run_id: 'run-adapter', payload: { status: 'ACCEPTED', iterations: 2, token_usage_total: null, cost_estimate_total_usd: null } },
+    ],
+  });
+
+  assert.equal(forecast.tokens.used, 123);
+  assert.equal(forecast.usd.used, 0.42);
+  assert.equal(forecast.runs[0].tokens_used, 123);
+  assert.equal(forecast.runs[0].usd_used, 0.42);
+});
+
+test('budget forecast excludes an only-started run from historical aggregates', () => {
+  const forecast = buildBudgetForecast({
+    integrity: { valid: true, events: 4, head: 'f'.repeat(64) },
+    generations: [],
+    events: [
+      { seq: 1, created_at: '2026-09-29T02:00:00.000Z', event_type: 'run.started', run_id: 'run-complete', payload: { requested_iterations: 1, contract_snapshot: { budgets: { max_iterations: 1, max_tokens: 100, max_usd: 1 } } } },
+      { seq: 2, created_at: '2026-09-29T02:00:01.000Z', event_type: 'run.finished', run_id: 'run-complete', payload: { status: 'ACCEPTED', iterations: 1, token_usage_total: 30, cost_estimate_total_usd: 0.3 } },
+      { seq: 3, created_at: '2026-09-29T02:00:02.000Z', event_type: 'run.started', run_id: 'run-partial', payload: { requested_iterations: 4, contract_snapshot: { budgets: { max_iterations: 4, max_tokens: 100, max_usd: 1 } } } },
+      { seq: 4, created_at: '2026-09-29T02:00:03.000Z', event_type: 'budget.tokens.observed', run_id: 'run-partial', payload: { limit: 100, observed_total: 50 } },
+    ],
+  });
+
+  assert.equal(forecast.rounds_used, 1);
+  assert.equal(forecast.tokens.used, 30);
+  assert.equal(forecast.usd.used, 0.3);
+  assert.equal(forecast.runs.find((run) => run.run_id === 'run-partial').status, 'INCOMPLETE');
+  assert.equal(forecast.runs.find((run) => run.run_id === 'run-partial').tokens_used, null);
+});
+
+test('budget forecast keeps valid observations when terminal payload totals are null', () => {
+  const forecast = buildBudgetForecast({
+    integrity: { valid: true, events: 4, head: '0'.repeat(64) },
+    generations: [],
+    events: [
+      { seq: 1, created_at: '2026-09-29T03:00:00.000Z', event_type: 'run.started', run_id: 'run-observed', payload: { requested_iterations: 1, contract_snapshot: { budgets: { max_iterations: 1, max_tokens: 100, max_usd: 1 } } } },
+      { seq: 2, created_at: '2026-09-29T03:00:01.000Z', event_type: 'budget.tokens.observed', run_id: 'run-observed', payload: { limit: 100, observed_total: 20 } },
+      { seq: 3, created_at: '2026-09-29T03:00:02.000Z', event_type: 'budget.usd.observed', run_id: 'run-observed', payload: { limit_usd: 1, observed_total_usd: 0.25 } },
+      { seq: 4, created_at: '2026-09-29T03:00:03.000Z', event_type: 'run.finished', run_id: 'run-observed', payload: { status: 'ACCEPTED', iterations: 1, token_usage_total: null, cost_estimate_total_usd: null } },
+    ],
+  });
+
+  assert.equal(forecast.tokens.used, 20);
+  assert.equal(forecast.usd.used, 0.25);
+});
+
 test('a broken chain still returns every view class, with unknown ledger facts left null', async () => {
   const stub = {
     readSnapshot: () => ({
@@ -312,6 +364,44 @@ test('CLI report renders the gate decisions table only when there are decisions'
       await rm(probe.directory, { recursive: true, force: true });
     }
   } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI report dispatches SARIF and JUnit formats and rejects conflicting JSON flags', async () => {
+  const directory = await scratchLedger();
+  const probe = await makeRepo('report-format-dispatch');
+  try {
+    await mkdir(path.join(probe.root, '.evofence'), { recursive: true });
+    await writeFile(path.join(probe.root, '.evofence', 'ledger.sqlite'), await readFile(path.join(directory, 'ledger.sqlite')));
+
+    const sarifResult = spawnCli(['report', '--format', 'sarif'], probe.root);
+    assert.equal(sarifResult.status, 0, sarifResult.stderr);
+    const sarif = JSON.parse(sarifResult.stdout);
+    assert.equal(sarif.$schema, 'https://json.schemastore.org/sarif-2.1.0.json');
+    assert.equal(sarif.version, '2.1.0');
+    assert.equal(sarif.runs[0].results.length, 3);
+    assert.equal(sarif.runs[0].results[0].ruleId, 'evofence.gate-decision');
+
+    const junitResult = spawnCli(['report', '--format', 'junit'], probe.root);
+    assert.equal(junitResult.status, 0, junitResult.stderr);
+    assert.match(junitResult.stdout, /^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuite /);
+    assert.match(junitResult.stdout, /<testsuite[^>]* tests="3"/);
+    assert.equal((junitResult.stdout.match(/<testcase\b/g) ?? []).length, 3);
+
+    const textResult = spawnCli(['report'], probe.root);
+    assert.equal(textResult.status, 0, textResult.stderr);
+    assert.match(textResult.stdout, /^# EvoFence Evolution Report\n/);
+    assert.match(textResult.stdout, /## Gate decisions/);
+
+    const conflict = spawnCli(['report', '--json', '--format', 'sarif'], probe.root);
+    assert.equal(conflict.status, 1);
+    assert.equal(conflict.stdout, '');
+    const error = JSON.parse(conflict.stderr);
+    assert.equal(error.error.code, 'USAGE');
+    assert.match(error.error.message, /cannot be combined/);
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
     await rm(directory, { recursive: true, force: true });
   }
 });

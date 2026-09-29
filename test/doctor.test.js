@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -260,6 +260,32 @@ test('doctor --fix adds the holdout ignore entry, rechecks it, and is idempotent
     assert.deepEqual(secondCheck.action, { status: 'not-needed', message: 'No action required.' });
     const ignoreFile = await readFile(path.join(root, '.gitignore'), 'utf8');
     assert.equal(ignoreFile.split('\n').filter((line) => line === '.evofence/private/holdout.yaml').length, 1);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('doctor --fix refuses a hard-linked .gitignore without changing the shared target', async () => {
+  const { directory, root } = await makeRepo();
+  try {
+    const emptyGlobalExcludes = path.join(root, 'empty-global-excludes');
+    await writeFile(emptyGlobalExcludes, '');
+    runGit(root, ['config', 'core.excludesFile', emptyGlobalExcludes]);
+    await writeFile(path.join(root, '.evofence', '.gitignore'), '');
+    await writeFile(path.join(root, '.evofence', 'private', 'holdout.yaml'), 'regressions: []\n');
+
+    const gitignore = path.join(root, '.gitignore');
+    const contract = path.join(root, '.evofence', 'contract.yaml');
+    const contractBefore = await readFile(contract, 'utf8');
+    await rm(gitignore, { force: true });
+    await link(contract, gitignore);
+
+    const error = doctorFailure(spawnDoctor(['--fix', '--json'], root));
+    assert.equal(error.code, 'DOCTOR_UNFIXABLE');
+    const check = error.details.checks.find((item) => item.id === 'holdout-exposure');
+    assert.equal(check.code, 'DOCTOR_UNFIXABLE');
+    assert.equal(check.action.status, 'unfixable');
+    assert.equal(await readFile(contract, 'utf8'), contractBefore);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

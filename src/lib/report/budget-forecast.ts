@@ -7,6 +7,7 @@ import type {
   LedgerEvent,
   LedgerSnapshot,
 } from '../../types/index.js';
+import { buildBudgetTotalsByRun } from './budget.js';
 import { payloadObject } from './ledger-view.js';
 
 const FORECAST_EXPLANATION = 'Estimates use the historical mean usage per completed run/round; they are not a prediction commitment. Unknown token/USD telemetry remains null.';
@@ -39,11 +40,11 @@ function iterationLimit(payload: Record<string, JsonValue>): number | null {
 }
 
 function tokenLimit(payload: Record<string, JsonValue>): number | null {
-  return integerValue(snapshotBudgets(payload).max_tokens) ?? integerValue(payload.token_budget);
+  return integerValue(snapshotBudgets(payload).max_tokens);
 }
 
 function usdLimit(payload: Record<string, JsonValue>): number | null {
-  return numberValue(snapshotBudgets(payload).max_usd) ?? numberValue(payload.limit_usd);
+  return numberValue(snapshotBudgets(payload).max_usd);
 }
 
 function tokenUsage(payload: Record<string, JsonValue>): number | null {
@@ -162,16 +163,26 @@ function displayRatio(value: number | null): string {
 export function buildBudgetForecast(snapshot: LedgerSnapshot): BudgetForecastView {
   const runsById = new Map<string, MutableRun>();
   for (const event of snapshot.events) applyEvent(runsById, event);
-  const runs = [...runsById.values()]
-    .map(({ max_iteration_observed, terminal, ...run }) => ({
-      ...run,
-      iterations: terminal ? run.iterations : max_iteration_observed,
-    }))
+  const totalsByRun = buildBudgetTotalsByRun(snapshot.events);
+  const reducedRuns = [...runsById.values()]
+    .map((run) => {
+      const totals = totalsByRun.get(run.run_id);
+      return {
+        ...run,
+        iterations: run.terminal ? run.iterations : run.max_iteration_observed,
+        tokens_used: run.terminal ? totals?.tokens_total ?? null : null,
+        usd_used: run.terminal && totals?.usd_total_micros !== undefined && totals.usd_total_micros !== null
+          ? totals.usd_total_micros / 1_000_000
+          : null,
+      };
+    });
+  const completed = reducedRuns.filter((run) => run.terminal);
+  const runs = reducedRuns
+    .map(({ max_iteration_observed, terminal, ...run }) => run)
     .sort((left, right) => left.run_id < right.run_id ? -1 : left.run_id > right.run_id ? 1 : 0);
-  const completed = runs.filter((run) => run.status !== 'INCOMPLETE');
-  const roundsUsed = runs.reduce((total, run) => total + run.iterations, 0);
-  const roundsLimit = runs.length > 0 && runs.every((run) => run.iteration_limit !== null)
-    ? runs.reduce((total, run) => total + (run.iteration_limit as number), 0)
+  const roundsUsed = completed.reduce((total, run) => total + run.iterations, 0);
+  const roundsLimit = completed.length > 0 && completed.every((run) => run.iteration_limit !== null)
+    ? completed.reduce((total, run) => total + (run.iteration_limit as number), 0)
     : null;
   const historicalMeanRounds = completed.length
     ? completed.reduce((total, run) => total + run.iterations, 0) / completed.length

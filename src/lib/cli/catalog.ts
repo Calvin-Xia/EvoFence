@@ -6,11 +6,23 @@
  * so it can be reviewed, diffed and consumed by docs, integration adapters and the smoke test.
  * `src/lib/cli/commands.ts` exposes the lookup/help API over it; `src/cli.ts` is the entry.
  *
- * GROUPING (ADR-0003 keeps the 0.3.0 group skeleton, with the flag/JSON/exit conventions
+ * GROUPING (ADR-0003 keeps the 0.3.0 eleven-group skeleton, with the flag/JSON/exit conventions
  * unified inside it): `init`, `run`, `proposal`, `evidence`, `gate`, `ledger`, `diff`,
  * `rollback`, `experiment`, `report`, `budget`, `status`. Groups with more than one operation carry an
  * explicit action (`proposal inspect`, `evidence run`, `ledger show|verify|recent|export`,
  * `experiment run|export`).
+ *
+ * BREAKING CHANGES vs 0.3.0 (authorized by ADR-0003; recorded here because `docs/` belongs to
+ * l4_docs):
+ *   1. `--json` is accepted by EVERY subcommand (0.3.0 only honoured it on run/diff/report/status)
+ *      and, when present, a failure is reported as ONE JSON object on stderr instead of the
+ *      `[CODE] message` text.
+ *   2. Unknown flags are rejected everywhere. 0.3.0 silently ignored an unknown value flag on
+ *      `run` (`--foo bar`) and treated stray arguments on `init`/`proposal` as positional noise.
+ *   3. `--flag=value` is accepted in addition to `--flag value`.
+ *   4. `init`, `rollback`, `ledger export` and `experiment export` gained a `--json` view.
+ *   5. Exit codes are frozen at 0/1 (0.3.0 already behaved that way; the convention is now
+ *      declared instead of emergent) and `supports`/`flags`/`exits` are machine-readable.
  */
 import type { CommandSpec, FlagSpec, SmokeFixture, SmokeSpec } from './spec.js';
 
@@ -250,27 +262,19 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'report',
     group: 'report',
-    summary: 'Print the cross-run evolution report as text, JSON, SARIF or JUnit.',
-    usage: 'report [file] [--format <text|json|sarif|junit>] [--json]',
+    summary: 'Print the cross-run evolution report as text, JSON, SARIF or JUnit.', usage: 'report [file] [--format <text|json|sarif|junit>] [--json]',
     legacyUsage: 'report [file] [--json]',
-    positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }],
-    flags: [REPORT_FORMAT_FLAG, JSON_FLAG],
-    json: 'flag',
+    positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }], flags: [REPORT_FORMAT_FLAG, JSON_FLAG], json: 'flag',
     exits: exits('the report was rendered/written; --format json is the JSON view, while SARIF and JUnit are interoperable report formats', 'usage error, unsupported report format, conflicting --json/--format flags, or PROTECTED_PATH when the output would overwrite control-plane state'),
-    smoke: inLedger(['report', SMOKE.reportFile], 0),
-    jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
+    smoke: inLedger(['report', SMOKE.reportFile], 0), jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
   },
   {
     name: 'budget',
     group: 'budget',
-    summary: 'Read ledger usage and thresholds into a deterministic historical-mean forecast.',
-    usage: 'budget [--json]',
-    positionals: [],
-    flags: [JSON_FLAG],
-    json: 'flag',
+    summary: 'Read ledger usage and thresholds into a deterministic historical-mean forecast.', usage: 'budget [--json]',
+    positionals: [], flags: [JSON_FLAG], json: 'flag',
     exits: exits('the read-only budget forecast was rendered; remaining rounds use the historical mean and are not a prediction commitment', 'usage error, an unreadable/incompatible ledger, or a failed ledger integrity check'),
-    smoke: inLedger(['budget'], 0),
-    jsonSmoke: inLedger(['budget', '--json'], 0),
+    smoke: inLedger(['budget'], 0), jsonSmoke: inLedger(['budget', '--json'], 0),
   },
   {
     name: 'status',
@@ -287,14 +291,10 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'doctor',
     group: 'doctor',
-    summary: 'Run preflight checks, optionally applying safe idempotent fixes.',
-    usage: 'doctor [--adapter <name>] [--fix] [--json]',
-    positionals: [],
-    flags: [ADAPTER_FLAG, FIX_FLAG, JSON_FLAG],
-    json: 'flag',
+    summary: 'Run preflight checks, optionally applying safe idempotent fixes.', usage: 'doctor [--adapter <name>] [--fix] [--json]',
+    positionals: [], flags: [ADAPTER_FLAG, FIX_FLAG, JSON_FLAG], json: 'flag',
     exits: exits('all checks are ok', 'usage error, or at least one check is refused'),
-    smoke: inLedger(['doctor'], 0),
-    jsonSmoke: inLedger(['doctor', '--json'], 0),
+    smoke: inLedger(['doctor'], 0), jsonSmoke: inLedger(['doctor', '--json'], 0),
   },
 ];
 

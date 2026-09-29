@@ -67,6 +67,26 @@ function runTotals(events: LedgerEvent[], eventTypes: readonly string[], cumulat
   return totals;
 }
 
+export interface BudgetRunTotals {
+  tokens_total: number | null;
+  usd_total_micros: number | null;
+}
+
+/** Reuse the complete cumulative/invocation reducer for per-run report consumers. */
+export function buildBudgetTotalsByRun(events: LedgerEvent[]): Map<string, BudgetRunTotals> {
+  const tokenTotals = runTotals(events, TOKEN_TOTAL_EVENTS, tokenTotal, invocationTokenTotal);
+  const usdTotals = runTotals(events, USD_TOTAL_EVENTS, usdTotalMicros, invocationUsdTotalMicros);
+  const runIds = new Set([...tokenTotals.keys(), ...usdTotals.keys()]);
+  const rows = [...runIds].map((runId): [string, BudgetRunTotals] => {
+    const usd = usdTotals.get(runId);
+    return [runId, {
+      tokens_total: tokenTotals.get(runId) ?? null,
+      usd_total_micros: usd ?? null,
+    }];
+  });
+  return new Map(rows);
+}
+
 function tokenTotal(payload: Payload): number | null {
   for (const value of [payload.observed_total, payload.token_usage_total]) {
     if (Number.isSafeInteger(value) && (value as number) >= 0) return value as number;
@@ -99,10 +119,11 @@ function invocationUsdTotalMicros(usage: Payload): number | null {
 
 /** `report.budgets`. Both totals are `null` when no complete telemetry exists. */
 export function buildBudgets(events: LedgerEvent[]): { tokens_total: number | null; usd_total: number | null } {
-  const tokenTotals = runTotals(events, TOKEN_TOTAL_EVENTS, tokenTotal, invocationTokenTotal);
-  const usdTotals = runTotals(events, USD_TOTAL_EVENTS, usdTotalMicros, invocationUsdTotalMicros);
+  const totals = buildBudgetTotalsByRun(events);
+  const tokenValues = [...totals.values()].map((value) => value.tokens_total).filter((value): value is number => value !== null);
+  const usdValues = [...totals.values()].map((value) => value.usd_total_micros).filter((value): value is number => value !== null);
   return {
-    tokens_total: tokenTotals.size ? [...tokenTotals.values()].reduce((total, value) => total + value, 0) : null,
-    usd_total: usdTotals.size ? [...usdTotals.values()].reduce((total, value) => total + value, 0) / MICROS_PER_USD : null,
+    tokens_total: tokenValues.length ? tokenValues.reduce((total, value) => total + value, 0) : null,
+    usd_total: usdValues.length ? usdValues.reduce((total, value) => total + value, 0) / MICROS_PER_USD : null,
   };
 }

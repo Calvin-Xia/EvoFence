@@ -51,6 +51,7 @@ const ADAPTER_REMEDIATION = 'Set the incompatible budget to null, choose a compa
 const PROCESS_REMEDIATION = 'Use a host that can terminate the agent process tree, or remove the live token/USD budget.';
 const LEDGER_REMEDIATION = 'Restore or repair the ledger, then rerun doctor.';
 const HOLDOUT_IGNORE_ENTRY = '.evofence/private/holdout.yaml';
+type IgnoreFileStat = Awaited<ReturnType<typeof lstat>>;
 
 type CheckAction = () => void | null | PreflightRefusal | Promise<void | null | PreflightRefusal>;
 
@@ -139,17 +140,31 @@ async function doctorChecksOnce(root: string, adapter: string): Promise<DoctorCh
 
 async function addHoldoutIgnoreEntry(root: string): Promise<DoctorAction> {
   const file = path.join(root, '.gitignore');
-  try {
-    const info = await lstat(file);
+  const lstatIfPresent = async (): Promise<IgnoreFileStat | null> => {
+    try {
+      return await lstat(file);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw error;
+    }
+  };
+  const assertSafeTarget = (info: IgnoreFileStat): void => {
     if (!info.isFile()) {
       throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: it is not a regular file.`);
     }
+    if (info.nlink !== 1) {
+      throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: it has multiple hard links.`);
+    }
+  };
+  const sameIdentity = (left: IgnoreFileStat, right: IgnoreFileStat): boolean => left.dev === right.dev && left.ino === right.ino;
+  let before: IgnoreFileStat | null;
+  try {
+    before = await lstatIfPresent();
+    if (before !== null) assertSafeTarget(before);
   } catch (error) {
     if (error instanceof EvoFenceError) throw error;
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot inspect ${file}: ${message}`);
-    }
+    const message = error instanceof Error ? error.message : String(error);
+    throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot inspect ${file}: ${message}`);
   }
 
   try {
@@ -158,7 +173,17 @@ async function addHoldoutIgnoreEntry(root: string): Promise<DoctorAction> {
       return '';
     });
     const prefix = contents.length === 0 || contents.endsWith('\n') || contents.endsWith('\r') ? '' : '\n';
-    await writeFile(file, `${contents}${prefix}${HOLDOUT_IGNORE_ENTRY}\n`, 'utf8');
+
+    const after = await lstatIfPresent();
+    if (before === null) {
+      if (after !== null) throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: its identity changed while it was inspected.`);
+    } else {
+      if (after === null || !sameIdentity(before, after)) {
+        throw new EvoFenceError('DOCTOR_UNFIXABLE', `Cannot safely update ${file}: its identity changed while it was inspected.`);
+      }
+      assertSafeTarget(after);
+    }
+    await writeFile(file, `${contents}${prefix}${HOLDOUT_IGNORE_ENTRY}\n`, { encoding: 'utf8', flag: before === null ? 'wx' : 'w' });
   } catch (error) {
     if (error instanceof EvoFenceError) throw error;
     const message = error instanceof Error ? error.message : String(error);
