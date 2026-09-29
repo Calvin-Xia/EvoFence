@@ -30,5 +30,10 @@
 | task · passed | l3_review_disposition | 复核意见处置 | 2026-09-29T06:09:33.358Z |
 | task · passed | l3_review_spec | 规格轴复核 | 2026-09-29T06:05:56.351Z |
 | task · passed | l3_trace_matrix | 派单四方对应表 | 2026-09-29T05:36:20.024Z |
+| task · passed | l4_criteria_audit | 验收标准逐条核对与遗留项汇总 | 2026-09-29T06:20:00.073Z |
 | task · passed | l4_docs_behavior | 文档与行为一致性 | 2026-09-29T06:17:19.435Z |
+| task · passed | l4_export | 领域视图导出与漂移核对 | 2026-09-29T06:18:20.077Z |
 | task · passed | l4_frozen_audit | 冻结过程记录零改动 | 2026-09-29T06:17:20.291Z |
+| task · passed | l5_accept_artifacts | artifacts 存在性与内容抽查 | 2026-09-29T06:20:42.315Z |
+| task · passed | l5_accept_matrix | 成功标准逐条验收 | 2026-09-29T06:20:40.139Z |
+| task · passed | l5_accept_verdict | verdict 落账 | 2026-09-29T06:20:49.964Z |
