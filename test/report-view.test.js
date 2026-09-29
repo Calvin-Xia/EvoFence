@@ -414,6 +414,25 @@ test('CLI report dispatches SARIF and JUnit formats and rejects conflicting JSON
   }
 });
 
+test('CLI report --format json matches --json on a failed subprocess', async () => {
+  const probe = await makeRepo('format-json-error');
+  try {
+    const jsonResult = spawnCli(['report', '--json'], probe.root);
+    const formatResult = spawnCli(['report', '--format', 'json'], probe.root);
+    assert.equal(jsonResult.status, 1);
+    assert.equal(formatResult.status, 1);
+    assert.equal(jsonResult.stdout, '');
+    assert.equal(formatResult.stdout, '');
+    const jsonError = JSON.parse(jsonResult.stderr);
+    const formatError = JSON.parse(formatResult.stderr);
+    assert.deepEqual(formatError, jsonError);
+    assert.deepEqual(Object.keys(formatError), ['error']);
+    assert.equal(typeof formatError.error.message, 'string');
+  } finally {
+    await rm(probe.directory, { recursive: true, force: true });
+  }
+});
+
 test('CLI status --json exits 0 with parseable JSON', async () => {
   const probe = await makeRepo('status-json');
   try {
