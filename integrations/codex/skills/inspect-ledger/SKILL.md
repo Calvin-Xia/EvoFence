@@ -9,3 +9,4 @@ Use the EvoFence CLI from the current repository root.
 2. Run `evofence ledger recent 10` and summarize status, adapter, accepted/rejected candidates, and duration.
 3. Do not run `evofence ledger show` for this task. It includes full event payloads, which may contain prompts, commands, or evaluator output.
 4. If the CLI or ledger is unavailable, report that without initializing EvoFence or changing repository files.
+5. If another repository or person provides an exported bundle and no local SQLite ledger is available, run `evofence ledger verify --bundle <file> --json`. This reads only the supplied JSON bundle; report its integrity result and exit status without initializing or opening a local ledger.

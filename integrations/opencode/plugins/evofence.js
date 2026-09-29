@@ -1,8 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { tool } from '@opencode-ai/plugin';
 
-function readLedger(action, directory) {
-  const args = action === 'recent' ? ['ledger', 'recent', '10'] : ['ledger', 'verify'];
+function readLedger(action, directory, bundle) {
+  const args = action === 'recent'
+    ? ['ledger', 'recent', '10']
+    : bundle === undefined ? ['ledger', 'verify'] : ['ledger', 'verify', '--bundle', bundle];
   const isWindows = process.platform === 'win32';
   const result = spawnSync(isWindows ? 'evofence.cmd' : 'evofence', args, {
     cwd: directory,
@@ -65,6 +67,15 @@ export const EvoFencePlugin = async () => ({
       args: {},
       async execute(_args, context) {
         return JSON.stringify(readLedger('recent', context.directory));
+      },
+    }),
+    evofence_verify_bundle: tool({
+      description: 'Verify an exported EvoFence ledger bundle without opening the local SQLite ledger. Read-only.',
+      args: {
+        bundle: tool.schema.string(),
+      },
+      async execute(args, context) {
+        return JSON.stringify(readLedger('verify', context.directory, args.bundle));
       },
     }),
   },

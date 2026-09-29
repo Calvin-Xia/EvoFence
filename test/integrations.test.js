@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { access, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { COMMANDS } from '../dist/lib/cli/catalog.js';
+import * as publicApi from '../dist/index.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const readJson = async (relativePath) => JSON.parse(await readFile(path.join(root, relativePath), 'utf8'));
@@ -122,6 +123,34 @@ test('all five host integrations expose the read-only doctor preflight', async (
   assert.match(await read(files[2]), /name: 'evofence_doctor'/);
   assert.match(await read(files[3]), /evofence_doctor/);
   assert.match(await read(files[4]), /Preflight is outside this library surface/);
+});
+
+test('the public package API adds verifyBundle without changing existing export shapes', () => {
+  const existing = [
+    'initializeRepository', 'loadContract', 'loadPrivateHoldout', 'validateContract', 'runEvolution',
+    'Ledger', 'ledgerPath', 'checkChangedPaths', 'checkClaims', 'checkProposal', 'isAllowedPath',
+    'isProtectedPath', 'matchesGlob', 'assessRisk', 'collectEvidence', 'buildEvolutionReport',
+    'formatEvolutionReport', 'EvoFenceError',
+  ];
+  for (const name of existing) assert.equal(typeof publicApi[name], 'function', `${name} must remain callable`);
+  assert.equal(typeof publicApi.verifyBundle, 'function');
+  assert.equal(publicApi.verifyBundle.length, 1);
+});
+
+test('Pi and OpenCode expose a bundle-file parameter for offline verification', async () => {
+  const pi = await read('integrations/pi/evofence.js');
+  assert.match(pi, /name: 'evofence_verify_bundle'/);
+  assert.match(pi, /bundle: Type\.String/);
+  assert.match(pi, /\['ledger', 'verify', '--bundle', bundle\]/);
+
+  const opencode = await read('integrations/opencode/plugins/evofence.js');
+  assert.match(opencode, /evofence_verify_bundle/);
+  assert.match(opencode, /bundle: tool\.schema\.string\(\)/);
+  assert.match(opencode, /\['ledger', 'verify', '--bundle', bundle\]/);
+
+  const verify = COMMANDS.find((command) => command.name === 'ledger verify');
+  assert.ok(verify);
+  assert.equal(verify.usage, 'ledger verify [--bundle <file>] [--json]');
 });
 
 test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {

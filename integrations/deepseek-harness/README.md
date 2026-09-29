@@ -11,6 +11,8 @@ The plugin opens `.evofence/ledger.sqlite` under the current working directory i
 
 Preflight is outside this library surface. Before dispatching an agent, use the EvoFence CLI directly: `evofence doctor --adapter <name> --json`. The command is read-only; a non-zero exit is a refusal that must be reported rather than bypassed. This bundle does not create a run directory, worktree, or ledger event.
 
+Offline bundle verification is also a CLI surface: `evofence ledger verify --bundle <file> --json` reads the supplied export without opening `.evofence/ledger.sqlite`. The package root exports `verifyBundle` for consumers that already hold a parsed bundle, but this library keeps the CLI choice because it receives file paths and the CLI owns file reading and its failure contract.
+
 ## Compatibility and dependencies
 
 - Node.js: `^22.19.0 || >=24.0.0`

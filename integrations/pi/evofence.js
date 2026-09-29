@@ -1,8 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { Type } from 'typebox';
 
-function readLedger(action, cwd) {
-  const args = action === 'recent' ? ['ledger', 'recent', '10'] : ['ledger', 'verify'];
+function readLedger(action, cwd, bundle) {
+  const args = action === 'recent'
+    ? ['ledger', 'recent', '10']
+    : bundle === undefined ? ['ledger', 'verify'] : ['ledger', 'verify', '--bundle', bundle];
   const isWindows = process.platform === 'win32';
   const result = spawnSync(isWindows ? 'evofence.cmd' : 'evofence', args, {
     cwd,
@@ -90,6 +92,18 @@ export default function evofenceExtension(pi) {
     parameters: Type.Object({}),
     async execute(_toolCallId, _params, _signal, _onUpdate, context) {
       return { content: [{ type: 'text', text: JSON.stringify(readLedger('recent', context.cwd ?? process.cwd())) }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: 'evofence_verify_bundle',
+    label: 'Verify EvoFence ledger bundle',
+    description: 'Verify an exported EvoFence ledger bundle without opening the local SQLite ledger. Read-only.',
+    parameters: Type.Object({
+      bundle: Type.String({ description: 'Path to the exported ledger bundle JSON file.' }),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, context) {
+      return { content: [{ type: 'text', text: JSON.stringify(readLedger('verify', context.cwd ?? process.cwd(), params.bundle)) }], details: {} };
     },
   });
 }
