@@ -1,6 +1,10 @@
 # EvoFence plugin for Codex
 
-This portable Codex plugin provides the namespaced skills `$evofence:inspect-ledger` and `$evofence:run-evolution`. Codex prefixes plugin skills with the plugin name, so the descriptive names remain scoped to EvoFence in the skill list. It works with Codex CLI and Codex in the ChatGPT desktop app through a marketplace. The plugin contains instructions only; EvoFence's CLI remains the control plane for contracts, evidence, budgets, and candidate acceptance.
+This portable Codex plugin provides the namespaced skills `$evofence:inspect-ledger` and `$evofence:run-evolution`. Codex prefixes plugin skills with the plugin name, so the descriptive command names remain scoped to EvoFence in the skill list. It works with Codex CLI and Codex in the ChatGPT desktop app through a marketplace. The plugin contains instructions only; EvoFence's CLI remains the control plane for contracts, evidence, budgets, and candidate acceptance.
+
+## USD budgets
+
+The Codex adapter does not support `budgets.max_usd`. Preflight refuses it with `UNSUPPORTED_COST_BUDGET`: `Codex does not provide complete, verifiable USD telemetry. Set budgets.max_usd to null or use the Claude Code or Pi adapter.` The alternative is to set `budgets.max_usd` to `null`, or choose Claude Code or Pi; do not bypass the refusal.
 
 ## Install from GitHub
 

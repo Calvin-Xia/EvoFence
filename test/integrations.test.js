@@ -153,6 +153,28 @@ test('Pi and OpenCode expose a bundle-file parameter for offline verification', 
   assert.equal(verify.usage, 'ledger verify [--bundle <file>] [--json]');
 });
 
+test('each host documents its USD budget support, refusal, and alternative', async () => {
+  const docs = {
+    claude: await read('integrations/claude-code/README.md'),
+    codex: await read('integrations/codex/README.md'),
+    pi: await read('integrations/pi/README.md'),
+    opencode: await read('integrations/opencode/README.md'),
+    deepseek: await read('integrations/deepseek-harness/README.md'),
+  };
+  for (const [host, text] of Object.entries(docs)) {
+    assert.match(text, /budgets\.max_usd/, `${host} must describe max_usd`);
+    assert.match(text, /null/, `${host} must state an alternative`);
+    assert.match(text, /alternative/i, `${host} must name the alternative`);
+  }
+  assert.match(docs.claude, /supports `budgets\.max_usd`/i);
+  assert.match(docs.pi, /after-the-fact cumulative estimate/);
+  assert.match(docs.pi, /response that crosses the threshold has already completed/);
+  assert.match(docs.pi, /not the service provider's final bill/);
+  assert.match(docs.codex, /UNSUPPORTED_COST_BUDGET/);
+  assert.match(docs.opencode, /UNSUPPORTED_COST_BUDGET/);
+  assert.match(docs.deepseek, /does not run an EvoFence adapter/);
+});
+
 test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {
   const entry = await read('.pi/extensions/evofence.js');
   const specifier = entry.match(/export\s+\{\s*default\s*\}\s+from\s+['"]([^'"]+)['"]/)?.[1];
