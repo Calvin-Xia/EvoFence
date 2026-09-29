@@ -1,26 +1,73 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 — 2026-09-29
 
-- Non-breaking: `budgets.max_usd` now supports Pi's complete USD model-price estimates. Pi
-  accumulates cost after each invocation and stops at the run-wide threshold; it is not a
-  request-time hard cap, and the crossing response may put the estimate over the threshold.
-  Claude Code continues to use its native `--max-budget-usd` cap, while Codex and OpenCode remain
-  rejected when `max_usd` is non-null.
-- New: `evofence doctor [--adapter <name>] [--json]` — a read-only preflight that presents the same
-  pre-dispatch judgements `run` already applies (policy validity, evidence configuration, holdout
-  exposure, budget/adapter compatibility, process-tree capability, ledger integrity), so an
-  environment problem surfaces before an agent spends budget. It adds no separate health-check
-  rules: the pre-dispatch policy now lives in one module (`src/lib/exec/preflight-policy.ts`) that
-  `run` and `doctor` both call, so the two cannot disagree.
-- New: `ledger verify --bundle <file>` verifies an exported ledger bundle **offline** — it
-  recomputes the frozen SHA-256 chain recipe over the bundle's events and compares the result with
-  the bundle's recorded `integrity`. Exported evidence can therefore be checked on a host that does
-  not hold the local database, which the previous surface could not do.
-- New: the configuration surface documented in `docs/config.md` is now machine-guarded. A
-  zero-dependency script solves the required paths, the two code defaults and the per-document
-  failure codes from `src/lib/config/schema.ts` and fails CI on any drift, so the documented
-  surface cannot fall out of sync silently.
+**Non-breaking.** Two new capabilities, one budget extension, two machine guards and one bug fix.
+No existing contract changes: every 0.4.0 command, flag, exit code and on-disk format behaves as
+before.
+
+### New: `evofence doctor [--adapter <name>] [--json]`
+
+A read-only preflight that presents the same pre-dispatch judgements `run` already applies (policy
+validity, evidence configuration, holdout exposure and Git-ignore, budget/adapter compatibility,
+adapter isolation, process-tree capability, ledger integrity), so an environment problem surfaces
+before an agent spends budget.
+
+It introduces **no separate health-check rules**: the pre-dispatch policy now lives in one module
+(`src/lib/exec/preflight-policy.ts`) that `run` and `doctor` both call, so the two cannot drift
+apart. This was not a cosmetic choice — an earlier revision duplicated the `prepareRun` conditions
+and reported a *false* `UNSUPPORTED_COST_BUDGET` refusal for a `pi` + `max_usd` configuration that
+`run` accepts. Independent review caught it; the shared module is the fix, locked by
+cross-assertion tests that compare `doctor` against `run` on the same fixtures.
+
+All checks pass → exit 0. Any refusal → exit 1, and under `--json` a refusal follows the CLI
+failure contract: empty stdout, one `{"error":...}` object on stderr carrying the checks in
+`details`.
+
+### New: `ledger verify --bundle <file>`
+
+Verifies an exported ledger bundle **offline**: it recomputes the frozen SHA-256 chain recipe over
+the bundle's events and compares the result with the bundle's recorded `integrity`. Exported
+evidence can therefore be checked on a host that does not hold the local database — something no
+previous surface could do.
+
+The verifier additionally rejects a bundle whose parsed `payload` diverges from the hashed
+`payload_json` (`LEDGER_BUNDLE_PAYLOAD_MISMATCH`, naming the first offending sequence), and maps
+malformed bundle JSON to a coded error rather than a bare `SyntaxError` (`code: null`). Without the
+first check a forged `payload` would still verify, which would defeat the point of the command.
+
+### `budgets.max_usd` now supports the Pi adapter
+
+Pi reports complete USD model-price estimates, so it joins Claude Code as a USD-budgeted adapter.
+Pi accumulates cost after each invocation and stops at the run-wide threshold; it is **not** a
+request-time hard cap, and the crossing response may put the estimate over the threshold. This is
+an estimate, not the provider's final bill. Claude Code continues to use its native
+`--max-budget-usd` cap. Codex (no complete USD telemetry) and OpenCode (cost reported without a
+verified currency) stay rejected before launch whenever `max_usd` is non-null.
+
+### New: the documented configuration surface is machine-guarded
+
+`docs/config.md` declared its list of required paths complete while nothing verified it. A
+zero-dependency script now solves the required paths, the two code defaults, the per-document
+failure codes, the `UNSUPPORTED_CONTRACT` exception and the open/closed map boundaries from
+`src/lib/config/schema.ts`, and fails CI on any drift. It runs as its own `npm run config:doc` CI
+step — deliberately not folded into `npm run check`.
+
+### Fixed
+
+- **`stderr` was polluted on Node ≥ 23.5.** `runProcess` passed a non-empty argv together with
+  `shell: true`, a combination Node deprecates. The child emitted a `DEP0190` warning onto the
+  parent's `stderr`, breaking the contract that a failing `--json` run prints exactly one error
+  object there. The argv is now folded into the command line under shell mode, preserving the exact
+  command semantics; a regression test asserts both the clean `stderr` and the unchanged semantics.
+
+### Docs
+
+- Exported graph views for this round's topology: `docs/evofence-ops-evidence/` — `CONTEXT-MAP.md`,
+  `DECISIONS.md`, four context documents and four ADRs. The 0.4.0 views at the repository root are
+  unchanged.
+- `AGENTS.md` command list corrected (adds `src:policy` and `config:doc`, and records that
+  `npm run check` does not include `config:doc`); `docs/topology.mmd` regenerated.
 
 ## 0.4.0 — BREAKING
 

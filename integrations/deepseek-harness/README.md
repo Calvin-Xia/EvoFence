@@ -14,7 +14,7 @@ The plugin opens `.evofence/ledger.sqlite` under the current working directory i
 - Node.js: `^22.19.0 || >=24.0.0`
 - DeepSeek Harness: `0.1.7-rc.1` (the exact version exercised for this bundle)
 - `@deepseek-ai/dsh-tools` peer: `0.1.7-rc.1`, matching the DSH runtime compatibility contract.
-- Runtime dependency: `evofence@0.4.0`, which uses `better-sqlite3` and `yaml`.
+- Runtime dependency: `evofence@0.4.1`, which uses `better-sqlite3` and `yaml`.
 
 `better-sqlite3` includes a native install/build step (`prebuild-install || node-gyp rebuild`). Installing the bundle may download a prebuilt native module or compile it locally. DeepSeek Harness uses pnpm, which may block native build scripts until the user reviews and allows the exact package in that Profile. Do not enable build scripts globally or grant a broad allowlist to install this bundle.
 

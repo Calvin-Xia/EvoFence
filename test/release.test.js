@@ -50,7 +50,7 @@ test('release metadata requires event values when run as a script', async () => 
 
 // --- 0.4.0 adaptation (adr_0002: the published artifact is built `dist/` output) ---
 
-test('release metadata accepts the 0.4.0 stable tag this release ships, and still rejects 0.3.0', () => {
+test('release metadata accepts a stable tag the release gate ships, and still rejects 0.3.0', () => {
   assert.doesNotThrow(() => verifyReleaseMetadata({
     version: '0.4.0',
     releaseTag: 'v0.4.0',
@@ -75,7 +75,7 @@ test('release metadata accepts the 0.4.0 stable tag this release ships, and stil
 
 test('the shipped package.json is the version the release gate publishes', () => {
   const pkg = readRootJson('package.json');
-  assert.equal(pkg.version, '0.4.0');
+  assert.equal(pkg.version, '0.4.1');
   assert.doesNotThrow(() => verifyReleaseMetadata({
     version: pkg.version,
     releaseTag: `v${pkg.version}`,

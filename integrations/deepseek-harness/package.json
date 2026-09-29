@@ -22,7 +22,7 @@
     "dsh": "0.1.7-rc.1"
   },
   "dependencies": {
-    "evofence": "0.4.0"
+    "evofence": "0.4.1"
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": "0.1.7-rc.1"
