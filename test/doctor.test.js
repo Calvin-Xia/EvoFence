@@ -199,6 +199,14 @@ test('doctor and run agree on an adapter budget refusal', async () => {
   }, 'budget-adapter');
 });
 
+test('doctor and run agree on Pi max_usd preflight ordering', async () => {
+  await assertDoctorMatchesRun(async (root) => {
+    const file = path.join(root, '.evofence', 'contract.yaml');
+    const contract = await readFile(file, 'utf8');
+    await writeFile(file, contract.replace('max_usd: null', 'max_usd: 1.0'));
+  }, 'budget-adapter', 'pi');
+});
+
 test('doctor and run agree on an adapter isolation refusal', async () => {
   await assertDoctorMatchesRun(async () => {}, 'budget-adapter', 'claude');
 });
