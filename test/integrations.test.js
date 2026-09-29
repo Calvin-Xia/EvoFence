@@ -235,6 +235,41 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
   }
 });
 
+test('all root-release hand-copy points read the root version without changing version values', async () => {
+  const rootPackage = await readJson('package.json');
+  const claudeMarketplace = await readJson('.claude-plugin/marketplace.json');
+  const claudePlugin = await readJson('integrations/claude-code/.claude-plugin/plugin.json');
+  const codexPortable = await readJson('integrations/codex/plugin.json');
+  const codexManifest = await readJson('integrations/codex/.codex-plugin/plugin.json');
+  const harnessPackage = await readJson('integrations/deepseek-harness/package.json');
+  const harnessReadme = await read('integrations/deepseek-harness/README.md');
+  const releaseTest = await read('test/release.test.js');
+  const releaseTestVersion = releaseTest.match(/assert\.equal\(pkg\.version,\s*'([^']+)'\)/)?.[1];
+
+  const points = [
+    { file: '.claude-plugin/marketplace.json', field: 'metadata.version', value: claudeMarketplace.metadata.version },
+    { file: '.claude-plugin/marketplace.json', field: 'plugins[0].version', value: claudeMarketplace.plugins[0].version },
+    { file: 'integrations/claude-code/.claude-plugin/plugin.json', field: 'version', value: claudePlugin.version },
+    { file: 'integrations/codex/plugin.json', field: 'version', value: codexPortable.version },
+    { file: 'integrations/codex/.codex-plugin/plugin.json', field: 'version', value: codexManifest.version },
+    { file: 'integrations/deepseek-harness/package.json', field: 'dependencies.evofence', value: harnessPackage.dependencies.evofence },
+    { file: 'integrations/deepseek-harness/README.md', field: 'Runtime dependency evofence@<version>', value: harnessReadme.match(/Runtime dependency:\s*`evofence@([^`]+)`/)?.[1] },
+    { file: 'test/release.test.js', field: "assert.equal(pkg.version, '<version>')", value: releaseTestVersion },
+  ];
+  assert.equal(points.length, 8);
+  for (const point of points) assert.equal(point.value, rootPackage.version, `${point.file} ${point.field}`);
+
+  // These three private integration packages intentionally have independent package versions;
+  // they do not follow the root release version and must not be bumped in this node.
+  const independentPackages = {};
+  for (const name of ['opencode', 'pi', 'deepseek-harness']) {
+    const packageJson = await readJson(`integrations/${name}/package.json`);
+    independentPackages[name] = packageJson.version;
+    assert.notEqual(packageJson.version, rootPackage.version, `${name} is a private, independently-versioned package`);
+  }
+  console.log(JSON.stringify({ rootVersion: rootPackage.version, handCopiedPoints: points, independentPrivatePackages: independentPackages }));
+});
+
 test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {
   const entry = await read('.pi/extensions/evofence.js');
   const specifier = entry.match(/export\s+\{\s*default\s*\}\s+from\s+['"]([^'"]+)['"]/)?.[1];
