@@ -11,6 +11,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildEvolutionReport } from '../dist/lib/report.js';
+import { formatEvolutionReport } from '../dist/lib/report.js';
+import { formatReport, formatReportJunit, formatReportSarif } from '../dist/lib/report/formats.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
@@ -155,6 +157,40 @@ test('ledger reference points back at the chain the report was computed from', a
     assert.equal(report.ledger.last_seq, tip.events);
     assert.equal(typeof report.ledger.read_at, 'string');
     assert.equal(Number.isNaN(Date.parse(report.ledger.read_at)), false, 'read_at must be an ISO timestamp');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('report text remains byte-stable and SARIF/JUnit cover every gate decision', async () => {
+  const directory = await scratchLedger();
+  try {
+    const report = await withLedger(directory, (ledger) => buildEvolutionReport({ root: directory, ledger }));
+    const sarif = JSON.parse(formatReportSarif(report));
+    assert.equal(sarif.$schema, 'https://json.schemastore.org/sarif-2.1.0.json');
+    assert.equal(sarif.version, '2.1.0');
+    assert.equal(Array.isArray(sarif.runs), true);
+    assert.equal(sarif.runs.length, 1);
+    assert.equal(sarif.runs[0].tool.driver.name, 'EvoFence');
+    assert.equal(sarif.runs[0].results.length, report.gate_decisions.length);
+    for (const result of sarif.runs[0].results) {
+      assert.equal(typeof result.ruleId, 'string');
+      assert.equal(result.locations.length, 1);
+      assert.equal(typeof result.locations[0].physicalLocation.artifactLocation.uri, 'string');
+      assert.equal(Number.isInteger(result.locations[0].physicalLocation.region.startLine), true);
+      assert.equal(typeof result.message.text, 'string');
+    }
+
+    const junit = formatReportJunit(report);
+    assert.match(junit, /^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuite /);
+    assert.match(junit, new RegExp(`<testsuite name="EvoFence report" tests="${report.gate_decisions.length}"`));
+    assert.equal((junit.match(/<testcase\b/g) ?? []).length, report.gate_decisions.length);
+    assert.equal((junit.match(/<failure\b/g) ?? []).length, report.gate_decisions.filter((item) => item.decision !== 'ACCEPT').length);
+
+    const baseline = formatEvolutionReport(report);
+    const explicitText = formatReport(report, 'text');
+    assert.equal(Buffer.compare(Buffer.from(explicitText), Buffer.from(baseline)), 0);
+    assert.equal(Buffer.byteLength(baseline), 867);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

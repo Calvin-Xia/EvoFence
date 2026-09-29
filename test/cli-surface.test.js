@@ -246,7 +246,7 @@ test('the manifest and the handler registry describe exactly the same commands',
 
 test('the manifest is internally consistent', () => {
   for (const spec of COMMANDS) {
-    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status|doctor)\b/, spec.name);
+    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status|doctor|budget)\b/, spec.name);
     assert.deepEqual(spec.flags.filter((flag) => flag.name === 'json').length, 1, `${spec.name} must declare --json`);
     assert.deepEqual(spec.exits.map((exit) => exit.code).sort(), [0, 1], `${spec.name} exit codes`);
     assert.equal([0, 1].includes(spec.smoke.code), true);
@@ -456,7 +456,7 @@ test('--help documents every manifest command plus the exit-code convention', ()
     assert.ok(result.stdout.includes(`evofence ${spec.usage}`), `help must document ${spec.name}`);
   }
   assert.ok(result.stdout.includes('diff <generation-id> [--json]'));
-  assert.ok(result.stdout.includes('report [file] [--json]'));
+  assert.ok(result.stdout.includes('report [file] [--format <text|json|sarif|junit>] [--json]'));
   assert.ok(result.stdout.includes('status [--json]'));
   assert.ok(result.stdout.includes('Exit codes:'));
   assert.equal(hasStack(result.stderr), false);

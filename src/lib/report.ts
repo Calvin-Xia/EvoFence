@@ -26,6 +26,8 @@ import { summarizeRuns } from './report/runs.js';
 import type { ReportView } from './report/view.js';
 
 export { formatEvolutionReport } from './report/render.js';
+export { formatReport, formatReportJunit, formatReportSarif } from './report/formats.js';
+export type { ReportFormat } from './report/formats.js';
 export type { ReportGateDecision, ReportLedgerReference, ReportView } from './report/view.js';
 export type { SnapshotLedger, StatusLedger } from './report/ledger-view.js';
 

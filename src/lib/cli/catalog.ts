@@ -75,6 +75,7 @@ const WALL_CLOCK_FLAG: FlagSpec = { name: 'max-wall-clock-ms', key: 'max_wall_cl
 const UNISOLATED_FLAG: FlagSpec = { name: 'allow-unisolated-agent', key: 'allow_unisolated_agent', kind: 'boolean', description: 'Required for opencode/claude/pi; CLI controls are not an OS sandbox.' };
 const HOLDOUT_FLAG: FlagSpec = { name: 'allow-readable-holdout', key: 'allow_readable_holdout', kind: 'boolean', description: 'Required to run private checks when host read isolation is unavailable.' };
 const BUNDLE_FLAG: FlagSpec = { name: 'bundle', key: 'bundle', kind: 'value', description: 'Read and verify an exported ledger bundle instead of the local SQLite ledger.' };
+const REPORT_FORMAT_FLAG: FlagSpec = { name: 'format', key: 'format', kind: 'value', description: 'Report format: text (default), json, sarif or junit.' };
 
 const LEDGER = 'ledger' as const;
 const AGENTLESS = 'agentless' as const;
@@ -260,12 +261,12 @@ export const COMMANDS: readonly CommandSpec[] = [
   {
     name: 'report',
     group: 'report',
-    summary: 'Print the cross-run evolution report (Markdown, or JSON with --json).',
-    usage: 'report [file] [--json]',
+    summary: 'Print the cross-run evolution report as text, JSON, SARIF or JUnit.',
+    usage: 'report [file] [--format <text|json|sarif|junit>] [--json]',
     positionals: [{ name: 'file', required: false, description: 'Write to this path instead of stdout.' }],
-    flags: [JSON_FLAG],
+    flags: [REPORT_FORMAT_FLAG, JSON_FLAG],
     json: 'flag',
-    exits: exits('the report was rendered/written', 'usage error, or PROTECTED_PATH when the output would overwrite control-plane state'),
+    exits: exits('the report was rendered/written; --format json is the JSON view, while SARIF and JUnit are interoperable report formats', 'usage error, unsupported report format, conflicting --json/--format flags, or PROTECTED_PATH when the output would overwrite control-plane state'),
     smoke: inLedger(['report', SMOKE.reportFile], 0),
     jsonSmoke: inLedger(['report', SMOKE.reportJsonFile, '--json'], 0, 'write-file form: stdout must be the {"written","bytes"} JSON envelope, not the text line'),
   },
