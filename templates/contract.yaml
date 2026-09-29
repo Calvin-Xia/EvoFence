@@ -34,8 +34,6 @@ capabilities:
   dependency_install: deny
   credentials: deny
   external_api: deny
-  shell:
-    mode: evidence_commands_only
 
 evidence:
   public_commands: []
@@ -43,8 +41,6 @@ evidence:
   max_output_bytes: 1048576
 
 acceptance:
-  require_proposal: true
-  require_claims: true
   require_objective_improvement: true
   require_rollback_point: true
   hidden_regression_tolerance: 0

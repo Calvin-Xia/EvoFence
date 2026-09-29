@@ -80,13 +80,12 @@ With no private regressions configured, EvoFence has no hidden-regression eviden
 - `evofence init` validates the scaffold it wrote, and `evofence status` validates both policy files: an invalid `contract.yaml` / `config.yaml` now fails `status` with exit code 1 and a configuration error code instead of being ignored, while an absent file stays tolerable.
 - The YAML version fields did not change: `config.yaml` still requires `version: 1` and `contract.yaml` still requires `contract_version: 1`. "v2" names the validator layer, not a new value for those keys.
 
-The following template keys are **not effective**, so do not treat them as gates:
+The following contract keys are **not switchable gates**, so do not treat them as controls:
 
 | Key | Real status |
 | --- | --- |
-| `acceptance.require_proposal` | Not a gate: zero code references; proposal validation always runs. |
-| `acceptance.require_claims` | Not a gate: zero code references; claims validation always runs. |
-| `capabilities.shell.mode` | Not a gate: zero code references. |
+| `acceptance.require_proposal` | Compatibility-only: retained for 0.4.x contracts; it does not affect decisions, and proposal validation always runs. |
+| `acceptance.require_claims` | Compatibility-only: retained for 0.4.x contracts; it does not affect decisions, and claims validation always runs. |
 | `capabilities.authority_ceiling` | Validated as `A0`–`A3` (`A4` rejected) but consulted by no decision. |
 | `capabilities.network` / `dependency_install` / `credentials` | Request-path gates keyed by capability name; `test/runner.test.js` requests `network`, so its fixture sets this value to `allow`; actual use not declared in `requested_capabilities` has no detection signal. |
 

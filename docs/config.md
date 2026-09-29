@@ -69,15 +69,14 @@ for any other field: that would turn a fail-closed refusal into a silent default
 
 ## Keys that are not gates
 
-Several keys appear in `templates/contract.yaml` but do not act as gates. They are documented so
-they cannot be mistaken for effective controls; `src/lib/gate/dead-keys.ts` is the
-machine-readable registry and a test pins that a permissive value changes no judgement.
+Several keys are either compatibility-only or do not act as gates. They are documented so they
+cannot be mistaken for effective controls; `src/lib/gate/dead-keys.ts` is the machine-readable
+registry and a test pins that a permissive value changes no judgement.
 
 | Key | Status | What it actually does |
 | --- | --- | --- |
-| `acceptance.require_proposal` | **not a gate** | Zero code references. Proposal validation runs unconditionally in `checkProposal`. |
-| `acceptance.require_claims` | **not a gate** | Zero code references. Claims validation runs unconditionally in `checkClaims`. |
-| `capabilities.shell.mode` | **not a gate** | Zero code references. The only shell capability is the hardcoded builtin `shell:evidence_commands_only` grant. |
+| `acceptance.require_proposal` | **compatibility only** | Retained so 0.4.x contracts remain valid; no judgement consumes it, and proposal validation runs unconditionally in `checkProposal`. |
+| `acceptance.require_claims` | **compatibility only** | Retained so 0.4.x contracts remain valid; no judgement consumes it, and claims validation runs unconditionally in `checkClaims`. |
 | `capabilities.authority_ceiling` | validated only | Accepted as `A0`–`A3` (and `A4` is rejected), but no decision consults it. |
 | `capabilities.network` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `network`; `test/runner.test.js` sets it to `allow` for that reason. An actual use not declared in `requested_capabilities` has no detection signal. |
 | `capabilities.dependency_install` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `dependency_install`. An actual use not declared in `requested_capabilities` has no detection signal. |

@@ -60,7 +60,7 @@ function isCapabilitySetting(value: unknown): boolean {
   return isObject(value) && (value.mode === 'allow' || value.mode === 'deny');
 }
 
-/** Keep the 0.4.1 template's dead shell object readable until the cleanup node removes it. */
+/** Keep the legacy nested mode object readable; the capability gate still denies it. */
 function isLegacyShellSetting(name: string, value: unknown): boolean {
   return name === 'shell' && isObject(value) && value.mode === 'evidence_commands_only';
 }

@@ -78,13 +78,12 @@ regressions:
 - `evofence init` 会校验自己写下的骨架，`evofence status` 会校验两份策略文件：无效的 `contract.yaml` / `config.yaml` 让 `status` 以退出码 1 失败并给出配置错误码，而不是被忽略；文件不存在仍是可容忍的。
 - YAML 里的版本键没有变：`config.yaml` 仍要求 `version: 1`，`contract.yaml` 仍要求 `contract_version: 1`。“v2”指校验层，不是这两个键的新值。
 
-以下模板键**当前不生效**，不要把门禁语义寄托在它们身上：
+以下合同键**不是可关闭的门禁**，不要把门禁语义寄托在它们身上：
 
 | 键 | 真实状态 |
 | --- | --- |
-| `acceptance.require_proposal` | 未生效：代码零引用；提案校验始终执行 |
-| `acceptance.require_claims` | 未生效：代码零引用；claims 校验始终执行 |
-| `capabilities.shell.mode` | 未生效：代码零引用 |
+| `acceptance.require_proposal` | 兼容保留：接受 0.4.x 合同，但不参与决策；提案校验始终执行 |
+| `acceptance.require_claims` | 兼容保留：接受 0.4.x 合同，但不参与决策；claims 校验始终执行 |
 | `capabilities.authority_ceiling` | 仅校验 A0–A3（A4 被拒），不参与任何决策 |
 | `capabilities.network` / `dependency_install` / `credentials` | 请求路径上按能力名参与门禁；`test/runner.test.js` 请求 `network`，所以夹具将其设为 `allow`；未声明的实际使用没有检测信号 |
 
