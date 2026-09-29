@@ -57,7 +57,7 @@ function isStringArray(value: unknown): boolean {
 /** Serialized capability-setting forms; only mode `allow` grants at the capability gate. */
 function isCapabilitySetting(value: unknown): boolean {
   if (value === true || value === false || value === 'allow' || value === 'deny') return true;
-  return isObject(value) && typeof value.mode === 'string' && value.mode.length > 0;
+  return isObject(value) && typeof value.mode === 'string' && value.mode.trim().length > 0;
 }
 
 /** Reject a present, non-object container; absent containers are the shape walk's job. */

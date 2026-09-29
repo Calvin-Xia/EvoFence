@@ -209,6 +209,8 @@ test('capability values reject malformed open-map entries with INVALID_CONTRACT'
     ['network', [1, 2, 3]],
     ['telemetry_export', 7],
     ['shell', 'evidence_commands_only'],
+    ['shell', { mode: ' ' }],
+    ['shell', { mode: '\t' }],
   ];
   for (const [name, setting] of cases) {
     const value = templateContract();
