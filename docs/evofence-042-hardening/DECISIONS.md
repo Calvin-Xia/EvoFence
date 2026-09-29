@@ -30,6 +30,8 @@
 | task · passed | l3_review_convention | 惯例轴交叉复核 | 2026-09-29T14:20:48.499Z |
 | task · passed | l3_review_disposition | 复核意见处置 | 2026-09-29T14:56:14.990Z |
 | task · passed | l3_review_spec | 规格轴交叉复核 | 2026-09-29T14:20:48.095Z |
+| task · passed | l4_criteria_audit | 图级验收标准逐条核对与遗留汇总 | 2026-09-29T17:32:11.898Z |
 | task · passed | l4_docs_behavior | 文档与行为一致性 | 2026-09-29T16:32:57.278Z |
 | task · passed | l4_export | 图导出视图生成与漂移核对 | 2026-09-29T16:33:06.658Z |
 | task · passed | l4_frozen_audit | 历史冻结文档零改动核对 | 2026-09-29T16:32:54.395Z |
+| task · passed | l5_release_042 | 合并后发布 0.4.2 | 2026-09-29T17:32:13.307Z |
