@@ -133,6 +133,10 @@ evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
 
+### Read-only preflight
+
+`evofence doctor [--adapter <name>] [--json]` presents the existing pre-dispatch checks without writing a run, temporary directory, worktree, or ledger event. Text mode prints one readable line per check; `--json` prints check objects with `id`, `label`, `status`, the original error code, and a remediation. It exits 0 when all checks pass and 1 when any check is refused.
+
 ### Command-surface conventions (0.4.0)
 
 - `--json` is accepted by **every** subcommand (0.3.0 honoured it only on `run`, `diff`, `report` and `status`). `ledger show|verify|recent`, `proposal inspect` and `gate` always print only JSON. `evidence run` prints progress lines and then the JSON document; adding `--json` suppresses the progress lines so stdout carries one JSON document.

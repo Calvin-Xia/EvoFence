@@ -23,6 +23,7 @@ export const COMMAND_GROUPS = [
   'experiment',
   'report',
   'status',
+  'doctor',
 ] as const;
 
 export type CommandGroup = (typeof COMMAND_GROUPS)[number];
