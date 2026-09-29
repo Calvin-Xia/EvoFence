@@ -34,6 +34,10 @@ jobs:
         run: npm run src:policy
       - name: build
         run: npm run build
+      # Configuration documentation is checked against the built config schema, independently
+      # from the source-shape, dependency, and test gates.
+      - name: config:doc
+        run: npm run config:doc
       # The module-graph cycle gate lives in `npm run check`, which CI does not call,
       # so without this step the acyclicity gate never runs in CI. Static and fast.
       - name: dep:check
