@@ -184,6 +184,43 @@ test('the capabilities map stays open because capability names are dynamic', () 
   assert.equal(contractReport(value).valid, true);
 });
 
+test('capability values accept the three allow forms and their explicit denials', () => {
+  const settings = [true, 'allow', { mode: 'allow' }, false, 'deny', { mode: 'deny' }];
+  for (const setting of settings) {
+    const value = templateContract();
+    value.capabilities.telemetry_export = setting;
+    const report = contractReport(value);
+    assert.equal(report.valid, true, `${JSON.stringify(setting)} must be accepted: ${JSON.stringify(report.rejected_fields)}`);
+  }
+  assert.equal(contractReport(templateContract()).valid, true, 'template defaults must remain valid');
+});
+
+test('legacy non-empty capability mode strings remain accepted', () => {
+  for (const setting of [{ mode: 'evidence_commands_only' }, { mode: 'full_shell' }]) {
+    const value = templateContract();
+    value.capabilities.shell = setting;
+    const report = contractReport(value);
+    assert.equal(report.valid, true, `${JSON.stringify(setting)} must be accepted: ${JSON.stringify(report.rejected_fields)}`);
+  }
+});
+
+test('capability values reject malformed open-map entries with INVALID_CONTRACT', () => {
+  const cases = [
+    ['network', [1, 2, 3]],
+    ['telemetry_export', 7],
+    ['shell', 'evidence_commands_only'],
+    ['shell', { mode: ' ' }],
+    ['shell', { mode: '\t' }],
+  ];
+  for (const [name, setting] of cases) {
+    const value = templateContract();
+    value.capabilities[name] = setting;
+    const report = contractReport(value);
+    assert.equal(report.valid, false, `${name} must be rejected`);
+    assert.ok(report.rejected_fields.some((issue) => issue.path === `capabilities.${name}` && issue.code === 'INVALID_CONTRACT'), JSON.stringify(report.rejected_fields));
+  }
+});
+
 test('contract value rules reject the same documents the 0.3.0 validator rejects', () => {
   const cases = [
     { path: 'contract_version', code: 'UNSUPPORTED_CONTRACT', mutate: (value) => { value.contract_version = 2; } },

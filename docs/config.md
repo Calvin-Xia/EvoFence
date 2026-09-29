@@ -62,28 +62,30 @@ for any other field: that would turn a fail-closed refusal into a silent default
 
 - `capabilities` is the one open map (`open: true`): `assessCapabilities` indexes it by the
   capability name a proposal requests, so an unknown key there is a capability name, not a typo.
+  Open means the key name is open; each value still has a checked shape and value domain:
+  `true`/`false`, `'allow'`/`'deny'`, or an object with any non-empty `mode` string.
 - `adapters` is closed: only the four known adapter names are read, and v2 rejects an unknown one
   (`rejected field(s): adapters.gemini`).
 
 ## Keys that are not gates
 
-Several keys appear in `templates/contract.yaml` but do not act as gates. They are documented so
-they cannot be mistaken for effective controls; `src/lib/gate/dead-keys.ts` is the
-machine-readable registry and a test pins that a permissive value changes no judgement.
+Several keys are either compatibility-only or do not act as gates. They are documented so they
+cannot be mistaken for effective controls; `src/lib/gate/dead-keys.ts` is the machine-readable
+registry and a test pins that a permissive value changes no judgement.
 
 | Key | Status | What it actually does |
 | --- | --- | --- |
-| `acceptance.require_proposal` | **not a gate** | Zero code references. Proposal validation runs unconditionally in `checkProposal`. |
-| `acceptance.require_claims` | **not a gate** | Zero code references. Claims validation runs unconditionally in `checkClaims`. |
-| `capabilities.shell.mode` | **not a gate** | Zero code references. The only shell capability is the hardcoded builtin `shell:evidence_commands_only` grant. |
+| `acceptance.require_proposal` | **compatibility only** | Retained so 0.4.x contracts remain valid; no judgement consumes it, and proposal validation runs unconditionally in `checkProposal`. |
+| `acceptance.require_claims` | **compatibility only** | Retained so 0.4.x contracts remain valid; no judgement consumes it, and claims validation runs unconditionally in `checkClaims`. |
 | `capabilities.authority_ceiling` | validated only | Accepted as `A0`–`A3` (and `A4` is rejected), but no decision consults it. |
-| `capabilities.network` | task file only | Echoed into `.evofence-task.md` by `taskContents`; blocks nothing. |
-| `capabilities.dependency_install` | task file only | Same. |
-| `capabilities.credentials` | task file only | Same. |
+| `capabilities.network` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `network`; `test/runner.test.js` sets it to `allow` for that reason. An actual use not declared in `requested_capabilities` has no detection signal. |
+| `capabilities.dependency_install` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `dependency_install`. An actual use not declared in `requested_capabilities` has no detection signal. |
+| `capabilities.credentials` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `credentials`. An actual use not declared in `requested_capabilities` has no detection signal. |
 | `capabilities.external_api` | **live gate** | Read through the dynamic capability table (`contract.capabilities[capability]`), so a proposal that requests `external_api` is judged by this value. The template sets it to `deny`, which denies the request. |
 
 `assessCapabilities` treats a capability as granted only when the configured value is `true`,
-`'allow'`, or an object with `mode: 'allow'`. An unconfigured capability is denied.
+`'allow'`, or an object with `mode: 'allow'`; other non-empty object modes are denied. An
+unconfigured capability is denied.
 
 ## Where validation runs
 

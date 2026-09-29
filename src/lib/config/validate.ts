@@ -54,6 +54,12 @@ function isStringArray(value: unknown): boolean {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+/** Serialized capability-setting forms; only mode `allow` grants at the capability gate. */
+function isCapabilitySetting(value: unknown): boolean {
+  if (value === true || value === false || value === 'allow' || value === 'deny') return true;
+  return isObject(value) && typeof value.mode === 'string' && value.mode.trim().length > 0;
+}
+
 /** Reject a present, non-object container; absent containers are the shape walk's job. */
 function container(value: unknown, path: string, code: ConfigIssueCode, issues: Issues): Record<string, unknown> | null {
   if (value === undefined) return null;
@@ -137,6 +143,10 @@ function contractIssues(root: Record<string, unknown>): Issues {
   const capabilities = container(root.capabilities, 'capabilities', INVALID_CONTRACT, issues);
   if (capabilities) {
     leaf(capabilities.authority_ceiling, 'capabilities.authority_ceiling', INVALID_CONTRACT, issues, (v) => v === 'A0' || v === 'A1' || v === 'A2' || v === 'A3', 'authority_ceiling must be A0, A1, A2, or A3. A4 cannot be automatically granted.');
+    for (const [name, setting] of Object.entries(capabilities)) {
+      if (name === 'authority_ceiling') continue;
+      leaf(setting, `capabilities.${name}`, INVALID_CONTRACT, issues, isCapabilitySetting, `capabilities.${name} must be true, false, allow, deny, or an object with a non-empty mode string.`);
+    }
   }
 
   const budgets = container(root.budgets, 'budgets', INVALID_CONTRACT, issues);

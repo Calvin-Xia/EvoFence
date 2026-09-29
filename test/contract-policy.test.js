@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { validateDocument } from '../dist/lib/config/index.js';
 import { parseYamlText, validateContract } from '../dist/lib/contract.js';
 import { assessCapabilities, assessRisk, checkChangedPaths, checkClaims, checkProposal, isAllowedPath, isProtectedPath, matchesGlob } from '../dist/lib/policy.js';
 import {
@@ -200,38 +201,40 @@ test('capabilities.external_api is a live dynamic-table capability gate', async 
   assert.equal(evaluateCapabilityGate({ proposal: { requested_capabilities: ['external_api'] }, contract: template }).reason, 'CAPABILITY_DENIED');
 });
 
-// DoD 5 — the three template-only keys are documented as unwired, not left as fake gates.
+// DoD 5 — the old acceptance keys remain compatibility-only; the removed shell shape is absent.
 // The evidence strings are re-grepped here (review F10) so they cannot rot into a claim the
 // source contradicts.
-test('template-only contract keys are documented as unwired, not left as fake gates', async () => {
+test('legacy acceptance keys remain compatibility-only and the dead shell shape is removed', async () => {
   const text = await readFile(path.join(projectRoot, 'templates', 'contract.yaml'), 'utf8');
-  assert.match(text, /require_proposal: true/);
-  assert.match(text, /require_claims: true/);
-  assert.match(text, /mode: evidence_commands_only/);
-  assert.deepEqual(DEAD_CONTRACT_KEYS.map((entry) => entry.path), ['acceptance.require_proposal', 'acceptance.require_claims', 'capabilities.shell.mode']);
+  assert.doesNotMatch(text, /require_proposal:/);
+  assert.doesNotMatch(text, /require_claims:/);
+  assert.doesNotMatch(text, /evidence_commands_only/);
+  assert.deepEqual(DEAD_CONTRACT_KEYS.map((entry) => entry.path), ['acceptance.require_proposal', 'acceptance.require_claims']);
+  assert.deepEqual(DEAD_CONTRACT_KEYS.map((entry) => entry.status), ['compatibility_only', 'compatibility_only']);
   assert.ok(DEAD_CONTRACT_KEYS.every((entry) => entry.evidence.length > 0));
 
   // F10 — each `evidence` string must be falsifiable by grep and must survive the attempt.
   const validationLayerHits = ['src/lib/config/schema.ts', 'src/lib/config/validate.ts', 'src/lib/gate/dead-keys.ts', 'src/types/config.ts'];
   assert.deepEqual(await grepSources('require_proposal'), validationLayerHits);
   assert.deepEqual(await grepSources('require_claims'), validationLayerHits);
-  // The nested key is never written as a dotted literal outside this registry — only the
-  // template nests it under `capabilities.shell`.
-  assert.deepEqual(await grepSources('capabilities.shell.mode'), ['src/lib/gate/dead-keys.ts']);
+  assert.deepEqual(await grepSources('capabilities.shell.mode'), []);
   assert.equal(DEAD_CONTRACT_KEYS.every((entry) => !entry.evidence.includes('no reference under src/')), true);
   const byPath = new Map(DEAD_CONTRACT_KEYS.map((entry) => [entry.path, entry.evidence]));
   for (const dotted of ['acceptance.require_proposal', 'acceptance.require_claims']) {
     assert.match(byPath.get(dotted), /config\/schema\.ts/);
     assert.match(byPath.get(dotted), /config\/validate\.ts/);
   }
-  assert.match(byPath.get('capabilities.shell.mode'), /templates\/contract\.yaml/);
-  assert.equal(isDeadContractKey('capabilities.shell.mode'), true);
+  assert.equal(isDeadContractKey('capabilities.shell.mode'), false);
+  assert.equal(isDeadContractKey('acceptance.require_proposal'), true);
   assert.equal(isDeadContractKey('capabilities.external_api'), false);
   const template = await templateContract();
-  const flipped = { ...template, acceptance: { ...template.acceptance, require_proposal: false, require_claims: false }, capabilities: { ...template.capabilities, shell: { mode: 'evidence_commands_only_disabled' } } };
-  assert.doesNotThrow(() => validateContract(flipped));
-  assert.equal(assessCapabilities({ requested_capabilities: ['shell'] }, template).allowed, false);
-  assert.equal(assessCapabilities({ requested_capabilities: ['shell'] }, flipped).allowed, false);
+  const legacy = { ...template, acceptance: { ...template.acceptance, require_proposal: true, require_claims: true } };
+  assert.equal(validateDocument('contract', legacy, '<legacy>').valid, true);
+  assert.doesNotThrow(() => validateContract(legacy));
+  assert.throws(() => checkProposal({}), /proposal\.iteration/);
+  assert.throws(() => checkClaims({}), /claims\.status/);
+  assert.equal(assessCapabilities({ requested_capabilities: ['network'] }, template).allowed, false);
+  assert.equal(assessCapabilities({ requested_capabilities: ['network'] }, { ...template, capabilities: { ...template.capabilities, network: 'allow' } }).allowed, true);
 });
 
 // DoD 1 — the budget thresholds are pure, and accounting stays in the exec domain.

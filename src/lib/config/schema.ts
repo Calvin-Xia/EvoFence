@@ -18,8 +18,9 @@
  *
  * `capabilities` is the one open map (`open: true`): `assessCapabilities` indexes it by the
  * capability name a proposal requests (`src/lib/policy.js:148`), so an unknown key there is a
- * capability name, not a typo. `adapters` is closed: 0.3.0 only ever reads the four
- * `ADAPTER_NAMES`, so an unknown adapter key would be silently ignored — v2 rejects it.
+ * capability name, not a typo; its value is still validated as a capability setting. `adapters`
+ * is closed: 0.3.0 only ever reads the four `ADAPTER_NAMES`, so an unknown adapter key would be
+ * silently ignored — v2 rejects it.
  */
 import type { ConfigDocumentKind } from '../../types/index.js';
 
