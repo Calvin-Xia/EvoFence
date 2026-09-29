@@ -21,7 +21,14 @@ import { canTerminateProcessTree } from '../process.js';
 import { createRunId, headSha, repositoryRoot } from '../git.js';
 import { currentPolicyHashes } from './runner-events.js';
 import { ensurePrivateIgnored } from './runner-candidate.js';
-import { parseNumericBudget, usdFromMicros, usdToMicros } from './budget.js';
+import { parseNumericBudget, usdFromMicros } from './budget.js';
+import {
+  checkAdapterIsolation,
+  checkClaudeTokenBudget,
+  checkCostBudget,
+  checkHoldoutExposure,
+  checkProcessTree,
+} from './preflight-policy.js';
 import { runTempRoot as runTempRootPath, worktreeTempParent } from './worktree-temp.js';
 import type { RunContext, RunState } from './runner-context.js';
 import type { AdapterName, EvoFenceConfig, EvoFenceContract, RunEvolutionOptions, RunOutcome } from '../../types/index.js';
@@ -46,36 +53,45 @@ export async function prepareRun(options: RunEvolutionOptions): Promise<RunConte
   const config = loadRequiredConfigDocumentSync(root) as EvoFenceConfig;
   const holdout = await loadPrivateHoldout(root) as unknown[];
   requireEvidenceConfigured(contract);
-  if (holdout.length > 0 && !allowReadableHoldout) {
-    throw new EvoFenceError('PRIVATE_ORACLE_READABLE', 'The built-in Codex, OpenCode, Claude Code, and Pi adapters cannot guarantee read isolation from files elsewhere on this host. Re-run with --allow-readable-holdout only if you accept possible oracle exposure, or run EvoFence from a container/VM that mounts only the candidate and gate data.');
+  const holdoutRefusal = checkHoldoutExposure(holdout.length, allowReadableHoldout);
+  if (holdoutRefusal) {
+    throw new EvoFenceError(holdoutRefusal.code, holdoutRefusal.message);
   }
   let costLimitMicros: number | null = null;
-  if (contract.budgets.max_usd !== null) {
-    if (adapter !== 'claude' && adapter !== 'pi') {
-      const message = adapter === 'codex'
-        ? 'Codex does not provide complete, verifiable USD telemetry. Set budgets.max_usd to null or use the Claude Code or Pi adapter.'
-        : 'OpenCode reports cost without a verified currency; EvoFence cannot infer USD. Set budgets.max_usd to null or use the Claude Code or Pi adapter.';
-      throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', message);
+  const costPolicy = checkCostBudget(contract.budgets.max_usd, adapter);
+  if (costPolicy.refusal) {
+    throw new EvoFenceError(costPolicy.refusal.code, costPolicy.refusal.message);
+  }
+  costLimitMicros = costPolicy.costLimitMicros;
+  const isolationRefusal = checkAdapterIsolation(adapter, allowUnisolatedAgent, 'preflight');
+  if (isolationRefusal) {
+    throw new EvoFenceError(isolationRefusal.code, isolationRefusal.message);
+  }
+  const claudeTokenRefusal = checkClaudeTokenBudget(adapter, contract.budgets.max_tokens);
+  if (claudeTokenRefusal) {
+    throw new EvoFenceError(claudeTokenRefusal.code, claudeTokenRefusal.message);
+  }
+  if (contract.budgets.max_tokens !== null) {
+    const processRefusal = checkProcessTree(
+      contract.budgets.max_tokens,
+      null,
+      adapter,
+      await canTerminateProcessTree(),
+    );
+    if (processRefusal) {
+      throw new EvoFenceError(processRefusal.code, processRefusal.message);
     }
-    costLimitMicros = usdToMicros(contract.budgets.max_usd);
-    if (costLimitMicros < 1) {
-      throw new EvoFenceError('INVALID_BUDGET', 'budgets.max_usd must be at least $0.000001 for USD budget enforcement.');
+  }
+  if (costLimitMicros !== null) {
+    const processRefusal = checkProcessTree(
+      null,
+      costLimitMicros,
+      adapter,
+      await canTerminateProcessTree(),
+    );
+    if (processRefusal) {
+      throw new EvoFenceError(processRefusal.code, processRefusal.message);
     }
-  }
-  if (adapter === 'claude' && !allowUnisolatedAgent) {
-    throw new EvoFenceError('CLAUDE_SANDBOX_REQUIRED', 'EvoFence does not place the Claude Code CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
-  }
-  if (adapter === 'pi' && !allowUnisolatedAgent) {
-    throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
-  }
-  if (adapter === 'claude' && contract.budgets.max_tokens !== null) {
-    throw new EvoFenceError('UNSUPPORTED_CLAUDE_TOKEN_BUDGET', 'Claude Code reports complete whole-tree token usage only in its final result event. EvoFence cannot safely interrupt the run at the token threshold; set max_tokens to null or use Codex, OpenCode, or Pi for token-budgeted runs.');
-  }
-  if (contract.budgets.max_tokens !== null && !(await canTerminateProcessTree())) {
-    throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
-  }
-  if (costLimitMicros !== null && !(await canTerminateProcessTree())) {
-    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET_PROCESS_CONTROL', `This host cannot terminate the ${adapter} process tree. EvoFence refused to start a USD-budgeted run.`);
   }
   await ensurePrivateIgnored(root);
 

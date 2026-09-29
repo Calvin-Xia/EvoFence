@@ -15,6 +15,7 @@ import { commandRollback } from './rollback.js';
 import { commandExperimentExport, commandExperimentRun } from './experiment.js';
 import { commandReport } from './report.js';
 import { commandStatus } from './status.js';
+import { commandDoctor } from './doctor.js';
 
 export type { CommandContext, CommandHandler } from './context.js';
 
@@ -34,4 +35,5 @@ export const HANDLERS: Readonly<Record<string, CommandHandler>> = {
   'experiment export': commandExperimentExport,
   report: commandReport,
   status: commandStatus,
+  doctor: commandDoctor,
 };

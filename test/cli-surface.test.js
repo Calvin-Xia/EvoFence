@@ -246,7 +246,7 @@ test('the manifest and the handler registry describe exactly the same commands',
 
 test('the manifest is internally consistent', () => {
   for (const spec of COMMANDS) {
-    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status)\b/, spec.name);
+    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status|doctor)\b/, spec.name);
     assert.deepEqual(spec.flags.filter((flag) => flag.name === 'json').length, 1, `${spec.name} must declare --json`);
     assert.deepEqual(spec.exits.map((exit) => exit.code).sort(), [0, 1], `${spec.name} exit codes`);
     assert.equal([0, 1].includes(spec.smoke.code), true);

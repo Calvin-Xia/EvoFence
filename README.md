@@ -131,6 +131,10 @@ evofence report evolution-report.json --json
 evofence diff <generation-id> [--json]
 ```
 
+### 只读预检
+
+`evofence doctor [--adapter <name>] [--json]` 只读呈现 `run` 已使用的前置判定：默认逐项输出可读文本，使用 `--json` 且全部通过时输出带有 `id`、`label`、`status`、原始错误码和修复建议的检查对象；有拒绝时 stdout 保持为空，stderr 输出单个失败对象，逐条检查放在 `error.details.checks`。它不另建一套独立体检规则，不创建运行、临时目录、worktree 或 ledger 事件；所有检查通过时退出 0，任一检查拒绝时退出 1。
+
 ### 命令面约定（0.4.0）
 
 - `--json` 被**每一条**子命令接受（0.3.0 只在 `run` / `diff` / `report` / `status` 上生效）。`ledger show|verify|recent`、`proposal inspect`、`gate` 始终只输出 JSON；`evidence run` 默认先打印进度行再打印 JSON 文档，加 `--json` 会抑制进度行，让 stdout 只剩一个 JSON 文档。

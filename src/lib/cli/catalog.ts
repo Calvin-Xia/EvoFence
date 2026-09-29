@@ -281,6 +281,18 @@ export const COMMANDS: readonly CommandSpec[] = [
     smoke: inLedger(['status'], 0),
     jsonSmoke: inLedger(['status', '--json'], 0),
   },
+  {
+    name: 'doctor',
+    group: 'doctor',
+    summary: 'Run read-only preflight checks before dispatching an agent.',
+    usage: 'doctor [--adapter <name>] [--json]',
+    positionals: [],
+    flags: [ADAPTER_FLAG, JSON_FLAG],
+    json: 'flag',
+    exits: exits('all checks are ok', 'usage error, or at least one check is refused'),
+    smoke: inLedger(['doctor'], 0),
+    jsonSmoke: inLedger(['doctor', '--json'], 0),
+  },
 ];
 
 /**
