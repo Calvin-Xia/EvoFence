@@ -88,7 +88,7 @@ The following template keys are **not effective**, so do not treat them as gates
 | `acceptance.require_claims` | Not a gate: zero code references; claims validation always runs. |
 | `capabilities.shell.mode` | Not a gate: zero code references. |
 | `capabilities.authority_ceiling` | Validated as `A0`–`A3` (`A4` rejected) but consulted by no decision. |
-| `capabilities.network` / `dependency_install` / `credentials` | Only echoed into the `.evofence-task.md` contract summary; they block nothing. |
+| `capabilities.network` / `dependency_install` / `credentials` | Request-path gates keyed by capability name; `test/runner.test.js` requests `network`, so its fixture sets this value to `allow`; actual use not declared in `requested_capabilities` has no detection signal. |
 
 By contrast, `capabilities.external_api` **is** a live capability gate: when a proposal requests it through `requested_capabilities`, the controller judges it by this contract value (the template sets `deny`, so the request is denied). An unconfigured capability is always denied.
 

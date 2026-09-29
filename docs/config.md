@@ -77,9 +77,9 @@ machine-readable registry and a test pins that a permissive value changes no jud
 | `acceptance.require_claims` | **not a gate** | Zero code references. Claims validation runs unconditionally in `checkClaims`. |
 | `capabilities.shell.mode` | **not a gate** | Zero code references. The only shell capability is the hardcoded builtin `shell:evidence_commands_only` grant. |
 | `capabilities.authority_ceiling` | validated only | Accepted as `A0`–`A3` (and `A4` is rejected), but no decision consults it. |
-| `capabilities.network` | task file only | Echoed into `.evofence-task.md` by `taskContents`; blocks nothing. |
-| `capabilities.dependency_install` | task file only | Same. |
-| `capabilities.credentials` | task file only | Same. |
+| `capabilities.network` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `network`; `test/runner.test.js` sets it to `allow` for that reason. An actual use not declared in `requested_capabilities` has no detection signal. |
+| `capabilities.dependency_install` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `dependency_install`. An actual use not declared in `requested_capabilities` has no detection signal. |
+| `capabilities.credentials` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `credentials`. An actual use not declared in `requested_capabilities` has no detection signal. |
 | `capabilities.external_api` | **live gate** | Read through the dynamic capability table (`contract.capabilities[capability]`), so a proposal that requests `external_api` is judged by this value. The template sets it to `deny`, which denies the request. |
 
 `assessCapabilities` treats a capability as granted only when the configured value is `true`,

@@ -86,7 +86,7 @@ regressions:
 | `acceptance.require_claims` | 未生效：代码零引用；claims 校验始终执行 |
 | `capabilities.shell.mode` | 未生效：代码零引用 |
 | `capabilities.authority_ceiling` | 仅校验 A0–A3（A4 被拒），不参与任何决策 |
-| `capabilities.network` / `dependency_install` / `credentials` | 仅写进 `.evofence-task.md` 的契约摘要，不阻止任何行为 |
+| `capabilities.network` / `dependency_install` / `credentials` | 请求路径上按能力名参与门禁；`test/runner.test.js` 请求 `network`，所以夹具将其设为 `allow`；未声明的实际使用没有检测信号 |
 
 与此相对，`capabilities.external_api` 是**真实生效**的能力门：proposal 通过 `requested_capabilities` 请求它时，控制器按 contract 中该键的值裁决（模板为 `deny`，即请求被拒）。未配置的能力一律拒绝。
 
