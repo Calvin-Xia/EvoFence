@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { COMMANDS } from '../dist/lib/cli/catalog.js';
 import * as publicApi from '../dist/index.js';
@@ -205,8 +206,8 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
   assert.deepEqual(parsePiCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
   assert.deepEqual(parseOpenCodeCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
 
-  const shimRoot = await mkdtemp(path.join(process.env.TEMP ?? process.cwd(), 'evofence-integration-cli-'));
-  const repository = await mkdtemp(path.join(process.env.TEMP ?? process.cwd(), 'evofence-integration-repo-'));
+  const shimRoot = await mkdtemp(path.join(tmpdir(), 'evofence-integration-cli-'));
+  const repository = await mkdtemp(path.join(tmpdir(), 'evofence-integration-repo-'));
   const originalPath = process.env.PATH;
   try {
     const initialized = spawnSync('git', ['init', '--quiet', repository], { encoding: 'utf8' });
@@ -220,7 +221,7 @@ test('JS integrations surface structured CLI errors and retain a fallback for no
       : `#!/bin/sh\nexec "${process.execPath}" "${cliPath}" "$@"\n`;
     await writeFile(commandPath, command, 'utf8');
     if (process.platform !== 'win32') await chmod(commandPath, 0o755);
-    process.env.PATH = `${shimRoot}${path.delimiter}${originalPath ?? ''}`;
+    process.env.PATH = `${shimRoot}${path.delimiter}${originalPath}`;
 
     const piResult = runPiEvoFence(['ledger', 'verify'], repository, messages);
     const opencodeResult = runOpenCodeEvoFence(['ledger', 'verify'], repository, messages);

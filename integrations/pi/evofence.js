@@ -33,7 +33,7 @@ function doctorToolResult(cwd) {
 export default function evofenceExtension(pi) {
   const registerDoctor = () => {
     const handler = async (_args, context) => {
-      context?.ui?.notify?.(doctorToolResult(context.cwd ?? process.cwd()), 'info');
+      context.ui.notify(doctorToolResult(context.cwd), 'info');
     };
     if (typeof pi.registerCommand === 'function') {
       pi.registerCommand('evofence-doctor', {
@@ -83,7 +83,7 @@ export default function evofenceExtension(pi) {
       bundle: Type.String({ description: 'Path to the exported ledger bundle JSON file.' }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, context) {
-      return { content: [{ type: 'text', text: JSON.stringify(readLedger('verify', context.cwd ?? process.cwd(), params.bundle)) }], details: {} };
+      return { content: [{ type: 'text', text: JSON.stringify(readLedger('verify', context.cwd, params.bundle)) }], details: {} };
     },
   });
 }
