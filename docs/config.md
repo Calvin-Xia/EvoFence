@@ -62,6 +62,8 @@ for any other field: that would turn a fail-closed refusal into a silent default
 
 - `capabilities` is the one open map (`open: true`): `assessCapabilities` indexes it by the
   capability name a proposal requests, so an unknown key there is a capability name, not a typo.
+  Open means the key name is open; each value still has a checked shape and value domain:
+  `true`/`false`, `'allow'`/`'deny'`, or `{ mode: 'allow' }`/`{ mode: 'deny' }`.
 - `adapters` is closed: only the four known adapter names are read, and v2 rejects an unknown one
   (`rejected field(s): adapters.gemini`).
 

@@ -54,6 +54,17 @@ function isStringArray(value: unknown): boolean {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+/** The six serialized capability-setting forms understood by the capability gate. */
+function isCapabilitySetting(value: unknown): boolean {
+  if (value === true || value === false || value === 'allow' || value === 'deny') return true;
+  return isObject(value) && (value.mode === 'allow' || value.mode === 'deny');
+}
+
+/** Keep the 0.4.1 template's dead shell object readable until the cleanup node removes it. */
+function isLegacyShellSetting(name: string, value: unknown): boolean {
+  return name === 'shell' && isObject(value) && value.mode === 'evidence_commands_only';
+}
+
 /** Reject a present, non-object container; absent containers are the shape walk's job. */
 function container(value: unknown, path: string, code: ConfigIssueCode, issues: Issues): Record<string, unknown> | null {
   if (value === undefined) return null;
@@ -137,6 +148,11 @@ function contractIssues(root: Record<string, unknown>): Issues {
   const capabilities = container(root.capabilities, 'capabilities', INVALID_CONTRACT, issues);
   if (capabilities) {
     leaf(capabilities.authority_ceiling, 'capabilities.authority_ceiling', INVALID_CONTRACT, issues, (v) => v === 'A0' || v === 'A1' || v === 'A2' || v === 'A3', 'authority_ceiling must be A0, A1, A2, or A3. A4 cannot be automatically granted.');
+    for (const [name, setting] of Object.entries(capabilities)) {
+      if (name === 'authority_ceiling') continue;
+      if (isLegacyShellSetting(name, setting)) continue;
+      leaf(setting, `capabilities.${name}`, INVALID_CONTRACT, issues, isCapabilitySetting, `capabilities.${name} must be true, false, allow, deny, or an object with mode allow or deny.`);
+    }
   }
 
   const budgets = container(root.budgets, 'budgets', INVALID_CONTRACT, issues);
