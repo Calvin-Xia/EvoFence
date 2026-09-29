@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { claudeCodeArgs, createAdapterUsageMonitor, parseAdapterUsage, piArgs, runAgentAdapter } from '../dist/lib/adapter.js';
 
 test('Pi strategy loads one explicit EvoFence extension while keeping extension discovery disabled', () => {
@@ -286,6 +289,36 @@ test('Claude Code launch uses non-interactive streaming auto permissions and req
   await assert.rejects(runAgentAdapter({
     name: 'claude', command: 'must-not-launch', cwd: process.cwd(), timeoutMs: 1000, maxOutputBytes: 1000,
   }), { code: 'CLAUDE_SANDBOX_REQUIRED' });
+});
+
+test('USD cost budget capability is adapter-specific and Pi accepts a remaining budget', async () => {
+  const common = { command: 'must-not-launch', cwd: process.cwd(), timeoutMs: 1000, maxOutputBytes: 1000, maxUsdRemaining: 1 };
+  await assert.rejects(runAgentAdapter({ name: 'codex', ...common }), (error) => {
+    assert.equal(error.code, 'UNSUPPORTED_COST_BUDGET');
+    assert.match(error.message, /Codex/);
+    assert.match(error.message, /max_usd/);
+    assert.match(error.message, /Claude Code or Pi/);
+    return true;
+  });
+  await assert.rejects(runAgentAdapter({ name: 'opencode', ...common }), (error) => {
+    assert.equal(error.code, 'UNSUPPORTED_COST_BUDGET');
+    assert.match(error.message, /OpenCode/);
+    assert.match(error.message, /verified currency/);
+    assert.match(error.message, /cannot infer USD/);
+    return true;
+  });
+
+  const root = await mkdtemp(path.join(os.tmpdir(), 'evofence-pi-budget-'));
+  await mkdir(path.join(root, '.evofence-out'));
+  try {
+    const result = await runAgentAdapter({
+      name: 'pi', command: 'node', cwd: root, timeoutMs: 1000, maxOutputBytes: 1000,
+      maxUsdRemaining: 1, allowUnisolatedAgent: true,
+    });
+    assert.equal(result.adapter, 'pi');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('OpenCode component totals stay unavailable when reasoning usage is absent', () => {

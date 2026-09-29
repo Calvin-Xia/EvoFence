@@ -50,10 +50,10 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, phase 
   let env: EnvironmentValues = {};
   let piToolStrategyLog: string | null = null;
   if (name === 'codex') {
-    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Codex does not provide complete, verifiable USD telemetry. Set budgets.max_usd to null or use the Claude Code or Pi adapter.');
     args = codexArgs({ cwd, model });
   } else if (name === 'opencode') {
-    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
+    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'OpenCode reports cost without a verified currency; EvoFence cannot infer USD. Set budgets.max_usd to null or use the Claude Code or Pi adapter.');
     if (!allowUnisolatedAgent) {
       throw new EvoFenceError('OPEN_CODE_SANDBOX_REQUIRED', 'OpenCode does not provide an OS security sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or launch OpenCode in a Docker/VM sandbox.');
     }
@@ -81,7 +81,6 @@ export async function runAgentAdapter({ name, command, model, agent, cwd, phase 
     }
     args = claudeCodeArgs({ model, agent, maxBudgetUsd: maxUsdRemaining });
   } else if (name === 'pi') {
-    if (maxUsdRemaining !== null) throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence.');
     if (!allowUnisolatedAgent) {
       throw new EvoFenceError('PI_SANDBOX_REQUIRED', 'EvoFence does not place the Pi CLI inside an OS sandbox. Re-run with --allow-unisolated-agent only if you accept that boundary, or run EvoFence in a Docker/VM with restricted mounts.');
     }

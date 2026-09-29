@@ -51,12 +51,15 @@ export async function prepareRun(options: RunEvolutionOptions): Promise<RunConte
   }
   let costLimitMicros: number | null = null;
   if (contract.budgets.max_usd !== null) {
-    if (adapter !== 'claude') {
-      throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', 'Only Claude Code currently provides a native USD cap supported by EvoFence. Set max_usd to null or use the Claude Code adapter.');
+    if (adapter !== 'claude' && adapter !== 'pi') {
+      const message = adapter === 'codex'
+        ? 'Codex does not provide complete, verifiable USD telemetry. Set budgets.max_usd to null or use the Claude Code or Pi adapter.'
+        : 'OpenCode reports cost without a verified currency; EvoFence cannot infer USD. Set budgets.max_usd to null or use the Claude Code or Pi adapter.';
+      throw new EvoFenceError('UNSUPPORTED_COST_BUDGET', message);
     }
     costLimitMicros = usdToMicros(contract.budgets.max_usd);
     if (costLimitMicros < 1) {
-      throw new EvoFenceError('INVALID_BUDGET', 'budgets.max_usd must be at least $0.000001 for Claude Code USD budget enforcement.');
+      throw new EvoFenceError('INVALID_BUDGET', 'budgets.max_usd must be at least $0.000001 for USD budget enforcement.');
     }
   }
   if (adapter === 'claude' && !allowUnisolatedAgent) {
@@ -72,7 +75,7 @@ export async function prepareRun(options: RunEvolutionOptions): Promise<RunConte
     throw new EvoFenceError('UNSUPPORTED_TOKEN_BUDGET_PROCESS_CONTROL', 'This host cannot terminate an agent process tree. EvoFence refused to start a token-budgeted run.');
   }
   if (costLimitMicros !== null && !(await canTerminateProcessTree())) {
-    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET_PROCESS_CONTROL', 'This host cannot terminate a Claude process tree. EvoFence refused to start a USD-budgeted run.');
+    throw new EvoFenceError('UNSUPPORTED_COST_BUDGET_PROCESS_CONTROL', `This host cannot terminate the ${adapter} process tree. EvoFence refused to start a USD-budgeted run.`);
   }
   await ensurePrivateIgnored(root);
 
