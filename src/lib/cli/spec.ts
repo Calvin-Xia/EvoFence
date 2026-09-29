@@ -22,6 +22,7 @@ export const COMMAND_GROUPS = [
   'rollback',
   'experiment',
   'report',
+  'budget',
   'status',
   'doctor',
 ] as const;

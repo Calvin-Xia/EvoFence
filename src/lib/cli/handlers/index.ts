@@ -16,6 +16,7 @@ import { commandExperimentExport, commandExperimentRun } from './experiment.js';
 import { commandReport } from './report.js';
 import { commandStatus } from './status.js';
 import { commandDoctor } from './doctor.js';
+import { commandBudget } from './budget.js';
 
 export type { CommandContext, CommandHandler } from './context.js';
 
@@ -36,4 +37,5 @@ export const HANDLERS: Readonly<Record<string, CommandHandler>> = {
   report: commandReport,
   status: commandStatus,
   doctor: commandDoctor,
+  budget: commandBudget,
 };

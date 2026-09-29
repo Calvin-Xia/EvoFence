@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildEvolutionReport } from '../dist/lib/report.js';
 import { formatEvolutionReport } from '../dist/lib/report.js';
+import { buildBudgetForecast } from '../dist/lib/report.js';
 import { formatReport, formatReportJunit, formatReportSarif } from '../dist/lib/report/formats.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 
@@ -194,6 +195,34 @@ test('report text remains byte-stable and SARIF/JUnit cover every gate decision'
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test('budget forecast uses sorted runs, complete usage, and ledger thresholds only', () => {
+  const snapshot = {
+    integrity: { valid: true, events: 6, head: 'd'.repeat(64) },
+    generations: [],
+    events: [
+      { seq: 1, created_at: '2026-09-29T00:00:00.000Z', event_type: 'run.started', run_id: 'run-b', payload: { requested_iterations: 4, contract_snapshot: { budgets: { max_iterations: 4, max_tokens: 100, max_usd: 1 } } } },
+      { seq: 2, created_at: '2026-09-29T00:00:01.000Z', event_type: 'run.finished', run_id: 'run-b', payload: { status: 'PLATEAU', iterations: 2, token_usage_total: 30, cost_estimate_total_usd: 0.5 } },
+      { seq: 3, created_at: '2026-09-29T00:00:02.000Z', event_type: 'run.started', run_id: 'run-a', payload: { requested_iterations: 4, contract_snapshot: { budgets: { max_iterations: 4, max_tokens: 100, max_usd: 1 } } } },
+      { seq: 4, created_at: '2026-09-29T00:00:03.000Z', event_type: 'budget.tokens.observed', run_id: 'run-a', payload: { limit: 100, observed_total: 20 } },
+      { seq: 5, created_at: '2026-09-29T00:00:04.000Z', event_type: 'budget.usd.observed', run_id: 'run-a', payload: { limit_usd: 1, observed_total_usd: 0.25 } },
+      { seq: 6, created_at: '2026-09-29T00:00:05.000Z', event_type: 'run.finished', run_id: 'run-a', payload: { status: 'ACCEPTED', iterations: 1, token_usage_total: 20, cost_estimate_total_usd: 0.25 } },
+    ],
+  };
+  const forecast = buildBudgetForecast(snapshot);
+  assert.deepEqual(forecast.runs.map((run) => run.run_id), ['run-a', 'run-b']);
+  assert.equal(forecast.rounds_used, 3);
+  assert.equal(forecast.rounds_limit, 8);
+  assert.equal(forecast.used_ratio, 3 / 8);
+  assert.equal(forecast.historical_mean_rounds_per_run, 1.5);
+  assert.equal(forecast.remaining_rounds_estimate, 5 / 1.5);
+  assert.equal(forecast.tokens.used, 50);
+  assert.equal(forecast.tokens.limit, 200);
+  assert.equal(forecast.tokens.historical_mean_per_round, 50 / 3);
+  assert.equal(forecast.usd.used, 0.75);
+  assert.equal(forecast.usd.limit, 2);
+  assert.equal(forecast.usd.historical_mean_per_round, 0.75 / 3);
 });
 
 test('a broken chain still returns every view class, with unknown ledger facts left null', async () => {

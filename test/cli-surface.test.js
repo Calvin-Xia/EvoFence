@@ -449,6 +449,44 @@ test('the downstream entry points exist in the new command surface (DoD 4)', () 
   assert.equal(typeof JSON.parse(json.stdout).run_count, 'number');
 });
 
+test('budget forecast is deterministic and does not change status', () => {
+  const statusBefore = spawnCli(['status'], ledgerFixture.root);
+  assert.equal(statusBefore.status, 0, statusBefore.stderr);
+  const first = spawnCli(['budget', '--json'], ledgerFixture.root);
+  const second = spawnCli(['budget', '--json'], ledgerFixture.root);
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(first.stdout, second.stdout, 'same ledger fixture must produce byte-identical forecasts');
+
+  const forecast = JSON.parse(first.stdout);
+  assert.equal(forecast.schema_version, 1);
+  assert.equal(forecast.basis, 'historical_mean');
+  assert.equal(typeof forecast.explanation, 'string');
+  assert.equal(forecast.rounds_used, 1);
+  assert.equal(forecast.rounds_limit, 3);
+  assert.equal(forecast.used_ratio, 1 / 3);
+  assert.equal(forecast.historical_mean_rounds_per_run, 1);
+  assert.equal(forecast.remaining_rounds_estimate, 2);
+  assert.equal(forecast.runs.length, 1);
+  assert.deepEqual(forecast.runs[0], {
+    run_id: SMOKE.runId,
+    started_at: forecast.runs[0].started_at,
+    status: 'ACCEPTED',
+    iterations: 1,
+    iteration_limit: 3,
+    tokens_used: null,
+    tokens_limit: null,
+    usd_used: null,
+    usd_limit: null,
+  });
+  assert.equal(forecast.tokens.used, null);
+  assert.equal(forecast.usd.used, null);
+
+  const statusAfter = spawnCli(['status'], ledgerFixture.root);
+  assert.equal(statusAfter.status, 0, statusAfter.stderr);
+  assert.equal(statusAfter.stdout, statusBefore.stdout, 'budget must not mutate the status view');
+});
+
 test('--help documents every manifest command plus the exit-code convention', () => {
   const result = spawnCli(['--help'], ledgerFixture.root);
   assert.equal(result.status, 0, result.stderr);
