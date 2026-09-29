@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.4.2 — 2026-09-30
+
+**Non-breaking.** Extends the 0.4.1 command, configuration and host-integration surfaces without
+changing the existing command contracts or on-disk formats.
+
+### New command surfaces
+
+- `report --format <text|json|sarif|junit>` exposes the shared report view in text, JSON, SARIF
+  and JUnit formats.
+- `doctor --fix` provides the explicitly requested local remediation for the private holdout
+  ignore entry and verifies the result, rolling back the change if the post-fix check fails.
+- `budget` adds a read-only view of the deterministic historical budget forecast.
+
+### Configuration and integration guards
+
+- Corrected the documented status of `capabilities.network`, `capabilities.dependency_install`
+  and `capabilities.credentials`: they are echoed into the task context rather than enforced as
+  runtime gates.
+- Added shape validation for values in the open capability map.
+- Removed the three template-only dead keys (`acceptance.require_proposal`,
+  `acceptance.require_claims` and `capabilities.shell.mode`) from the template without weakening
+  proposal or claims validation, which remains unconditional.
+- All five host integrations and three entry points now cover the 0.4.1 command surfaces. The
+  integration guard is closed over command names, flags and documented surface coverage.
+
+### Fixed
+
+- Hardened write-file protection against hard-linked control-plane targets.
+- Changed isolation-class refusals to an explicit user-authorization boundary.
+- Avoided shell invocation when host integrations call the CLI on Windows.
+- Made `doctor --fix` roll back when its post-fix verification fails.
+
 ## 0.4.1 — 2026-09-29
 
 **Non-breaking.** Two new capabilities, one budget extension, two machine guards and one bug fix.
