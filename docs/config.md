@@ -34,10 +34,11 @@ Two rules are the point of the layer:
 
 The complete set of required paths (`required` in `src/lib/config/schema.ts`):
 
-- `contract.yaml`: `contract_version`, `objective.{name,command,direction,min_delta}`,
-  `hard_invariants`, `allowed_evolution_surface`, `protected_paths`,
-  `evidence.public_commands`, `acceptance.{require_rollback_point,hidden_regression_tolerance}`,
-  `capabilities.authority_ceiling`,
+- `contract.yaml`: `contract_version`, `objective`, `objective.{name,command,direction,min_delta}`,
+  `hard_invariants`, `allowed_evolution_surface`, `protected_paths`, `evidence`,
+  `evidence.public_commands`, `acceptance`,
+  `acceptance.{require_rollback_point,hidden_regression_tolerance}`, `capabilities`,
+  `capabilities.authority_ceiling`, `budgets`,
   `budgets.{max_iterations,max_wall_clock_ms,max_failed_candidates,max_consecutive_no_improvement,max_tokens,max_usd}`
 - `config.yaml`: `version`
 - `holdout.yaml`: `regressions`
@@ -102,6 +103,18 @@ machine-readable registry and a test pins that a permissive value changes no jud
 - `validateContract` (`src/lib/gate/contract-document.ts`) stays the pure, in-memory 0.3.0 value
   checker behind the public export. It has no `additionalProperties: false` semantics and no longer
   reads files, so it is not the gate that rejects a typo.
+
+## Configuration surface guard
+
+Run `npm run config:doc` to compare the machine-readable configuration surface from the built
+`src/lib/config/` exports with this document. `src/lib/config/schema.ts` remains the source of
+truth; the guard does not reimplement runtime validation or add a runtime default.
+
+The guard checks the failure-code table, every required path, the two code-default paths and
+values, the unknown-field and missing-field rules, and the open/closed map rules. It reports the
+document kind, field path, and relevant section for additions, removals, renames, or value drift.
+A non-zero exit means that this document no longer describes the shipped schema and must be
+updated together with the schema change. The guard does not replace `evofence status` validation.
 
 To check a document by hand, run `evofence status` and read the reported paths, or add
 `--json` to get `details.rejected_fields` / `details.missing_fields`.
