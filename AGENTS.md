@@ -13,10 +13,12 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
 - Commands:
   - `npm run build` — `tsc`; emits `dist/**/*.js`, `*.d.ts`, `*.d.ts.map`, `*.js.map`.
   - `npm run typecheck` — `tsc --noEmit`.
+  - `npm run src:policy` — source-shape check: no `.js` under `src/`, no `src/**/*.ts` over 350 lines.
   - `npm run dep:check` — acyclic dependency check over `src/` (`acyclic: true`).
+  - `npm run config:doc` — build, then the config-doc guard (`scripts/check-config-doc.mjs`): `docs/config.md` must match the schema facts in `src/lib/config/schema.ts`. Deliberately not part of `check`; CI runs it as its own step.
   - `npm test` — build, then `node --test` over `test/**`.
   - `npm run test:e2e` — build, then `test-e2e/cli-flow.mjs`.
-  - `npm run check` — `typecheck` + `dep:check` + `test`. This is the project gate.
+  - `npm run check` — `typecheck` + `src:policy` + `dep:check` + `test`. This is the project gate.
 - Keep generated state, local ledgers, private holdouts, and credentials out of Git.
 
 ## Structure and boundaries
@@ -29,11 +31,12 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
   - `src/lib/config/` — the v2 config surface (`schema` → `fields` → `validate` → `load`) for the four `.evofence` YAML documents.
   - `src/lib/cli/` — command catalog (`catalog.ts` is the manifest), argv parsing, handlers, output/failure contract.
   - `src/lib/report/` — the shared JSON views behind `report`, `status` and `diff`.
+  - `src/lib/audit/` — the fail-closed acceptance-link audit behind `diff` (`links`), the dynamic ledger payload shape (`payload`) and the capped audit-view rendering (`render`).
   - The remaining `src/lib/*.ts` files (`runner.ts`, `ledger.ts`, `contract.ts`, `policy.ts`, `audit.ts`, `report.ts`, `status.ts`, `adapter.ts`, `process.ts`, `git.ts`, `init.ts`, …) are the R1-stable entry points kept as facades over their domain.
-- `test/` uses Node's built-in test runner against `dist/**`; `test-e2e/` holds the CLI flow suite; `scripts/` holds the dependency and release-metadata checks.
+- `test/` uses Node's built-in test runner against `dist/**`; `test-e2e/` holds the CLI flow suite; `scripts/` holds the source-shape, dependency and config-doc checks plus the release-metadata and publish-workflow verifiers.
 - `docs/refactor-inventory.md`, `docs/refactor-inventory-review.md`, `docs/refactor-l2-protocol.md`, `docs/refactor-dispatch.md`, `docs/refactor-final-review.md` and `docs/test-coverage-map.md` are historical process records. They describe the 0.3.0 baseline or the refactor that produced 0.4.0, not current behavior; keep them frozen and do not treat them as the source of truth for the shipped CLI, config or ledger format. `docs/config.md` and `docs/pi-tool-strategy.md` describe current behavior.
 - The 0.4.0 topology lives in `.graph/` ([Super Plumber](https://github.com/LUKAWI/super-plumber)): nodes, edges, the five ADRs and the append-only `events.jsonl` audit log. It is **gitignored on purpose** — it is the process state that drove the refactor, not product source, and most of its bulk is auto-generated per-mutation snapshots. No code under `src/` may read it, and no npm script or CI job may require the `graph` CLI.
-- The root `CONTEXT-MAP.md` and `DECISIONS.md` plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd` are **exported views** of that graph, and they ARE tracked: they are the readable record for everyone who does not have the graph. Do not hand-edit them — whoever holds the graph re-exports (`graph export --docs`), and `graph export --docs --check` reports drift for exactly that reason. Node status moves only through the graph CLI/MCP or `sp.mjs`: never hand-edit a node YAML to fake a transition.
+- The root `CONTEXT-MAP.md` and `DECISIONS.md` plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd` are **exported views** of that graph, and they ARE tracked: they are the readable record for everyone who does not have the graph. The 2026-09-29 ops round added a second graph whose exported views live in `docs/evofence-ops-evidence/` (`CONTEXT-MAP.md`, `DECISIONS.md`, `adr/`, `contexts/`) under the same rules. Do not hand-edit either set — whoever holds the graph re-exports (`graph export --docs` for the markdown views, `graph export --mermaid` for `docs/topology.mmd`), and `graph export --docs --check --graph <name>` reports drift for exactly that reason. Node status moves only through the graph CLI/MCP or `sp.mjs`: never hand-edit a node YAML to fake a transition.
 - `integrations/` contains agent adapters and native plugins. A plugin's available tools are not the same thing as an `evofence run --adapter ...` adapter.
 - Keep plugin inspection read-only unless a separately documented, explicit command delegates to the EvoFence CLI.
 - Preserve contract, evidence, budget, and isolation gates. Do not claim worktree isolation is an OS sandbox.
@@ -47,4 +50,4 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
 
 ## Current status and next step
 
-The package is a prerelease research MVP. Check `CHANGELOG.md`, the active pull requests, and their CI before describing current release status. Do not create a release tag or publish to npm without explicit user authorization.
+The package is a research MVP. 0.4.0 is published to npm (dist-tag `latest`, 2026-09-27); the feature set merged on 2026-09-29 (`max_usd` for Pi, `ledger verify --bundle`, `evofence doctor`, the config-doc guard) is merged but unreleased — it sits under `Unreleased` in `CHANGELOG.md`. Check `CHANGELOG.md`, the active pull requests, and their CI before describing current release status. Do not create a release tag or publish to npm without explicit user authorization.

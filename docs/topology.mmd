@@ -11,11 +11,11 @@ graph TD;
 %% decides/fallback/iterates = 虚线箭头；relates = 点线；shares_context = 无箭头实线；其余 = 实线箭头
   %% 节点定义 (按状态着色)
   %% 知识顶点 (context/ADR 横切领域知识，不入分期带)
-  adr_0001{{"ledger schema v2 破坏性变更且不提供迁移"}}:::adr_proposed;
-  adr_0002{{"发行形态：仅发布 dist 构建产物与类型声明"}}:::adr_proposed;
-  adr_0003{{"CLI 命令面重设计：命令分组与 --json 契约可破坏性调整"}}:::adr_proposed;
-  adr_0004{{"TS 测试执行策略：编译后运行构建产物"}}:::adr_proposed;
-  adr_0005{{"模块依赖方向：类型契约层在最底层，单向依赖无环"}}:::adr_proposed;
+  adr_0001{{"ledger schema v2 破坏性变更且不提供迁移"}}:::adr_accepted;
+  adr_0002{{"发行形态：仅发布 dist 构建产物与类型声明"}}:::adr_accepted;
+  adr_0003{{"CLI 命令面重设计：命令分组与 --json 契约可破坏性调整"}}:::adr_accepted;
+  adr_0004{{"TS 测试执行策略：编译后运行构建产物"}}:::adr_accepted;
+  adr_0005{{"模块依赖方向：类型契约层在最底层，单向依赖无环"}}:::adr_accepted;
   ctx_exec(["执行编排域"]):::context;
   ctx_ext(["集成与扩展消费域"]):::context;
   ctx_gate(["门禁判定域"]):::context;
@@ -23,33 +23,33 @@ graph TD;
   ctx_ledger(["审计账本域"]):::context;
   %% 分期带 (按 level 分组；带内按 id 排序，Git diff 友好)
   subgraph band_L1["L1"]
-    l1_base["TS 构建基座"]:::pending;
-    l1_design["拓扑定稿与人审通过"]:::pending;
-    l1_dispatch["herdr 派单机制就绪"]:::pending;
-    l1_recon["项目识别与实现盘点"]:::pending;
+    l1_base["TS 构建基座"]:::passed;
+    l1_design["拓扑定稿与人审通过"]:::passed;
+    l1_dispatch["herdr 派单机制就绪"]:::passed;
+    l1_recon["项目识别与实现盘点"]:::passed;
   end
   subgraph band_L2["L2"]
-    l2_cli["CLI 命令面重设计"]:::pending;
-    l2_config["config v2 校验与 fail-closed"]:::pending;
-    l2_exec["执行域模块化"]:::pending;
-    l2_gate["门禁域模块化"]:::pending;
-    l2_ledger["ledger v2 schema 与哈希链内核"]:::pending;
-    l2_report["报告/状态/审计视图模块化"]:::pending;
-    l2_types["共享类型契约层"]:::pending;
+    l2_cli["CLI 命令面重设计"]:::passed;
+    l2_config["config v2 校验与 fail-closed"]:::passed;
+    l2_exec["执行域模块化"]:::passed;
+    l2_gate["门禁域模块化"]:::passed;
+    l2_ledger["ledger v2 schema 与哈希链内核"]:::passed;
+    l2_report["报告/状态/审计视图模块化"]:::passed;
+    l2_types["共享类型契约层"]:::passed;
   end
   subgraph band_L3["L3"]
-    l3_integrations["集成消费方对齐"]:::pending;
-    l3_tests_e2e["端到端 CLI 冒烟与退出码断言"]:::pending;
-    l3_tests_unit["单元测试迁移与补强"]:::pending;
+    l3_integrations["集成消费方对齐"]:::passed;
+    l3_tests_e2e["端到端 CLI 冒烟与退出码断言"]:::passed;
+    l3_tests_unit["单元测试迁移与补强"]:::passed;
   end
   subgraph band_L4["L4"]
-    l4_ci["CI 流水线升级"]:::pending;
-    l4_docs["文档同步与 BREAKING 说明"]:::pending;
-    l4_release["发布流水线就绪与 dry-run 彩排"]:::pending;
+    l4_ci["CI 流水线升级"]:::passed;
+    l4_docs["文档同步与 BREAKING 说明"]:::passed;
+    l4_release["发布流水线就绪与 dry-run 彩排"]:::passed;
   end
   subgraph band_L5["L5"]
-    l5_accept["终局验收收口"]:::pending;
-    l5_review["独立交叉复核"]:::pending;
+    l5_accept["终局验收收口"]:::passed;
+    l5_review["独立交叉复核"]:::passed;
   end
 
   %% 边
@@ -94,6 +94,6 @@ graph TD;
   adr_0005 -.->|"decides"| l2_types;
 
   %% 样式定义
-  classDef adr_proposed fill:#ffb74d,stroke:#ef6c00;
+  classDef adr_accepted fill:#81c784,stroke:#388e3c;
   classDef context fill:#4db6ac,stroke:#00897b;
-  classDef pending fill:#8a8f98,stroke:#5b5f66;
+  classDef passed fill:#16a34a,stroke:#0e7a37;
