@@ -71,6 +71,18 @@ test('OpenCode and Pi integration packages declare the modules their extensions 
   assert.match(piProjectEntry, /export\s+\{\s*default\s*\}\s+from\s+['"]\.\.\/\.\.\/integrations\/pi\/evofence\.js['"]/);
 });
 
+const INTEGRATION_DOC_FILES = [
+  'integrations/claude-code/README.md',
+  'integrations/claude-code/commands/inspect-ledger.md',
+  'integrations/claude-code/commands/run-evolution.md',
+  'integrations/codex/README.md',
+  'integrations/codex/skills/inspect-ledger/SKILL.md',
+  'integrations/codex/skills/run-evolution/SKILL.md',
+  'integrations/deepseek-harness/README.md',
+  'integrations/opencode/README.md',
+  'integrations/pi/README.md',
+];
+
 const INTEGRATION_COMMAND_FILES = [
   'integrations/claude-code/commands/inspect-ledger.md',
   'integrations/claude-code/commands/run-evolution.md',
@@ -78,6 +90,234 @@ const INTEGRATION_COMMAND_FILES = [
   'integrations/codex/skills/run-evolution/SKILL.md',
   'integrations/opencode/README.md',
 ];
+
+const INTEGRATION_JS_FILES = ['integrations/pi/evofence.js', 'integrations/opencode/plugins/evofence.js'];
+const COMMAND_NAMES = COMMANDS.map((command) => command.name);
+const COMMAND_NAMES_BY_LENGTH = [...COMMAND_NAMES].sort((left, right) => right.split(' ').length - left.split(' ').length);
+
+const COMMAND_COVERAGE_ALLOWLIST = new Map([
+  ['init', 'Host integrations must not initialize control-plane state.'],
+  ['proposal inspect', 'Proposal payload inspection is a CLI control-plane surface, not a host tool.'],
+  ['evidence run', 'Candidate evidence execution is an EvoFence control-plane operation, not a host read tool.'],
+  ['gate', 'Gate evaluation is a control-plane decision surface and is not dispatched by a host integration.'],
+  ['ledger show', 'The command exposes complete event payloads, which violates the host integrations privacy boundary.'],
+  ['ledger export', 'Export writes a bundle and is intentionally kept as an explicit CLI operation.'],
+  ['diff', 'Generation diffs can expose candidate evidence and remain a CLI-only audit surface.'],
+  ['rollback', 'Rollback mutates the active-generation ref and is never a host integration action.'],
+  ['experiment run', 'Experiment execution is a CLI control-plane operation, not a host integration action.'],
+  ['experiment export', 'Experiment export writes a file and remains an explicit CLI operation.'],
+  ['report', 'Cross-run report serialization is CLI-only; host integrations expose only their minimal sanitized ledger/run surfaces.'],
+  ['budget', 'Historical budget forecasting is CLI-only and must not be presented as host-side enforcement.'],
+  ['status', 'The operational status view is CLI-only; host integrations expose targeted read-only checks instead.'],
+]);
+
+const REQUIRED_NEW_SURFACES = ['report --format', 'doctor --fix', 'budget'];
+
+const NEW_SURFACE_COVERAGE = [
+  {
+    surface: 'report --format',
+    command: 'report',
+    flag: 'format',
+    coveredBy: [],
+    allowlistReason: 'No host integration renders cross-run text/JSON/SARIF/JUnit reports; this remains an explicit CLI output surface.',
+  },
+  {
+    surface: 'doctor --fix',
+    command: 'doctor',
+    flag: 'fix',
+    coveredBy: [],
+    allowlistReason: 'All host doctor integrations are strictly read-only; they must not expose a mutating remediation flag.',
+  },
+  {
+    surface: 'budget',
+    command: 'budget',
+    flag: null,
+    coveredBy: [],
+    allowlistReason: 'The deterministic historical-mean forecast is a CLI control-plane view, not a host adapter capability.',
+  },
+];
+
+function commandSpec(name) {
+  return COMMANDS.find((command) => command.name === name);
+}
+
+function parseInvocation(tokens, file) {
+  const name = COMMAND_NAMES_BY_LENGTH.find((candidate) => {
+    const words = candidate.split(' ');
+    return words.every((word, index) => tokens[index] === word);
+  });
+  const command = name === undefined ? undefined : commandSpec(name);
+  const argumentsStart = name === undefined ? 0 : name.split(' ').length;
+  const flags = [];
+  const positionals = [];
+  for (let index = argumentsStart; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token.startsWith('--')) {
+      const flag = token.slice(2).split('=')[0];
+      flags.push(flag);
+      const declaration = command === undefined ? undefined : command.flags.find((candidate) => candidate.name === flag);
+      if (!token.includes('=') && declaration !== undefined && declaration.kind === 'value') index += 1;
+      continue;
+    }
+    if (!token.startsWith('<')) positionals.push(token);
+  }
+  return { file, name, flags, positionals, tokens };
+}
+
+function parseMarkdownInvocations(text, file) {
+  return text.split(/\r?\n/).flatMap((line) => [...line.matchAll(/evofence\s+[^`]+/g)].map((match) => {
+    const tokens = match[0].trim().replace(/[.,;:]$/, '').split(/\s+/);
+    return parseInvocation(tokens.slice(1), file);
+  }));
+}
+
+function parseJavaScriptInvocations(text, file) {
+  const arrayPattern = /\[((?:\s*'[^']*'\s*,?|\s*[A-Za-z_$][A-Za-z0-9_$]*\s*,?)+)\]/g;
+  return [...text.matchAll(arrayPattern)].map((match) => {
+    const tokens = [...match[1].matchAll(/'([^']*)'|([A-Za-z_$][A-Za-z0-9_$]*)/g)].map((token) => token[1] === undefined ? token[2] : token[1]);
+    return parseInvocation(tokens, file);
+  });
+}
+
+async function loadIntegrationInvocations() {
+  const docs = await Promise.all(INTEGRATION_DOC_FILES.map(async (file) => [file, await read(file)]));
+  const scripts = await Promise.all(INTEGRATION_JS_FILES.map(async (file) => [file, await read(file)]));
+  return [
+    ...docs.flatMap(([file, text]) => parseMarkdownInvocations(text, file)),
+    ...scripts.flatMap(([file, text]) => parseJavaScriptInvocations(text, file)),
+  ];
+}
+
+function assertCommandClosure(invocations) {
+  for (const invocation of invocations) {
+    assert.ok(invocation.name, invocation.file + ' contains an unparseable EvoFence command: ' + invocation.tokens.join(' '));
+    assert.ok(commandSpec(invocation.name), invocation.file + ' invokes "' + invocation.name + '", which is not in the command catalog');
+  }
+}
+
+function assertFlagClosure(invocations) {
+  for (const invocation of invocations) {
+    const command = commandSpec(invocation.name);
+    assert.ok(command, invocation.file + ' must resolve a catalog command before checking flags');
+    const allowedFlags = new Set(command.flags.map((flag) => flag.name));
+    for (const flag of invocation.flags) {
+      assert.ok(allowedFlags.has(flag), invocation.file + ' invokes ' + invocation.name + ' with --' + flag + ', which is not declared by that command');
+    }
+  }
+}
+
+function assertPositionalContracts(invocations) {
+  for (const invocation of invocations) {
+    const command = commandSpec(invocation.name);
+    assert.ok(command, invocation.file + ' must resolve a catalog command before checking positionals');
+    for (const positional of command.positionals) {
+      const range = positional.description === undefined ? null : positional.description.match(/(\d+)\.\.(\d+)/);
+      if (range === null || invocation.positionals.length === 0) continue;
+      const value = Number(invocation.positionals[0]);
+      assert.ok(Number.isInteger(value) && value >= Number(range[1]) && value <= Number(range[2]), invocation.file + ' invokes ' + invocation.name + ' with ' + invocation.positionals[0] + ', outside ' + range[1] + '..' + range[2]);
+    }
+  }
+}
+
+function assertDirectoryCoverage(invocations) {
+  for (const [name, reason] of COMMAND_COVERAGE_ALLOWLIST) {
+    assert.ok(commandSpec(name), 'coverage allowlist names unknown command ' + name);
+    assert.ok(reason.length > 0, 'coverage allowlist needs a reason for ' + name);
+  }
+  const coveredCommands = new Set(invocations.map((invocation) => invocation.name));
+  for (const command of COMMANDS) {
+    if (COMMAND_COVERAGE_ALLOWLIST.has(command.name)) continue;
+    assert.ok(coveredCommands.has(command.name), command.name + ' is in the CLI catalog but has no host integration coverage');
+  }
+}
+
+function coverageFilesByCommand(invocations) {
+  const files = new Map();
+  for (const invocation of invocations) {
+    if (invocation.name === undefined) continue;
+    if (COMMAND_COVERAGE_ALLOWLIST.has(invocation.name)) continue;
+    if (!files.has(invocation.name)) files.set(invocation.name, new Set());
+    files.get(invocation.name).add(invocation.file);
+  }
+  return Object.fromEntries([...files].map(([name, commandFiles]) => [name, [...commandFiles].sort()]));
+}
+
+function assertNewSurfaceCoverage(entries = NEW_SURFACE_COVERAGE) {
+  const requiredSurfaces = REQUIRED_NEW_SURFACES;
+  assert.deepEqual(entries.map((entry) => entry.surface).sort(), requiredSurfaces.sort(), 'new CLI surfaces need an explicit coverage entry');
+  for (const entry of entries) {
+    const command = commandSpec(entry.command);
+    assert.ok(command, entry.surface + ' names an unknown command');
+    if (entry.flag !== null) assert.ok(command.flags.some((flag) => flag.name === entry.flag), entry.surface + ' names an unknown flag');
+    assert.ok(entry.coveredBy.length > 0 || entry.allowlistReason.length > 0, entry.surface + ' needs an integration or a concrete allowlist reason');
+  }
+}
+
+function legacyCommandNameGuard(invocations) {
+  const catalogNames = new Set(COMMAND_NAMES);
+  for (const invocation of invocations) assert.ok(catalogNames.has(invocation.name), invocation.file + ' invokes ' + invocation.name);
+}
+
+test('pre-upgrade guard evidence: flag and numeric-argument drift passed the old command-name check', async () => {
+  const flagDrift = parseMarkdownInvocations('evofence ledger verify --not-a-catalog-flag', 'synthetic-flag-drift.md');
+  const piSource = await read('integrations/pi/evofence.js');
+  const numericSource = piSource.replace("['ledger', 'recent', '10']", "['ledger', 'recent', '999']");
+  assert.notEqual(numericSource, piSource, 'the numeric drift fixture must change the integration source');
+  const numericDrift = parseJavaScriptInvocations(numericSource, 'synthetic-pi-drift.js').filter((invocation) => invocation.name === 'ledger recent');
+  assert.equal(numericDrift.length, 1);
+  assert.doesNotThrow(() => legacyCommandNameGuard([...flagDrift, ...numericDrift]));
+  console.log(JSON.stringify({ preUpgradeGuard: 'passed', flagDrift: '--not-a-catalog-flag', numericDrift: 'ledger recent 999' }));
+});
+
+test('host guard command-name closure covers all scanned integration invocations', async () => {
+  const invocations = await loadIntegrationInvocations();
+  assertCommandClosure(invocations);
+});
+
+test('host guard flag closure and positional contracts are independent and strict', async () => {
+  const invocations = await loadIntegrationInvocations();
+  assertFlagClosure(invocations);
+  assertPositionalContracts(invocations);
+
+  const flagDrift = parseMarkdownInvocations('evofence ledger verify --not-a-catalog-flag', 'synthetic-flag-drift.md');
+  assert.throws(() => assertFlagClosure(flagDrift), /not declared by that command/);
+
+  const piSource = await read('integrations/pi/evofence.js');
+  const numericSource = piSource.replace("['ledger', 'recent', '10']", "['ledger', 'recent', '999']");
+  const numericDrift = parseJavaScriptInvocations(numericSource, 'synthetic-pi-drift.js').filter((invocation) => invocation.name === 'ledger recent');
+  assert.throws(() => assertPositionalContracts(numericDrift), /outside 1\.\.20/);
+});
+
+test('host guard directory coverage and new-surface coverage are explicit', async () => {
+  const actualDocFiles = (await readdir(path.join(root, 'integrations'), { recursive: true }))
+    .filter((file) => file.endsWith('.md'))
+    .map((file) => file.replaceAll('\\', '/').replace(/^/, 'integrations/'))
+    .sort();
+  assert.deepEqual(actualDocFiles, [...INTEGRATION_DOC_FILES].sort(), 'the guard must scan every integration Markdown document');
+  const invocations = await loadIntegrationInvocations();
+  assertDirectoryCoverage(invocations);
+  assertNewSurfaceCoverage();
+  console.log(JSON.stringify({
+    scannedMarkdownFiles: INTEGRATION_DOC_FILES,
+    coverageByCommand: coverageFilesByCommand(invocations),
+    newSurfaces: NEW_SURFACE_COVERAGE.map(({ surface, coveredBy, allowlistReason }) => ({ surface, coveredBy, allowlistReason })),
+    coverageAllowlist: [...COMMAND_COVERAGE_ALLOWLIST],
+  }));
+});
+
+test('host guard turns red when a command, flag, or new-surface coverage reference is removed', async () => {
+  const inspectFile = 'integrations/claude-code/commands/inspect-ledger.md';
+  const inspectSource = await read(inspectFile);
+  const removedCommandReference = inspectSource.replace('evofence ledger verify', 'evofence ledger verifier');
+  assert.throws(() => assertCommandClosure(parseMarkdownInvocations(removedCommandReference, inspectFile)), /unparseable|not in the command catalog/);
+
+  const removedFlagReference = inspectSource.replace('--json', '--not-a-catalog-flag');
+  assert.throws(() => assertFlagClosure(parseMarkdownInvocations(removedFlagReference, inspectFile)), /not declared by that command/);
+
+  const removedNewSurfaceCoverage = NEW_SURFACE_COVERAGE.filter((entry) => entry.surface !== 'report --format');
+  assert.throws(() => assertNewSurfaceCoverage(removedNewSurfaceCoverage), /new CLI surfaces need an explicit coverage entry/);
+  console.log(JSON.stringify({ removedCommandReference: 'red', removedFlagReference: 'red', removedNewSurfaceCoverage: 'red' }));
+});
 
 test('every EvoFence CLI invocation shipped with an integration exists in the command catalog', async () => {
   const catalogNames = new Set(COMMANDS.map((command) => command.name));
@@ -110,7 +350,7 @@ test('every EvoFence CLI invocation shipped with an integration exists in the co
 test('all five host integrations expose the read-only doctor preflight', async () => {
   const doctor = COMMANDS.find((command) => command.name === 'doctor');
   assert.ok(doctor, 'doctor must remain in the CLI catalog');
-  assert.equal(doctor.usage, 'doctor [--adapter <name>] [--json]');
+  assert.equal(doctor.usage, 'doctor [--adapter <name>] [--fix] [--json]');
 
   const files = [
     'integrations/claude-code/commands/run-evolution.md',
