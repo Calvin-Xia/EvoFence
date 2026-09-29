@@ -1,9 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, readFile, readdir } from 'node:fs/promises';
+import { access, chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { COMMANDS } from '../dist/lib/cli/catalog.js';
 import * as publicApi from '../dist/index.js';
+import {
+  parseCliFailure as parsePiCliFailure,
+  parseCliResult as parsePiCliResult,
+  runEvoFence as runPiEvoFence,
+} from '../integrations/pi/cli.js';
+import {
+  parseCliFailure as parseOpenCodeCliFailure,
+  parseCliResult as parseOpenCodeCliResult,
+  runEvoFence as runOpenCodeEvoFence,
+} from '../integrations/opencode/plugins/cli.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const readJson = async (relativePath) => JSON.parse(await readFile(path.join(root, relativePath), 'utf8'));
@@ -173,6 +184,55 @@ test('each host documents its USD budget support, refusal, and alternative', asy
   assert.match(docs.codex, /UNSUPPORTED_COST_BUDGET/);
   assert.match(docs.opencode, /UNSUPPORTED_COST_BUDGET/);
   assert.match(docs.deepseek, /does not run an EvoFence adapter/);
+});
+
+test('JS integrations surface structured CLI errors and retain a fallback for non-JSON stderr', async () => {
+  const messages = {
+    missingMessage: 'missing',
+    processErrorMessage: 'process',
+    failureMessage: 'fallback',
+    invalidMessage: 'invalid',
+  };
+  const stderr = JSON.stringify({ error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' } });
+  assert.deepEqual(parsePiCliFailure(stderr, messages.failureMessage), {
+    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' },
+  });
+  assert.deepEqual(parseOpenCodeCliFailure(stderr, messages.failureMessage), {
+    error: { code: 'LEDGER_UNAVAILABLE', message: 'Ledger unavailable.' },
+  });
+  assert.deepEqual(parsePiCliFailure('not JSON', messages.failureMessage), { error: 'fallback' });
+  assert.deepEqual(parseOpenCodeCliFailure('not JSON', messages.failureMessage), { error: 'fallback' });
+  assert.deepEqual(parsePiCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
+  assert.deepEqual(parseOpenCodeCliResult({ status: 0, stdout: '{"valid":true}\n', stderr: '' }, messages), { valid: true });
+
+  const shimRoot = await mkdtemp(path.join(process.env.TEMP ?? process.cwd(), 'evofence-integration-cli-'));
+  const repository = await mkdtemp(path.join(process.env.TEMP ?? process.cwd(), 'evofence-integration-repo-'));
+  const originalPath = process.env.PATH;
+  try {
+    const initialized = spawnSync('git', ['init', '--quiet', repository], { encoding: 'utf8' });
+    assert.equal(initialized.status, 0, initialized.stderr);
+    await mkdir(path.join(repository, '.evofence'));
+    const cliPath = path.join(root, 'dist', 'cli.js');
+    const commandName = process.platform === 'win32' ? 'evofence.cmd' : 'evofence';
+    const commandPath = path.join(shimRoot, commandName);
+    const command = process.platform === 'win32'
+      ? `@echo off\r\n"${process.execPath}" "${cliPath}" %*\r\n`
+      : `#!/bin/sh\nexec "${process.execPath}" "${cliPath}" "$@"\n`;
+    await writeFile(commandPath, command, 'utf8');
+    if (process.platform !== 'win32') await chmod(commandPath, 0o755);
+    process.env.PATH = `${shimRoot}${path.delimiter}${originalPath ?? ''}`;
+
+    const piResult = runPiEvoFence(['ledger', 'verify'], repository, messages);
+    const opencodeResult = runOpenCodeEvoFence(['ledger', 'verify'], repository, messages);
+    assert.equal(typeof piResult.error?.code, 'string', JSON.stringify(piResult));
+    assert.equal(typeof opencodeResult.error?.code, 'string', JSON.stringify(opencodeResult));
+    assert.equal(piResult.error.code, opencodeResult.error.code);
+    assert.notEqual(piResult.error.message, messages.failureMessage);
+  } finally {
+    process.env.PATH = originalPath;
+    await rm(shimRoot, { recursive: true, force: true });
+    await rm(repository, { recursive: true, force: true });
+  }
 });
 
 test('the project-level pi entry keeps a runtime-loadable .js target and src/ holds no .js twin', async () => {
