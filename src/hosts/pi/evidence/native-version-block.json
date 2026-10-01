@@ -1,0 +1,59 @@
+{
+  "recordedAt": "2026-10-01T17:43:03.140Z",
+  "expected": "0.87.1",
+  "installed": "0.99.2",
+  "packageRoot": "C:\\Users\\Calvin-Xia\\AppData\\Roaming\\npm\\node_modules\\@earendil-works\\pi-coding-agent",
+  "status": "blocked-on-version",
+  "evidenceGrade": "native version preflight only; no Pi session/provider execution",
+  "userConfirmation": "No runnable 0.87.1 package; global only 0.99.2; install not authorized. Continue version-independent cp2/cp3 and gates.",
+  "versionProcess": {
+    "command": "node --input-type=module -e import fs from \"node:fs\";const p=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\"));console.log(JSON.stringify({name:p.name,version:p.version}));process.exit(p.version===\"0.87.1\"?0:1) C:\\Users\\Calvin-Xia\\AppData\\Roaming\\npm\\node_modules\\@earendil-works\\pi-coding-agent\\package.json",
+    "cwd": "C:\\Users\\Calvin-Xia\\EvoFence-wt\\harness-kernel\\l3-pi",
+    "exit": 1,
+    "signal": null,
+    "stdout": "{\"name\":\"@earendil-works/pi-coding-agent\",\"version\":\"0.99.2\"}\n",
+    "stderr": ""
+  },
+  "files": [
+    {
+      "file": "package.json",
+      "pinnedSha256": "627631b613ba4ca29eba8df793f5280fd20b19f01d73826e9ffda14c15def5dc",
+      "installedSha256": "066850c1badb43cf107c26e5b95262dbde84e3514c75348f363009d5ba9ce42d"
+    },
+    {
+      "file": "dist/core/sdk.js",
+      "pinnedSha256": "b49c2843197166bb84283edcb7702b91346d8fbaed2b0b8c70e5277dd78bcf5f",
+      "installedSha256": "fe643170de3d259c7e06179d9e18270a009dfb54df915f6e3de515425b8d009b"
+    },
+    {
+      "file": "dist/core/agent-session.js",
+      "pinnedSha256": "5ebfae51db5a900596145159428e7cb57d195af9d54a28f41d4ac8ff1bfd5729",
+      "installedSha256": "4da636cea504ccec903c7b39f5eb1553f4f64469408f06e5b7938c7682b131d1"
+    },
+    {
+      "file": "dist/core/model-runtime.js",
+      "pinnedSha256": "bae3c3feb7928c7702c3d98a3454660bee1647064dd449472fc6308c354fbc25",
+      "installedSha256": "da26f76339a031456f6d239a249159231776f760ab4ac538c6b54c417dea6f67"
+    },
+    {
+      "file": "dist/core/extensions/types.d.ts",
+      "pinnedSha256": "14d00e645b453f4361440da6fcda86ed6cef9a8fc36d483a621a0250e0d4a396",
+      "installedSha256": "6c78c89ad1ffb421e81ff0ad11ceff1a635b21fd818a32aa3e87009392298d9f"
+    },
+    {
+      "file": "node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+      "pinnedSha256": "a2397cb3114a3d1a05993f6f19671ecbcc85540d8f8c59a233808c717df2682c",
+      "installedSha256": "8167bfe47b0c9cc99a653d84f24ad055128e66888429f9f954e063918c074ea0"
+    }
+  ],
+  "nativeSessionSmoke": "not run",
+  "providerLive": "unknown/blocked",
+  "apiRequests": 0,
+  "newUsage": null,
+  "estimatedUsd": null,
+  "budgetMutation": false,
+  "limitations": [
+    "L1 0.87.1 native/provider traces are historical reference, not evidence for this L3 binding",
+    "No installation or replacement by 0.99.2"
+  ]
+}
