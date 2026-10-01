@@ -1,0 +1,43 @@
+/**
+ * `evofence.storage` — the memory reference implementations of the storage ports.
+ *
+ * The single entry point for this directory. Callers import from here, not from a leaf module, so
+ * the internal file split can move without breaking a consumer. Ports are injected (`DigestPort`);
+ * nothing here is constructed or executed on import, and there is no default backend.
+ */
+export { createMemoryEventStore, type MemoryEventStore } from './memory-event-store.js';
+export { createMemorySnapshotStore, type MemorySnapshotStore } from './memory-snapshot-store.js';
+export { createMemoryArtifactStore } from './memory-artifact-store.js';
+export { intendedIds, projectOutbox, reconcileIds } from './outbox.js';
+export { replay, verifyProjection } from './projection.js';
+export { canonical, identityDigest, type DigestPort } from './identity.js';
+export { storeFail, storeOk, type StoreErr, type StoreOk, type StoreResult } from './contracts.js';
+export type {
+  AppendOutcome,
+  AppendRequest,
+  ArtifactRef,
+  ArtifactStore,
+  CreateSessionInput,
+  DispatchClaim,
+  DispatchInput,
+  DispatchMode,
+  Effect,
+  Event,
+  EventDraft,
+  EventStore,
+  ExportedSession,
+  JournalProjection,
+  NodeStateEntry,
+  OutboxEntryProjection,
+  OutboxProjection,
+  ProtocolEnvelope,
+  Receipt,
+  ReceiptInput,
+  ReceiptOutcome,
+  Recovery,
+  ReplayState,
+  SessionHandle,
+  SnapshotInput,
+  SnapshotStore,
+  StoredSnapshot,
+} from './contracts.js';
