@@ -89,6 +89,15 @@ export function capabilityStatus(matrix: CapabilityMatrix, capability: string): 
   return matrix[capability]?.status ?? 'unknown';
 }
 
+/**
+ * Reconcile reads native state; the same static demand serves `HostPort.reconcile` and its effect.
+ * A module-level literal, not a call: module scope stays free of function execution (I05).
+ */
+export const RECONCILE_REQUIREMENTS: readonly CapabilityRequirement[] = [
+  { capability: 'nativeSessionBinding', accepts: VERIFIED, because: 'reconcile reads native state for that session' },
+  { capability: 'settledAndIdle', accepts: VERIFIED, because: 'an unresolved turn cannot be read as an outcome' },
+];
+
 /** The base demands of one effect kind, independent of payload. */
 const BASE_REQUIREMENTS: Readonly<Record<EffectKind, readonly CapabilityRequirement[]>> = {
   'host.agent': [
@@ -102,38 +111,30 @@ const BASE_REQUIREMENTS: Readonly<Record<EffectKind, readonly CapabilityRequirem
   'host.delegate': [
     { capability: 'sdkChildSessionIsolation', accepts: VERIFIED_OR_PARTIAL, because: 'a child needs its own transcript identity' },
   ],
-  'host.cancel': [], // filled by `cancelRequirements`, which is shared with `HostPort.cancel`
+  // `host.cancel` carries no base demand on purpose (R6): a weak cancellation guarantee becomes
+  // `unconfirmed`/`unknown` here, never a dispatch refusal. `cancelConfirmationCapability` names
+  // the per-target guarantee the confirmation actually rests on.
+  'host.cancel': [],
   'host.activate': [
     { capability: 'nativeSessionBinding', accepts: VERIFIED, because: 'activation targets one real host session' },
     { capability: 'settledAndIdle', accepts: VERIFIED, because: 'idle is a precondition, and the new snapshot must be real' },
   ],
-  'host.reconcile': reconcileRequirements(),
+  'host.reconcile': RECONCILE_REQUIREMENTS,
   'timer.wait': [
     { capability: 'settledAndIdle', accepts: VERIFIED_OR_PARTIAL, because: 'the injected clock/timer drives the wait' },
   ],
 };
 
-/** Reconcile reads native state; the same demand serves `HostPort.reconcile` and its effect. */
-export function reconcileRequirements(): readonly CapabilityRequirement[] {
-  return [
-    { capability: 'nativeSessionBinding', accepts: VERIFIED, because: 'reconcile reads native state for that session' },
-    { capability: 'settledAndIdle', accepts: VERIFIED, because: 'an unresolved turn cannot be read as an outcome' },
-  ];
-}
-
-/** The native abort is always needed to confirm a stop; a cascade needs a second guarantee. */
-export function cancelRequirements(targetCount: number): readonly CapabilityRequirement[] {
-  const requirements: CapabilityRequirement[] = [
-    { capability: 'sdkAbort', accepts: VERIFIED_OR_PARTIAL, because: 'a cancel confirmation comes from the native abort' },
-  ];
-  if (targetCount > 1) {
-    requirements.push({
-      capability: 'parentChildCancellation',
-      accepts: VERIFIED,
-      because: 'stopping more than one target needs a cascade the host has to confirm',
-    });
-  }
-  return requirements;
+/**
+ * The per-target guarantee a stop needs (`sdkAbort` for a loop, `toolCancellation` for a tool,
+ * `parentChildCancellation` for a delegated child). R6 is explicit that a weak cancellation
+ * guarantee is **not** a dispatch gate: the target comes back `unconfirmed`, the cancel result
+ * stays `unknown`, and the cancellation action itself is never refused as unsupported.
+ */
+export function cancelConfirmationCapability(kind: EffectKind): string {
+  if (kind === 'host.tool') return 'toolCancellation';
+  if (kind === 'host.delegate') return 'parentChildCancellation';
+  return 'sdkAbort';
 }
 
 /** A fresh transcript needs child-session identity; an additive packet needs the context seam. */
@@ -169,7 +170,8 @@ export function requiredCapabilities(
   effect: Effect,
   demands: readonly CapabilityRequirement[] = [],
 ): readonly CapabilityRequirement[] {
-  if (effect.kind === 'host.cancel') return [...cancelRequirements(effect.payload.targetIds.length), ...demands];
+  // `host.cancel` deliberately contributes no base demand: R6 forbids letting a weak cancel
+  // guarantee become a dispatch refusal, so the per-target confirmation carries the honesty.
   return [...BASE_REQUIREMENTS[effect.kind], ...payloadRequirements(effect), ...demands];
 }
 

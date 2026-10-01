@@ -19,7 +19,7 @@
  *   - invoke anything during `reconcile`, which only reads back what was recorded.
  */
 import { CURRENT_SCHEMA_VERSION, RUNTIME_NAMESPACE, fail } from '../../protocol/index.js';
-import { cancelRequirements, capabilityGate, contextRequirements, reconcileRequirements, requiredCapabilities } from './capabilities.js';
+import { RECONCILE_REQUIREMENTS, cancelConfirmationCapability, capabilityGate, capabilityStatus, contextRequirements, requiredCapabilities } from './capabilities.js';
 import { dedupeUsage, stableStringify, usageIsComplete } from './usage.js';
 import {
   err,
@@ -29,6 +29,7 @@ import {
   type BoardOwner,
   type CancelOutcome,
   type CancelRequest,
+  type CancelTarget,
   type CapabilityMatrix,
   type Clock,
   type ContextInjection,
@@ -110,18 +111,23 @@ export function createFakeHost(config: FakeHostConfig): FakeHost {
   const dispatched = new Set<string>();
   let invocations = 0;
 
-  function buildReceipt(effect: Effect, status: ReceiptStatus, error: Receipt['error'], suffix = ''): Receipt {
+  function buildReceipt(
+    effect: Effect,
+    status: ReceiptStatus,
+    error: Receipt['error'],
+    options: { suffix?: string; observability?: readonly string[] } = {},
+  ): Receipt {
     const invocation = script.hostInvocationId?.[effect.effectId] ?? `invocation:${effect.effectId}`;
     return {
       protocol: PROTOCOL,
-      receiptId: `receipt:${effect.effectId}:${effect.idempotencyKey}${suffix}`,
+      receiptId: `receipt:${effect.effectId}:${effect.idempotencyKey}${options.suffix ?? ''}`,
       effectId: effect.effectId,
       hostInvocationId: status === 'unknown' ? null : invocation,
       binding: effect.binding,
       status,
       artifactRefs: status === 'completed' ? [...(script.artifacts?.[effect.effectId] ?? [])] : [],
       usage: [...(script.usage?.[effect.effectId] ?? [])],
-      observability: status === 'unknown' ? [] : [`${config.host}-native`],
+      observability: options.observability ?? (status === 'unknown' ? [] : [`${config.host}-native`]),
       error,
     };
   }
@@ -131,6 +137,45 @@ export function createFakeHost(config: FakeHostConfig): FakeHost {
     lastReceipt.set(effect.effectId, receipt);
     lastStatus.set(effect.effectId, receipt.status);
     if (receipt.status !== 'not-executed') dispatched.add(effect.effectId);
+  }
+
+  /** One target's cancellation state. R6: a weak guarantee is `unconfirmed`, never a refusal. */
+  function confirmationFor(targetId: string): CancelTarget {
+    const effect = effects.get(targetId);
+    if (effect === undefined) return { targetId, confirmation: 'not-executed', observability: [] };
+    const override = script.cancelConfirmed?.[targetId];
+    const confirmable =
+      override ??
+      (config.cancellation.status === 'verified' && capabilityStatus(config.capabilities, cancelConfirmationCapability(effect.kind)) === 'verified');
+    return confirmable
+      ? { targetId, confirmation: 'native-ack', observability: [`${config.host}-abort-ack`] }
+      : { targetId, confirmation: 'unconfirmed', observability: [] };
+  }
+
+  /** The cancel decision itself. No capability gate: R6 keeps an unconfirmed stop as `unknown`. */
+  function cancelOutcome(request: CancelRequest): CancelOutcome {
+    const targets = request.targetIds.map(confirmationFor);
+    const unconfirmed = targets.filter((target) => target.confirmation === 'unconfirmed').map((target) => target.targetId);
+    if (unconfirmed.length > 0) {
+      return { status: 'unknown', targets, error: fail('EFK_CANCEL_UNCONFIRMED', `${config.host} did not confirm every cancel target`, unconfirmed) };
+    }
+    return { status: 'cancelled', targets, error: null };
+  }
+
+  /** Read back what was recorded. Reads the invocation log only; it never re-runs an effect. */
+  function reconcileOutcomes(request: ReconcileRequest): readonly ReconcileOutcome[] {
+    return request.targetIds.map((effectId): ReconcileOutcome => {
+      const effect = effects.get(effectId);
+      if (effect === undefined) return { effectId, verdict: 'not-executed', receipt: null, error: null };
+      const resolved = script.reconcile?.[effectId];
+      if (resolved === undefined) {
+        return { effectId, verdict: 'unknown', receipt: lastReceipt.get(effectId) ?? null, error: fail('EFK_EFFECT_UNKNOWN', `no evidence yet for ${effectId}`, [effectId]) };
+      }
+      if (resolved === 'not-executed') return { effectId, verdict: 'not-executed', receipt: null, error: null };
+      const receipt = buildReceipt(effect, resolved, statusError(resolved, effect), { suffix: ':reconciled' });
+      record(effect, receipt);
+      return { effectId, verdict: 'resolved', receipt, error: null };
+    });
   }
 
   async function execute(authorized: AuthorizedEffect): Promise<HostResult<Receipt>> {
@@ -145,6 +190,23 @@ export function createFakeHost(config: FakeHostConfig): FakeHost {
     }
     const allowed = capabilityGate(config.host, config.capabilities, requiredCapabilities(effect, authorized.demands ?? []));
     if (!allowed.ok) return allowed;
+    if (effect.kind === 'host.cancel') {
+      const outcome = cancelOutcome({ sessionId: effect.binding.sessionId, targetIds: effect.payload.targetIds });
+      const receipt = buildReceipt(effect, outcome.status === 'cancelled' ? 'cancelled' : 'unknown', outcome.error, {
+        observability: [...new Set(outcome.targets.flatMap((target) => target.observability))],
+      });
+      record(effect, receipt);
+      return ok(receipt);
+    }
+    if (effect.kind === 'host.reconcile') {
+      const outcomes = reconcileOutcomes({ sessionId: effect.binding.sessionId, targetIds: effect.payload.targetIds });
+      const unknowns = outcomes.filter((outcome) => outcome.verdict === 'unknown').map((outcome) => outcome.effectId);
+      const allNotExecuted = outcomes.length > 0 && outcomes.every((outcome) => outcome.verdict === 'not-executed');
+      const status: ReceiptStatus = unknowns.length > 0 ? 'unknown' : allNotExecuted ? 'not-executed' : 'completed';
+      const receipt = buildReceipt(effect, status, unknowns.length > 0 ? fail('EFK_EFFECT_UNKNOWN', `reconcile left ${unknowns.length} effect(s) unknown`, unknowns) : null);
+      record(effect, receipt);
+      return ok(receipt);
+    }
     if (config.clock.now() > effect.deadline) {
       const expired = buildReceipt(effect, 'not-executed', null);
       record(effect, expired);
@@ -162,42 +224,13 @@ export function createFakeHost(config: FakeHostConfig): FakeHost {
   }
 
   async function cancel(request: CancelRequest): Promise<HostResult<CancelOutcome>> {
-    const allowed = capabilityGate(config.host, config.capabilities, cancelRequirements(request.targetIds.length));
-    if (!allowed.ok) return allowed;
-    const targets = request.targetIds.map((targetId) => {
-      if (!dispatched.has(targetId)) return { targetId, confirmation: 'not-executed' as const, observability: [] as string[] };
-      const confirmed = script.cancelConfirmed?.[targetId] ?? config.cancellation.status === 'verified';
-      return confirmed
-        ? { targetId, confirmation: 'native-ack' as const, observability: [`${config.host}-abort-ack`] }
-        : { targetId, confirmation: 'unconfirmed' as const, observability: [] as string[] };
-    });
-    const unconfirmed = targets.filter((target) => target.confirmation === 'unconfirmed').map((target) => target.targetId);
-    if (unconfirmed.length > 0) {
-      return ok({
-        status: 'unknown',
-        targets,
-        error: fail('EFK_CANCEL_UNCONFIRMED', `${config.host} did not confirm every cancel target`, unconfirmed),
-      });
-    }
-    return ok({ status: 'cancelled', targets, error: null });
+    return ok(cancelOutcome(request));
   }
 
   async function reconcile(request: ReconcileRequest): Promise<HostResult<readonly ReconcileOutcome[]>> {
-    const allowed = capabilityGate(config.host, config.capabilities, reconcileRequirements());
+    const allowed = capabilityGate(config.host, config.capabilities, RECONCILE_REQUIREMENTS);
     if (!allowed.ok) return allowed;
-    const outcomes = request.targetIds.map((effectId): ReconcileOutcome => {
-      const effect = effects.get(effectId);
-      if (effect === undefined) return { effectId, verdict: 'not-executed', receipt: null, error: null };
-      const resolved = script.reconcile?.[effectId];
-      if (resolved === undefined) {
-        return { effectId, verdict: 'unknown', receipt: lastReceipt.get(effectId) ?? null, error: fail('EFK_EFFECT_UNKNOWN', `no evidence yet for ${effectId}`, [effectId]) };
-      }
-      if (resolved === 'not-executed') return { effectId, verdict: 'not-executed', receipt: null, error: null };
-      const receipt = buildReceipt(effect, resolved, statusError(resolved, effect), ':reconciled');
-      record(effect, receipt);
-      return { effectId, verdict: 'resolved', receipt, error: null };
-    });
-    return ok(outcomes);
+    return ok(reconcileOutcomes(request));
   }
 
   async function context(request: ContextRequest): Promise<HostResult<ContextInjection>> {

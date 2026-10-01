@@ -16,8 +16,9 @@
  *     differ; the port surfaces the difference rather than smoothing it away.
  *
  * Layering: `runtime` may import `protocol` only (`OWNERSHIP.md` §2 `allowedEdges`). No bare
- * specifier, no node builtin, no ambient clock — the `Clock` below is injected (I07), and
- * nothing is constructed or fetched at module scope (I05).
+ * specifier, no node builtin, no ambient clock — the `Clock` below is injected (I07), and module
+ * scope only defines static data and functions: it calls no port, constructs no backend and
+ * performs no I/O (I05).
  */
 import type { Decoded, ErrorEnvelope } from '../../protocol/index.js';
 

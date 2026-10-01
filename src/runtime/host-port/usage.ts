@@ -51,8 +51,12 @@ export function dedupeUsage(usages: readonly Usage[]): HostResult<readonly Usage
 
 /**
  * `true` only when there is at least one row, every row is `complete`, and the reasoning subset
- * is not larger than the output it is part of (S15). Unknown values staying `null` is fine; an
- * empty list is not evidence of a free request.
+ * is not larger than the output it is part of. Unknown values staying `null` is fine; an empty
+ * list is not evidence of a free request.
+ *
+ * Scope note: this is the minimal S15 check the port needs. The full S15 arithmetic (`total`
+ * against its components, cached/uncached split accounting) is `UsageCompleteness` and belongs to
+ * the policy lane — do not read this function as a complete usage validator.
  */
 export function usageIsComplete(usages: readonly Usage[]): boolean {
   if (usages.length === 0) return false;

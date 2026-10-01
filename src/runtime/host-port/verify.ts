@@ -10,13 +10,15 @@
  *     **budget** (`reservationRef` for a billable kind). Its output is the read-only
  *     `AuthorizedEffect` that `execute` accepts.
  *   - `verifyReceipt` classifies an arriving receipt as `current` or `archived`: a receipt whose
- *     epoch/attempt moved on is kept as evidence but never applied (`EFK_RECEIPT_STALE`).
+ *     immutable binding moved on (any of epoch/attempt/base/graph/host session, not just the
+ *     ordinal) is kept as evidence but never applied (`EFK_RECEIPT_STALE`).
  *   - `verifyBoardAuthority` is A15: a native board owner that has no matching kernel claim is
  *     `EFK_HOST_BOARD_AUTHORITY_CONFLICT`, because the board projects the journal and does not
  *     own a second claim.
  */
 import { decode, fail } from '../../protocol/index.js';
 import { grantIsLive } from './grant.js';
+import { stableStringify } from './usage.js';
 import {
   err,
   ok,
@@ -98,12 +100,11 @@ export function verifyReceipt(input: unknown, effect: Effect): HostResult<Receip
       fail('EFK_ARTIFACT_BINDING_MISMATCH', `receipt ${receipt.receiptId} answers effect ${receipt.effectId}, not ${effect.effectId}`, [receipt.receiptId]),
     );
   }
-  const sameBinding =
-    receipt.binding.epoch === effect.binding.epoch &&
-    receipt.binding.attemptId === effect.binding.attemptId &&
-    receipt.binding.attemptOrdinal === effect.binding.attemptOrdinal;
-  if (!sameBinding) {
-    return ok({ disposition: 'archived', reason: 'epoch/attempt moved on; evidence kept, nothing applied', receipt });
+  // `INTERFACES.md` §5 archives a receipt when epoch/attempt/base/fencing no longer match. Comparing
+  // the whole immutable binding (canonical, key-sorted) covers base and graph too, and cannot drift
+  // field-by-field the way an enumerated conjunction can.
+  if (stableStringify(receipt.binding) !== stableStringify(effect.binding)) {
+    return ok({ disposition: 'archived', reason: 'epoch/attempt/base moved on; evidence kept, nothing applied', receipt });
   }
   return ok({ disposition: 'current', reason: null, receipt });
 }

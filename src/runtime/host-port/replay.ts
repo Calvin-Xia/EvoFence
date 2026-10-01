@@ -21,13 +21,9 @@ export interface ReplayView {
   readonly unknowns: readonly string[];
 }
 
-/** Pure. Same records in, byte-identical view out (I07). */
+/** Pure. Same records in, byte-identical view out (I07). `unknowns` is a set: one id once. */
 export function replayView(records: readonly CommittedRecord[]): ReplayView {
   const byEffect: Record<string, ReceiptStatus> = {};
-  const unknowns: string[] = [];
-  for (const record of records) {
-    byEffect[record.effectId] = record.receipt.status;
-    if (record.receipt.status === 'unknown') unknowns.push(record.effectId);
-  }
-  return { byEffect, unknowns: unknowns.sort() };
+  for (const record of records) byEffect[record.effectId] = record.receipt.status;
+  return { byEffect, unknowns: Object.keys(byEffect).filter((effectId) => byEffect[effectId] === 'unknown').sort() };
 }

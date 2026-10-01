@@ -265,10 +265,38 @@ test('DoD ②: a partial guarantee satisfies only the demand that accepts partia
   failure(await host.execute({ effect: second, grant, demands: tierDemand }), 'EFK_CAPABILITY_UNSUPPORTED');
 });
 
-test('DoD ②: a cancel that needs a cascade the host never proved is unsupported', async () => {
-  const multi = await dsh().cancel({ sessionId: 'session-1', targetIds: ['effect-a', 'effect-b'] });
-  failure(multi, 'EFK_CAPABILITY_UNSUPPORTED');
-  assert.deepEqual(multi.error.refs, ['parentChildCancellation']);
+test('R6: a multi-target cancel is never refused; unconfirmed targets keep it unknown', async () => {
+  const outgoing = effectOf('host.delegate', { effectId: 'effect-delegate', payload: { context, graphRef } });
+  for (const [name, host] of [
+    ['dsh', dsh()],
+    ['pi', pi()],
+  ]) {
+    unwrap(await host.execute({ effect: agentEffect, grant }));
+    unwrap(await host.execute({ effect: outgoing, grant }));
+    const outcome = await host.cancel({ sessionId: 'session-1', targetIds: [agentEffect.effectId, outgoing.effectId] });
+    assert.equal(outcome.ok, true, `${name}: the cancel action itself is never a capability refusal`);
+    assert.equal(outcome.value.status, 'unknown');
+    assert.equal(outcome.error, undefined);
+    assert.equal(outcome.value.error.code, 'EFK_CANCEL_UNCONFIRMED');
+    const byTarget = Object.fromEntries(outcome.value.targets.map((target) => [target.targetId, target.confirmation]));
+    assert.equal(byTarget[outgoing.effectId], 'unconfirmed', `${name}: a delegated child needs parentChildCancellation`);
+  }
+  // negative control: no path here produces EFK_CAPABILITY_UNSUPPORTED
+  const host = dsh();
+  unwrap(await host.execute({ effect: agentEffect, grant }));
+  const outcome = await host.cancel({ sessionId: 'session-1', targetIds: [agentEffect.effectId, 'effect-never'] });
+  assert.notEqual(outcome.error?.code ?? null, 'EFK_CAPABILITY_UNSUPPORTED');
+  assert.equal(outcome.value.targets.find((target) => target.targetId === 'effect-never').confirmation, 'not-executed');
+});
+
+test('executing a host.cancel effect carries R6 semantics, not a generic success', async () => {
+  const host = dsh();
+  unwrap(await host.execute({ effect: agentEffect, grant }));
+  const cancelEffect = effectOf('host.cancel', { effectId: 'effect-cancel', payload: { targetIds: [agentEffect.effectId] } });
+  const receipt = unwrap(await host.execute({ effect: cancelEffect, grant }));
+  assert.equal(receipt.status, 'unknown');
+  assert.equal(receipt.error.code, 'EFK_CANCEL_UNCONFIRMED');
+  assert.equal(host.stats().invocations, 1, 'a cancel does not enter the model/tool invocation path');
 });
 
 test('R6: an unconfirmed cancel stays unknown, a confirmed one or a never-dispatched target does not', async () => {
@@ -371,7 +399,21 @@ test('stale receipts are archived, foreign receipts are refused', async () => {
   assert.equal(unwrap(verifyReceipt(receipt, agentEffect)).disposition, 'current');
   const movedOn = { ...agentEffect, binding: { ...binding, epoch: 4 } };
   assert.equal(unwrap(verifyReceipt(receipt, movedOn)).disposition, 'archived');
+  const baseChanged = { ...agentEffect, binding: { ...binding, baseDigest: `sha256:${'b'.repeat(64)}` } };
+  const archivedBase = unwrap(verifyReceipt(receipt, baseChanged));
+  assert.equal(archivedBase.disposition, 'archived', 'a receipt for a different workspace base must not apply');
+  assert.match(archivedBase.reason, /base/);
+  const graphMoved = { ...agentEffect, binding: { ...binding, graph: { ...binding.graph, revision: 2 } } };
+  assert.equal(unwrap(verifyReceipt(receipt, graphMoved)).disposition, 'archived');
   failure(verifyReceipt(receipt, { ...agentEffect, effectId: 'effect-other' }), 'EFK_ARTIFACT_BINDING_MISMATCH');
+});
+
+test('replayView reports each unknown effect once', () => {
+  const record = (effectId, status) => ({ effectId, receipt: { status } });
+  const view = replayView([record('e-dup', 'unknown'), record('e-dup', 'unknown'), record('e-ok', 'completed')]);
+  assert.deepEqual(view.unknowns, ['e-dup']);
+  assert.equal(view.byEffect['e-dup'], 'unknown');
+  assert.equal(view.byEffect['e-ok'], 'completed');
 });
 
 test('A15: a native board owner with no matching kernel claim is a conflict', async () => {
