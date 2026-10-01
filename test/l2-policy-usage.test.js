@@ -64,3 +64,15 @@ test('usage identity is stable across key order', () => {
   assert.equal(usageIdentity(a), usageIdentity(b));
   assert.notEqual(usageIdentity(a), usageIdentity(fixtures.usage({ requestId: 'r1', output: 51 })));
 });
+
+// nit-3: `complete` from a source the kernel cannot trust is a contradiction, not a settled value.
+test('complete usage from an unknown source is a conflict and is not settled', () => {
+  const normalized = normalizeUsage(fixtures.usage({ complete: true, source: 'unknown' }));
+  assert.equal(normalized.ok, false);
+  assert.equal(normalized.error.code, 'EFK_USAGE_CONFLICT');
+
+  const completeness = usageCompleteness([fixtures.usage({ requestId: 'r1', complete: true, source: 'unknown' })], ['r1']);
+  assert.equal(completeness.complete, false);
+  assert.deepEqual(completeness.incompleteRequestIds, ['r1']);
+  assert.equal(completeness.knownMicros, null);
+});

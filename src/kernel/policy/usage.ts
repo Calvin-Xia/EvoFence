@@ -26,7 +26,8 @@ export interface NormalizedUsage {
 
 function sum(values: readonly (number | null)[]): number | null {
   if (values.some((value) => value === null)) return null;
-  return values.reduce<number>((total, value) => total + (value ?? 0), 0);
+  const present = values.filter((value): value is number => value !== null);
+  return present.reduce((total, value) => total + value, 0);
 }
 
 /**
@@ -42,6 +43,12 @@ export function normalizeUsage(usage: Usage): PolicyResult<NormalizedUsage> {
         `reasoning (${usage.reasoning}) exceeds output (${usage.output}); reasoning is a subset of output`,
         [usage.requestId],
       ),
+    };
+  }
+  if (usage.complete && usage.source === 'unknown') {
+    return {
+      ok: false,
+      error: fail('EFK_USAGE_CONFLICT', `usage for ${usage.requestId} is marked complete but its source is unknown`, [usage.requestId]),
     };
   }
   if (usage.complete) {
@@ -119,14 +126,15 @@ export function usageCompleteness(usages: readonly Usage[], expectedRequestIds: 
   const missingRequestIds = expected.filter((requestId) => !byRequest.has(requestId));
   const incompleteRequestIds = expected.filter((requestId) => {
     const usage = byRequest.get(requestId);
-    return usage !== undefined && (!usage.complete || usage.estimatedUsdMicros === null);
+    return usage !== undefined && (!usage.complete || usage.estimatedUsdMicros === null || usage.source === 'unknown');
   });
   for (const requestId of byRequest.keys()) if (!expectedSet.has(requestId)) conflicting.add(requestId);
   const conflictingRequestIds = [...conflicting].sort();
 
   const complete = missingRequestIds.length === 0 && incompleteRequestIds.length === 0 && conflictingRequestIds.length === 0;
+  // `complete` proves every expected request is present, complete, known-source and non-null.
   const knownMicros = complete
-    ? expected.reduce((total, requestId) => total + (byRequest.get(requestId)?.estimatedUsdMicros ?? 0), 0)
+    ? expected.reduce((total, requestId) => total + byRequest.get(requestId)!.estimatedUsdMicros!, 0)
     : null;
 
   return { complete, knownMicros, missingRequestIds, incompleteRequestIds, conflictingRequestIds };

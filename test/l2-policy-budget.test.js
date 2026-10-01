@@ -178,3 +178,29 @@ test('actual usage above the reservation is recorded and reported as exhausted',
   assert.equal(over.error.code, 'EFK_BUDGET_EXHAUSTED');
   assert.equal(budgetSnapshot(over.ledger).settledMicros, 20000);
 });
+
+// minor-1 negative control: the per-request reserve is a real input boundary, not any number.
+test('a non-positive or non-integer per-request reserve is refused at open', () => {
+  for (const reservePerRequest of [0, 1.5, -1]) {
+    const result = openBudgetLedger(fixtures.budgetPolicy(), reservePerRequest);
+    assert.equal(result.ok, false, `expected ${reservePerRequest} to be refused`);
+    assert.equal(result.error.code, 'EFK_BUDGET_ENVELOPE_INCONSISTENT');
+  }
+});
+
+test('a negative settlement is refused and leaves the reservation intact', () => {
+  let ledger = open(fixtures.budgetPolicy(), 9547);
+  ledger = reserveOk(ledger, 'r1');
+  const negative = settle(ledger, { requestId: 'r1', micros: -1, complete: true, digest: 'u1' });
+  assert.equal(negative.error.code, 'EFK_SCHEMA_INVALID');
+  assert.equal(budgetSnapshot(negative.ledger).outstandingMicros, 9547);
+  assert.equal(budgetSnapshot(negative.ledger).settledMicros, 0);
+});
+
+test('a negative confirmed-unspent release is refused and keeps the reservation', () => {
+  let ledger = open(fixtures.budgetPolicy(), 9547);
+  ledger = reserveOk(ledger, 'r1');
+  const negative = releaseUnspent(ledger, { requestId: 'r1', confirmedUnspentMicros: -1 });
+  assert.equal(negative.error.code, 'EFK_SCHEMA_INVALID');
+  assert.equal(budgetSnapshot(negative.ledger).outstandingMicros, 9547);
+});

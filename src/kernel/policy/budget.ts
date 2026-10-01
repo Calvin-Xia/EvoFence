@@ -134,6 +134,12 @@ export function budgetSnapshot(ledger: BudgetLedger): BudgetSnapshot {
  * own envelope (`budget.changed` would have to be an explicit act, not an implicit widening).
  */
 export function openBudgetLedger(policy: BudgetPolicy, reservePerRequest: number): PolicyResult<BudgetLedger> {
+  if (!Number.isSafeInteger(reservePerRequest) || reservePerRequest < 1) {
+    return {
+      ok: false,
+      error: fail('EFK_BUDGET_ENVELOPE_INCONSISTENT', `reservePerRequest ${reservePerRequest} is not a positive integer micro-USD amount`, [policy.poolId]),
+    };
+  }
   if (policy.category === 'controlled-experiment' && policy.authorizationRef === null) {
     return { ok: false, error: fail('EFK_BUDGET_NOT_AUTHORIZED', 'controlled-experiment budget requires a real authorizationRef', [policy.poolId]) };
   }
@@ -224,6 +230,12 @@ export interface SettlementInput {
  * an exhausted cap.
  */
 export function settle(ledger: BudgetLedger, input: SettlementInput): BudgetTransition {
+  if (input.micros !== null && (!Number.isSafeInteger(input.micros) || input.micros < 0)) {
+    return {
+      ledger,
+      error: fail('EFK_SCHEMA_INVALID', `settlement micros for ${input.requestId} is not a non-negative integer (${input.micros})`, [input.requestId]),
+    };
+  }
   const existing = ledger.settlements.find((settlement) => settlement.requestId === input.requestId);
   if (existing !== undefined) {
     if (existing.digest === input.digest) return { ledger, error: null };
@@ -273,6 +285,12 @@ function releaseDigest(input: ReleaseInput): string {
  * way to make spend disappear.
  */
 export function releaseUnspent(ledger: BudgetLedger, input: ReleaseInput): BudgetTransition {
+  if (input.confirmedUnspentMicros !== null && (!Number.isSafeInteger(input.confirmedUnspentMicros) || input.confirmedUnspentMicros < 0)) {
+    return {
+      ledger,
+      error: fail('EFK_SCHEMA_INVALID', `confirmedUnspentMicros for ${input.requestId} is not a non-negative integer (${input.confirmedUnspentMicros})`, [input.requestId]),
+    };
+  }
   const digest = releaseDigest(input);
   const existing = ledger.settlements.find((settlement) => settlement.requestId === input.requestId);
   if (existing !== undefined) {
