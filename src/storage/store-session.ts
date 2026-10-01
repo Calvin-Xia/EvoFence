@@ -205,9 +205,10 @@ export function commitBatch(
     }
   }
 
-  // Pre-simulate with the same reducer the read path uses: a batch is accepted only if the reducer
-  // would accept it, so an accepted journal can never be unreplayable (e.g. a non-advancing or
-  // duplicate session.epoch-changed, or a transition with no binding/after).
+  // Pre-simulate with the same reducers the read path uses — journal replay and the outbox
+  // projection — so an accepted batch can never leave the journal unreplayable or the outbox
+  // permanently inconsistent (e.g. a non-advancing session.epoch-changed, a transition with no
+  // binding/after, a dispatched effect with no committed intention, or a receipt with no effect).
   const produced = session.events.length === 0 ? storeOk(emptyReplayState(session.sessionId, session.epoch)) : replay(session.events);
   if (!produced.ok) return produced;
 
@@ -246,6 +247,12 @@ export function commitBatch(
   if (!plannedReceipts.ok) return plannedReceipts;
   const simulated = replay(nextEvents, produced.value);
   if (!simulated.ok) return simulated;
+  const simulatedEffects = new Map(session.effects);
+  for (const planned of plannedEffects.value.additions) simulatedEffects.set(planned.effectId, planned);
+  const simulatedReceipts = new Map(session.receipts);
+  for (const planned of plannedReceipts.value) simulatedReceipts.set(planned.receiptId, planned);
+  const simulatedOutbox = projectOutbox([...session.events, ...nextEvents], simulatedEffects, simulatedReceipts);
+  if (!simulatedOutbox.ok) return simulatedOutbox;
 
   for (const event of nextEvents) {
     session.events.push(event);

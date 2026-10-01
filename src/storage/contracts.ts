@@ -11,11 +11,15 @@
  * referenced by `$ref` is widened by the `Wire` mapping, so the fields a consumer actually reads are
  * re-narrowed below. Nothing is re-declared: each narrowing points at the same frozen definition.
  *
- * Boundary: the store consumes values that `src/protocol`'s codec has already decoded — every port
- * signature takes `Decoded<K>`. The store does not re-decode them (the protocol layer documents
- * that callers decode once and then trust the result); what it does verify at its own persistence
- * boundary is identity, protocol version and journal continuity, not schema shape. Effect and
- * receipt content is additionally version-gated against the session's pinned protocol.
+ * Boundary: the store consumes values that `src/protocol`'s codec has already decoded — the port
+ * signatures take `Decoded<K>` — with two deliberate exceptions it decodes itself:
+ * `CreateSessionInput.protocol` (a real boundary input) and the `ArtifactRef`s passed to the artifact
+ * store. Apart from those, the store does not re-decode transaction content (the protocol layer
+ * documents that callers decode once and then trust the result); what it verifies at its own
+ * persistence boundary is identity, protocol version, `ArtifactRef` schema/digest binding, and
+ * journal continuity — not the schema shape of events, effects or receipts. Effect and receipt
+ * content is additionally version-gated against the session's pinned protocol; the closed
+ * `Event.type` enum is therefore a caller obligation, not a store-side decode.
  *
  * Two store-internal concepts have no wire object on purpose (`SCHEMAS.md` §3): the dispatch claim
  * and the idempotency request index. Their whole lifetime is inside one `EventStore` CAS

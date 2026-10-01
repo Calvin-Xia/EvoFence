@@ -78,6 +78,37 @@ function effect(effectId, over = {}) {
   };
 }
 
+function receipt(receiptId, effectId, status, over = {}) {
+  return {
+    protocol: PROTOCOL,
+    receiptId,
+    effectId,
+    hostInvocationId: null,
+    binding: binding(),
+    status,
+    artifactRefs: [],
+    usage: [],
+    observability: [],
+    error: null,
+    ...over,
+  };
+}
+
+function receiptRef(receiptId) {
+  return {
+    protocol: PROTOCOL,
+    id: receiptId,
+    digest: digestPort.digest(`receipt:${receiptId}`),
+    producer: { actorId: 'kernel-1', kind: 'kernel', identityRef: null },
+    binding: null,
+    schema: { name: 'Receipt', version: '1.1.0', digest: digestPort.digest('schema') },
+    location: `artifact://${receiptId}`,
+    visibility: 'internal',
+    expiresAt: null,
+    partition: 'not-evaluation',
+  };
+}
+
 const ok = (result, what) => {
   assert.equal(result.ok, true, `${what ?? 'call'} expected success, got ${JSON.stringify(result.error)}`);
   return result.value;
@@ -251,6 +282,35 @@ test('cp2 effect identity and idempotency key cannot be rebound', () => {
     }),
     'EFK_IDEMPOTENCY_COLLISION',
   );
+});
+
+test('cp2 a dispatched effect with no committed intention is refused by the pre-simulation', () => {
+  const store = openStore();
+  err(
+    append(store, {
+      requestId: 'c1',
+      expectedRevision: 0,
+      events: [draft('effect.dispatched', { eventId: 'd1', payload: payload({ effectId: 'fx1' }) })],
+    }),
+    'EFK_INVARIANT_VIOLATION',
+  );
+  ok(store.outbox(SESSION), 'a refused batch leaves a consistent outbox');
+});
+
+test('cp2 a receipt with no committed effect is refused by the pre-simulation', () => {
+  const store = openStore();
+  err(
+    append(store, {
+      requestId: 'c2',
+      expectedRevision: 0,
+      events: [
+        draft('receipt.applied', { eventId: 'ra1', payload: payload({ effectId: 'fx1', objectRef: receiptRef('r1') }) }),
+      ],
+      receipts: [receipt('r1', 'fx1', 'completed')],
+    }),
+    'EFK_INVARIANT_VIOLATION',
+  );
+  ok(store.outbox(SESSION), 'a refused batch leaves a consistent outbox');
 });
 
 test('cp1 a stale epoch writer is refused', () => {
