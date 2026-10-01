@@ -1,0 +1,12 @@
+import test from 'node:test';
+import { concurrency, cancellation, budget } from '../verification/kernel/faults.mjs';
+import { crashBefore, crashAfter, crashIntended, epoch, staleLease, boundaryErrors } from '../verification/kernel/recovery.mjs';
+test('kernel verify cp2 concurrent planners and dispatchers fence two attempts', concurrency);
+test('kernel verify cp2 unconfirmed cancel keeps unknown and reserved funds after restart', cancellation);
+test('kernel verify cp2 policy rejects oversubscription and separates reservation from settlement', budget);
+test('kernel verify cp2 crash before atomic commit dispatches nothing', crashBefore);
+test('kernel verify cp2 crash after commit before claim restores safe pending intention', crashIntended);
+test('kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence', crashAfter);
+test('kernel verify cp2 old epoch webhook cannot advance state or settle funds', epoch);
+test('kernel verify cp2 expired fencing lease prevents dispatch and settlement', staleLease);
+test('kernel verify boundary protocol authority evaluator identity journal board and source pin refusals', boundaryErrors);

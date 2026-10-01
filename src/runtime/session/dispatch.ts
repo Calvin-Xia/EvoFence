@@ -1,8 +1,8 @@
 /** A claimed effect is never sent twice, even when the subsequent host call throws. */
 import { grantCovers, verifyBoardAuthority, verifyEffect } from '../host-port/index.js';
 import { asInstant } from '../../protocol/index.js';
-import { storeFail, storeOk } from '../../storage/index.js';
-import { readArtifact, type ArtifactRef as ConsumerArtifact } from '../../storage/artifacts/index.js';
+import { storeFail, storeOk } from '../../kernel/store/index.js';
+import { readArtifact, type ArtifactRef as ConsumerArtifact } from '../../kernel/artifacts/index.js';
 import { bindingFor } from './project.js';
 import { dispatchAdmission, planRound } from './plans.js';
 import { commit, idFor } from './journal.js';

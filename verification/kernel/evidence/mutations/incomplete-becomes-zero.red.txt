@@ -1,0 +1,33 @@
+(node:49384) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (11.3511ms)
+[mutation-applied:incomplete-becomes-zero] dist/runtime/session/project.js
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 189.4851
+
+✖ failing tests:
+
+test at test\l2-kernel-verify-faults.test.js:6:1
+✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (11.3511ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.budget (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/faults.mjs:93:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

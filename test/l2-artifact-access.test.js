@@ -16,7 +16,7 @@ import {
   readArtifact,
   visibilityCeiling,
   withheldReason,
-} from '../dist/storage/artifacts/index.js';
+} from '../dist/kernel/artifacts/index.js';
 
 const PROTOCOL = { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' };
 const digestPort = {

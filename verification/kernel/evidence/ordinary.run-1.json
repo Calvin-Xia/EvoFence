@@ -1,0 +1,2287 @@
+{
+  "name": "ordinary",
+  "boundary": "production memory stores + fake host; serialized kernel restart; no OS crash durability",
+  "checkpoints": [
+    {
+      "label": "create-accepted",
+      "revision": 1,
+      "epoch": 1,
+      "dispatchMode": "active",
+      "nodeStates": [],
+      "attempts": {},
+      "outbox": {
+        "entries": [],
+        "archivedReceiptIds": []
+      },
+      "budget": {
+        "poolId": "pool-verify",
+        "category": "development",
+        "capMicros": 800,
+        "reservePerRequest": 100,
+        "maxRequests": 8,
+        "maxConcurrentRequests": 4,
+        "reservations": [],
+        "settlements": [],
+        "requestCount": 0
+      },
+      "unknown": [],
+      "calls": {
+        "observe": 0,
+        "execute": 0,
+        "reconcile": 0,
+        "evaluate": 0,
+        "clock": 0,
+        "inspect": 0,
+        "resume": 0
+      },
+      "snapshotDigest": "sha256:d77da1ad30814ea808a059d31664e055a6f7c5e0556a57e9f1f016be5af4d8b1"
+    },
+    {
+      "label": "receipt-applied-verifying",
+      "revision": 5,
+      "epoch": 1,
+      "dispatchMode": "active",
+      "nodeStates": [
+        {
+          "nodeId": "work",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "state": "verifying",
+          "sinceSequence": 10
+        }
+      ],
+      "attempts": {
+        "work": 1
+      },
+      "outbox": {
+        "entries": [
+          {
+            "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "state": "resolved",
+            "resolvedStatus": "completed"
+          }
+        ],
+        "archivedReceiptIds": []
+      },
+      "budget": {
+        "poolId": "pool-verify",
+        "category": "development",
+        "capMicros": 800,
+        "reservePerRequest": 100,
+        "maxRequests": 8,
+        "maxConcurrentRequests": 4,
+        "reservations": [],
+        "settlements": [
+          {
+            "requestId": "node0:a1:e1",
+            "micros": 37,
+            "complete": true,
+            "digest": "[\"node0:a1:e1\",\"provider\",10,0,0,3,1,13,37,null,true]"
+          }
+        ],
+        "requestCount": 1
+      },
+      "unknown": [],
+      "calls": {
+        "observe": 1,
+        "execute": 1,
+        "reconcile": 0,
+        "evaluate": 0,
+        "clock": 4,
+        "inspect": 2,
+        "resume": 0
+      },
+      "snapshotDigest": "sha256:23a0b58617adfe1b6d4a75677c572f5d731c72991e803cbe3fda123d4693113a"
+    },
+    {
+      "label": "registered-evaluation-succeeded",
+      "revision": 6,
+      "epoch": 1,
+      "dispatchMode": "active",
+      "nodeStates": [
+        {
+          "nodeId": "work",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "state": "succeeded",
+          "sinceSequence": 12
+        }
+      ],
+      "attempts": {
+        "work": 1
+      },
+      "outbox": {
+        "entries": [
+          {
+            "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "state": "resolved",
+            "resolvedStatus": "completed"
+          }
+        ],
+        "archivedReceiptIds": []
+      },
+      "budget": {
+        "poolId": "pool-verify",
+        "category": "development",
+        "capMicros": 800,
+        "reservePerRequest": 100,
+        "maxRequests": 8,
+        "maxConcurrentRequests": 4,
+        "reservations": [],
+        "settlements": [
+          {
+            "requestId": "node0:a1:e1",
+            "micros": 37,
+            "complete": true,
+            "digest": "[\"node0:a1:e1\",\"provider\",10,0,0,3,1,13,37,null,true]"
+          }
+        ],
+        "requestCount": 1
+      },
+      "unknown": [],
+      "calls": {
+        "observe": 1,
+        "execute": 1,
+        "reconcile": 0,
+        "evaluate": 1,
+        "clock": 6,
+        "inspect": 2,
+        "resume": 0
+      },
+      "snapshotDigest": "sha256:54bf4539aadf1d430d79e678fb32732d474321bb04830b07b033621ee99b8ccf"
+    },
+    {
+      "label": "close-export-restore-equal",
+      "revision": 6,
+      "epoch": 1,
+      "dispatchMode": "active",
+      "nodeStates": [
+        {
+          "nodeId": "work",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "state": "succeeded",
+          "sinceSequence": 12
+        }
+      ],
+      "attempts": {
+        "work": 1
+      },
+      "outbox": {
+        "entries": [
+          {
+            "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "state": "resolved",
+            "resolvedStatus": "completed"
+          }
+        ],
+        "archivedReceiptIds": []
+      },
+      "budget": {
+        "poolId": "pool-verify",
+        "category": "development",
+        "capMicros": 800,
+        "reservePerRequest": 100,
+        "maxRequests": 8,
+        "maxConcurrentRequests": 4,
+        "reservations": [],
+        "settlements": [
+          {
+            "requestId": "node0:a1:e1",
+            "micros": 37,
+            "complete": true,
+            "digest": "[\"node0:a1:e1\",\"provider\",10,0,0,3,1,13,37,null,true]"
+          }
+        ],
+        "requestCount": 1
+      },
+      "unknown": [],
+      "calls": {
+        "observe": 1,
+        "execute": 1,
+        "reconcile": 0,
+        "evaluate": 1,
+        "clock": 6,
+        "inspect": 2,
+        "resume": 0
+      },
+      "snapshotDigest": "sha256:54bf4539aadf1d430d79e678fb32732d474321bb04830b07b033621ee99b8ccf"
+    }
+  ],
+  "log": [
+    {
+      "port": "EventStore.append",
+      "request": {
+        "sessionId": "s-ordinary",
+        "requestId": "create:54e7d544a928796b3704d69bdddae2d9",
+        "expectedRevision": 0,
+        "epoch": 1,
+        "events": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r1:graph",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "create:54e7d544a928796b3704d69bdddae2d9",
+            "type": "graph.accepted",
+            "visibility": "internal",
+            "payload": {
+              "binding": null,
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "graph:20f66c70c86c063fec7611d70f103c84",
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+                "producer": {
+                  "actorId": "kernel",
+                  "kind": "kernel",
+                  "identityRef": null
+                },
+                "binding": null,
+                "schema": {
+                  "name": "GraphSpec",
+                  "version": "1.1.0",
+                  "digest": "sha256:08c93294287e1a4268385abe624da99cec342f0e0133b807c144e64f73547282"
+                },
+                "location": "journal:s-ordinary:graph:20f66c70c86c063fec7611d70f103c84",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": null,
+              "after": null,
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r1:seed",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "create:54e7d544a928796b3704d69bdddae2d9",
+            "type": "budget.changed",
+            "visibility": "internal",
+            "payload": {
+              "binding": null,
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "seed:54e7d544a928796b3704d69bdddae2d9",
+                "digest": "sha256:7c4380ca5a315a8465614882376072d9f0e20557cd4315f4f00dd4edbcfeb868",
+                "producer": {
+                  "actorId": "kernel",
+                  "kind": "kernel",
+                  "identityRef": null
+                },
+                "binding": null,
+                "schema": {
+                  "name": "SessionSeed",
+                  "version": "1.1.0",
+                  "digest": "sha256:1c5c527b9a3940fe8d1e578351f781f0b25d60385ba2238f4a7db516fcc796ab"
+                },
+                "location": "journal:s-ordinary:seed:54e7d544a928796b3704d69bdddae2d9",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": null,
+              "after": null,
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [],
+              "error": null
+            }
+          }
+        ],
+        "effects": [],
+        "receipts": []
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 1,
+          "eventIds": [
+            "event:r1:graph",
+            "event:r1:seed"
+          ],
+          "effectIds": []
+        }
+      }
+    },
+    {
+      "port": "EventStore.append",
+      "request": {
+        "sessionId": "s-ordinary",
+        "requestId": "observe:1e08d85d64493e925a696d4dc8711ca4",
+        "expectedRevision": 1,
+        "epoch": 1,
+        "events": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r2:observed",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "observe:1e08d85d64493e925a696d4dc8711ca4",
+            "type": "host.observed",
+            "visibility": "internal",
+            "payload": {
+              "binding": null,
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "observe:1e08d85d64493e925a696d4dc8711ca4",
+                "digest": "sha256:86fe3d3e50f1e59b955acd1a8a7323d42fd1627973bff082cc7a035a5491f5a4",
+                "producer": {
+                  "actorId": "host",
+                  "kind": "host-adapter",
+                  "identityRef": null
+                },
+                "binding": null,
+                "schema": {
+                  "name": "HostObservation",
+                  "version": "1.1.0",
+                  "digest": "sha256:693cea7b3206eb141d623da9ce252ad0d271e4c9d5da6d36bf82773d8ad17bc8"
+                },
+                "location": "journal:s-ordinary:observe:1e08d85d64493e925a696d4dc8711ca4",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": null,
+              "after": null,
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [],
+              "error": null
+            }
+          }
+        ],
+        "effects": [],
+        "receipts": []
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 2,
+          "eventIds": [
+            "event:r2:observed"
+          ],
+          "effectIds": []
+        }
+      }
+    },
+    {
+      "port": "EventStore.append",
+      "request": {
+        "sessionId": "s-ordinary",
+        "requestId": "round:6a959fcb6163dcbabf82ca0119187f9a",
+        "expectedRevision": 2,
+        "epoch": 1,
+        "events": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r3:pending:0",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": null,
+              "after": "pending",
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r3:ready:0",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": "pending",
+              "after": "ready",
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r3:leased:0",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": "ready",
+              "after": "leased",
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r3:intended:0",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+            "type": "effect.intended",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": null,
+              "after": null,
+              "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+              "decisionId": null,
+              "changedIds": [],
+              "error": null
+            }
+          }
+        ],
+        "effects": [
+          {
+            "kind": "host.agent",
+            "inputRefs": [],
+            "payload": {
+              "context": {
+                "inputRefs": [],
+                "maxTokens": 4096,
+                "preserveHostResources": true,
+                "isolation": "current"
+              },
+              "toolName": null,
+              "argumentsRef": null,
+              "graphRef": null,
+              "targetIds": [],
+              "assetRef": null,
+              "previousSnapshot": null,
+              "deliveryGuarantee": "none"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "idempotencyKey": "send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "binding": {
+              "sessionId": "s-ordinary",
+              "hostSessionId": null,
+              "graph": {
+                "graphId": "g-verify",
+                "revision": 1,
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+              },
+              "nodeId": "work",
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "epoch": 1,
+              "baseDigest": null
+            },
+            "authorityRef": "grant-verify",
+            "reservationRef": "node0:a1:e1",
+            "leases": [
+              {
+                "resourceId": "writer",
+                "ownerClaimId": "node0:a1:e1",
+                "epoch": 1,
+                "fencingToken": 1,
+                "expiresAt": 6000
+              }
+            ],
+            "deadline": 6000
+          }
+        ],
+        "receipts": []
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 3,
+          "eventIds": [
+            "event:r3:pending:0",
+            "event:r3:ready:0",
+            "event:r3:leased:0",
+            "event:r3:intended:0"
+          ],
+          "effectIds": [
+            "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0"
+          ]
+        }
+      }
+    },
+    {
+      "port": "EventStore.dispatchEffect",
+      "request": {
+        "expectedRevision": 3,
+        "epoch": 1,
+        "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "claimId": "dispatch:a0900656bce2c6b146832dbcf68faa09"
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 4,
+          "eventIds": [
+            "dispatch:a0900656bce2c6b146832dbcf68faa09"
+          ],
+          "effectIds": []
+        }
+      }
+    },
+    {
+      "port": "HostPort.execute",
+      "effect": {
+        "kind": "host.agent",
+        "inputRefs": [],
+        "payload": {
+          "context": {
+            "inputRefs": [],
+            "maxTokens": 4096,
+            "preserveHostResources": true,
+            "isolation": "current"
+          },
+          "toolName": null,
+          "argumentsRef": null,
+          "graphRef": null,
+          "targetIds": [],
+          "assetRef": null,
+          "previousSnapshot": null,
+          "deliveryGuarantee": "none"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "idempotencyKey": "send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "binding": {
+          "sessionId": "s-ordinary",
+          "hostSessionId": null,
+          "graph": {
+            "graphId": "g-verify",
+            "revision": 1,
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+          },
+          "nodeId": "work",
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "baseDigest": null
+        },
+        "authorityRef": "grant-verify",
+        "reservationRef": "node0:a1:e1",
+        "leases": [
+          {
+            "resourceId": "writer",
+            "ownerClaimId": "node0:a1:e1",
+            "epoch": 1,
+            "fencingToken": 1,
+            "expiresAt": 6000
+          }
+        ],
+        "deadline": 6000
+      },
+      "journalRevision": 4
+    },
+    {
+      "port": "EventStore.append",
+      "request": {
+        "sessionId": "s-ordinary",
+        "requestId": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+        "expectedRevision": 4,
+        "epoch": 1,
+        "disposition": "applied",
+        "receipt": {
+          "protocol": {
+            "namespace": "evofence.runtime/1",
+            "schemaVersion": "1.1.0"
+          },
+          "receiptId": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "hostInvocationId": "invocation:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "binding": {
+            "sessionId": "s-ordinary",
+            "hostSessionId": null,
+            "graph": {
+              "graphId": "g-verify",
+              "revision": 1,
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+            },
+            "nodeId": "work",
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "epoch": 1,
+            "baseDigest": null
+          },
+          "status": "completed",
+          "artifactRefs": [
+            {
+              "protocol": {
+                "namespace": "evofence.runtime/1",
+                "schemaVersion": "1.1.0"
+              },
+              "id": "output:node0:a1:e1",
+              "digest": "sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c",
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "producer": {
+                "actorId": "host",
+                "kind": "host-adapter",
+                "identityRef": null
+              },
+              "schema": {
+                "name": "BuildOutput",
+                "version": "1.1.0",
+                "digest": "sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab"
+              },
+              "location": "verification:output:node0:a1:e1",
+              "visibility": "internal",
+              "expiresAt": null,
+              "partition": "not-evaluation"
+            }
+          ],
+          "usage": [
+            {
+              "requestId": "node0:a1:e1",
+              "source": "provider",
+              "inputUncached": 10,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "output": 3,
+              "reasoning": 1,
+              "total": 13,
+              "estimatedUsdMicros": 37,
+              "invoiceUsdMicros": null,
+              "complete": true,
+              "evidenceRefs": []
+            }
+          ],
+          "observability": [
+            "verification-fake-native"
+          ],
+          "error": null
+        },
+        "events": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r5:receipt",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+            "type": "receipt.applied",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+                "digest": "sha256:a4648a5d55ad8ca7d766a02417daf0f997b1495c0adbd4c2d9b49b817bfe05fb",
+                "producer": {
+                  "actorId": "host",
+                  "kind": "host-adapter",
+                  "identityRef": null
+                },
+                "binding": {
+                  "sessionId": "s-ordinary",
+                  "hostSessionId": null,
+                  "graph": {
+                    "graphId": "g-verify",
+                    "revision": 1,
+                    "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                  },
+                  "nodeId": "work",
+                  "attemptId": "node0:a1:e1",
+                  "attemptOrdinal": 1,
+                  "epoch": 1,
+                  "baseDigest": null
+                },
+                "schema": {
+                  "name": "Receipt",
+                  "version": "1.1.0",
+                  "digest": "sha256:20e27d66764dcbd132c502629477d1a46e4e584dc4a2571e665081ff28afe5ef"
+                },
+                "location": "journal:s-ordinary:receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": null,
+              "after": null,
+              "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+              "decisionId": null,
+              "changedIds": [],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r5:effect:state:0",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": "leased",
+              "after": "running",
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r5:effect:state:1",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": null,
+              "before": "running",
+              "after": "verifying",
+              "effectId": null,
+              "decisionId": null,
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          }
+        ],
+        "effects": [],
+        "receipts": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "receiptId": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "hostInvocationId": "invocation:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "binding": {
+              "sessionId": "s-ordinary",
+              "hostSessionId": null,
+              "graph": {
+                "graphId": "g-verify",
+                "revision": 1,
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+              },
+              "nodeId": "work",
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "epoch": 1,
+              "baseDigest": null
+            },
+            "status": "completed",
+            "artifactRefs": [
+              {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "output:node0:a1:e1",
+                "digest": "sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c",
+                "binding": {
+                  "sessionId": "s-ordinary",
+                  "hostSessionId": null,
+                  "graph": {
+                    "graphId": "g-verify",
+                    "revision": 1,
+                    "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                  },
+                  "nodeId": "work",
+                  "attemptId": "node0:a1:e1",
+                  "attemptOrdinal": 1,
+                  "epoch": 1,
+                  "baseDigest": null
+                },
+                "producer": {
+                  "actorId": "host",
+                  "kind": "host-adapter",
+                  "identityRef": null
+                },
+                "schema": {
+                  "name": "BuildOutput",
+                  "version": "1.1.0",
+                  "digest": "sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab"
+                },
+                "location": "verification:output:node0:a1:e1",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              }
+            ],
+            "usage": [
+              {
+                "requestId": "node0:a1:e1",
+                "source": "provider",
+                "inputUncached": 10,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "output": 3,
+                "reasoning": 1,
+                "total": 13,
+                "estimatedUsdMicros": 37,
+                "invoiceUsdMicros": null,
+                "complete": true,
+                "evidenceRefs": []
+              }
+            ],
+            "observability": [
+              "verification-fake-native"
+            ],
+            "error": null
+          }
+        ]
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 5,
+          "eventIds": [
+            "event:r5:receipt",
+            "event:r5:effect:state:0",
+            "event:r5:effect:state:1"
+          ],
+          "effectIds": []
+        }
+      }
+    },
+    {
+      "port": "EventStore.append",
+      "request": {
+        "sessionId": "s-ordinary",
+        "requestId": "evaluation:6e3c7f7750e4332c2594ea57955992c0",
+        "expectedRevision": 5,
+        "epoch": 1,
+        "events": [
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r6:decision",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "evaluation:6e3c7f7750e4332c2594ea57955992c0",
+            "type": "decision.recorded",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "decision:node0:a1:e1",
+                "digest": "sha256:526fca6a45b70ce383864c788cc2fe831ef05aa7c058894575619db6393fb195",
+                "producer": {
+                  "actorId": "verification-evaluator",
+                  "kind": "evaluator",
+                  "identityRef": null
+                },
+                "binding": {
+                  "sessionId": "s-ordinary",
+                  "hostSessionId": null,
+                  "graph": {
+                    "graphId": "g-verify",
+                    "revision": 1,
+                    "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                  },
+                  "nodeId": "work",
+                  "attemptId": "node0:a1:e1",
+                  "attemptOrdinal": 1,
+                  "epoch": 1,
+                  "baseDigest": null
+                },
+                "schema": {
+                  "name": "DecisionRecord",
+                  "version": "1.1.0",
+                  "digest": "sha256:dec28ef0ddaf6e6e6f84e80cb72f07084742cfc8aadd39e6cd790aa1fbb048c7"
+                },
+                "location": "journal:s-ordinary:decision:node0:a1:e1",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": null,
+              "after": null,
+              "effectId": null,
+              "decisionId": "decision:node0:a1:e1",
+              "changedIds": [],
+              "error": null
+            }
+          },
+          {
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "eventId": "event:r6:outcome",
+            "sessionId": "s-ordinary",
+            "epoch": 1,
+            "causedBy": "evaluation:6e3c7f7750e4332c2594ea57955992c0",
+            "type": "node.transition",
+            "visibility": "internal",
+            "payload": {
+              "binding": {
+                "sessionId": "s-ordinary",
+                "hostSessionId": null,
+                "graph": {
+                  "graphId": "g-verify",
+                  "revision": 1,
+                  "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                },
+                "nodeId": "work",
+                "attemptId": "node0:a1:e1",
+                "attemptOrdinal": 1,
+                "epoch": 1,
+                "baseDigest": null
+              },
+              "objectRef": {
+                "protocol": {
+                  "namespace": "evofence.runtime/1",
+                  "schemaVersion": "1.1.0"
+                },
+                "id": "decision:node0:a1:e1",
+                "digest": "sha256:526fca6a45b70ce383864c788cc2fe831ef05aa7c058894575619db6393fb195",
+                "producer": {
+                  "actorId": "verification-evaluator",
+                  "kind": "evaluator",
+                  "identityRef": null
+                },
+                "binding": {
+                  "sessionId": "s-ordinary",
+                  "hostSessionId": null,
+                  "graph": {
+                    "graphId": "g-verify",
+                    "revision": 1,
+                    "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e"
+                  },
+                  "nodeId": "work",
+                  "attemptId": "node0:a1:e1",
+                  "attemptOrdinal": 1,
+                  "epoch": 1,
+                  "baseDigest": null
+                },
+                "schema": {
+                  "name": "DecisionRecord",
+                  "version": "1.1.0",
+                  "digest": "sha256:dec28ef0ddaf6e6e6f84e80cb72f07084742cfc8aadd39e6cd790aa1fbb048c7"
+                },
+                "location": "journal:s-ordinary:decision:node0:a1:e1",
+                "visibility": "internal",
+                "expiresAt": null,
+                "partition": "not-evaluation"
+              },
+              "before": "verifying",
+              "after": "succeeded",
+              "effectId": null,
+              "decisionId": "decision:node0:a1:e1",
+              "changedIds": [
+                "work"
+              ],
+              "error": null
+            }
+          }
+        ],
+        "effects": [],
+        "receipts": []
+      },
+      "result": {
+        "ok": true,
+        "value": {
+          "disposition": "committed",
+          "sessionId": "s-ordinary",
+          "revision": 6,
+          "eventIds": [
+            "event:r6:decision",
+            "event:r6:outcome"
+          ],
+          "effectIds": []
+        }
+      }
+    },
+    {
+      "port": "restart",
+      "hostCallsDuringReplay": 0,
+      "clockCallsDuringReplay": 0,
+      "journalDigest": "sha256:a9befbb809ce3ff74cb41d011ecc837e5f561616e174bbb87b3c5f78017d71cb"
+    }
+  ],
+  "errors": [],
+  "journal": {
+    "sessionId": "s-ordinary",
+    "epoch": 1,
+    "protocol": {
+      "namespace": "evofence.runtime/1",
+      "schemaVersion": "1.1.0"
+    },
+    "revision": 6,
+    "events": [
+      {
+        "causedBy": "create:54e7d544a928796b3704d69bdddae2d9",
+        "epoch": 1,
+        "eventId": "event:r1:graph",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": null,
+          "changedIds": [],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": {
+            "binding": null,
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "expiresAt": null,
+            "id": "graph:20f66c70c86c063fec7611d70f103c84",
+            "location": "journal:s-ordinary:graph:20f66c70c86c063fec7611d70f103c84",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "kernel",
+              "identityRef": null,
+              "kind": "kernel"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:08c93294287e1a4268385abe624da99cec342f0e0133b807c144e64f73547282",
+              "name": "GraphSpec",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 1,
+        "sequence": 0,
+        "sessionId": "s-ordinary",
+        "type": "graph.accepted",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "create:54e7d544a928796b3704d69bdddae2d9",
+        "epoch": 1,
+        "eventId": "event:r1:seed",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": null,
+          "changedIds": [],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": {
+            "binding": null,
+            "digest": "sha256:7c4380ca5a315a8465614882376072d9f0e20557cd4315f4f00dd4edbcfeb868",
+            "expiresAt": null,
+            "id": "seed:54e7d544a928796b3704d69bdddae2d9",
+            "location": "journal:s-ordinary:seed:54e7d544a928796b3704d69bdddae2d9",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "kernel",
+              "identityRef": null,
+              "kind": "kernel"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:1c5c527b9a3940fe8d1e578351f781f0b25d60385ba2238f4a7db516fcc796ab",
+              "name": "SessionSeed",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 1,
+        "sequence": 1,
+        "sessionId": "s-ordinary",
+        "type": "budget.changed",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "observe:1e08d85d64493e925a696d4dc8711ca4",
+        "epoch": 1,
+        "eventId": "event:r2:observed",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": null,
+          "changedIds": [],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": {
+            "binding": null,
+            "digest": "sha256:86fe3d3e50f1e59b955acd1a8a7323d42fd1627973bff082cc7a035a5491f5a4",
+            "expiresAt": null,
+            "id": "observe:1e08d85d64493e925a696d4dc8711ca4",
+            "location": "journal:s-ordinary:observe:1e08d85d64493e925a696d4dc8711ca4",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "host",
+              "identityRef": null,
+              "kind": "host-adapter"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:693cea7b3206eb141d623da9ce252ad0d271e4c9d5da6d36bf82773d8ad17bc8",
+              "name": "HostObservation",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 2,
+        "sequence": 2,
+        "sessionId": "s-ordinary",
+        "type": "host.observed",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+        "epoch": 1,
+        "eventId": "event:r3:pending:0",
+        "payload": {
+          "after": "pending",
+          "before": null,
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 3,
+        "sequence": 3,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+        "epoch": 1,
+        "eventId": "event:r3:ready:0",
+        "payload": {
+          "after": "ready",
+          "before": "pending",
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 3,
+        "sequence": 4,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+        "epoch": 1,
+        "eventId": "event:r3:leased:0",
+        "payload": {
+          "after": "leased",
+          "before": "ready",
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 3,
+        "sequence": 5,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "round:6a959fcb6163dcbabf82ca0119187f9a",
+        "epoch": 1,
+        "eventId": "event:r3:intended:0",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [],
+          "decisionId": null,
+          "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 3,
+        "sequence": 6,
+        "sessionId": "s-ordinary",
+        "type": "effect.intended",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "dispatch:a0900656bce2c6b146832dbcf68faa09",
+        "epoch": 1,
+        "eventId": "dispatch:a0900656bce2c6b146832dbcf68faa09",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0"
+          ],
+          "decisionId": null,
+          "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 4,
+        "sequence": 7,
+        "sessionId": "s-ordinary",
+        "type": "effect.dispatched",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+        "epoch": 1,
+        "eventId": "event:r5:receipt",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [],
+          "decisionId": null,
+          "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+          "error": null,
+          "objectRef": {
+            "binding": {
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "baseDigest": null,
+              "epoch": 1,
+              "graph": {
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+                "graphId": "g-verify",
+                "revision": 1
+              },
+              "hostSessionId": null,
+              "nodeId": "work",
+              "sessionId": "s-ordinary"
+            },
+            "digest": "sha256:a4648a5d55ad8ca7d766a02417daf0f997b1495c0adbd4c2d9b49b817bfe05fb",
+            "expiresAt": null,
+            "id": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "location": "journal:s-ordinary:receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "host",
+              "identityRef": null,
+              "kind": "host-adapter"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:20e27d66764dcbd132c502629477d1a46e4e584dc4a2571e665081ff28afe5ef",
+              "name": "Receipt",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 5,
+        "sequence": 8,
+        "sessionId": "s-ordinary",
+        "type": "receipt.applied",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+        "epoch": 1,
+        "eventId": "event:r5:effect:state:0",
+        "payload": {
+          "after": "running",
+          "before": "leased",
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 5,
+        "sequence": 9,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "ack:39ab534c3abbc03a2fcacc62b5bc7aef",
+        "epoch": 1,
+        "eventId": "event:r5:effect:state:1",
+        "payload": {
+          "after": "verifying",
+          "before": "running",
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": null,
+          "effectId": null,
+          "error": null,
+          "objectRef": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 5,
+        "sequence": 10,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "evaluation:6e3c7f7750e4332c2594ea57955992c0",
+        "epoch": 1,
+        "eventId": "event:r6:decision",
+        "payload": {
+          "after": null,
+          "before": null,
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [],
+          "decisionId": "decision:node0:a1:e1",
+          "effectId": null,
+          "error": null,
+          "objectRef": {
+            "binding": {
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "baseDigest": null,
+              "epoch": 1,
+              "graph": {
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+                "graphId": "g-verify",
+                "revision": 1
+              },
+              "hostSessionId": null,
+              "nodeId": "work",
+              "sessionId": "s-ordinary"
+            },
+            "digest": "sha256:526fca6a45b70ce383864c788cc2fe831ef05aa7c058894575619db6393fb195",
+            "expiresAt": null,
+            "id": "decision:node0:a1:e1",
+            "location": "journal:s-ordinary:decision:node0:a1:e1",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "verification-evaluator",
+              "identityRef": null,
+              "kind": "evaluator"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:dec28ef0ddaf6e6e6f84e80cb72f07084742cfc8aadd39e6cd790aa1fbb048c7",
+              "name": "DecisionRecord",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 6,
+        "sequence": 11,
+        "sessionId": "s-ordinary",
+        "type": "decision.recorded",
+        "visibility": "internal"
+      },
+      {
+        "causedBy": "evaluation:6e3c7f7750e4332c2594ea57955992c0",
+        "epoch": 1,
+        "eventId": "event:r6:outcome",
+        "payload": {
+          "after": "succeeded",
+          "before": "verifying",
+          "binding": {
+            "attemptId": "node0:a1:e1",
+            "attemptOrdinal": 1,
+            "baseDigest": null,
+            "epoch": 1,
+            "graph": {
+              "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+              "graphId": "g-verify",
+              "revision": 1
+            },
+            "hostSessionId": null,
+            "nodeId": "work",
+            "sessionId": "s-ordinary"
+          },
+          "changedIds": [
+            "work"
+          ],
+          "decisionId": "decision:node0:a1:e1",
+          "effectId": null,
+          "error": null,
+          "objectRef": {
+            "binding": {
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "baseDigest": null,
+              "epoch": 1,
+              "graph": {
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+                "graphId": "g-verify",
+                "revision": 1
+              },
+              "hostSessionId": null,
+              "nodeId": "work",
+              "sessionId": "s-ordinary"
+            },
+            "digest": "sha256:526fca6a45b70ce383864c788cc2fe831ef05aa7c058894575619db6393fb195",
+            "expiresAt": null,
+            "id": "decision:node0:a1:e1",
+            "location": "journal:s-ordinary:decision:node0:a1:e1",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "verification-evaluator",
+              "identityRef": null,
+              "kind": "evaluator"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:dec28ef0ddaf6e6e6f84e80cb72f07084742cfc8aadd39e6cd790aa1fbb048c7",
+              "name": "DecisionRecord",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "revision": 6,
+        "sequence": 12,
+        "sessionId": "s-ordinary",
+        "type": "node.transition",
+        "visibility": "internal"
+      }
+    ],
+    "effects": [
+      {
+        "authorityRef": "grant-verify",
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "deadline": 6000,
+        "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "idempotencyKey": "send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "inputRefs": [],
+        "kind": "host.agent",
+        "leases": [
+          {
+            "epoch": 1,
+            "expiresAt": 6000,
+            "fencingToken": 1,
+            "ownerClaimId": "node0:a1:e1",
+            "resourceId": "writer"
+          }
+        ],
+        "payload": {
+          "argumentsRef": null,
+          "assetRef": null,
+          "context": {
+            "inputRefs": [],
+            "isolation": "current",
+            "maxTokens": 4096,
+            "preserveHostResources": true
+          },
+          "deliveryGuarantee": "none",
+          "graphRef": null,
+          "previousSnapshot": null,
+          "targetIds": [],
+          "toolName": null
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "reservationRef": "node0:a1:e1"
+      }
+    ],
+    "receipts": [
+      {
+        "artifactRefs": [
+          {
+            "binding": {
+              "attemptId": "node0:a1:e1",
+              "attemptOrdinal": 1,
+              "baseDigest": null,
+              "epoch": 1,
+              "graph": {
+                "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+                "graphId": "g-verify",
+                "revision": 1
+              },
+              "hostSessionId": null,
+              "nodeId": "work",
+              "sessionId": "s-ordinary"
+            },
+            "digest": "sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c",
+            "expiresAt": null,
+            "id": "output:node0:a1:e1",
+            "location": "verification:output:node0:a1:e1",
+            "partition": "not-evaluation",
+            "producer": {
+              "actorId": "host",
+              "identityRef": null,
+              "kind": "host-adapter"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "schema": {
+              "digest": "sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab",
+              "name": "BuildOutput",
+              "version": "1.1.0"
+            },
+            "visibility": "internal"
+          }
+        ],
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "effectId": "effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "error": null,
+        "hostInvocationId": "invocation:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "observability": [
+          "verification-fake-native"
+        ],
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "receiptId": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "status": "completed",
+        "usage": [
+          {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "complete": true,
+            "estimatedUsdMicros": 37,
+            "evidenceRefs": [],
+            "inputUncached": 10,
+            "invoiceUsdMicros": null,
+            "output": 3,
+            "reasoning": 1,
+            "requestId": "node0:a1:e1",
+            "source": "provider",
+            "total": 13
+          }
+        ]
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "ref": {
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "digest": "sha256:526fca6a45b70ce383864c788cc2fe831ef05aa7c058894575619db6393fb195",
+        "expiresAt": null,
+        "id": "decision:node0:a1:e1",
+        "location": "journal:s-ordinary:decision:node0:a1:e1",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "verification-evaluator",
+          "identityRef": null,
+          "kind": "evaluator"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:dec28ef0ddaf6e6e6f84e80cb72f07084742cfc8aadd39e6cd790aa1fbb048c7",
+          "name": "DecisionRecord",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"activationReceiptRef\":null,\"capabilityJudgement\":null,\"contractRef\":{\"digest\":\"sha256:cc8321d6375c494d043fdd0260f21bc0ec51dacc9f6abb7f909cdcd3041b78bf\",\"taskId\":\"task-verify\",\"version\":1},\"decisionId\":\"decision:node0:a1:e1\",\"evaluationProtocolRef\":null,\"evaluationReceiptRef\":null,\"evaluatorVersion\":\"verification/1\",\"evidenceRefs\":[{\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"digest\":\"sha256:d2b2249bb6282d08a57f751c2e6c3243532bb79b1465a2b10ccd3c1bbabdbe97\",\"expiresAt\":null,\"id\":\"evidence:node0:a1:e1\",\"location\":\"verification:evidence:node0:a1:e1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"verification-evaluator\",\"identityRef\":null,\"kind\":\"evaluator\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:817445414ba29780268be3ea3a12b979b802a11e000945eab5c7f2db23fb441d\",\"name\":\"TaskEvidenceReport\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}],\"feedbackVisibility\":\"internal\",\"inputs\":[{\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"digest\":\"sha256:a4648a5d55ad8ca7d766a02417daf0f997b1495c0adbd4c2d9b49b817bfe05fb\",\"expiresAt\":null,\"id\":\"receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0\",\"location\":\"journal:s-ordinary:receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"host\",\"identityRef\":null,\"kind\":\"host-adapter\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:20e27d66764dcbd132c502629477d1a46e4e584dc4a2571e665081ff28afe5ef\",\"name\":\"Receipt\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}],\"issuer\":{\"actorId\":\"verification-evaluator\",\"identityRef\":null,\"kind\":\"evaluator\"},\"kind\":\"task\",\"outcome\":\"completed\",\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"reasons\":[\"private-tests:true\"],\"taskEvidenceRef\":{\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"digest\":\"sha256:d2b2249bb6282d08a57f751c2e6c3243532bb79b1465a2b10ccd3c1bbabdbe97\",\"expiresAt\":null,\"id\":\"evidence:node0:a1:e1\",\"location\":\"verification:evidence:node0:a1:e1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"verification-evaluator\",\"identityRef\":null,\"kind\":\"evaluator\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:817445414ba29780268be3ea3a12b979b802a11e000945eab5c7f2db23fb441d\",\"name\":\"TaskEvidenceReport\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}}"
+    },
+    {
+      "ref": {
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "digest": "sha256:d2b2249bb6282d08a57f751c2e6c3243532bb79b1465a2b10ccd3c1bbabdbe97",
+        "expiresAt": null,
+        "id": "evidence:node0:a1:e1",
+        "location": "verification:evidence:node0:a1:e1",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "verification-evaluator",
+          "identityRef": null,
+          "kind": "evaluator"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:817445414ba29780268be3ea3a12b979b802a11e000945eab5c7f2db23fb441d",
+          "name": "TaskEvidenceReport",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"actualDiffRef\":null,\"artifactRefs\":[{\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"digest\":\"sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c\",\"expiresAt\":null,\"id\":\"output:node0:a1:e1\",\"location\":\"verification:output:node0:a1:e1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"host\",\"identityRef\":null,\"kind\":\"host-adapter\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab\",\"name\":\"BuildOutput\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}],\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"branchReport\":[],\"contractRef\":{\"digest\":\"sha256:cc8321d6375c494d043fdd0260f21bc0ec51dacc9f6abb7f909cdcd3041b78bf\",\"taskId\":\"task-verify\",\"version\":1},\"privacyChecked\":true,\"privateTestsPassed\":true,\"requiredOutcomesMet\":true,\"runStatus\":\"completed\",\"usageComplete\":true}"
+    },
+    {
+      "ref": {
+        "binding": null,
+        "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+        "expiresAt": null,
+        "id": "graph:20f66c70c86c063fec7611d70f103c84",
+        "location": "journal:s-ordinary:graph:20f66c70c86c063fec7611d70f103c84",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "kernel",
+          "identityRef": null,
+          "kind": "kernel"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:08c93294287e1a4268385abe624da99cec342f0e0133b807c144e64f73547282",
+          "name": "GraphSpec",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"abandonedBranches\":[],\"graphId\":\"g-verify\",\"graphLimits\":{\"maxAttempts\":4,\"maxConcurrentAgents\":2,\"maxDepth\":3,\"maxNodes\":16},\"nodes\":[{\"contextPlan\":{\"inputRefs\":[],\"isolation\":\"current\",\"maxTokens\":4096,\"preserveHostResources\":true},\"inputRefs\":[],\"kind\":\"agent\",\"loop\":null,\"modelRequirements\":{\"payloadRef\":null,\"providerModel\":null,\"reasoningGuarantee\":\"payload-only\",\"reasoningRequested\":null},\"nodeId\":\"work\",\"outputSchemas\":[{\"digest\":\"sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab\",\"name\":\"BuildOutput\",\"version\":\"1.1.0\"}],\"requiredBranches\":[],\"resources\":{\"exclusive\":[\"writer\"],\"shared\":[]},\"subgraph\":null,\"terminal\":true,\"termination\":{\"cancelMode\":\"stop-and-confirm\",\"excludeHumanWait\":true,\"maxActiveWallMs\":600000,\"maxAttempts\":3,\"unknownPolicy\":\"reconcile\"},\"toolRequirements\":[]}],\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"requiredJoins\":[],\"resourcePolicy\":[{\"maxHolders\":1,\"mode\":\"exclusive\",\"resourceId\":\"writer\"}],\"revision\":1,\"taskContractRef\":{\"digest\":\"sha256:cc8321d6375c494d043fdd0260f21bc0ec51dacc9f6abb7f909cdcd3041b78bf\",\"taskId\":\"task-verify\",\"version\":1},\"typedEdges\":[]}"
+    },
+    {
+      "ref": {
+        "binding": null,
+        "digest": "sha256:86fe3d3e50f1e59b955acd1a8a7323d42fd1627973bff082cc7a035a5491f5a4",
+        "expiresAt": null,
+        "id": "observe:1e08d85d64493e925a696d4dc8711ca4",
+        "location": "journal:s-ordinary:observe:1e08d85d64493e925a696d4dc8711ca4",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "host",
+          "identityRef": null,
+          "kind": "host-adapter"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:693cea7b3206eb141d623da9ce252ad0d271e4c9d5da6d36bf82773d8ad17bc8",
+          "name": "HostObservation",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"boardOwners\":[],\"cancellation\":{\"coverage\":[],\"evidenceRefs\":[],\"status\":\"partial\"},\"capabilities\":{\"contextAndResources\":{\"status\":\"verified\"},\"costInvoice\":{\"limitation\":\"reference estimates only, no provider invoice\",\"status\":\"unknown\"},\"externalEffectReconciliation\":{\"limitation\":\"requires kernel journal/outbox\",\"status\":\"absent\"},\"nativeSessionBinding\":{\"status\":\"verified\"},\"nativeTeamGraphBoard\":{\"limitation\":\"no built-in board parity\",\"status\":\"absent\"},\"osSandbox\":{\"limitation\":\"no OS sandbox was added or tested\",\"status\":\"absent\"},\"providerCancelBilling\":{\"limitation\":\"vendor abort billing not probed\",\"status\":\"unknown\"},\"reasoningHighGuarantee\":{\"status\":\"partial\",\"unverified\":[\"server-tier reasoning guarantee\"],\"verifiedSubset\":[\"thinking.enabled + reasoning_effort=high accepted (HTTP 200)\"]},\"sdkAbort\":{\"status\":\"verified\"},\"sdkChildSessionIsolation\":{\"status\":\"verified\"},\"sessionCustomEntries\":{\"status\":\"verified\"},\"settledAndIdle\":{\"status\":\"verified\"},\"toolRequestGate\":{\"status\":\"verified\"},\"transcriptRecovery\":{\"status\":\"verified\"},\"usageTokens\":{\"status\":\"verified\"}},\"host\":\"verification-fake\",\"idle\":true,\"isolation\":{\"coverage\":[],\"evidenceRefs\":[],\"status\":\"partial\"},\"recovery\":{\"coverage\":[],\"evidenceRefs\":[],\"status\":\"verified\"}}"
+    },
+    {
+      "ref": {
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "digest": "sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c",
+        "expiresAt": null,
+        "id": "output:node0:a1:e1",
+        "location": "verification:output:node0:a1:e1",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "host",
+          "identityRef": null,
+          "kind": "host-adapter"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab",
+          "name": "BuildOutput",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"result\":\"built\"}"
+    },
+    {
+      "ref": {
+        "binding": null,
+        "digest": "sha256:31a7cffa3c481ab5240e94206a6d02b0c76e11d94dc0c9b0f478486ccfd1e21e",
+        "expiresAt": null,
+        "id": "price-frozen",
+        "location": "verification:price-frozen",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "kernel",
+          "identityRef": null,
+          "kind": "kernel"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:be92a57ac1f5d6ee97760c5bda1f44c3361d782a13321f5a3a2315f98b51a38b",
+          "name": "PriceTable",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"model\":\"simulated-host\",\"reservePerRequest\":100,\"unit\":\"micro-USD\"}"
+    },
+    {
+      "ref": {
+        "binding": {
+          "attemptId": "node0:a1:e1",
+          "attemptOrdinal": 1,
+          "baseDigest": null,
+          "epoch": 1,
+          "graph": {
+            "digest": "sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e",
+            "graphId": "g-verify",
+            "revision": 1
+          },
+          "hostSessionId": null,
+          "nodeId": "work",
+          "sessionId": "s-ordinary"
+        },
+        "digest": "sha256:a4648a5d55ad8ca7d766a02417daf0f997b1495c0adbd4c2d9b49b817bfe05fb",
+        "expiresAt": null,
+        "id": "receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "location": "journal:s-ordinary:receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "host",
+          "identityRef": null,
+          "kind": "host-adapter"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:20e27d66764dcbd132c502629477d1a46e4e584dc4a2571e665081ff28afe5ef",
+          "name": "Receipt",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"artifactRefs\":[{\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"digest\":\"sha256:8b2942b08a1b886f4b924033df2bb47b8a7fbf4e9788aa955d2671fb9654e60c\",\"expiresAt\":null,\"id\":\"output:node0:a1:e1\",\"location\":\"verification:output:node0:a1:e1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"host\",\"identityRef\":null,\"kind\":\"host-adapter\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:cc70c9bf0654970ab1fab033fecfc2e3b3cb3294bb72bff9fa83e18bfec7d5ab\",\"name\":\"BuildOutput\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}],\"binding\":{\"attemptId\":\"node0:a1:e1\",\"attemptOrdinal\":1,\"baseDigest\":null,\"epoch\":1,\"graph\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"hostSessionId\":null,\"nodeId\":\"work\",\"sessionId\":\"s-ordinary\"},\"effectId\":\"effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0\",\"error\":null,\"hostInvocationId\":\"invocation:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0\",\"observability\":[\"verification-fake-native\"],\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"receiptId\":\"receipt:effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0:send:round:6a959fcb6163dcbabf82ca0119187f9a:n0\",\"status\":\"completed\",\"usage\":[{\"cacheRead\":0,\"cacheWrite\":0,\"complete\":true,\"estimatedUsdMicros\":37,\"evidenceRefs\":[],\"inputUncached\":10,\"invoiceUsdMicros\":null,\"output\":3,\"reasoning\":1,\"requestId\":\"node0:a1:e1\",\"source\":\"provider\",\"total\":13}]}"
+    },
+    {
+      "ref": {
+        "binding": null,
+        "digest": "sha256:7c4380ca5a315a8465614882376072d9f0e20557cd4315f4f00dd4edbcfeb868",
+        "expiresAt": null,
+        "id": "seed:54e7d544a928796b3704d69bdddae2d9",
+        "location": "journal:s-ordinary:seed:54e7d544a928796b3704d69bdddae2d9",
+        "partition": "not-evaluation",
+        "producer": {
+          "actorId": "kernel",
+          "identityRef": null,
+          "kind": "kernel"
+        },
+        "protocol": {
+          "namespace": "evofence.runtime/1",
+          "schemaVersion": "1.1.0"
+        },
+        "schema": {
+          "digest": "sha256:1c5c527b9a3940fe8d1e578351f781f0b25d60385ba2238f4a7db516fcc796ab",
+          "name": "SessionSeed",
+          "version": "1.1.0"
+        },
+        "visibility": "internal"
+      },
+      "bytes": "{\"grants\":[{\"budget\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":4,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":8,\"maxUsdMicros\":800,\"maxWallMs\":600000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-verify\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:31a7cffa3c481ab5240e94206a6d02b0c76e11d94dc0c9b0f478486ccfd1e21e\",\"expiresAt\":null,\"id\":\"price-frozen\",\"location\":\"verification:price-frozen\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel\",\"identityRef\":null,\"kind\":\"kernel\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:be92a57ac1f5d6ee97760c5bda1f44c3361d782a13321f5a3a2315f98b51a38b\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"expiresAt\":10000,\"grantId\":\"grant-verify\",\"issuedEpoch\":1,\"maxConcurrency\":4,\"remainingDepth\":2,\"revocationEpoch\":0,\"revoked\":false,\"rootAuthorityRef\":\"root-verify\",\"scope\":{\"artifactScopes\":[],\"readResources\":[\"writer\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"writer\"]}}],\"graphRef\":{\"digest\":\"sha256:c0df39f4f749ecc9affaed4cea306414b95bba4f91771e5f6d2bec272469251e\",\"graphId\":\"g-verify\",\"revision\":1},\"operations\":{\"work\":{\"inputRefs\":[],\"kind\":\"host.agent\",\"payload\":{\"argumentsRef\":null,\"assetRef\":null,\"context\":{\"inputRefs\":[],\"isolation\":\"current\",\"maxTokens\":4096,\"preserveHostResources\":true},\"deliveryGuarantee\":\"none\",\"graphRef\":null,\"previousSnapshot\":null,\"targetIds\":[],\"toolName\":null}}},\"policy\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":4,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":8,\"maxUsdMicros\":800,\"maxWallMs\":600000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-verify\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:31a7cffa3c481ab5240e94206a6d02b0c76e11d94dc0c9b0f478486ccfd1e21e\",\"expiresAt\":null,\"id\":\"price-frozen\",\"location\":\"verification:price-frozen\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel\",\"identityRef\":null,\"kind\":\"kernel\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"schema\":{\"digest\":\"sha256:be92a57ac1f5d6ee97760c5bda1f44c3361d782a13321f5a3a2315f98b51a38b\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"reservePerRequest\":100}"
+    }
+  ],
+  "snapshot": {
+    "sessionId": "s-ordinary",
+    "revision": 6,
+    "epoch": 1,
+    "sequence": 12,
+    "schemaVersion": "1.1.0",
+    "projection": {
+      "sessionId": "s-ordinary",
+      "revision": 6,
+      "epoch": 1,
+      "lastSequence": 12,
+      "dispatchMode": "active",
+      "nodeStates": [
+        {
+          "nodeId": "work",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "state": "succeeded",
+          "sinceSequence": 12
+        }
+      ]
+    },
+    "digest": "sha256:54bf4539aadf1d430d79e678fb32732d474321bb04830b07b033621ee99b8ccf"
+  },
+  "calls": {
+    "observe": 1,
+    "execute": 1,
+    "reconcile": 0,
+    "evaluate": 1,
+    "clock": 6,
+    "inspect": 2,
+    "resume": 0
+  },
+  "hostStats": {
+    "invocations": 1,
+    "dispatched": 1,
+    "receipts": 1
+  }
+}

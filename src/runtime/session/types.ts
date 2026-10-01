@@ -7,7 +7,7 @@ import type {
   ArtifactRef, ArtifactStore, DigestPort, DispatchMode, Effect, Event, EventDraft,
   EventStore, ExportedSession, NodeStateEntry, OutboxProjection, Receipt, ReceiptOutcome,
   SessionHandle, StoreResult,
-} from '../../storage/index.js';
+} from '../../kernel/store/index.js';
 import type { Clock, DelegationGrant, HostObservation, HostPort } from '../host-port/index.js';
 
 export type { ArtifactRef, Binding, Effect, Event, EventDraft, Receipt, StoreResult };

@@ -7,7 +7,7 @@ import { decode } from '../dist/protocol/index.js';
 import {
   admitArtifact, bindingMismatches, checkBinding, defaultReportRefs, isRestrictedPartition,
   partitionFeedback, readArtifact, verifyForConsumer, withheldReason,
-} from '../dist/storage/artifacts/index.js';
+} from '../dist/kernel/artifacts/index.js';
 
 const digestPort = { digest: (bytes) => `sha256:${createHash('sha256').update(bytes).digest('hex')}` };
 const digest = (seed) => digestPort.digest(seed);

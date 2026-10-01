@@ -1,5 +1,5 @@
 /** Thin application service. Construction is inert; all outside capabilities are parameter ports. */
-import { canonical, storeFail, storeOk } from '../../storage/index.js';
+import { canonical, storeFail, storeOk } from '../../kernel/store/index.js';
 import { openBudgetLedger } from '../../kernel/policy/index.js';
 import { project } from './project.js';
 import { commit, event, idFor, putObject } from './journal.js';
@@ -7,7 +7,7 @@ import { planReceipt, notExecutedReceipt } from './receipts.js';
 import { stepSession } from './dispatch.js';
 import { pauseSession, resumeSession, cancelSession } from './controls.js';
 import { evaluateSession } from './evaluation.js';
-import type { ReceiptOutcome } from '../../storage/index.js';
+import type { ReceiptOutcome } from '../../kernel/store/index.js';
 import type { RuntimeState, SessionPorts, SessionSeed, SessionService, StoreResult, ReconcileReport } from './types.js';
 
 export function createSessionService(ports: SessionPorts): SessionService {

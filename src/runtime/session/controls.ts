@@ -1,6 +1,6 @@
 /** Lifecycle commands: journal identities survive restart; unconfirmed cancel stays unknown. */
 import { asInstant, fail } from '../../protocol/index.js';
-import { storeFail, storeOk } from '../../storage/index.js';
+import { storeFail, storeOk } from '../../kernel/store/index.js';
 import { grantCovers } from '../host-port/index.js';
 import { bindingFor, currentAttemptOf, nodeStateOf } from './project.js';
 import { commit, event, idFor, priorCommand, putObject, transition } from './journal.js';

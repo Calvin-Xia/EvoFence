@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
 import { createMemoryArtifactStore } from '../dist/storage/index.js';
-import { admitArtifact, attributeProducer, checkAvailability, matchSchema, readArtifact } from '../dist/storage/artifacts/index.js';
+import { admitArtifact, attributeProducer, checkAvailability, matchSchema, readArtifact } from '../dist/kernel/artifacts/index.js';
 
 const PROTOCOL = { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' };
 const digestPort = {

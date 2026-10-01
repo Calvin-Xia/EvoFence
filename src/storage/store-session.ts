@@ -11,11 +11,11 @@
  * `effectId`); a journal that references content the store does not hold is a gap and is refused,
  * not guessed around.
  */
-import type { AppendOutcome, Effect, Event, EventDraft, ExportedSession, ProtocolEnvelope, Receipt, StoreResult } from './contracts.js';
-import { storeFail, storeOk } from './contracts.js';
-import { canonical, identityDigest, type DigestPort } from './identity.js';
-import { projectOutbox } from './outbox.js';
-import { emptyReplayState, replay } from './projection.js';
+import type { AppendOutcome, Effect, Event, EventDraft, ExportedSession, ProtocolEnvelope, Receipt, StoreResult } from '../kernel/store/contracts.js';
+import { storeFail, storeOk } from '../kernel/store/contracts.js';
+import { canonical, identityDigest, type DigestPort } from '../kernel/store/identity.js';
+import { projectOutbox } from '../kernel/store/outbox.js';
+import { emptyReplayState, replay } from '../kernel/store/projection.js';
 
 export interface SessionRecord {
   readonly sessionId: string;

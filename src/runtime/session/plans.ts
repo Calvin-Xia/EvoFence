@@ -2,7 +2,7 @@
 import { budgetSnapshot, decide as policyDecide, usageCompleteness } from '../../kernel/policy/index.js';
 import { computeFrontier, dispatchRound, emptyFairness, liveGrants } from '../../kernel/scheduler/index.js';
 import { grantCovers, budgetWithin } from '../host-port/index.js';
-import { storeFail, storeOk } from '../../storage/index.js';
+import { storeFail, storeOk } from '../../kernel/store/index.js';
 import type { BranchFacts, NodeFacts, ArtifactRef as GraphArtifact } from '../../kernel/graph/index.js';
 import { bindingFor, currentAttemptOf, nodeStateOf } from './project.js';
 import { event, transition } from './journal.js';

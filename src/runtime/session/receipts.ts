@@ -1,7 +1,7 @@
 /** The host-receipt boundary and its atomic state/outbox plan. */
 import { decode } from '../../protocol/index.js';
-import { canonical, storeFail, storeOk } from '../../storage/index.js';
-import { verifyForConsumer, type ArtifactRef as ConsumerArtifact, type BindingExpectation } from '../../storage/artifacts/index.js';
+import { canonical, storeFail, storeOk } from '../../kernel/store/index.js';
+import { verifyForConsumer, type ArtifactRef as ConsumerArtifact, type BindingExpectation } from '../../kernel/artifacts/index.js';
 import { sameSchema } from '../../kernel/graph/index.js';
 import type { SchemaRef } from '../../kernel/graph/index.js';
 import { nodeStateOf, currentAttemptOf } from './project.js';

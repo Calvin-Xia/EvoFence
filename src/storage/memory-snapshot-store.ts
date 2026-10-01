@@ -11,10 +11,10 @@
  * silently reused.
  */
 import { isSupportedSchemaVersion } from '../protocol/index.js';
-import type { Event, Recovery, SnapshotInput, SnapshotStore, StoreResult, StoredSnapshot } from './contracts.js';
-import { storeFail, storeOk } from './contracts.js';
-import { identityDigest, type DigestPort } from './identity.js';
-import { replay, verifyProjection } from './projection.js';
+import type { Event, Recovery, SnapshotInput, SnapshotStore, StoreResult, StoredSnapshot } from '../kernel/store/contracts.js';
+import { storeFail, storeOk } from '../kernel/store/contracts.js';
+import { identityDigest, type DigestPort } from '../kernel/store/identity.js';
+import { replay, verifyProjection } from '../kernel/store/projection.js';
 
 function bodyOf(snapshot: StoredSnapshot | SnapshotInput): SnapshotInput {
   return {

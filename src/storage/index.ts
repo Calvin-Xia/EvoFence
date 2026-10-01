@@ -9,10 +9,10 @@
 export { createMemoryEventStore, type MemoryEventStore } from './memory-event-store.js';
 export { createMemorySnapshotStore, type MemorySnapshotStore } from './memory-snapshot-store.js';
 export { createMemoryArtifactStore } from './memory-artifact-store.js';
-export { intendedIds, projectOutbox, reconcileIds } from './outbox.js';
-export { replay, verifyProjection, emptyReplayState } from './projection.js';
-export { canonical, identityDigest, type DigestPort } from './identity.js';
-export { storeFail, storeOk, type StoreErr, type StoreOk, type StoreResult } from './contracts.js';
+export { intendedIds, projectOutbox, reconcileIds } from '../kernel/store/outbox.js';
+export { replay, verifyProjection, emptyReplayState } from '../kernel/store/projection.js';
+export { canonical, identityDigest, type DigestPort } from '../kernel/store/identity.js';
+export { storeFail, storeOk, type StoreErr, type StoreOk, type StoreResult } from '../kernel/store/contracts.js';
 export type {
   AppendOutcome,
   AppendRequest,
@@ -41,4 +41,4 @@ export type {
   SnapshotInput,
   SnapshotStore,
   StoredSnapshot,
-} from './contracts.js';
+} from '../kernel/store/contracts.js';

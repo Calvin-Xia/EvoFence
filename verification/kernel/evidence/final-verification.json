@@ -1,0 +1,25 @@
+{
+  "cp1": "passed",
+  "cp2": "passed",
+  "cp3": "passed",
+  "gates": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "tests": 814,
+  "pass": 814,
+  "fail": 0,
+  "mutationCases": 7,
+  "mutationFreshDiskHashes": true,
+  "preFixSummariesByteIdentical": true,
+  "trajectoryCount": 12,
+  "frozenErrorPaths": 17,
+  "auditViolations": 0,
+  "movedFiles": 12,
+  "newCoreBarrels": 1,
+  "modifiedRuntime": 9,
+  "modifiedBackendBarrel": 5,
+  "modifiedTestImports": 5
+}

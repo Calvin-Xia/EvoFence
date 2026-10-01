@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 
 import { createMemoryArtifactStore } from '../dist/storage/index.js';
 import { ERROR_CODES } from '../dist/protocol/index.js';
-import { ARTIFACT_ERROR_MATRIX, verifyForConsumer } from '../dist/storage/artifacts/index.js';
+import { ARTIFACT_ERROR_MATRIX, verifyForConsumer } from '../dist/kernel/artifacts/index.js';
 
 const PROTOCOL = { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' };
 const digestPort = {

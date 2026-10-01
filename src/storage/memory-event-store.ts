@@ -30,11 +30,11 @@ import type {
   ReceiptOutcome,
   SessionHandle,
   StoreResult,
-} from './contracts.js';
-import { storeFail, storeOk } from './contracts.js';
-import { canonical, type DigestPort } from './identity.js';
-import { intendedIds, projectOutbox, reconcileIds } from './outbox.js';
-import { replay } from './projection.js';
+} from '../kernel/store/contracts.js';
+import { storeFail, storeOk } from '../kernel/store/contracts.js';
+import { canonical, type DigestPort } from '../kernel/store/identity.js';
+import { intendedIds, projectOutbox, reconcileIds } from '../kernel/store/outbox.js';
+import { replay } from '../kernel/store/projection.js';
 import { commitBatch, newSessionRecord, reviveSession, type SessionRecord } from './store-session.js';
 
 /** A fully-populated `EventPayload`; omitted members are the explicit nulls/empties the schema requires. */

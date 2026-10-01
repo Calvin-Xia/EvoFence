@@ -1,0 +1,34 @@
+(node:48536) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (13.5625ms)
+[mutation-applied:unknown-resend] dist/kernel/store/outbox.js
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 193.5738
+
+✖ failing tests:
+
+test at test\l2-kernel-verify-faults.test.js:9:1
+✖ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (13.5625ms)
+  AssertionError [ERR_ASSERTION]: {"code":"EFK_CLAIM_CONFLICT","message":"effect effect:round:9db5ac8417e7777fef204239494803c2:n0 is dispatched; only an intended effect is dispatchable","retry":"after-refresh","refs":["effect:round:9db5ac8417e7777fef204239494803c2:n0"],"visibility":"internal"}
+  
+  false !== true
+  
+      at value (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/harness.mjs:10:40)
+      at TestContext.crashAfter (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/recovery.mjs:43:3)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

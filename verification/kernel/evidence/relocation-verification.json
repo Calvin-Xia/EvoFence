@@ -1,0 +1,286 @@
+{
+  "authorization": "S05 relocation only",
+  "head": "aca28835110bf6717936d8e73f79dc7095a20711",
+  "verified": [
+    {
+      "from": "src/storage/contracts.ts",
+      "to": "src/kernel/store/contracts.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:7fd91fead35226d2d0b552e60a490c92c96a235f8bfd14c2ce96df837e50f48e",
+      "afterDigest": "sha256:f5f4a911a647869c57dc09b92ffc96ebade42467684a0a3262548a2858f786a7"
+    },
+    {
+      "from": "src/storage/identity.ts",
+      "to": "src/kernel/store/identity.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:5608b42054a7906054ae02f8179cbc15a01038850e61401f3c90a9993e9fa719",
+      "afterDigest": "sha256:5608b42054a7906054ae02f8179cbc15a01038850e61401f3c90a9993e9fa719"
+    },
+    {
+      "from": "src/storage/projection.ts",
+      "to": "src/kernel/store/projection.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:32415e99838b2d22c366b40ed595219718fa1dc267a96545f37934bf6fd38ec8",
+      "afterDigest": "sha256:32415e99838b2d22c366b40ed595219718fa1dc267a96545f37934bf6fd38ec8"
+    },
+    {
+      "from": "src/storage/outbox.ts",
+      "to": "src/kernel/store/outbox.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:70817546bc15a6d4b8f27a062e1885850836b10fa353f6d71a9a62384915b180",
+      "afterDigest": "sha256:70817546bc15a6d4b8f27a062e1885850836b10fa353f6d71a9a62384915b180"
+    },
+    {
+      "from": "src/storage/artifacts/access.ts",
+      "to": "src/kernel/artifacts/access.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:6fc576b835b56ebe08b15065ce8bd1cd60d8a911fe6df8174f1e7458817ec601",
+      "afterDigest": "sha256:9b6f723ea47e8b17ff70e31a010ba3c521514b11eee0d1b2e7c2237438694a9e"
+    },
+    {
+      "from": "src/storage/artifacts/admit.ts",
+      "to": "src/kernel/artifacts/admit.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:0254ff55ddbc58f861e144efe6344e798e82a38026a8b9ee93a792398eacdb25",
+      "afterDigest": "sha256:2d788af9493e9d1891e7f008b0c1051304ce406666db36ddd8e36c7841362294"
+    },
+    {
+      "from": "src/storage/artifacts/availability.ts",
+      "to": "src/kernel/artifacts/availability.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:ebfc6919dc4ff4a33c0d97bb34f16c079725c423479d84dc94f5a39512df4a57",
+      "afterDigest": "sha256:695b9b66afdfbaf7519d8f7210d0dca3a49a876febb0e11a9ec3fd051f651d1b"
+    },
+    {
+      "from": "src/storage/artifacts/binding.ts",
+      "to": "src/kernel/artifacts/binding.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:18dde755117b201223e4b331133caf9a5e480518e0198f9873ccb1b87452a405",
+      "afterDigest": "sha256:9047c055e326dc2a8454e1e56dd54f0e7177015602a3c92da3f888bd6f103fdb"
+    },
+    {
+      "from": "src/storage/artifacts/consumer.ts",
+      "to": "src/kernel/artifacts/consumer.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:894216487a7e0f53a6486e74e435bb044f59d7f4cac4d6d943b5262f54b2ed57",
+      "afterDigest": "sha256:c689e60ba9ca354ebd9ead23c0fdb233794a834e6a19d1c26ad14c62bdb2397f"
+    },
+    {
+      "from": "src/storage/artifacts/identity.ts",
+      "to": "src/kernel/artifacts/identity.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:7890159c4e47f3c3e0599eb8c42abf1306e6026d02f8b86c618dd3ff8f01b5d8",
+      "afterDigest": "sha256:dcb8905a1ec7af68735002512f9a4f34d4c1578df50dd85611b597c15499731a"
+    },
+    {
+      "from": "src/storage/artifacts/index.ts",
+      "to": "src/kernel/artifacts/index.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:ed3ad0bef232b339c025a3885537ff099e6a9aa8dc7c517acc1d68265956b150",
+      "afterDigest": "sha256:ed3ad0bef232b339c025a3885537ff099e6a9aa8dc7c517acc1d68265956b150"
+    },
+    {
+      "from": "src/storage/artifacts/types.ts",
+      "to": "src/kernel/artifacts/types.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:258309c186d9366b9ba04c34988cda3f1b0b9493dbb8bf54a326575488777b3f",
+      "afterDigest": "sha256:bc04b35c045c8331c7d0a71a39c61134465ee1db2f90925abd3d81484401e3ca"
+    },
+    {
+      "from": "src/storage/memory-event-store.ts",
+      "to": "src/storage/memory-event-store.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:5889eb20bc61d275ff6befce42a7a86e6f525183be6aabb38e56d13f54099212",
+      "afterDigest": "sha256:28aee6eaa5d5db3db6e216e9b8182a511169872927e778ecb79e2c515ff09742"
+    },
+    {
+      "from": "src/storage/memory-snapshot-store.ts",
+      "to": "src/storage/memory-snapshot-store.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:2b4d2834354476160bb8bf054b5e456a3b254ba6bcd50341a039bd9f7ea97b61",
+      "afterDigest": "sha256:fc3e3184d1410ae3667aa4179cf95c6d14c31e4ed44e9147e32ea5f1bc8e95ae"
+    },
+    {
+      "from": "src/storage/memory-artifact-store.ts",
+      "to": "src/storage/memory-artifact-store.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:13dbb8ab131e365998c9f5d8ff92cdc60091ed120ac26d685d94e9f0c42e7769",
+      "afterDigest": "sha256:7811475151fee1c0e4aa19ef8792b57f80329939e8dbcb211d3c95e704c166c3"
+    },
+    {
+      "from": "src/storage/store-session.ts",
+      "to": "src/storage/store-session.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:6d19869c35524b5e663bb6d4239ebac5a1ed1c91299a7dede8abf1d72dbcc500",
+      "afterDigest": "sha256:915ef595a4985add14557afc5e3c982d689f1144eda35b7109bdf3db3f0f07a8"
+    },
+    {
+      "from": "src/storage/index.ts",
+      "to": "src/storage/index.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:b08498eed4f80e56cffaba8367e0cca2e76a350f2bf065fc587b4c19a3f7513a",
+      "afterDigest": "sha256:9969b85604429d6d6d212eae2ea2cacc8cbc552aa8d38c2c0290edb1561fa2d8"
+    },
+    {
+      "from": "src/runtime/session/controls.ts",
+      "to": "src/runtime/session/controls.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:6f59aaa97a7e01af6744f02786def3abcc4f243399b2946cd68dd7e66a6cfd17",
+      "afterDigest": "sha256:45110be942b2d3be005e8f6253976b7b49325f441053e60587cfcbd8e4602a22"
+    },
+    {
+      "from": "src/runtime/session/dispatch.ts",
+      "to": "src/runtime/session/dispatch.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:216270aad7a657fb950746f2d9c9dba89729a931174bbc6d951acdd49468e32b",
+      "afterDigest": "sha256:486db4e0c33a557441f0216484fa84f803def46bc4c5f02c517c4f17a4ef8bd9"
+    },
+    {
+      "from": "src/runtime/session/evaluation.ts",
+      "to": "src/runtime/session/evaluation.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:4abfc791123a67251b0317fbb376c430ca833ff230fa9584680903db79bc3d8d",
+      "afterDigest": "sha256:9fc6cdd4eb96d849d6bdafb9d56a63e974b73f3e2313b45c1a84d557ee6131b5"
+    },
+    {
+      "from": "src/runtime/session/journal.ts",
+      "to": "src/runtime/session/journal.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:9442da4ef75d3808efaa36b89721ae7b546e98e2a4f46083e50914693a3013e8",
+      "afterDigest": "sha256:47d6b6c18bfa7a94b768e92ce53e48294afffd38acc44d50c0c363427fb6c8f2"
+    },
+    {
+      "from": "src/runtime/session/plans.ts",
+      "to": "src/runtime/session/plans.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:cc22827120d0ac7661b18bf2de323d176fa42fe3b374eea4feb2a08de05be8e5",
+      "afterDigest": "sha256:f3e2697f421c66d80cb95f290b35eabe96b3990445a0cbb895eb0e95692e58e8"
+    },
+    {
+      "from": "src/runtime/session/project.ts",
+      "to": "src/runtime/session/project.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:2f98bf1ebc86bb97f99a082e662cf30efa45786ba2f65cd879c410cd786b4ac0",
+      "afterDigest": "sha256:d40909997633d4e98f28d1ab5d9a76c5b87e66e036d490ed1af5003b60a8027e"
+    },
+    {
+      "from": "src/runtime/session/receipts.ts",
+      "to": "src/runtime/session/receipts.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:7ff6fba8a0ff83671d5d08b2e3a6f883759e4db975b7ef8889d391e575605ded",
+      "afterDigest": "sha256:fff290cd7f6dd7fe9383ed157293ad3b955742b33d8e9b58b90c5866f4feb81a"
+    },
+    {
+      "from": "src/runtime/session/service.ts",
+      "to": "src/runtime/session/service.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:0c5b94e7839380e4cd1b9bfd387735b97935c42238f0f10da4049a37583dc65d",
+      "afterDigest": "sha256:b44be2a34f534c9011e88cbf7f5a955f0a0a9fbea0e88ca349eca1556f022f8e"
+    },
+    {
+      "from": "src/runtime/session/types.ts",
+      "to": "src/runtime/session/types.ts",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:d9e047b073d9c2fcac68400bf2d91396d581c32c5f9597cc21fea41cce24a110",
+      "afterDigest": "sha256:99b52337e5ecbe8b8bdd100e3d74ffb9e092c228b54db8ae62655fcf1921354b"
+    },
+    {
+      "from": "test/l2-artifact-access.test.js",
+      "to": "test/l2-artifact-access.test.js",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:1d2df8fca339b1a162e28fa263da7d6ae95d521841fe03ea5316a11b7272abde",
+      "afterDigest": "sha256:cfc4d8d07420a8a48a534a08a6ae213975d139f188dc69bb27f37cd9f9b6dd8b"
+    },
+    {
+      "from": "test/l2-artifact-binding.test.js",
+      "to": "test/l2-artifact-binding.test.js",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:83b3aedc678a582e0097cfd68f383c6031bc58160b7369ff4608add45f923207",
+      "afterDigest": "sha256:ccf4aa9fcd1eef2ca95a8ee96b549342e394f73df3d8a28a420ca1e1b0d19952"
+    },
+    {
+      "from": "test/l2-artifact-consumers.test.js",
+      "to": "test/l2-artifact-consumers.test.js",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:b3772719c09e2668d2dd2671f327cb796c658e5e2f7dd896b46a9dd877b9eeaf",
+      "afterDigest": "sha256:e5e92e14a68f8d3513de720b0263d29f3eb68051597e7b231e842f421a6ff5ea"
+    },
+    {
+      "from": "test/l2-artifact-identity.test.js",
+      "to": "test/l2-artifact-identity.test.js",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:42b48e54ce2b6acd2aa6263846ef7382bf2379cb0286f21001c45a538dfed05e",
+      "afterDigest": "sha256:7db1b4d43ab36cda11365c646d185e9cf0612521ba66cff3dd4724d164c16236"
+    },
+    {
+      "from": "test/l2-artifact-repairs.test.js",
+      "to": "test/l2-artifact-repairs.test.js",
+      "nonImportBytesIdentical": true,
+      "beforeDigest": "sha256:49720e5c8129dfc3a2101759962b1d2e6f45c78b23240a531a8f860d838eb946",
+      "afterDigest": "sha256:d0543bd27bac6d799dc90d8bcee3677d8c2e26ba6319e405b4f5aa7b4ccd23dc"
+    }
+  ],
+  "newBarrelExact": true,
+  "preFixSummaryByteIdentical": true,
+  "preFixSummaryDigest": "sha256:fb55466caa617b70a679808f229f499f73835d03116014dc99cb906687c8fb6f",
+  "currentSummaryDigest": "sha256:fb55466caa617b70a679808f229f499f73835d03116014dc99cb906687c8fb6f",
+  "movedModules": 12,
+  "modifiedRuntimeFiles": 9,
+  "modifiedBackendAndBarrelFiles": 5,
+  "modifiedTestFiles": 5,
+  "trackedChanges": [
+    "src/runtime/session/controls.ts",
+    "src/runtime/session/dispatch.ts",
+    "src/runtime/session/evaluation.ts",
+    "src/runtime/session/journal.ts",
+    "src/runtime/session/plans.ts",
+    "src/runtime/session/project.ts",
+    "src/runtime/session/receipts.ts",
+    "src/runtime/session/service.ts",
+    "src/runtime/session/types.ts",
+    "src/storage/artifacts/access.ts",
+    "src/storage/artifacts/admit.ts",
+    "src/storage/artifacts/availability.ts",
+    "src/storage/artifacts/binding.ts",
+    "src/storage/artifacts/consumer.ts",
+    "src/storage/artifacts/identity.ts",
+    "src/storage/artifacts/index.ts",
+    "src/storage/artifacts/types.ts",
+    "src/storage/contracts.ts",
+    "src/storage/identity.ts",
+    "src/storage/index.ts",
+    "src/storage/memory-artifact-store.ts",
+    "src/storage/memory-event-store.ts",
+    "src/storage/memory-snapshot-store.ts",
+    "src/storage/outbox.ts",
+    "src/storage/projection.ts",
+    "src/storage/store-session.ts",
+    "test/l2-artifact-access.test.js",
+    "test/l2-artifact-binding.test.js",
+    "test/l2-artifact-consumers.test.js",
+    "test/l2-artifact-identity.test.js",
+    "test/l2-artifact-repairs.test.js"
+  ],
+  "addedCoreFiles": [
+    "src/kernel/store/contracts.ts",
+    "src/kernel/store/identity.ts",
+    "src/kernel/store/projection.ts",
+    "src/kernel/store/outbox.ts",
+    "src/kernel/artifacts/access.ts",
+    "src/kernel/artifacts/admit.ts",
+    "src/kernel/artifacts/availability.ts",
+    "src/kernel/artifacts/binding.ts",
+    "src/kernel/artifacts/consumer.ts",
+    "src/kernel/artifacts/identity.ts",
+    "src/kernel/artifacts/index.ts",
+    "src/kernel/artifacts/types.ts",
+    "src/kernel/store/index.ts"
+  ],
+  "sourceFiles": 194,
+  "frozenContractUnchanged": true,
+  "testAssertionsUnchanged": true,
+  "sessionPortsSignatureUnchanged": true,
+  "status": " M src/runtime/session/controls.ts\n M src/runtime/session/dispatch.ts\n M src/runtime/session/evaluation.ts\n M src/runtime/session/journal.ts\n M src/runtime/session/plans.ts\n M src/runtime/session/project.ts\n M src/runtime/session/receipts.ts\n M src/runtime/session/service.ts\n M src/runtime/session/types.ts\n D src/storage/artifacts/access.ts\n D src/storage/artifacts/admit.ts\n D src/storage/artifacts/availability.ts\n D src/storage/artifacts/binding.ts\n D src/storage/artifacts/consumer.ts\n D src/storage/artifacts/identity.ts\n D src/storage/artifacts/index.ts\n D src/storage/artifacts/types.ts\n D src/storage/contracts.ts\n D src/storage/identity.ts\n M src/storage/index.ts\n M src/storage/memory-artifact-store.ts\n M src/storage/memory-event-store.ts\n M src/storage/memory-snapshot-store.ts\n D src/storage/outbox.ts\n D src/storage/projection.ts\n M src/storage/store-session.ts\n M test/l2-artifact-access.test.js\n M test/l2-artifact-binding.test.js\n M test/l2-artifact-consumers.test.js\n M test/l2-artifact-identity.test.js\n M test/l2-artifact-repairs.test.js\n?? src/kernel/artifacts/access.ts\n?? src/kernel/artifacts/admit.ts\n?? src/kernel/artifacts/availability.ts\n?? src/kernel/artifacts/binding.ts\n?? src/kernel/artifacts/consumer.ts\n?? src/kernel/artifacts/identity.ts\n?? src/kernel/artifacts/index.ts\n?? src/kernel/artifacts/types.ts\n?? src/kernel/store/contracts.ts\n?? src/kernel/store/identity.ts\n?? src/kernel/store/index.ts\n?? src/kernel/store/outbox.ts\n?? src/kernel/store/projection.ts\n?? test/l2-kernel-verify-faults.test.js\n?? test/l2-kernel-verify-normal.test.js\n?? verification/kernel/DRIFT.md\n?? verification/kernel/ERROR-MATRIX.md\n?? verification/kernel/MIGRATION.md\n?? verification/kernel/README.md\n?? verification/kernel/REPORT.md\n?? verification/kernel/capture-evidence.mjs\n?? verification/kernel/evidence/boundary-errors.run-1.json\n?? verification/kernel/evidence/boundary-errors.run-2.json\n?? verification/kernel/evidence/budget.run-1.json\n?? verification/kernel/evidence/budget.run-2.json\n?? verification/kernel/evidence/cancellation.run-1.json\n?? verification/kernel/evidence/cancellation.run-2.json\n?? verification/kernel/evidence/command-repeatability.json\n?? verification/kernel/evidence/concurrency.run-1.json\n?? verification/kernel/evidence/concurrency.run-2.json\n?? verification/kernel/evidence/crash-after.run-1.json\n?? verification/kernel/evidence/crash-after.run-2.json\n?? verification/kernel/evidence/crash-before.run-1.json\n?? verification/kernel/evidence/crash-before.run-2.json\n?? verification/kernel/evidence/crash-intended.run-1.json\n?? verification/kernel/evidence/crash-intended.run-2.json\n?? verification/kernel/evidence/delegation.run-1.json\n?? verification/kernel/evidence/delegation.run-2.json\n?? verification/kernel/evidence/epoch.run-1.json\n?? verification/kernel/evidence/epoch.run-2.json\n?? verification/kernel/evidence/error-matrix.json\n?? verification/kernel/evidence/gates/build.stderr.txt\n?? verification/kernel/evidence/gates/build.stdout.txt\n?? verification/kernel/evidence/gates/dep-check.stderr.txt\n?? verification/kernel/evidence/gates/dep-check.stdout.txt\n?? verification/kernel/evidence/gates/results.json\n?? verification/kernel/evidence/gates/source-preservation.json\n?? verification/kernel/evidence/gates/src-policy.stderr.txt\n?? verification/kernel/evidence/gates/src-policy.stdout.txt\n?? verification/kernel/evidence/gates/test.stderr.txt\n?? verification/kernel/evidence/gates/test.stdout.txt\n?? verification/kernel/evidence/gates/typecheck.stderr.txt\n?? verification/kernel/evidence/gates/typecheck.stdout.txt\n?? verification/kernel/evidence/mutations/budget-policy-bypass.green.txt\n?? verification/kernel/evidence/mutations/budget-policy-bypass.red.txt\n?? verification/kernel/evidence/mutations/budget-policy-bypass.restored.txt\n?? verification/kernel/evidence/mutations/graph-completion-shadow.green.txt\n?? verification/kernel/evidence/mutations/graph-completion-shadow.red.txt\n?? verification/kernel/evidence/mutations/graph-completion-shadow.restored.txt\n?? verification/kernel/evidence/mutations/host-skips-evaluator.green.txt\n?? verification/kernel/evidence/mutations/host-skips-evaluator.red.txt\n?? verification/kernel/evidence/mutations/host-skips-evaluator.restored.txt\n?? verification/kernel/evidence/mutations/incomplete-becomes-zero.green.txt\n?? verification/kernel/evidence/mutations/incomplete-becomes-zero.red.txt\n?? verification/kernel/evidence/mutations/incomplete-becomes-zero.restored.txt\n?? verification/kernel/evidence/mutations/missing-intention.green.txt\n?? verification/kernel/evidence/mutations/missing-intention.red.txt\n?? verification/kernel/evidence/mutations/missing-intention.restored.txt\n?? verification/kernel/evidence/mutations/old-epoch-applied.green.txt\n?? verification/kernel/evidence/mutations/old-epoch-applied.red.txt\n?? verification/kernel/evidence/mutations/old-epoch-applied.restored.txt\n?? verification/kernel/evidence/mutations/results.json\n?? verification/kernel/evidence/mutations/unknown-resend.green.txt\n?? verification/kernel/evidence/mutations/unknown-resend.red.txt\n?? verification/kernel/evidence/mutations/unknown-resend.restored.txt\n?? verification/kernel/evidence/ordinary.run-1.json\n?? verification/kernel/evidence/ordinary.run-2.json\n?? verification/kernel/evidence/pre-fix/command-repeatability.json\n?? verification/kernel/evidence/pre-fix/relocation-sources.json\n?? verification/kernel/evidence/pre-fix/repeatability.json\n?? verification/kernel/evidence/pre-fix/static-audit.json\n?? verification/kernel/evidence/pre-fix/summary.json\n?? verification/kernel/evidence/relocation-verification.json\n?? verification/kernel/evidence/relocation.json\n?? verification/kernel/evidence/repair.run-1.json\n?? verification/kernel/evidence/repair.run-2.json\n?? verification/kernel/evidence/repeatability.json\n?? verification/kernel/evidence/run-command-1.stderr.txt\n?? verification/kernel/evidence/run-command-1.stdout.txt\n?? verification/kernel/evidence/run-command-2.stderr.txt\n?? verification/kernel/evidence/run-command-2.stdout.txt\n?? verification/kernel/evidence/scope-check.json\n?? verification/kernel/evidence/stale-lease.run-1.json\n?? verification/kernel/evidence/stale-lease.run-2.json\n?? verification/kernel/evidence/static-audit-command.stdout.json\n?? verification/kernel/evidence/static-audit.json\n?? verification/kernel/evidence/summary.json\n?? verification/kernel/faults.mjs\n?? verification/kernel/fixtures.mjs\n?? verification/kernel/harness.mjs\n?? verification/kernel/mutation-loader.mjs\n?? verification/kernel/mutations.mjs\n?? verification/kernel/normal.mjs\n?? verification/kernel/recovery.mjs\n?? verification/kernel/relocate.mjs\n?? verification/kernel/run-mutations.mjs\n?? verification/kernel/run.mjs\n?? verification/kernel/static-audit.mjs\n?? verification/kernel/verify-gates.mjs\n?? verification/kernel/verify-relocation.mjs\n",
+  "commitsCreated": false,
+  "graphOperations": false
+}

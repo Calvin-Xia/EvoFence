@@ -1,0 +1,35 @@
+(node:39136) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ kernel verify cp2 old epoch webhook cannot advance state or settle funds (14.788ms)
+[mutation-applied:old-epoch-applied] dist/runtime/session/receipts.js
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 204.5501
+
+✖ failing tests:
+
+test at test\l2-kernel-verify-faults.test.js:10:1
+✖ kernel verify cp2 old epoch webhook cannot advance state or settle funds (14.788ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'applied'
+  - 'archived'
+  
+      at TestContext.epoch (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/recovery.mjs:95:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'applied',
+    expected: 'archived',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

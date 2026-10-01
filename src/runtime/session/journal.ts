@@ -1,6 +1,6 @@
 /** Pure identities and the one application CAS write path. */
 import { DEFS } from '../../protocol/index.js';
-import { canonical, storeFail, storeOk } from '../../storage/index.js';
+import { canonical, storeFail, storeOk } from '../../kernel/store/index.js';
 import type { Decoded } from '../../protocol/index.js';
 import type { ArtifactRef, Binding, CommandOutcome, EventDraft, PlannedBatch, RuntimeState, SessionCommand, SessionPorts, StoreResult } from './types.js';
 

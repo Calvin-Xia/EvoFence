@@ -2,8 +2,8 @@
 import { decode } from '../../protocol/index.js';
 import type { Decoded } from '../../protocol/index.js';
 import { decide, type NodeOutcome } from '../../kernel/graph/index.js';
-import { verifyForConsumer, type ArtifactRef as ConsumerArtifact, type BindingExpectation } from '../../storage/artifacts/index.js';
-import { canonical, storeFail } from '../../storage/index.js';
+import { verifyForConsumer, type ArtifactRef as ConsumerArtifact, type BindingExpectation } from '../../kernel/artifacts/index.js';
+import { canonical, storeFail } from '../../kernel/store/index.js';
 import { bindingFor, currentAttemptOf, nodeStateOf } from './project.js';
 import { commit, event, idFor, putObject, transition } from './journal.js';
 import type { ArtifactRef, CommandOutcome, RuntimeState, SessionPorts, SessionSeed, StoreResult } from './types.js';

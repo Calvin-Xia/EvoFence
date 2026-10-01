@@ -2,8 +2,8 @@
 import { normalizeUsage, openBudgetLedger, releaseUnspent, reserve, settle, usageIdentity } from '../../kernel/policy/index.js';
 import { asInstant, fail } from '../../protocol/index.js';
 import { claimFor } from '../../kernel/scheduler/index.js';
-import { emptyReplayState, intendedIds, projectOutbox, reconcileIds, replay, storeOk } from '../../storage/index.js';
-import type { ExportedSession, StoreResult } from '../../storage/index.js';
+import { emptyReplayState, intendedIds, projectOutbox, reconcileIds, replay, storeOk } from '../../kernel/store/index.js';
+import type { ExportedSession, StoreResult } from '../../kernel/store/index.js';
 import type { Binding, Effect, Event, RuntimeState, SessionSeed } from './types.js';
 import type { NodeState } from '../../kernel/graph/index.js';
 

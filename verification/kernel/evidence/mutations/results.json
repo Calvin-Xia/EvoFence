@@ -1,0 +1,315 @@
+[
+  {
+    "id": "host-skips-evaluator",
+    "file": "dist/runtime/session/receipts.js",
+    "testFile": "test/l2-kernel-verify-normal.test.js",
+    "pattern": "ordinary atomic intention",
+    "edits": [
+      [
+        "move('verifying');",
+        "move('succeeded');",
+        2
+      ]
+    ],
+    "purpose": "Host completion may not bypass registered evaluation.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "host-skips-evaluator"
+    },
+    "diskDigestBefore": "sha256:49e75388ac895d13b01a261866bb3085bb5a751acc4db8a22566f2cb93b8eb14",
+    "diskDigestAfter": "sha256:49e75388ac895d13b01a261866bb3085bb5a751acc4db8a22566f2cb93b8eb14",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (21.7177ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.3238\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:51860) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (12.3509ms)\n[mutation-applied:host-skips-evaluator] dist/runtime/session/receipts.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 190.7663\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-normal.test.js:4:1\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (12.3509ms)\n  AssertionError [ERR_ASSERTION]: host completion must wait for evaluation\n  + actual - expected\n  \n  + 'succeeded'\n  - 'verifying'\n  \n      at TestContext.ordinary (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/normal.mjs:24:10)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'succeeded',\n    expected: 'verifying',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (22.7818ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.1053\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "missing-intention",
+    "file": "dist/runtime/session/plans.js",
+    "testFile": "test/l2-kernel-verify-normal.test.js",
+    "pattern": "ordinary atomic intention",
+    "edits": [
+      [
+        "effects.push(effect);",
+        "/* mutation: omit outbox effect */",
+        1
+      ]
+    ],
+    "purpose": "A journal intention without committed effect bytes cannot reach the host.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "missing-intention"
+    },
+    "diskDigestBefore": "sha256:2127ca855f5ab6d784c0eb9972db5ea71db853a824d532d66ddadc44a46a907a",
+    "diskDigestAfter": "sha256:2127ca855f5ab6d784c0eb9972db5ea71db853a824d532d66ddadc44a46a907a",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (21.8277ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 140.7233\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:52668) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (8.8808ms)\n[mutation-applied:missing-intention] dist/runtime/session/plans.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 192.5878\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-normal.test.js:4:1\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (8.8808ms)\n  AssertionError [ERR_ASSERTION]: {\"code\":\"EFK_INVARIANT_VIOLATION\",\"message\":\"effect.intended effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0 has no effect content in this transaction\",\"retry\":\"after-reconcile\",\"refs\":[\"effect:round:6a959fcb6163dcbabf82ca0119187f9a:n0\"],\"visibility\":\"internal\"}\n  \n  false !== true\n  \n      at value (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/harness.mjs:10:40)\n      at TestContext.ordinary (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/normal.mjs:20:18)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (22.2872ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 153.4083\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "unknown-resend",
+    "file": "dist/kernel/store/outbox.js",
+    "testFile": "test/l2-kernel-verify-faults.test.js",
+    "pattern": "crash after native execution",
+    "edits": [
+      [
+        "entry.state === 'intended').map",
+        "entry.state !== 'resolved').map",
+        1
+      ]
+    ],
+    "purpose": "Claimed unknown effects stay out of the dispatcher sendable set.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "unknown-resend"
+    },
+    "diskDigestBefore": "sha256:1921c6893f37f7a25d2d3424b0bfc2336019a8f53455e917150f3c2be1ba2312",
+    "diskDigestAfter": "sha256:1921c6893f37f7a25d2d3424b0bfc2336019a8f53455e917150f3c2be1ba2312",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern crash after native execution test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (23.3204ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 150.3867\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern crash after native execution test/l2-kernel-verify-faults.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:48536) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (13.5625ms)\n[mutation-applied:unknown-resend] dist/kernel/store/outbox.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 193.5738\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-faults.test.js:9:1\n✖ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (13.5625ms)\n  AssertionError [ERR_ASSERTION]: {\"code\":\"EFK_CLAIM_CONFLICT\",\"message\":\"effect effect:round:9db5ac8417e7777fef204239494803c2:n0 is dispatched; only an intended effect is dispatchable\",\"retry\":\"after-refresh\",\"refs\":[\"effect:round:9db5ac8417e7777fef204239494803c2:n0\"],\"visibility\":\"internal\"}\n  \n  false !== true\n  \n      at value (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/harness.mjs:10:40)\n      at TestContext.crashAfter (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/recovery.mjs:43:3)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern crash after native execution test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 crash after native execution keeps unknown until actual reconcile evidence (22.4985ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 147.7781\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "incomplete-becomes-zero",
+    "file": "dist/runtime/session/project.js",
+    "testFile": "test/l2-kernel-verify-faults.test.js",
+    "pattern": "policy rejects oversubscription",
+    "edits": [
+      [
+        "{ ...normalized.value, digest: usageIdentity(row) }",
+        "{ ...normalized.value, micros: 0, complete: true, digest: usageIdentity(row) }",
+        1
+      ]
+    ],
+    "purpose": "Incomplete telemetry must retain the actual reservation.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "incomplete-becomes-zero"
+    },
+    "diskDigestBefore": "sha256:eb8c1e0d2e4003009a5336e7e13476c2185a0936da869d495df9c86845b1aa11",
+    "diskDigestAfter": "sha256:eb8c1e0d2e4003009a5336e7e13476c2185a0936da869d495df9c86845b1aa11",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (24.9248ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 148.6362\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:49384) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (11.3511ms)\n[mutation-applied:incomplete-becomes-zero] dist/runtime/session/project.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 189.4851\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-faults.test.js:6:1\n✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (11.3511ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  0 !== 1\n  \n      at TestContext.budget (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/faults.mjs:93:10)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 0,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (26.7213ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 156.5691\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "old-epoch-applied",
+    "file": "dist/runtime/session/receipts.js",
+    "testFile": "test/l2-kernel-verify-faults.test.js",
+    "pattern": "old epoch webhook",
+    "edits": [
+      [
+        "receipt.binding.epoch !== state.epoch ||",
+        "false ||",
+        1
+      ]
+    ],
+    "purpose": "Late old-epoch receipts remain archived with unchanged state and budget.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "old-epoch-applied"
+    },
+    "diskDigestBefore": "sha256:49e75388ac895d13b01a261866bb3085bb5a751acc4db8a22566f2cb93b8eb14",
+    "diskDigestAfter": "sha256:49e75388ac895d13b01a261866bb3085bb5a751acc4db8a22566f2cb93b8eb14",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern old epoch webhook test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 old epoch webhook cannot advance state or settle funds (23.9959ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 149.2834\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern old epoch webhook test/l2-kernel-verify-faults.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:39136) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp2 old epoch webhook cannot advance state or settle funds (14.788ms)\n[mutation-applied:old-epoch-applied] dist/runtime/session/receipts.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 204.5501\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-faults.test.js:10:1\n✖ kernel verify cp2 old epoch webhook cannot advance state or settle funds (14.788ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + 'applied'\n  - 'archived'\n  \n      at TestContext.epoch (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/recovery.mjs:95:10)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'applied',\n    expected: 'archived',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern old epoch webhook test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 old epoch webhook cannot advance state or settle funds (23.0669ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 150.2137\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "budget-policy-bypass",
+    "file": "dist/kernel/policy/risk.js",
+    "testFile": "test/l2-kernel-verify-faults.test.js",
+    "pattern": "policy rejects oversubscription",
+    "edits": [
+      [
+        "if (input.budget.error !== null)",
+        "if (false)",
+        1
+      ],
+      [
+        "if (input.budget.snapshot.exhausted)",
+        "if (false)",
+        1
+      ]
+    ],
+    "purpose": "Runtime scheduling really calls the production policy budget gate.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "budget-policy-bypass"
+    },
+    "diskDigestBefore": "sha256:ec1fa97aa4ea24e770a41906dc05a848decef52e4b9634d828e59a2d191b892e",
+    "diskDigestAfter": "sha256:ec1fa97aa4ea24e770a41906dc05a848decef52e4b9634d828e59a2d191b892e",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (24.2541ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 150.3001\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:18428) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (16.3861ms)\n[mutation-applied:budget-policy-bypass] dist/kernel/policy/risk.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 199.0497\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-faults.test.js:6:1\n✖ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (16.3861ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + undefined\n  - 'EFK_BUDGET_EXHAUSTED'\n  \n      at error (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/harness.mjs:13:10)\n      at Object.recordError (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/harness.mjs:157:20)\n      at TestContext.budget (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/faults.mjs:102:5)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: 'EFK_BUDGET_EXHAUSTED',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern policy rejects oversubscription test/l2-kernel-verify-faults.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp2 policy rejects oversubscription and separates reservation from settlement (26.0201ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 148.7826\n"
+    },
+    "fileWasModified": false
+  },
+  {
+    "id": "graph-completion-shadow",
+    "file": "dist/kernel/graph/decide.js",
+    "testFile": "test/l2-kernel-verify-normal.test.js",
+    "pattern": "ordinary atomic intention",
+    "edits": [
+      [
+        "return 'succeeded';",
+        "return 'failed';",
+        1
+      ]
+    ],
+    "purpose": "The application consumes graph.decide outcome, not an independent success branch.",
+    "environment": {
+      "EFK_VERIFICATION_MUTATION": "graph-completion-shadow"
+    },
+    "diskDigestBefore": "sha256:8e82763053f1d1b82787706e8e4e67e96598dd9ce38af8bd2a11273e2325b406",
+    "diskDigestAfter": "sha256:8e82763053f1d1b82787706e8e4e67e96598dd9ce38af8bd2a11273e2325b406",
+    "green": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (23.3097ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 147.3936\n"
+    },
+    "red": {
+      "command": "node --loader file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 1,
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "output": "(node:49652) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"file%3A///C%3A/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/mutation-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (16.3272ms)\n[mutation-applied:graph-completion-shadow] dist/kernel/graph/decide.js\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 205.6078\n\n✖ failing tests:\n\ntest at test\\l2-kernel-verify-normal.test.js:4:1\n✖ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (16.3272ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + 'failed'\n  - 'succeeded'\n  \n      at TestContext.ordinary (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/verification/kernel/normal.mjs:39:10)\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async Test.run (node:internal/test_runner/test:1113:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'failed',\n    expected: 'succeeded',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    "restored": {
+      "command": "node --test --test-reporter=spec --test-name-pattern ordinary atomic intention test/l2-kernel-verify-normal.test.js",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "output": "✔ kernel verify cp1 ordinary atomic intention -> receipt -> evaluation -> serialized close (22.0709ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 146.6329\n"
+    },
+    "fileWasModified": false
+  }
+]

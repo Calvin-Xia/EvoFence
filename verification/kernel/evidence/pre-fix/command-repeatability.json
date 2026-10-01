@@ -1,0 +1,95 @@
+{
+  "command": "node verification/kernel/run.mjs",
+  "run1Exit": 1,
+  "run2Exit": 1,
+  "explanation": "Exit 1 is the blocking cp3 I01 drift; cp1/cp2 assertions and repeatability all pass.",
+  "summaryByteIdentical": true,
+  "summaryDigest1": "sha256:92a28fba3b14e86edfcab233811593ba02fa0a003604092c5f82b7b5a124acf0",
+  "summaryDigest2": "sha256:92a28fba3b14e86edfcab233811593ba02fa0a003604092c5f82b7b5a124acf0",
+  "tracePairs": [
+    {
+      "file": "boundary-errors.run-1.json",
+      "other": "boundary-errors.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:1e3def03df25b166514501ac83345a4caa24df097956fd54d19a634e08d7a1bc",
+      "diskDigest2": "sha256:1e3def03df25b166514501ac83345a4caa24df097956fd54d19a634e08d7a1bc"
+    },
+    {
+      "file": "budget.run-1.json",
+      "other": "budget.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:6fee97be258e376ad1b90f6433980d74977024f81de890fbcdb30ad98d76346a",
+      "diskDigest2": "sha256:6fee97be258e376ad1b90f6433980d74977024f81de890fbcdb30ad98d76346a"
+    },
+    {
+      "file": "cancellation.run-1.json",
+      "other": "cancellation.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:5dc88dafa302c7a68ea8c1ee4bcc964232bb5b3b67bbf4e7eaec76ef53c7568d",
+      "diskDigest2": "sha256:5dc88dafa302c7a68ea8c1ee4bcc964232bb5b3b67bbf4e7eaec76ef53c7568d"
+    },
+    {
+      "file": "concurrency.run-1.json",
+      "other": "concurrency.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:9cc8051d7255be3d8aa2663e188163fde4c28887978d42a0e85ab59594f58a28",
+      "diskDigest2": "sha256:9cc8051d7255be3d8aa2663e188163fde4c28887978d42a0e85ab59594f58a28"
+    },
+    {
+      "file": "crash-after.run-1.json",
+      "other": "crash-after.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:87a5925ea53e0df6e7c4cb12f97f6c5006c95eb2d0011fe32ab0ca0a9b4dfc83",
+      "diskDigest2": "sha256:87a5925ea53e0df6e7c4cb12f97f6c5006c95eb2d0011fe32ab0ca0a9b4dfc83"
+    },
+    {
+      "file": "crash-before.run-1.json",
+      "other": "crash-before.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:190373a91bfd27aad20e8cee4201dd6515b6d2fec925a86cd449b2a22bc51680",
+      "diskDigest2": "sha256:190373a91bfd27aad20e8cee4201dd6515b6d2fec925a86cd449b2a22bc51680"
+    },
+    {
+      "file": "crash-intended.run-1.json",
+      "other": "crash-intended.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:3f3f8f79f4b6983e2b98d65c52f8b9672121e1059e433285833afa2beb39cab9",
+      "diskDigest2": "sha256:3f3f8f79f4b6983e2b98d65c52f8b9672121e1059e433285833afa2beb39cab9"
+    },
+    {
+      "file": "delegation.run-1.json",
+      "other": "delegation.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:2cc2a15f35c16782971855662d24bf0cdc7752a43e35465afced0031eb40e18c",
+      "diskDigest2": "sha256:2cc2a15f35c16782971855662d24bf0cdc7752a43e35465afced0031eb40e18c"
+    },
+    {
+      "file": "epoch.run-1.json",
+      "other": "epoch.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:028894bd311ad90856804708efaedeb43b943b903104fa0e510101a9bac1dfdc",
+      "diskDigest2": "sha256:028894bd311ad90856804708efaedeb43b943b903104fa0e510101a9bac1dfdc"
+    },
+    {
+      "file": "ordinary.run-1.json",
+      "other": "ordinary.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:d760b72a8e0553261324dfc45de29714cf4816b03ab5eb55a92c334eafd82b7d",
+      "diskDigest2": "sha256:d760b72a8e0553261324dfc45de29714cf4816b03ab5eb55a92c334eafd82b7d"
+    },
+    {
+      "file": "repair.run-1.json",
+      "other": "repair.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:22d872bcbae3e88d8a9300678c0d07c2f094aee49b8432aa06f99ab3f2123f5d",
+      "diskDigest2": "sha256:22d872bcbae3e88d8a9300678c0d07c2f094aee49b8432aa06f99ab3f2123f5d"
+    },
+    {
+      "file": "stale-lease.run-1.json",
+      "other": "stale-lease.run-2.json",
+      "byteIdentical": true,
+      "diskDigest1": "sha256:e51d28c9c393bddca6a5448348a11cce7813e0e3f5c18fbd07976f69aa7ef422",
+      "diskDigest2": "sha256:e51d28c9c393bddca6a5448348a11cce7813e0e3f5c18fbd07976f69aa7ef422"
+    }
+  ]
+}

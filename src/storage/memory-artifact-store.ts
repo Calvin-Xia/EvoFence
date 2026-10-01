@@ -11,9 +11,9 @@
  * implemented here; a credential embedded in the locator is the case this store can decide.
  */
 import { decode } from '../protocol/index.js';
-import type { ArtifactRef, ArtifactStore, StoreResult } from './contracts.js';
-import { storeFail, storeOk } from './contracts.js';
-import type { DigestPort } from './identity.js';
+import type { ArtifactRef, ArtifactStore, StoreResult } from '../kernel/store/contracts.js';
+import { storeFail, storeOk } from '../kernel/store/contracts.js';
+import type { DigestPort } from '../kernel/store/identity.js';
 
 /** S01: serialized UTF-8 content bound. */
 const MAX_ARTIFACT_BYTES = 1024 * 1024;
