@@ -240,8 +240,12 @@
       "thinking": "max (orchestrator) / high (reviewers) / xhigh (codex)",
       "startedAt": "2026-10-01T15:45:00.000Z",
       "phase": "L2",
-      "currentNode": "l2_scheduler",
-      "completedNodes": [],
+      "currentNode": "l2_kernel_verification",
+      "completedNodes": [
+        "l2_artifact_port",
+        "l2_scheduler",
+        "l2_runtime"
+      ],
       "routingPolicy": "User directive 2026-10-01: execution-class work goes to codex CLI; review/verification to fresh pi+deepseek tabs (new tab per review, no long-context reuse); hand off the orchestrator when its context grows; enable /goal-focus in the successor pi.",
       "fleet": {
         "orchestrator": {
@@ -255,29 +259,22 @@
         },
         "activePanes": [
           {
-            "paneId": "wG:pS",
-            "name": "l2-runtime-codex",
+            "paneId": "wG:p11",
+            "name": "l2-kernel-verify",
             "harness": "codex",
             "model": "gpt-6.1-sol",
             "thinking": "xhigh",
-            "role": "l2_runtime implementation lane"
-          },
-          {
-            "paneId": "wG:pT",
-            "name": "l2-artifact-codex",
-            "harness": "codex",
-            "model": "gpt-6.1-sol",
-            "thinking": "xhigh",
-            "role": "l2_artifact_port minor fixes"
-          },
-          {
-            "paneId": "wG:pV",
-            "name": "l2-scheduler-codex",
-            "harness": "codex",
-            "model": "gpt-6.1-sol",
-            "thinking": "xhigh",
-            "role": "l2_scheduler blocker/major/minor fixes"
+            "role": "l2_kernel_verification execution lane (integration worktree, sole writer)"
           }
+        ],
+        "closedPanes": [
+          "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
+          "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
+          "wG:pS l2-runtime-codex (impl merged 90e589f, pane closed)",
+          "wG:pY verify-artifact-fix (accepted dossier, pane closed)",
+          "wG:pZ verify-scheduler-fix (accepted dossier, pane closed)",
+          "wG:p0 verify-runtime (accepted dossier, pane closed)",
+          "wG:pC S04 orchestrator (handoff complete, pane closed)"
         ]
       },
       "cwd": "C:/Users/Calvin-Xia/EvoFence",
