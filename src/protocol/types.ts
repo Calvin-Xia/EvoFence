@@ -25,7 +25,7 @@ type RequiredOf<K extends DefName> = (typeof DEFS)[K] extends { required: readon
  *
  * Branch order mirrors the frozen document's own vocabulary: `$ref`, `const`, `enum`, `array`,
  * `object`+`additionalProperties`, the scalar `type`s, then `anyOf`. A node that matches nothing
- * here is `unknown` — `test/protocol/schema-drift.test.ts` asserts that the keyword set used by
+ * here is `unknown` — `test/protocol-schema-drift.test.js` asserts that the keyword set used by
  * `$defs` is exactly the set `codec.ts` implements, so an unhandled construct fails the suite
  * rather than silently degrading to `unknown`.
  */

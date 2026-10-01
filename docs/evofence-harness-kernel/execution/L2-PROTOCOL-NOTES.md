@@ -92,7 +92,7 @@ import { decode } from '../../dist/protocol/index.js';
 |---|---|
 | `DEFS` / `DefName` | 冻结字段表与定义名；由 drift 测试钉死在 `SCHEMAS.md` |
 | `Decoded<K>` / `Wire<S>` / `ObjectName` / `ScalarName` | 从表推导的 wire 类型 |
-| `decode(name, value)` | 唯一的边界校验入口；返回 `Validated<K>` |
+| `decode(name, value)` | 唯一的边界校验入口；返回 `Validated<K>`。封套自带的 `protocol` 版本对**在这一步就过 S02 门**，**真相源按冻结文档里 `protocol` 指向的定义选**：runtime 封套用 `ProtocolVersion`、资产封套用 `AssetProtocolVersion`（`evofence.assets/1 @ 1.0.0`），两域不共用枚举。值与冻结值不符 → `EFK_PROTOCOL_UNSUPPORTED`，缺字段/结构错 → `EFK_SCHEMA_INVALID`。调用方**不需要**记住“先 `decodeRuntimeVersion` 再 `decode`”的顺序 |
 | `decodeProtocolVersion` / `decodeRuntimeVersion` | 版本门（未知版本 → `EFK_PROTOCOL_UNSUPPORTED`） |
 | `fail(code, message, refs?, visibility?)` / `ErrorEnvelope` / `ErrorCode` / `RETRY_POLICY` / `ERROR_CODES` | 唯一错误封套与纠错类别 |
 | `Id` / `Digest` / `ModelId` / `Instant` / `brand` / `asDigest` / `asInstant` | 编译期身份品牌（运行时擦除） |

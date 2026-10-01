@@ -2,7 +2,7 @@
  * Field table, group `policy` (12 definitions).
  *
  * Transcribed once from `SCHEMAS.md` §1 `$defs` (l1-freeze.2, schemaVersion 1.1.0).
- * Do not hand-edit: `test/protocol/schema-drift.test.ts` re-parses the frozen document and
+ * Do not hand-edit: `test/protocol-schema-drift.test.js` re-parses the frozen document and
  * fails on any divergence in the definition set, property set, required set or field type.
  */
 import type { DefsSchema } from '../defs.js';

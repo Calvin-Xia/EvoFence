@@ -6,7 +6,7 @@
  * JSON Schema draft 2020-12). Those tables must satisfy `DefsSchema`, and `codec.ts` implements
  * exactly `ASSERTION_KEYWORDS`.
  *
- * Two machine checks keep that honest (`test/protocol/schema-drift.test.ts`):
+ * Two machine checks keep that honest (`test/protocol-schema-drift.test.js`):
  *   1. every object/field/type in the tables equals the `$defs` block re-parsed from SCHEMAS.md;
  *   2. the keyword set used by `$defs` equals `ASSERTION_KEYWORDS ∪ ANNOTATION_KEYWORDS`, so a new
  *      keyword in the frozen document fails the test instead of being silently ignored.

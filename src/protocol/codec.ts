@@ -215,8 +215,34 @@ function validate(spec: Def, value: unknown, at: string): Failure | null {
   return null;
 }
 
+/**
+ * Map a version-pair failure to its error: a **value** that mismatches the frozen namespace /
+ * schemaVersion is S02 (`EFK_PROTOCOL_UNSUPPORTED`), anything else is a shape error. Shared by the
+ * runtime gate and the asset gate so the two domains cannot drift apart.
+ */
+function versionError(specName: DefName, value: unknown, at: string): ErrorEnvelope | null {
+  const failure = validate(DEFS[specName], value, at);
+  if (failure === null) return null;
+  const code: ErrorCode = failure.keyword === 'const' || failure.keyword === 'enum' ? 'EFK_PROTOCOL_UNSUPPORTED' : 'EFK_SCHEMA_INVALID';
+  return fail(code, failure.message);
+}
+
 /** Decode one definition. Unknown fields and unknown enum/const values are rejected. */
 export function decode<K extends DefName>(name: K, value: unknown): Validated<K> {
+  // An envelope carries its version pair under `protocol`, and `SCHEMAS.md §3` S02 makes an unknown
+  // pair a protocol error wherever it appears. Run that gate first so callers never have to
+  // remember an ordering. The truth source is whatever definition the frozen document points
+  // `protocol` at: runtime envelopes use `ProtocolVersion`, asset envelopes use
+  // `AssetProtocolVersion` (`evofence.assets/1 @ 1.0.0`). Definitions that declare no `protocol`
+  // are untouched.
+  const declared = (DEFS[name] as Def).properties?.protocol;
+  if (declared?.$ref !== undefined) {
+    const protocol = value !== null && typeof value === 'object' ? (value as { protocol?: unknown }).protocol : undefined;
+    if (protocol !== undefined) {
+      const error = versionError(refName(declared.$ref) as DefName, protocol, `${name}.protocol`);
+      if (error !== null) return { ok: false, error };
+    }
+  }
   const failure = validate(DEFS[name], value, name);
   if (failure === null) return { ok: true, value: value as Decoded<K> };
   return { ok: false, error: fail('EFK_SCHEMA_INVALID', failure.message) };
@@ -226,15 +252,15 @@ export function decode<K extends DefName>(name: K, value: unknown): Validated<K>
  * Decode the runtime protocol envelope.
  *
  * `ProtocolVersion` expresses "which versions exist" as a `const` namespace plus an `enum`
- * schemaVersion, so on this node those two keywords *are* the S02 version gate; every other
- * rejection (missing `namespace`, wrong type) stays `EFK_SCHEMA_INVALID`. That is why this is a
- * separate entry point instead of a second schema.
+ * schemaVersion, so on this node those two keywords *are* the S02 version gate: a **value** that
+ * mismatches either one comes back as `EFK_PROTOCOL_UNSUPPORTED`, while a missing `namespace` or a
+ * structurally wrong value stays `EFK_SCHEMA_INVALID`. That is why this is a separate entry point
+ * instead of a second schema.
  */
-export function decodeProtocolVersion(value: unknown): Validated<'ProtocolVersion'> {
-  const failure = validate(DEFS.ProtocolVersion, value, 'ProtocolVersion');
-  if (failure === null) return { ok: true, value: value as Decoded<'ProtocolVersion'> };
-  const code: ErrorCode = failure.keyword === 'const' || failure.keyword === 'enum' ? 'EFK_PROTOCOL_UNSUPPORTED' : 'EFK_SCHEMA_INVALID';
-  return { ok: false, error: fail(code, failure.message) };
+export function decodeProtocolVersion(value: unknown, at = 'ProtocolVersion'): Validated<'ProtocolVersion'> {
+  const error = versionError('ProtocolVersion', value, at);
+  if (error === null) return { ok: true, value: value as Decoded<'ProtocolVersion'> };
+  return { ok: false, error };
 }
 
 /**

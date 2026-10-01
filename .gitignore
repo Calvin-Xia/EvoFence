@@ -19,3 +19,6 @@ docs/deep-research-report.md
 # pi goal-tracking state (machine-local)
 .pi/goals/
 .pi/.goals-pool-snapshot.json*
+
+# guard test scratch (regenerated per run)
+test/protocol-guard/.work/

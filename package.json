@@ -27,8 +27,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "build": "node node_modules/typescript/bin/tsc",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "src:policy": "node scripts/check-src-policy.mjs",
     "dep:check": "node scripts/check-deps.mjs",
     "config:doc": "npm run build && node scripts/check-config-doc.mjs",

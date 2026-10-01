@@ -219,6 +219,7 @@ async function guardMain(argv) {
   }
   function isPortType(n) { return n.type && portNames.some(p => new RegExp('\\b' + p + '\\b').test(n.type.getText())); }
   let portParameters = new Set();
+  let storageParameters = new Set();
   function portDerived(n, seen = new Set()) {
     n = unwrap(n);
     if (ts.isIdentifier(n)) {
@@ -235,12 +236,14 @@ async function guardMain(argv) {
       return false;
     }
     if (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) return portDerived(n.expression, seen);
+    if (ts.isSpreadElement(n)) return portDerived(n.expression, seen);
+    if (ts.isNewExpression(n) && n.arguments) return n.arguments.some(a => portDerived(a, new Set(seen)));
     // Track capability handles stored in objects/arrays/closures as well as direct aliases.
     if (ts.isObjectLiteralExpression(n)) return n.properties.some(p => {
       if (ts.isPropertyAssignment(p)) return portDerived(p.initializer, new Set(seen));
       if (ts.isShorthandPropertyAssignment(p)) return portDerived(p.name, new Set(seen));
       if (ts.isSpreadAssignment(p)) return portDerived(p.expression, new Set(seen));
-      if (ts.isMethodDeclaration(p)) return portDerived(p, new Set(seen));
+      if (ts.isFunctionLike(p) && p.body) return portDerived(p, new Set(seen));
       return false;
     });
     if (ts.isArrayLiteralExpression(n)) return n.elements.some(e => portDerived(e, new Set(seen)));
@@ -255,6 +258,12 @@ async function guardMain(argv) {
     }
     if (ts.isConditionalExpression(n)) return portDerived(n.whenTrue, new Set(seen)) || portDerived(n.whenFalse, new Set(seen));
     if (ts.isCallExpression(n)) {
+      const e = valueAlias(n.expression), key = memberName(e);
+      if (key !== null) {
+        const base = valueAlias(e.expression);
+        const builtin = ts.isIdentifier(base) && !isLocal(base) ? base.text : null;
+        if (builtin === 'Object' && ['assign', 'freeze', 'create'].includes(key) || builtin === 'Array' && key === 'from' || builtin === 'Promise' && ['resolve', 'all', 'allSettled'].includes(key)) return n.arguments.some(a => portDerived(a, new Set(seen)));
+      }
       const signature = checker.getResolvedSignature(n), d = signature && signature.declaration;
       if (!d || !d.body || seen.has(d) || !checkedFiles.has(canonical(d.getSourceFile().fileName))) return false;
       seen.add(d);
@@ -269,8 +278,92 @@ async function guardMain(argv) {
     }
     return false;
   }
+  function moduleStorage(node, seen = new Set()) {
+    const n = unwrap(node);
+    if (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) return moduleStorage(n.expression, seen);
+    if (ts.isCallExpression(n)) {
+      const signature = checker.getResolvedSignature(n), d = signature && signature.declaration;
+      if (!d || !d.body || seen.has(d) || !checkedFiles.has(canonical(d.getSourceFile().fileName))) return false;
+      seen.add(d);
+      if (!ts.isBlock(d.body)) return moduleStorage(d.body, seen);
+      let returnsStorage = false;
+      function scan(child) {
+        if (ts.isReturnStatement(child) && child.expression && moduleStorage(child.expression, new Set(seen))) returnsStorage = true;
+        if (!ts.isFunctionLike(child)) ts.forEachChild(child, scan);
+      }
+      scan(d.body);
+      return returnsStorage;
+    }
+    if (!ts.isIdentifier(n)) return false;
+    let symbol = bindingSymbol(n);
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol);
+    const d = symbol && symbol.valueDeclaration;
+    if (!d || seen.has(d)) return false;
+    seen.add(d);
+    if (ts.isParameter(d)) return storageParameters.has(d);
+    if (ts.isSourceFile(d)) return true;
+    if (ts.isClassDeclaration(d) || ts.isFunctionDeclaration(d) || ts.isEnumDeclaration(d)) {
+      let scope = d.parent;
+      while (!ts.isFunctionLike(scope) && !ts.isSourceFile(scope)) scope = scope.parent;
+      return ts.isSourceFile(scope);
+    }
+    if (ts.isVariableDeclaration(d)) {
+      let scope = d.parent;
+      while (!ts.isFunctionLike(scope) && !ts.isSourceFile(scope)) scope = scope.parent;
+      return ts.isSourceFile(scope) || Boolean(d.initializer && moduleStorage(d.initializer, seen));
+    }
+    if (ts.isBindingElement(d)) {
+      const parent = d.parent.parent;
+      if (ts.isParameter(parent)) return storageParameters.has(parent);
+      if (ts.isVariableDeclaration(parent)) {
+        let scope = parent.parent;
+        while (!ts.isFunctionLike(scope) && !ts.isSourceFile(scope)) scope = scope.parent;
+        return ts.isSourceFile(scope) || Boolean(parent.initializer && moduleStorage(parent.initializer, seen));
+      }
+    }
+    return false;
+  }
+  function valueAlias(node, seen = new Set()) {
+    const n = unwrap(node);
+    if (!ts.isIdentifier(n)) return n;
+    const symbol = bindingSymbol(n), d = symbol && symbol.valueDeclaration;
+    if (d && ts.isVariableDeclaration(d) && d.initializer && !seen.has(d)) {
+      seen.add(d);
+      return valueAlias(d.initializer, seen);
+    }
+    return n;
+  }
+  function memberName(n) {
+    if (ts.isPropertyAccessExpression(n)) return n.name.text;
+    if (ts.isElementAccessExpression(n) && ts.isStringLiteralLike(n.argumentExpression)) return n.argumentExpression.text;
+    return null;
+  }
+  const containerMutators = new Set(['push', 'set', 'add', 'unshift', 'splice']);
+  function capturesPortByMutation(call) {
+    const e = valueAlias(call.expression);
+    if (ts.isCallExpression(e) && memberName(e.expression) === 'bind') {
+      const fn = valueAlias(e.expression.expression), key = memberName(fn);
+      if (key !== null) {
+        const receiver = valueAlias(fn.expression);
+        const builtin = ts.isIdentifier(receiver) && !isLocal(receiver) ? receiver.text : null;
+        const args = [...e.arguments.slice(1), ...call.arguments];
+        if (builtin === 'Object' && ['assign', 'defineProperty', 'defineProperties'].includes(key) || builtin === 'Reflect' && key === 'set') return args.length > 1 && moduleStorage(args[0]) && args.slice(1).some(a => portDerived(a));
+        if (containerMutators.has(key)) return e.arguments.length > 0 && moduleStorage(e.arguments[0]) && args.some(a => portDerived(a));
+      }
+      return false;
+    }
+    const key = memberName(e);
+    if (key === null) return false;
+    const receiver = valueAlias(e.expression);
+    const builtin = ts.isIdentifier(receiver) && !isLocal(receiver) ? receiver.text : null;
+    if (builtin === 'Object' && ['assign', 'defineProperty', 'defineProperties'].includes(key) || builtin === 'Reflect' && key === 'set') {
+      return call.arguments.length > 1 && moduleStorage(call.arguments[0]) && call.arguments.slice(1).some(a => portDerived(a));
+    }
+    return containerMutators.has(key) && moduleStorage(e.expression) && call.arguments.some(a => portDerived(a));
+  }
   function tracePortArguments() {
     portParameters = new Set();
+    storageParameters = new Set();
     let changed;
     do {
       changed = false;
@@ -282,6 +375,10 @@ async function guardMain(argv) {
               const parameter = d.parameters[i];
               if (!portParameters.has(parameter) && portDerived(n.arguments[i])) {
                 portParameters.add(parameter);
+                changed = true;
+              }
+              if (!storageParameters.has(parameter) && moduleStorage(n.arguments[i])) {
+                storageParameters.add(parameter);
                 changed = true;
               }
             }
@@ -310,6 +407,7 @@ async function guardMain(argv) {
         const e = unwrap(n.expression), p = expressionPath(e);
         if (e.kind === ts.SyntaxKind.ImportKeyword) reject('I03','DYNAMIC_IMPORT',record.file,'dynamic import forbidden, including literal targets');
         if (p === 'Date') reject('I04','AMBIENT_DATE_CALL',record.file,'Date() reads ambient time');
+        if (capturesPortByMutation(n)) reject('I08','PORT_CONTAINER_CAPTURE',record.file,'injected port escapes into module-scoped storage through '+e.getText(sf));
         if (top && e.kind !== ts.SyntaxKind.ImportKeyword && !isPureTopCall(n)) reject('I05','TOP_CALL_UNPROVEN',record.file,'top-level/static call is not a recognized pure initializer: '+e.getText(sf));
       }
       if (ts.isNewExpression(n)) {
@@ -353,16 +451,7 @@ async function guardMain(argv) {
       if (ts.isBinaryExpression(n) && [ts.SyntaxKind.QuestionQuestionToken,ts.SyntaxKind.BarBarToken,ts.SyntaxKind.QuestionQuestionEqualsToken,ts.SyntaxKind.BarBarEqualsToken].includes(n.operatorToken.kind) && portDerived(n.left)) reject('I08','PORT_FALLBACK',record.file,'injected capability cannot fall back to a default backend');
       if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken && portDerived(n.left)) reject('I08','PORT_REPLACEMENT',record.file,'core cannot replace an injected capability or its alias');
       if (ts.isBinaryExpression(n) && n.operatorToken.kind===ts.SyntaxKind.EqualsToken && portDerived(n.right)) {
-        let target=unwrap(n.left);
-        while (ts.isPropertyAccessExpression(target) || ts.isElementAccessExpression(target)) target=unwrap(target.expression);
-        if (ts.isIdentifier(target)) {
-          const s=checker.getSymbolAtLocation(target), d=s && s.valueDeclaration;
-          if (d) {
-            let scope=d.parent;
-            while (scope && !ts.isFunctionLike(scope) && !ts.isSourceFile(scope)) scope=scope.parent;
-            if (scope && ts.isSourceFile(scope)) reject('I08','PORT_CAPTURE',record.file,'injected port escapes into module-scoped storage');
-          }
-        }
+        if (moduleStorage(n.left)) reject('I08','PORT_CAPTURE',record.file,'injected port escapes into module-scoped storage');
       }
       if (ts.isConditionalExpression(n) && portDerived(n.condition)) reject('I08','PORT_CONDITIONAL_DEFAULT',record.file,'capability-dependent fallback requires explicit host policy, not a core default');
       if (ts.isClassDeclaration(n) || ts.isClassExpression(n)) {
@@ -494,6 +583,7 @@ async function guardMain(argv) {
       Math.random=trap('Math.random'); Date.now=trap('Date.now');
       const NativeDate=Date;
       globalThis.Date=new Proxy(NativeDate,{construct(){return __record('new Date');},apply(){return __record('Date()');}});
+      NativeDate.prototype.constructor=globalThis.Date;
       globalThis.performance={now:trap('performance.now')};
     }`,context);
     const modules = new Map();

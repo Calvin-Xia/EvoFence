@@ -78,6 +78,7 @@ test('core guard I01-I08: green baseline and red counterexamples',async t=>{
     await t.test('missing declared root never passes',()=>{
       const r=spawnSync(process.execPath,[guard,'--root','protocol='+path.join(area,'missing')],{cwd:repo,encoding:'utf8'});
       assert.equal(r.status,1);assert.match(r.stderr,/ENOENT/);
+      t.diagnostic('missing-root exit='+r.status+' '+r.stderr.split(/\r?\n/)[0]);
     });
     await t.test('global compiler escape hatch is removed',()=>{
       const r=spawnSync(process.execPath,[guard,'--compiler','typescript'],{cwd:repo,encoding:'utf8'});

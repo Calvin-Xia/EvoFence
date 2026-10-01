@@ -1,3 +1,5 @@
+# Regenerates the tracked test/protocol-guard/EVIDENCE-PROTOCOL.txt, including on failure.
+# Product src/dist/config stay read-only; this evidence file is an explicit output.
 $ErrorActionPreference = 'Stop'
 Push-Location (Resolve-Path (Join-Path $PSScriptRoot '../..'))
 try {
@@ -45,12 +47,22 @@ try {
   records.push('command: node ' + args.join(' '), 'guard exit=' + result.status, result.stdout, result.stderr);
   assert.equal(result.status, 0, result.stdout + result.stderr);
 
-  const bare = spawnSync(process.execPath, ['scripts/check-core-imports.mjs'], { cwd: repo, encoding: 'utf8' });
-  if (bare.error) throw bare.error;
-  records.push('command: node scripts/check-core-imports.mjs', 'default three-root guard exit=' + bare.status, bare.stdout, bare.stderr);
-  assert.equal(bare.status, 1);
-  assert.match(bare.stderr, /ENOENT/);
+  // Negative fixtures are owned here; live kernel/runtime may be added by other lanes.
+  const empty = path.join(area, 'empty');
+  mkdirSync(empty);
+  for (const [name, root, diagnostic] of [
+    ['missing-root', path.join(area, 'missing'), /ENOENT/],
+    ['empty-root', empty, /\[I01\/ENTRY_REQUIRED\]/],
+  ]) {
+    const negativeArgs = ['scripts/check-core-imports.mjs', '--root', 'protocol=' + root];
+    const negative = spawnSync(process.execPath, negativeArgs, { cwd: repo, encoding: 'utf8' });
+    if (negative.error) throw negative.error;
+    records.push('command: node ' + negativeArgs.join(' '), name + ' exit=' + negative.status, negative.stdout, negative.stderr);
+    assert.equal(negative.status, 1);
+    assert.match(negative.stderr, diagnostic);
+  }
 } finally {
+  // Deliberately regenerate the evidence artifact; this script is not repository-read-only.
   writeFileSync(path.join(here, 'EVIDENCE-PROTOCOL.txt'), records.join('\n'));
   // Remove only this invocation's directory, after checking its resolved parent.
   const realArea = realpathSync(area);

@@ -177,3 +177,44 @@ test('unknown protocol version is a protocol error, a malformed envelope is a sc
   assert.match(rejects(decodeProtocolVersion({ namespace: 'evofence.runtime/1', schemaVersion: '1.1.0', v: 1 }), 'EFK_SCHEMA_INVALID'), /unknown field "v"/);
   assert.equal(decodeRuntimeVersion({ namespace: 'evofence.assets/1', schemaVersion: '1.0.0' }).ok, false);
 });
+
+test('a nested envelope reports an unknown version pair as a protocol error (S02)', () => {
+  const stale = rejects(decode('Command', { protocol: { namespace: 'evofence.runtime/1', schemaVersion: '9.9.9' } }), 'EFK_PROTOCOL_UNSUPPORTED');
+  assert.match(stale, /Command\.protocol/);
+  rejects(decode('Command', { protocol: { namespace: 'evofence.runtime/2', schemaVersion: '1.1.0' } }), 'EFK_PROTOCOL_UNSUPPORTED');
+  // A structurally broken pair is still a schema error, and a definition without a `protocol`
+  // property is untouched by the gate.
+  rejects(decode('Command', { protocol: { namespace: 'evofence.runtime/1' } }), 'EFK_SCHEMA_INVALID');
+  const noProtocolProperty = rejects(
+    decode('NodeStateEntry', { nodeId: 'n1', attemptOrdinal: 1, epoch: 1, state: 'ready', sinceSequence: 0, protocol: { namespace: 'evofence.runtime/1', schemaVersion: '9.9.9' } }),
+    'EFK_SCHEMA_INVALID',
+  );
+  assert.match(noProtocolProperty, /unknown field "protocol"/);
+});
+
+/** Required fields: protocol, assetId, revision, digest, scope, qualificationRef. */
+const validAssetRef = {
+  protocol: { namespace: 'evofence.assets/1', schemaVersion: '1.0.0' },
+  assetId: 'asset.1',
+  revision: 1,
+  digest: `sha256:${'7'.repeat(64)}`,
+  scope: { workspaceRef: null, readResources: [], writeResources: [], artifactScopes: [], trustDomain: 'same-user' },
+  qualificationRef: null,
+};
+
+test('asset envelopes are gated against their own version pair, not the runtime one', () => {
+  assert.equal(ok(decode('AssetRef', validAssetRef)).assetId, 'asset.1');
+  assert.equal(ok(decode('AssetRef', { ...validAssetRef, protocol: { namespace: 'evofence.assets/1', schemaVersion: '1.0.0' } })).revision, 1);
+
+  const wrongNamespace = rejects(
+    decode('AssetRef', { ...validAssetRef, protocol: { namespace: 'evofence.runtime/1', schemaVersion: '1.0.0' } }),
+    'EFK_PROTOCOL_UNSUPPORTED',
+  );
+  assert.match(wrongNamespace, /AssetRef\.protocol\.namespace/);
+  rejects(decode('AssetRef', { ...validAssetRef, protocol: { namespace: 'evofence.assets/1', schemaVersion: '1.1.0' } }), 'EFK_PROTOCOL_UNSUPPORTED');
+  const missingField = rejects(decode('AssetRef', { ...validAssetRef, protocol: { namespace: 'evofence.assets/1' } }), 'EFK_SCHEMA_INVALID');
+  assert.match(missingField, /AssetRef\.protocol/);
+
+  // The runtime pair stays rejected as an asset pair: the two domains never share an enumeration.
+  rejects(decode('CapabilityAsset', { protocol: { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' } }), 'EFK_PROTOCOL_UNSUPPORTED');
+});

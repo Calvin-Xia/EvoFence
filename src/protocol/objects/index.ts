@@ -2,7 +2,7 @@
  * The frozen definition table, merged from the six field-table groups.
  *
  * `DEFS` is the single runtime truth for the protocol layer: `codec.ts` validates against it and
- * `types.ts` derives every wire type from it. `test/protocol/schema-drift.test.ts` re-parses
+ * `types.ts` derives every wire type from it. `test/protocol-schema-drift.test.js` re-parses
  * `SCHEMAS.md` and fails if this table diverges from `$defs` in any way.
  */
 import type { DefsSchema } from '../defs.js';

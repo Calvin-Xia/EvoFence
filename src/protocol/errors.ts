@@ -1,7 +1,7 @@
 /**
  * The 58 frozen error codes, their retry class, and the one error envelope.
  *
- * Transcribed once from `ERRORS.md` (l1-freeze.2). `test/protocol/schema-drift.test.ts` re-parses
+ * Transcribed once from `ERRORS.md` (l1-freeze.2). `test/protocol-schema-drift.test.js` re-parses
  * that file and the `ErrorCode` enum in `SCHEMAS.md` and fails on any divergence. `RETRY_POLICY` is
  * keyed by `ErrorCode`, so adding a code without a retry class does not compile.
  *

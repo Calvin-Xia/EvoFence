@@ -1326,6 +1326,435 @@
         "from": "runtime/linked",
         "to": "kernel"
       }
+    },
+    {
+      "name": "I08-Object-assign",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){Object.assign(box,{host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-Object-defineProperty",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){Object.defineProperty(box,'host',{value:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-Object-defineProperties",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){Object.defineProperties(box,{host:{value:ports.HostPort}});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-Reflect-set",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){Reflect.set(box,'host',ports.HostPort);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-array-push",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];\nexport function createKernel(ports:Ports){box.push(ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-array-unshift",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];\nexport function createKernel(ports:Ports){box.unshift(ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-array-splice",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];\nexport function createKernel(ports:Ports){box.splice(0,0,ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-map-set",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box=new Map<string,unknown>();\nexport function createKernel(ports:Ports){box.set('store',ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-set-add",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box=new Set<unknown>();\nexport function createKernel(ports:Ports){box.add(ports.HostPort);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-array-push-spread",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];\nexport function createKernel(ports:Ports){box.push(...[ports.EventStore]);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-local-container-alias",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];\nexport function createKernel(ports:Ports){const alias=box;alias.push(ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-Object-assign-alias",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){const O=Object;const B=O;const assign=B.assign;assign(box,{host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-helper-container-mutation",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:unknown[]=[];function save(dest:unknown[],value:unknown){dest.push(value);}\nexport function createKernel(ports:Ports){save(box,ports.EventStore);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-local-alias-assignment",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box:{host?:unknown}={};\nexport function createKernel(ports:Ports){const alias=box;alias.host=ports.HostPort;return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-class-container",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nclass Box{static items:unknown[]=[];}\nexport function createKernel(ports:Ports){Box.items.push(ports.HostPort);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-getter-container-capture",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nconst box={};\nexport function createKernel(ports:Ports){Object.assign(box,{get host(){return ports.HostPort;}});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-instance-container-positive",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\nexport interface Ports {EventStore:{read():number};}\n",
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; export function createKernel(ports:Ports){const box={};Object.assign(box,{host:ports.HostPort});const bag:unknown[]=[];bag.push(ports.EventStore);return {box,bag};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-bound-mutator",
+      "expect": 1,
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';const box={};export function createKernel(ports:Ports){const save=Object.assign.bind(null,box);save({host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ],
+      "rule": "I08"
+    },
+    {
+      "name": "I08-returned-container",
+      "expect": 1,
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';const box={};function getBox(){return box;}export function createKernel(ports:Ports){Object.assign(getBox(),{host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ],
+      "rule": "I08"
+    },
+    {
+      "name": "I06-built-container-capture",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js';const box={};export function createKernel(ports){Object.assign(box,{host:ports.HostPort});return {reduce};}\n"
+      }
+    },
+    {
+      "name": "I02-ambient-node-declaration",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "declare module \"node:fs\" {export interface Entry{value:string}}\nexport const version=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-ambient-wildcard-declaration",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "declare module \"*\" {export interface Entry{value:string}}\nexport const version=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-computed-constructor-unexecuted-blind",
+      "expect": 0,
+      "blind": [
+        "I03"
+      ],
+      "files": {
+        "protocol/index.ts": "export function load(){return (()=>0)['con'+'structor']('return 1')();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-computed-constructor-probed",
+      "expect": 1,
+      "rule": "I07",
+      "blind": [
+        "I03"
+      ],
+      "files": {
+        "protocol/index.ts": "export function load(){return (()=>0)['con'+'structor']('return 1')();}\n"
+      },
+      "roots": [
+        "protocol"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "protocol",
+            "export": "load",
+            "args": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "I07-Date-prototype-constructor",
+      "expect": 1,
+      "rule": "I07",
+      "blind": [
+        "I04"
+      ],
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';export function createKernel(ports:Ports){const C=(Date as any).prototype['con'+'structor'];const stamp=new C().getTime();return {stamp};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I07-finite-two-runs-blind",
+      "expect": 0,
+      "blind": [
+        "I07"
+      ],
+      "files": {
+        "kernel/index.ts": "let serial=0;export function reduce(){return {count:++serial<=2 ? 0:1};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I08-module-service-instance",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';class Service {constructor(readonly ports:Ports){}};let shared;export function createKernel(ports:Ports){shared=new Service(ports);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-frozen-handle-wrapper",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';let shared;export function createKernel(ports:Ports){shared=Object.freeze({host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-Promise-handle-wrapper",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';let shared;export function createKernel(ports:Ports){shared=Promise.resolve(ports.HostPort);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-returned-wrapper-container-blind",
+      "expect": 0,
+      "blind": [
+        "I08"
+      ],
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';const box={};function getBox(){return {target:box};}export function createKernel(ports:Ports){Object.assign(getBox().target,{host:ports.HostPort});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
     }
   ]
 }
