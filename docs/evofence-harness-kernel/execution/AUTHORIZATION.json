@@ -1,0 +1,827 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-01T06:55:35.778Z",
+  "sourceThreadId": "01a0f605-610d-7c30-bc1a-fb28a5b61f9a",
+  "human": "Calvin-Xia",
+  "executionQuote": "允许你新开对话进行完整执行。每一个新开对话都需要承接上一个session的内容，并交付handoff到下一个session。新开对话非万不得已不开子代理，依然使用gpt-6.1-sol xhigh",
+  "budgetQuote": "你可以启动pi或者opencode吗？如果可以xiaomi/mimo-v2.6-flash high，0.50usd",
+  "interpretedScope": "Full refactor execution of the delivered design, serial successor chats with durable handoffs; breaking changes allowed; future experimental conclusions and final human acceptance are not pre-approved results",
+  "model": "gpt-6.1-sol",
+  "thinking": "xhigh",
+  "modelExperiment": {
+    "providerModel": "xiaomi/mimo-v2.6-flash",
+    "reasoning": "high",
+    "totalAdditionalApiUsd": 0.5
+  },
+  "publicationAuthorized": false,
+  "existingGlobalSkillsWriteAuthorized": false,
+  "baseline": {
+    "cwd": "C:\\Users\\Calvin-Xia\\.codex\\worktrees\\72a4\\EvoFence",
+    "branch": "",
+    "head": "d47f88367564e65db026b43b4b1e4fd83f06a4b7",
+    "status": "?? docs/evofence-harness-kernel/"
+  },
+  "approvedDesign": {
+    "graph": "evofence-harness-kernel",
+    "graphId": "graph_1790834332454_5x67g3",
+    "sourceManifestSha256": "061fac1c932d0c3f2a401ce1b0f59358931040d2ec3e9a7ea52d3a7281682944",
+    "sourceHashes": [
+      {
+        "file": "edges/e001.yaml",
+        "sha256": "ae4befa37b45ce633e370e83a14dc0c2b6bda431aabdea86e325fa8dfc226ce0"
+      },
+      {
+        "file": "edges/e002.yaml",
+        "sha256": "62752b08fd71817b20d04d43da199e16c8be49cdb7bd25a56834f0d43d9d3941"
+      },
+      {
+        "file": "edges/e003.yaml",
+        "sha256": "00761e67a4137e9c415e61896cb602ba322120973f3d20f3ebccf7fde48f127f"
+      },
+      {
+        "file": "edges/e004.yaml",
+        "sha256": "bdabf59f3a8162580ae4a30e62991fc2b111c5d77ac8a6421f3a7ac6c4773b77"
+      },
+      {
+        "file": "edges/e005.yaml",
+        "sha256": "943c421fb0b5df8359b6eee7e5c123f69af1e91b7ef1f2bee1c3eeec6951e92b"
+      },
+      {
+        "file": "edges/e006.yaml",
+        "sha256": "631c349dbe3b4a4bbfa9c9df8c3dc33aa4278b0ad6a4ee012505ff95723c2243"
+      },
+      {
+        "file": "edges/e007.yaml",
+        "sha256": "46b4af0c3ff761895e3dfca9d5cf32135736d84ea7bb0f22dafc158e1c5e2f55"
+      },
+      {
+        "file": "edges/e008.yaml",
+        "sha256": "05faf5697682449a72b0846be93b3727f86026be058670e3823d78001ed352c4"
+      },
+      {
+        "file": "edges/e009.yaml",
+        "sha256": "08a5e514e39d0a51b4e4772ede4fc7080fe449d3f05910a17c31aec0677e3d51"
+      },
+      {
+        "file": "edges/e010.yaml",
+        "sha256": "aa7b3db1687cada12b328e1486245ed1536926210e9dae2b89a5ff8d4cd35c20"
+      },
+      {
+        "file": "edges/e011.yaml",
+        "sha256": "2e5cfbb8cc955764298f40f61de0a4d06ec33f365ab147cff46cd6f3436152cb"
+      },
+      {
+        "file": "edges/e012.yaml",
+        "sha256": "2991c166b9ba4705e95159c864eb2907d3779acdc7ec3b30fb39fc9ff1134c12"
+      },
+      {
+        "file": "edges/e013.yaml",
+        "sha256": "3eb4b2d4f7755aebf2051f586fba39d2a9ac0ed239e6234341ef695059e2f818"
+      },
+      {
+        "file": "edges/e014.yaml",
+        "sha256": "fe13c7929f8896a97d005637d831bb270ea09e730d884c46591c78a79db4dc9e"
+      },
+      {
+        "file": "edges/e015.yaml",
+        "sha256": "a16bd7eef3122453ed82bf4785323b6e2a139a9702eaafc90d714d730172ee4b"
+      },
+      {
+        "file": "edges/e016.yaml",
+        "sha256": "8d24b7fe92c125e3bf1f4e27b9816a8a3faa925b18059ee52777589b802d4861"
+      },
+      {
+        "file": "edges/e017.yaml",
+        "sha256": "0b26b0ff6c93d06ad4052a9f556e347b6eedd91e962819d02166ec50363de6ae"
+      },
+      {
+        "file": "edges/e018.yaml",
+        "sha256": "3f4e1446f667924e57054db541c3099dbc7ea929bbcc598eb7165ce371da12a8"
+      },
+      {
+        "file": "edges/e019.yaml",
+        "sha256": "0ddc087a27610fecb6b7ecdfe462f75024aed382585c9ebb7113d65f2354a817"
+      },
+      {
+        "file": "edges/e020.yaml",
+        "sha256": "803c94a7b86ac1b8240da01bae5508c984205a9379bd772db6162577ecc80413"
+      },
+      {
+        "file": "edges/e021.yaml",
+        "sha256": "c008c05f0deff3efe60e2612bce9d013b4f12b8943f65eca29e443d18b8022c3"
+      },
+      {
+        "file": "edges/e022.yaml",
+        "sha256": "d82c682c8b4da1445260eba8f899709c325cde5aba7fd92e7c3ba506961a18db"
+      },
+      {
+        "file": "edges/e023.yaml",
+        "sha256": "631af95ba6fba4c4424ed2a9ec8085eb099391d01098205f2caafe177557a0f7"
+      },
+      {
+        "file": "edges/e024.yaml",
+        "sha256": "bc7d0c049cd589f791922c2ad4c7ab5fba8bc5d3f90bf316e711242a777edd20"
+      },
+      {
+        "file": "edges/e025.yaml",
+        "sha256": "61038613b157a430aafc3efb0b69b9c04e03bd9697a37d8d825b2fea660ff198"
+      },
+      {
+        "file": "edges/e026.yaml",
+        "sha256": "342eb04a6001d591488a35f1a64cbd16e6623ccd6f0a268b82cf5821f8a40393"
+      },
+      {
+        "file": "edges/e027.yaml",
+        "sha256": "aa4030ff4c1505323857fb66997cce846b22465506d21e717b3ac4633284d259"
+      },
+      {
+        "file": "edges/e028.yaml",
+        "sha256": "c33d4bc7ef4f4eb11af6b9f8f579cdf216412f8ba285fd34f367b6128595fba5"
+      },
+      {
+        "file": "edges/e029.yaml",
+        "sha256": "0fef1fec53fa189e55d1774b7c37f231876762feec22aca99a6c4a2a2d54fca0"
+      },
+      {
+        "file": "edges/e030.yaml",
+        "sha256": "b7eaab7460c763742a24886bcbdc96dea243b28646bee8a6fef19489dc44f90e"
+      },
+      {
+        "file": "edges/e031.yaml",
+        "sha256": "cf532636a311ed4c36eab76ea394a8bf04a48995cbd399e3d14b76b7b9aa78f0"
+      },
+      {
+        "file": "edges/e032.yaml",
+        "sha256": "47baf054827693b9042c934203c7ba097880c4ffffcf27d81f96a00c8c311973"
+      },
+      {
+        "file": "edges/e033.yaml",
+        "sha256": "a84e9f36c7bc000ac5ff7e1f7e35a3238dff40cf505ed69f87472f8a13832aa3"
+      },
+      {
+        "file": "edges/e034.yaml",
+        "sha256": "8852b85e23572fc738fe049e3db00da63960cd446e5be600bfd1f85c6783e03b"
+      },
+      {
+        "file": "edges/e035.yaml",
+        "sha256": "3db86dea301fb12fd55e7d85aae2fd09a9d7f63c8db288853749789a2b0deca8"
+      },
+      {
+        "file": "edges/e036.yaml",
+        "sha256": "ebf516a8cbd86fcbeb4a087aeb243cd856e59c6cdf0d8d3aa35dcf30ff088450"
+      },
+      {
+        "file": "edges/e037.yaml",
+        "sha256": "a199ce7f0ffdc9c97ee0f03133eda829c5a01b7b8f5795900a47d263220991cc"
+      },
+      {
+        "file": "edges/e038.yaml",
+        "sha256": "5f97d4e1473278f398a246d2a62312c35870fe95e2b42aa83a55dc7507a969fe"
+      },
+      {
+        "file": "edges/e039.yaml",
+        "sha256": "ec1be10647c700098cd94370573bf0bf27752a731759dba2075f6b273a6ad57d"
+      },
+      {
+        "file": "edges/e040.yaml",
+        "sha256": "8ad712d94f60f5714febe9ed61b3fcf3ed0bcbdc90439362eb36768c804cafc0"
+      },
+      {
+        "file": "edges/e041.yaml",
+        "sha256": "2c567acb7d9b1ab47b050ded2133634446ac3af964dc415f7efdbe93906b62e7"
+      },
+      {
+        "file": "edges/e042.yaml",
+        "sha256": "06bdcaddbe7430d50c9572130e1554207bdb43213423cb294e9025ce03f17bcb"
+      },
+      {
+        "file": "edges/e043.yaml",
+        "sha256": "8433ce52b105c41c7cdaa5ca8cbefce92b5912754b562de5ffc4eb634ac5f9bb"
+      },
+      {
+        "file": "edges/e044.yaml",
+        "sha256": "dbfbd36d16b85572186ffb8024f6ea81b180ee77cf705d640790aaecee49dd7c"
+      },
+      {
+        "file": "edges/e045.yaml",
+        "sha256": "2c429a3f9372fcb8bf9ab7ec2941a4c1d645cb56bb6a307de86f0e25aa89fff7"
+      },
+      {
+        "file": "edges/e046.yaml",
+        "sha256": "aca4a8659ebb6e720f2981e683bc4c60509e3d420015379cec3f6f97a721c190"
+      },
+      {
+        "file": "edges/e047.yaml",
+        "sha256": "a4785f9264cc51956341c0b8028c3ad531426fd3ba7c61f01ccb6fdb9aedea2a"
+      },
+      {
+        "file": "edges/e048.yaml",
+        "sha256": "8e3f0242fac3e64b99401b0e5843dead44eea044d2253a08b7865bdd651fee69"
+      },
+      {
+        "file": "edges/e049.yaml",
+        "sha256": "fe0b3258ee8c43a2a29960a19507faf0690204899523f313c51b4e4140dc7369"
+      },
+      {
+        "file": "edges/e050.yaml",
+        "sha256": "761181b7b6181a427bb469431d10cc56aa09267c3f4a6b4eafb82d3ba8e2eb5b"
+      },
+      {
+        "file": "edges/e051.yaml",
+        "sha256": "e51f0b3cfa8a9dc902d32779f9175e7c32bae44691a665b9b81d4493b76c00da"
+      },
+      {
+        "file": "edges/e052.yaml",
+        "sha256": "7fcfd972aafaa5e6529fff512923582c388b2618ad9c296a3735a8691d42ea3e"
+      },
+      {
+        "file": "edges/e053.yaml",
+        "sha256": "dc8fb1e464efc81823585bc6e3328bf7900d60950bcb970c6c06bc0b0ea7b7a0"
+      },
+      {
+        "file": "edges/e054.yaml",
+        "sha256": "75384fd5b6ebafa81de55ecfe60c4129e1b2e3d97c48c7f5fbc94bdd83aae7ab"
+      },
+      {
+        "file": "edges/e055.yaml",
+        "sha256": "45421eebb5880fa36bd7c4dd87cd6e4aae08d8ce7fbe441d952b8bc56dc9b17b"
+      },
+      {
+        "file": "edges/e056.yaml",
+        "sha256": "6baffb12df3997424cfae8fd221cc973a88c16e621058a4157963d98a2ec82f3"
+      },
+      {
+        "file": "edges/e057.yaml",
+        "sha256": "05fb88381294493b676ada34e7c590f9d0cab014f6065cc57daba2a4bf7b3a84"
+      },
+      {
+        "file": "edges/e058.yaml",
+        "sha256": "ca2737ecd80c2d0e9cca3a51ab535286c23c21e936fee071c208a749332d88de"
+      },
+      {
+        "file": "edges/e059.yaml",
+        "sha256": "d8bc5e98bef819503ead2e5097e4b6d38a5e1f1abae5993ae154775ec4b3a78d"
+      },
+      {
+        "file": "edges/e060.yaml",
+        "sha256": "ccc2cf98787421c0f526b694d160a57ff9ffa235927db571e4964c3fe9c10132"
+      },
+      {
+        "file": "edges/e061.yaml",
+        "sha256": "9a81e003b4525a3fb3f414908a6a717db45a4ad633b29ef655210adaac92b9cf"
+      },
+      {
+        "file": "edges/e062.yaml",
+        "sha256": "b7a7b6d3a15fdeabf1556db1f1bb822caacda75f983d5776c5597af6cab932e6"
+      },
+      {
+        "file": "edges/e063.yaml",
+        "sha256": "4fa63f83a9f33e0ec57bc3b14fe50695b50e2c040e46c0123fd9cdef6295195a"
+      },
+      {
+        "file": "edges/e064.yaml",
+        "sha256": "08c6abc2dfb5f293a76f3091f145acaf0476beb1305f123b6000243ac2a48e35"
+      },
+      {
+        "file": "edges/e065.yaml",
+        "sha256": "16c9fc631c340e05a1ce4972717e450278d9eb24d40ffb36401720447e35fb30"
+      },
+      {
+        "file": "edges/e066.yaml",
+        "sha256": "67e313df820408c87ed601d4ce5f24ab7154498293275123ce2cf68d0eca8939"
+      },
+      {
+        "file": "edges/e067.yaml",
+        "sha256": "97fa10beabfe190debe069c0220c97b524bc1d0619e0264568f6d9733b60b62c"
+      },
+      {
+        "file": "edges/e068.yaml",
+        "sha256": "9f16dc8c97549304e16c8e36164dfb0486510558757c52a5fe09bcf30c30b601"
+      },
+      {
+        "file": "edges/e069.yaml",
+        "sha256": "d14d0ccc45a1588cfc000e34d0a26eaaa5dc16d0c2cea7e2febb15dbaeeaae4d"
+      },
+      {
+        "file": "edges/e070.yaml",
+        "sha256": "193ca016596baf759e004fa4b83347f09c7485b14533a93ec03eb7a3bc9b245e"
+      },
+      {
+        "file": "edges/e071.yaml",
+        "sha256": "bf93ac9013455eb0737ec6cd97cc38eff81b9c4a2405fc9f27e5e75e914a2a3f"
+      },
+      {
+        "file": "edges/e072.yaml",
+        "sha256": "3b685b8472c21830cda242b5e78c988a633bcc373f470d6119c8bb7015e57e72"
+      },
+      {
+        "file": "edges/e073.yaml",
+        "sha256": "9f6abde08ad80aa47f03230f9e61d26f8245b3db6b3bc161b19ec1e9c7ff7c73"
+      },
+      {
+        "file": "edges/e074.yaml",
+        "sha256": "57d6284ea5d05317cc1bf1cab555f9a0d053578efb1460276cf6b3f4fb485d47"
+      },
+      {
+        "file": "edges/e075.yaml",
+        "sha256": "3e3bf5f6466d3238e233267458c87a65ea9eb19dc8077af6b2edbecbc065b717"
+      },
+      {
+        "file": "edges/e076.yaml",
+        "sha256": "b81e6a3e687fc32eb377a384be7d5abd5a2bbf25fb1f8ab942c137d56bfb5f5e"
+      },
+      {
+        "file": "edges/e077.yaml",
+        "sha256": "70a0f525b08e265fd60df2f10195ed87b552d0e96a386100703e9c2a65e66ee7"
+      },
+      {
+        "file": "edges/e078.yaml",
+        "sha256": "c933419f8c4a1560f40966bc4e8b103868c52f1a31b2169bdba0b1aa8fcd2567"
+      },
+      {
+        "file": "edges/e079.yaml",
+        "sha256": "a8b78a4d99e85df200a9e80dcb3578df770e1401819891642b906eb91194eda9"
+      },
+      {
+        "file": "edges/e080.yaml",
+        "sha256": "19879375e3c356e567d88121114dd010c3126c5edd25776b4362c0ef9ace0427"
+      },
+      {
+        "file": "edges/e081.yaml",
+        "sha256": "a86aedfdb4f0412ee20a3a576c0e08bd9035924353be8fbedc7efe4317217aad"
+      },
+      {
+        "file": "edges/e082.yaml",
+        "sha256": "b9880ebc06a374acda145bc9a6e60903b5df5d22fe87f8882e5ce03593204e1f"
+      },
+      {
+        "file": "edges/e083.yaml",
+        "sha256": "33cfcbc4fbe93d86bbd7f2296f9228a29739886fef57479cd8195e47b258cc70"
+      },
+      {
+        "file": "edges/e084.yaml",
+        "sha256": "94d0664e3780ea0c024a08e5cfe08fe21316c78f67ae2b7011a42d2223837ba7"
+      },
+      {
+        "file": "edges/e085.yaml",
+        "sha256": "9431a95618fb6ffab159b633297a34a4a05b9e3b94993fabe0ef5c3d8e48c91c"
+      },
+      {
+        "file": "edges/e086.yaml",
+        "sha256": "781698f9bc33cb4c87e20c6d40b68e4b60ef942f90150d4745d83b51bf355edc"
+      },
+      {
+        "file": "edges/e087.yaml",
+        "sha256": "d5c5a532c75bd2152e684970938f949d5920afad945e13cb3b90729013ebba2f"
+      },
+      {
+        "file": "edges/e088.yaml",
+        "sha256": "240b74af32c1ded2f5b3b6b86b0a02bc6ea38ec4e52372fbf13f2a16b0f48763"
+      },
+      {
+        "file": "edges/e089.yaml",
+        "sha256": "ae3899b67d93127877e176fd64856f71443c6447c83883cf42d41e5fa4e6df97"
+      },
+      {
+        "file": "edges/e090.yaml",
+        "sha256": "3732f1b9272aaa80fb7a568c46d6a0c18f65cccf4a5bec5949e85520fa4cb3e1"
+      },
+      {
+        "file": "edges/e091.yaml",
+        "sha256": "2ab3e44689a61ed1b4524b605c68a2dc7af855bb9feaecbd09d7442b97b15a88"
+      },
+      {
+        "file": "edges/e092.yaml",
+        "sha256": "989b7bc434fc105c8993bd4fb2b22117ce09f3abe5e16cae258f202026c6f450"
+      },
+      {
+        "file": "edges/e093.yaml",
+        "sha256": "a54f2d92a93ae43ed08644b4791c001de89a842f416bd3eb3108eaf2bf5e069e"
+      },
+      {
+        "file": "edges/e094.yaml",
+        "sha256": "3e84934b22ecae63a0f227d6a1160390222792a73eef15b44d2e814b8423599b"
+      },
+      {
+        "file": "edges/e095.yaml",
+        "sha256": "85adb2696b6be752bd6d1b72777b5ef5bfc5c758d7774bc5b8bd41c2cb4243d6"
+      },
+      {
+        "file": "edges/e096.yaml",
+        "sha256": "4889754c84d528e5f7aaf2cd631e6da2d4d0088b654989834a9fdc64874d00ed"
+      },
+      {
+        "file": "edges/e097.yaml",
+        "sha256": "a01dc699e5c7f06b23927dbef9784688173ef88b4beccf802b83a83f40a36171"
+      },
+      {
+        "file": "edges/e098.yaml",
+        "sha256": "efdde91428dd8a9330c032f06e982cc8dbc7dacb6e5ecb86b7ccbdf70df26f51"
+      },
+      {
+        "file": "edges/e099.yaml",
+        "sha256": "45ea4f2022474694cf4bb0f677fa05121471b4b42e48b3e0ab24e46534ee1957"
+      },
+      {
+        "file": "edges/e100.yaml",
+        "sha256": "fac65236cbd50f585eed7a691303ecb31c82781c40ce15a1ca2e0a0036ac7adb"
+      },
+      {
+        "file": "edges/e101.yaml",
+        "sha256": "b7873856c2bd729572ae8fbca96ce1802c38c7c8432c8eeebf2bce81df269313"
+      },
+      {
+        "file": "edges/e102.yaml",
+        "sha256": "9826010670e3763b764923f3fba0835f09e4f82e5ed1d5abfc5e4be7a2aad5c6"
+      },
+      {
+        "file": "edges/e103.yaml",
+        "sha256": "b7aae9cdf8745209d72a2fa8332d990e1e1c5fbe1890a01dc83c52f5933b5dc6"
+      },
+      {
+        "file": "edges/e104.yaml",
+        "sha256": "1ac5af60701bf270e15a8c34ca524ad9b2ebc3247b491da2ded770194710f9e0"
+      },
+      {
+        "file": "edges/e105.yaml",
+        "sha256": "256cf3494db2b57efed1ce13e7b764f411e47b4221f988c1e3fe688350858896"
+      },
+      {
+        "file": "edges/e106.yaml",
+        "sha256": "dff898f7e251aea541216fb203389939c5c31edca7ed24423ea25eb7efc4befc"
+      },
+      {
+        "file": "edges/e107.yaml",
+        "sha256": "80e860f4d135c47cef6dbe7cd8a0e1be0b3b399bfe4752b201132dbae47743fd"
+      },
+      {
+        "file": "edges/e108.yaml",
+        "sha256": "9f163d1bc18caf81c770844ff20281f6e0205b9a9e1d355b238c38b8508be163"
+      },
+      {
+        "file": "edges/e109.yaml",
+        "sha256": "850b8636162e1c645ac680e01e36e460aae25c09681db14253fc80f4714bb514"
+      },
+      {
+        "file": "edges/e110.yaml",
+        "sha256": "9c24006e1d7aef240235461774ec4ddb4ac8ee631fe3e2cb7ea99798eee6774c"
+      },
+      {
+        "file": "edges/e111.yaml",
+        "sha256": "8067863945d4f1f4c3cf17a3f6fc353c165ea67cc262ccedf0ca59ff02dbd033"
+      },
+      {
+        "file": "edges/e112.yaml",
+        "sha256": "616378f1beafd67b123f386dae60ee0ca6971fffe19a7430f9da9d390a6c558d"
+      },
+      {
+        "file": "edges/e113.yaml",
+        "sha256": "340e582842d85f02de1cd320d7e19e5de657cea18af254695bd0286d3a0f2911"
+      },
+      {
+        "file": "edges/e114.yaml",
+        "sha256": "771cba14d5fef28a317a32155ec3aed95af265201fa48dabb2ffa252ac06ec58"
+      },
+      {
+        "file": "edges/e115.yaml",
+        "sha256": "29e63935266146548ac119df51eff9f0157dacd2d59b875b750946b31c5c71ed"
+      },
+      {
+        "file": "edges/e116.yaml",
+        "sha256": "5689867547a486ce61eaf6a24aff1494378b4d1cf532361e3c1d058a28f7610f"
+      },
+      {
+        "file": "edges/e117.yaml",
+        "sha256": "fedb6cab46360b244bda950afd9324e5891cdf3bdafbdb68e460db10ea488669"
+      },
+      {
+        "file": "edges/e118.yaml",
+        "sha256": "3df6c01a909468dd75604ad1f1aab2c818884084a73f5ae08e8172210a5ec25b"
+      },
+      {
+        "file": "edges/e119.yaml",
+        "sha256": "542fcb97180bf3c1ffa5b4c834c1ac8a94caf974daaadb3656c7efa814514776"
+      },
+      {
+        "file": "edges/e120.yaml",
+        "sha256": "88624e56add1e8fdebfa4656d31736a1d6ccc942d0c32202556743548d5b6a10"
+      },
+      {
+        "file": "edges/e121.yaml",
+        "sha256": "19fa2d865514b739f5d326ea328f4b50f0433cc10b61073516c6ffb4b8867727"
+      },
+      {
+        "file": "edges/e122.yaml",
+        "sha256": "c95a5cff8bc073f19016340d8143553886ce209f4b4218280fe81122be53c8bf"
+      },
+      {
+        "file": "edges/e123.yaml",
+        "sha256": "781523a64fc56aff7d188a333353e758eadbd7051dde1cbf1a7b990dd3c81bb8"
+      },
+      {
+        "file": "edges/e124.yaml",
+        "sha256": "851e789e08fd0b09c0eed978bc6f75aa7bbf6eed5255742d0507d48bd79bd49b"
+      },
+      {
+        "file": "edges/e125.yaml",
+        "sha256": "03ff78cbc27234cb63428c80a308dff12a612a7bceb5c6414367035e2e1b767f"
+      },
+      {
+        "file": "edges/e126.yaml",
+        "sha256": "9b584ccc37c3757189a6a87e4c427abbcc7ca86546b33aeddd123cb92375869a"
+      },
+      {
+        "file": "edges/e127.yaml",
+        "sha256": "900f07fc7c5d2d707effec3ddc0066956612ca2529df36352f4f3af3fadb74ea"
+      },
+      {
+        "file": "edges/e128.yaml",
+        "sha256": "a75dd7babb56683df02c88ffd424ce875ecd4d7aefeabd62efdc34cc7f588304"
+      },
+      {
+        "file": "edges/e129.yaml",
+        "sha256": "330bf542150f72683f70a555dadfefa4f7dee634fff679cbdd7bf059fc6c1d37"
+      },
+      {
+        "file": "edges/e130.yaml",
+        "sha256": "dbeb29fa65789f5bef7d90397d1ca363c9ac8327027f8efc631b22ad7b500907"
+      },
+      {
+        "file": "graph.yaml",
+        "sha256": "32478545fd116ec5d9830e2acf3f07d6f3044bbece2e4f9378d46626acbdede9"
+      },
+      {
+        "file": "nodes/adr_0001.yaml",
+        "sha256": "7f695a1215c01e198507ae098c3d5e4a4625950c4d100c93146b049adc4ec81e"
+      },
+      {
+        "file": "nodes/adr_0002.yaml",
+        "sha256": "8923660b4bd3579de3a1adf51d87960ff5d63f0d3472a972c27140c3f8a4b4c0"
+      },
+      {
+        "file": "nodes/adr_0003.yaml",
+        "sha256": "768aebe8ee100b91f5f6b12670dcdfb9835410d0deaf914c866f5ee55f91b5e2"
+      },
+      {
+        "file": "nodes/adr_0004.yaml",
+        "sha256": "d8e326e6bd9599e8510643982a63d390d89e437362340e405d9c4a4d95f1947f"
+      },
+      {
+        "file": "nodes/adr_0005.yaml",
+        "sha256": "422c564e76dc4205c355cbf790e1e1088b185ab9738a5f39ae5e5a83b43fe2ca"
+      },
+      {
+        "file": "nodes/adr_0006.yaml",
+        "sha256": "cdc4477adbf167eec02b7622aa5206df5317ce6d6fb20ac2cbc77b01f2123dda"
+      },
+      {
+        "file": "nodes/adr_0007.yaml",
+        "sha256": "fb9841ff3a60bd4cdeae9f51ea29c310574e75597bdf5f83f7a4374782f6f3d2"
+      },
+      {
+        "file": "nodes/adr_0008.yaml",
+        "sha256": "0b2a3f312303e37e295ba353650d10bdc9a34f08aa54f96f1bc990b865a8c78e"
+      },
+      {
+        "file": "nodes/adr_0009.yaml",
+        "sha256": "98d40b6c95a4d3777de7c89b923eb547ccfc0a476633bc3319b464184bb65557"
+      },
+      {
+        "file": "nodes/adr_0010.yaml",
+        "sha256": "fc814875d243bf850fcbeb26b04a1cf2f71ba765baa2b489938098d37e346b8c"
+      },
+      {
+        "file": "nodes/ctx_contract.yaml",
+        "sha256": "9c2ea7e49967b9a40da277d734fca3ce12dfe2fb9c534ee23045fec27203fa72"
+      },
+      {
+        "file": "nodes/ctx_eval.yaml",
+        "sha256": "aa42c5c7dc4294d2a52595bf730ef55c848346565896048484b79f39a04849b8"
+      },
+      {
+        "file": "nodes/ctx_graph.yaml",
+        "sha256": "6e83810bfca634f5e1066e5475e242dc8b6bb8ba2562b4d385ecfbc3a3e76b57"
+      },
+      {
+        "file": "nodes/ctx_host.yaml",
+        "sha256": "f93afc1bdeb208627ca9e676a10077399e3c842255f7470a6012950c868e11f1"
+      },
+      {
+        "file": "nodes/ctx_learning.yaml",
+        "sha256": "43f4516da4641c06a6922468937fa586b9fb2afc9395f5fe4c2092c21f1ce21b"
+      },
+      {
+        "file": "nodes/ctx_policy.yaml",
+        "sha256": "d1152ec7f0109f909b9c8f081973cc211154d446fa3f4af19a1cc3dd87ebb35d"
+      },
+      {
+        "file": "nodes/ctx_runtime.yaml",
+        "sha256": "5d11d97d67a172182cffd7758659c6a19ae46ac9a636eafdacc92707d2e39f33"
+      },
+      {
+        "file": "nodes/ctx_store.yaml",
+        "sha256": "a5d9fe295f18049caef1fd57940aa5e182ba94742a7391e148e521a06181b853"
+      },
+      {
+        "file": "nodes/ctx_surface.yaml",
+        "sha256": "fd672dc3073c7768ce5415ec24044a2ca038d3e558e087904eb04f2faef98e04"
+      },
+      {
+        "file": "nodes/l1_api_freeze.yaml",
+        "sha256": "c31971d3f1d075214da2e47b8f6f8fba6fcc8bac2b995cdd73e4a5ba05c4deb1"
+      },
+      {
+        "file": "nodes/l1_dsh_probe.yaml",
+        "sha256": "7b9898c7a7700b77d99a4a738e745370c500c6b3aa91c4f4bb5370feffddc6cb"
+      },
+      {
+        "file": "nodes/l1_eval_protocol.yaml",
+        "sha256": "80fbd4ee1c4cc9a3d2c245f31395f6a866ed940f43d9a98b845cd68fdf60bb60"
+      },
+      {
+        "file": "nodes/l1_graph_contract.yaml",
+        "sha256": "462dbd25a93aacea301b9a896407cf30954b4c154bd86d7f20df1a371fa8ba2b"
+      },
+      {
+        "file": "nodes/l1_pi_probe.yaml",
+        "sha256": "4cb50aab6e502b6a8d383d13d21b35a9f7355cc0aa14360c62e08f7d02b6ddb4"
+      },
+      {
+        "file": "nodes/l1_replan.yaml",
+        "sha256": "dafcac8d0d76e71d8b829001a20e35c44bf1d0777b33dcb9adfccc14e685cd10"
+      },
+      {
+        "file": "nodes/l1_review.yaml",
+        "sha256": "e969a75bf862e292c705b60eee979459412470117ea57df9545c50a7d7dd0a52"
+      },
+      {
+        "file": "nodes/l2_artifact_port.yaml",
+        "sha256": "391ac20a7ce4185af44406081b1b63f605d597212015f1d42b9e41cd446c1354"
+      },
+      {
+        "file": "nodes/l2_graph_model.yaml",
+        "sha256": "016b7f3c7fb880d8141360f153464d2dd25d9dfcb6ce8fe375f640a0b65c3d5a"
+      },
+      {
+        "file": "nodes/l2_host_port.yaml",
+        "sha256": "d415f5eba049cc764564f03ef890142cf42c36df9d454736f730f15954cae027"
+      },
+      {
+        "file": "nodes/l2_kernel_verification.yaml",
+        "sha256": "bc396d681f4227789f3dd338b9e5b901c85b9d3ee23cb29461f414121abbfc8a"
+      },
+      {
+        "file": "nodes/l2_policy.yaml",
+        "sha256": "e742065fbbb256853550cbbc210e7784f43387ea505c3eba403d69be2881fc38"
+      },
+      {
+        "file": "nodes/l2_public_contracts.yaml",
+        "sha256": "d3715ed730f18df4d8e169d902259c97e5902333a5f74626c4d2396d6aae659d"
+      },
+      {
+        "file": "nodes/l2_runtime.yaml",
+        "sha256": "5c21cc940e7915a949006cc6b06a3f6f1cfbb8364129d380cc17e107a069c61c"
+      },
+      {
+        "file": "nodes/l2_scheduler.yaml",
+        "sha256": "5dd06bf4586078e921e8367bcbb6d7b916dc41c9b04353f7acf77386101dd3e5"
+      },
+      {
+        "file": "nodes/l2_state_store.yaml",
+        "sha256": "3f59d0de598e45a403f9175976eb9f7f329edb178d52709469c70b4b83fdc409"
+      },
+      {
+        "file": "nodes/l3_context_router.yaml",
+        "sha256": "a414b390893bf19431db577dcbe02c11749d9fd9f801fc49759eed1f9062655c"
+      },
+      {
+        "file": "nodes/l3_dsh_delegation.yaml",
+        "sha256": "8c0d4e4138927fc3165555dbbbcb96d9dd3cfc9fa93fecef5241218ae7797383"
+      },
+      {
+        "file": "nodes/l3_dsh_scenario.yaml",
+        "sha256": "bafbdddf6ac67ac74e9ef3a55aaf9b249bcb7382ee5fb6a4e651b5ea16011325"
+      },
+      {
+        "file": "nodes/l3_dsh_session.yaml",
+        "sha256": "482c31d068a5a057fa103ca6f248b74f1701ce236bc65da35aab4fe514588652"
+      },
+      {
+        "file": "nodes/l3_dual_host_gate.yaml",
+        "sha256": "caf7a3321d9ba6a4b319a8d0ad85d4824b2198af6f50568a5d7aa8f176aefbce"
+      },
+      {
+        "file": "nodes/l3_pi_delegation.yaml",
+        "sha256": "34c4a995eefd26e48db34ae55450576c8218bb10e7ebf29e32c24f4f3558da99"
+      },
+      {
+        "file": "nodes/l3_pi_scenario.yaml",
+        "sha256": "bd06d94a2afb01b0aa3102bc0f9f9ca1f49a886d4100e68855d0657b3f9ac1fc"
+      },
+      {
+        "file": "nodes/l3_pi_session.yaml",
+        "sha256": "3fec3035dcdb3289d93b6ec9c3701ef0ba8668992cb07ad890dbb0f8497d83de"
+      },
+      {
+        "file": "nodes/l3_task_evaluation.yaml",
+        "sha256": "ece347e5a20fd3583f5d4f67fc9ddfbce055b90d3516d634f242840e52dcf0f7"
+      },
+      {
+        "file": "nodes/l3_workspace_txn.yaml",
+        "sha256": "043441b6a3054b87564002c98da55b77d528ed9ad93b298463a83b1b277f399d"
+      },
+      {
+        "file": "nodes/l4_asset_registry.yaml",
+        "sha256": "f3143c9e1a61b0262aad69962d981b26aea316b63a950e7867c87d4ad8c80c14"
+      },
+      {
+        "file": "nodes/l4_capability_trial.yaml",
+        "sha256": "842045490c452b8817ba63d7f09e14ed909146985cfbc9fb5bb2c6aa321f1b69"
+      },
+      {
+        "file": "nodes/l4_evolution_eval.yaml",
+        "sha256": "2198e5b2bcb70d9531c6c86df621f957cf5adcfce085c3330be9167331f6cd0d"
+      },
+      {
+        "file": "nodes/l4_experience.yaml",
+        "sha256": "0272b7ec82203bb57aa09ff02d8ea05000e3680b48600b64ab7d521cb9ed00c5"
+      },
+      {
+        "file": "nodes/l4_learning_scenario.yaml",
+        "sha256": "f89459208a3e1e747b43d3d61ffff2bd03e077523e58fe56f2b39d45cd2a92ae"
+      },
+      {
+        "file": "nodes/l4_promotion.yaml",
+        "sha256": "b5452a8f5cb5201d5b787d9f0e5e79498efa5b507ce35d9eb2b51a99a228fae9"
+      },
+      {
+        "file": "nodes/l4_regression_revocation.yaml",
+        "sha256": "9e4087c8746971788bbdaef23566ebccb18905a7247bb8497f5e708b69bd0acd"
+      },
+      {
+        "file": "nodes/l4_retrieval.yaml",
+        "sha256": "3aa177504a0f99e88cc9c975484072f28f82eaf8526aba0e5dfa2b6ca3ae195d"
+      },
+      {
+        "file": "nodes/l5_accept.yaml",
+        "sha256": "7e3fad99ff8d9ab274ef7af04a01536352781a2c00df4f1c34e9fab42aa7b228"
+      },
+      {
+        "file": "nodes/l5_cli_observability.yaml",
+        "sha256": "48d6a8642705aa4d9b38de10307434ba70e4c16423844ade6ba8d309b06a37e0"
+      },
+      {
+        "file": "nodes/l5_legacy_boundary.yaml",
+        "sha256": "c3a5fbc18a44205978a3b9aa77cf1bbc04539a4fc394a87751bb554b15d888d3"
+      },
+      {
+        "file": "nodes/l5_public_sdk.yaml",
+        "sha256": "a86100171a566e24d2fd16c02c9aa0a52f36eba5a4a2207dc30cce04a428fc7a"
+      },
+      {
+        "file": "nodes/l5_release_plan.yaml",
+        "sha256": "45124f40ce48df19c352ae054116c10eaca724c9164aaac7a97c49519bb87653"
+      },
+      {
+        "file": "nodes/l5_sp_bridge.yaml",
+        "sha256": "1010bdcb1535ccca6db719535689c4c354229bd93e972f89b6b83cc097ab1712"
+      }
+    ],
+    "documentHashes": [
+      {
+        "file": "docs/evofence-harness-kernel/ARCHITECTURE.md",
+        "sha256": "80b43633bd4d00dd3f3b4cce6629e4fef86f14f3934de9c715bd4010d6806dd1"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/CONTRACTS.md",
+        "sha256": "4caf8cc43be96206e22e7d6368c8896a38030b2408b02547f0eef8dcea6cae42"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/REVIEW.md",
+        "sha256": "693aea8bad7d8b96d640c2bb3c86bc42f60f7106786782318d37a5c2abd450a8"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/ROADMAP.md",
+        "sha256": "e7af032097cbbd90b34be80226047df4eb5e323a8b19c4cba37c8b6c03a8534c"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/SOURCES.md",
+        "sha256": "35c52fd1e8246f5b3c146876745aec07d8b6ba4242b58169dc933817779441d6"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/DESIGN-CHECKS.json",
+        "sha256": "e15bc5e52f5e80b3083839a644dae5da3ee049d7c7d834eb98e9c82807b7e967"
+      },
+      {
+        "file": "docs/evofence-harness-kernel/graph-review.zip",
+        "sha256": "0dc6852c98cc08ade827fd83d7a09d9e09a11e920d81d3194da8a72d20302551"
+      }
+    ]
+  },
+  "preApproval": {
+    "workflowPending": 40,
+    "proposedADRs": 10,
+    "review": null
+  },
+  "protocol": "docs/evofence-harness-kernel/execution/SESSION-PROTOCOL.md"
+}

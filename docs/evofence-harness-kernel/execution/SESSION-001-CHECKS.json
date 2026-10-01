@@ -1,0 +1,90 @@
+{
+  "recordedAt": "2026-10-01T07:22:00.304Z",
+  "session": "S01",
+  "phase": "L1",
+  "node": "l1_pi_probe",
+  "offlineChecks": {
+    "nativeSessionCreated": true,
+    "sameSessionPreserved": true,
+    "contextInjection": true,
+    "hostToolsAndSkillPreserved": true,
+    "toolExecutionAndHooks": true,
+    "blockedToolNeverExecutes": true,
+    "appendEntry": true,
+    "highPayload": true,
+    "reasoningPassThrough": true,
+    "usage": true,
+    "settledAfterAsyncEnd": true,
+    "diskRestore": true,
+    "independentChildSession": true,
+    "abortAndIdle": true,
+    "httpAbortDisconnect": true,
+    "extensionErrorsEmpty": true
+  },
+  "liveChecks": {
+    "nativeSessionCreated": true,
+    "sameSessionPreserved": true,
+    "contextInjection": true,
+    "hostToolsAndSkillPreserved": true,
+    "toolExecutionAndHooks": true,
+    "blockedToolNeverExecutes": null,
+    "appendEntry": true,
+    "highPayload": true,
+    "reasoningPassThrough": true,
+    "usage": true,
+    "settledAfterAsyncEnd": true,
+    "diskRestore": true,
+    "independentChildSession": true,
+    "extensionErrorsEmpty": true
+  },
+  "rawNativeUsageCrossCheck": true,
+  "validation": {
+    "ok": true,
+    "errors": [],
+    "warnings": [
+      "图中有未毕业雾区 dual-host-runtime-and-uplift（毕业条件：分段毕业：L1 的 DSH/Pi 固定版本能力探针、图语义/API/评测协议与 l1_replan 人审使实施方案可信；据实际研究以 amend 更新 fog，仅保留未解决部分，不能因 probe passed 清空全部雾区。完整毕业还要求 L2 并发/恢复生产核验及 L4 预注册双宿主受控收益证据达标；负结果或 inconclusive 保留未知并重新审图。）——雾区表示尚未想清楚的领域，执行期照常推进；想清楚后用 graduate-fog 毕业留痕"
+    ]
+  },
+  "docsCheck": "✅ 导出无漂移：21 个文件与图内真相一致。",
+  "budget": {
+    "limit": 0.5,
+    "settledUsd": 0.00198217,
+    "reservedUsd": 0,
+    "unknownSpend": false,
+    "remainingUsd": 0.49801783
+  },
+  "next": {
+    "ready": [],
+    "ready_eligible": [
+      {
+        "id": "l1_dsh_probe",
+        "label": "DSH 原生会话与团队能力探针",
+        "priority": 1
+      },
+      {
+        "id": "l1_graph_contract",
+        "label": "动态图与有界 loop 语义规格",
+        "priority": 3
+      },
+      {
+        "id": "l1_eval_protocol",
+        "label": "冻结实用场景和收益评测协议",
+        "priority": 4
+      }
+    ],
+    "running": [],
+    "summary": {
+      "total": 40,
+      "pending": 38,
+      "ready": 0,
+      "running": 0,
+      "passed": 2,
+      "failed": 0,
+      "blocked": 0,
+      "cancelled": 0
+    }
+  },
+  "productTestsRun": false,
+  "productSourceChanged": false,
+  "published": false
+}

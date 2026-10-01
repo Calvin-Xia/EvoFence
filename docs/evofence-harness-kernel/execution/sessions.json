@@ -1,0 +1,129 @@
+{
+  "version": 2,
+  "graph": "evofence-harness-kernel",
+  "cwd": "C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence",
+  "model": "gpt-6.1-sol",
+  "thinking": "xhigh",
+  "executionMode": "Orchestrated multi-harness fleet: one orchestrator session (pi) holds sole graph-write authority; codex panes are the sole shared-source writers; pi+deepseek panes are read-only verifiers/drafters. Parallel windows across herdr tabs, per user instruction.",
+  "currentOwner": "S02",
+  "sessions": [
+    {
+      "id": "S00",
+      "threadId": "01a0f605-610d-7c30-bc1a-fb28a5b61f9a",
+      "role": "Design, authorization and dispatch",
+      "status": "handoff-complete",
+      "predecessor": null,
+      "successor": "S01",
+      "handoff": "docs/evofence-harness-kernel/execution/SESSION-000-HANDOFF.md"
+    },
+    {
+      "id": "S01",
+      "threadId": "01a0f63f-ecf9-7dd3-8e86-5a110c35d712",
+      "role": "Dual-host probes, graph/evaluation protocol and API freeze",
+      "status": "paused",
+      "predecessor": "S00",
+      "successor": "S02",
+      "inputHandoff": "docs/evofence-harness-kernel/execution/SESSION-000-HANDOFF.md",
+      "handoff": "docs/evofence-harness-kernel/execution/SESSION-001-HANDOFF.md",
+      "model": "gpt-6.1-sol",
+      "thinking": "xhigh",
+      "startedAt": "2026-10-01T07:00:26.946Z",
+      "currentNode": null,
+      "phase": "L1",
+      "completedNodes": [
+        "l1_pi_probe"
+      ],
+      "completedAt": "2026-10-01T07:27:11.184Z",
+      "nextPhase": "L1",
+      "nextTask": "l1_dsh_probe",
+      "pausedAt": "2026-10-01T07:33:53.311Z",
+      "nextTaskIsResumeGuidanceOnly": true
+    },
+    {
+      "id": "S02",
+      "threadId": "01a0f6da-465e-725d-9993-3eaa0b4adca1",
+      "harness": "pi (orchestrator) + herdr fleet",
+      "role": "Continuous execution of the whole evofence-harness-kernel graph under a multi-harness herdr fleet; sole graph-write authority; per-phase handoffs",
+      "status": "awaiting-human-gate",
+      "predecessor": "S01",
+      "successor": null,
+      "inputHandoff": "docs/evofence-harness-kernel/execution/SESSION-001-HANDOFF.md",
+      "handoff": "docs/evofence-harness-kernel/execution/SESSION-002-HANDOFF.md",
+      "reviewPackage": "docs/evofence-harness-kernel/execution/L1-REVIEW-PACKAGE.md",
+      "model": "pi: deepseek/deepseek-flash high (orchestrator+verifier) / codex: gpt-6.1-sol xhigh (writer)",
+      "thinking": "high (pi) / xhigh (codex)",
+      "startedAt": "2026-10-01T09:57:00.000Z",
+      "currentNode": "l1_replan",
+      "phase": "L1",
+      "completedNodes": [
+        "l1_dsh_probe",
+        "l1_graph_contract",
+        "l1_eval_protocol",
+        "l1_api_freeze"
+      ],
+      "nextPhase": "L2",
+      "nextTask": "l1_replan",
+      "nextTaskIsResumeGuidanceOnly": true,
+      "gate": {
+        "node": "l1_replan",
+        "kind": "requires_human",
+        "blockedOn": "R1-R8 of L1-REVIEW-PACKAGE.md (R1=H01, R2=H09, R3=H07, R4=H11, R5=H12, R6=H13, R7=H06, R8=H05) plus ADR accept/supersede decisions and fog amend-vs-graduate",
+        "claimant": null,
+        "note": "Not claimed and must not be claimed by an agent; cp1/cp2/cp3 all require a human verifier."
+      },
+      "fleet": {
+        "orchestrator": {
+          "harness": "pi",
+          "model": "deepseek/deepseek-flash",
+          "thinking": "high",
+          "kind": "pi",
+          "paneId": "wG:p2",
+          "role": "graph writes, dispatch, verdicts, handoffs"
+        },
+        "writers": [
+          {
+            "name": "codex-main",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "kind": "codex",
+            "named": false,
+            "paneId": "wG:p3",
+            "tab": "wG:t3 (codex)",
+            "cwd": "C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence",
+            "role": "sole writer of shared source; per-node implementation and tests"
+          }
+        ],
+        "verifiers": [
+          {
+            "name": "verify-main",
+            "harness": "pi",
+            "model": "deepseek/deepseek-flash",
+            "thinking": "high",
+            "kind": "pi",
+            "paneId": "wG:p4",
+            "tab": "wG:t4 (verify)",
+            "cwd": "C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence",
+            "role": "read-only verification, evidence extraction, drafting"
+          }
+        ]
+      }
+    }
+  ],
+  "sessionCreationPolicy": {
+    "withinPhase": "same-phase continuation permitted; graph writes stay with the single orchestrator",
+    "crossPhase": "fresh conversation required across L phases",
+    "sourceThreadId": "01a0f63f-ecf9-7dd3-8e86-5a110c35d712",
+    "userQuote": "跨L阶段时不要直接fork对话，而是新开对话！",
+    "s02Quote": "按2选项的并行多窗，可合理分布herdr tab栏"
+  },
+  "taskExecutionPolicy": {
+    "graphWrites": "Only the orchestrator (S02) mutates .graph state via graph CLI / sp.mjs. Workers never write graph state.",
+    "sharedSourceWrites": "Parallel lanes are permitted when their directories are disjoint and each file has exactly one owner. Cross-lane drift is declared (e.g. OPEN-ITEMS T02/T03) and closed by the orchestrator's integration pass, never by silently editing another owner's file.",
+    "modelRouting": "pi + deepseek/deepseek-flash high is the default writer; codex + gpt-6.1-sol xhigh is reserved for real host probes, kernel concurrency/recovery, and cross-document adjudication. Measured basis: l1_api_freeze took codex 1h19m; comparable writing nodes took pi 10-20 minutes and also passed independent review.",
+    "codingStyle": "Defensive programming is forbidden (user directive 2026-10-01), hard requirement for gpt-family models. Deliberately designed fail-closed behaviour is NOT defensive programming: contract/evidence gates, explicit unknown + reconcile, real budget reservation, explicit schema/version rejection, boundary validation of genuine external input. Test: if removing the code leaves a real reachable input that fails silently, keep it; otherwise delete it.",
+    "startupHookTrust": "codex SessionStart hook (~/.codex/hooks.json -> herdr-agent-state.ps1 session) was trusted once in pane wG:p3 on 2026-10-01 to let codex start; it is the user's own herdr state-reporting hook."
+  },
+  "status": "awaiting-human-gate",
+  "pause": null
+}

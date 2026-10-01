@@ -1,0 +1,74 @@
+{
+  "version": "0.87.1",
+  "providerModel": "xiaomi/mimo-v2.6-flash",
+  "selectedModel": {
+    "id": "mimo-v2.6-flash",
+    "name": "MiMo-V2.6-Flash",
+    "api": "openai-completions",
+    "provider": "xiaomi",
+    "baseUrl": "https://api.xiaomimimo.com/v1",
+    "compat": {
+      "supportsStrictMode": true,
+      "requiresReasoningContentOnAssistantMessages": true,
+      "thinkingFormat": "deepseek"
+    },
+    "reasoning": true,
+    "input": [
+      "text",
+      "image"
+    ],
+    "cost": {
+      "input": 0.14,
+      "output": 0.28,
+      "cacheRead": 0.0028,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1048576,
+    "maxTokens": 131072,
+    "inputLimits": {
+      "images": {
+        "resize": {
+          "maxWidth": 2000,
+          "maxHeight": 2000,
+          "maxBytes": 4718592,
+          "jpegQuality": 80
+        }
+      }
+    }
+  },
+  "catalogSource": "read-only local catalog; network refresh disabled",
+  "files": [
+    {
+      "file": "package.json",
+      "sha256": "627631b613ba4ca29eba8df793f5280fd20b19f01d73826e9ffda14c15def5dc"
+    },
+    {
+      "file": "dist/core/sdk.js",
+      "sha256": "b49c2843197166bb84283edcb7702b91346d8fbaed2b0b8c70e5277dd78bcf5f"
+    },
+    {
+      "file": "dist/core/agent-session.js",
+      "sha256": "5ebfae51db5a900596145159428e7cb57d195af9d54a28f41d4ac8ff1bfd5729"
+    },
+    {
+      "file": "dist/core/model-runtime.js",
+      "sha256": "bae3c3feb7928c7702c3d98a3454660bee1647064dd449472fc6308c354fbc25"
+    },
+    {
+      "file": "dist/core/extensions/types.d.ts",
+      "sha256": "14d00e645b453f4361440da6fcda86ed6cef9a8fc36d483a621a0250e0d4a396"
+    },
+    {
+      "file": "node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+      "sha256": "a2397cb3114a3d1a05993f6f19671ecbcc85540d8f8c59a233808c717df2682c"
+    }
+  ],
+  "pricingSource": "https://mimo.mi.com/docs/en-US/price/pay-as-you-go",
+  "price": {
+    "input": 0.14,
+    "output": 0.28,
+    "cacheRead": 0.0028,
+    "cacheWrite": 0
+  },
+  "thinkingSource": "https://mimo.mi.com/docs/en-US/quick-start/usage-guide/text-generation/deep-thinking"
+}
