@@ -9,8 +9,12 @@
  * The withheld side of a partition deliberately carries counts and reasons, never ids, locators or
  * digests: A13 forbids the executor-visible path from containing the reference, and an id is part of
  * the reference. A caller that needs to audit *what* was withheld asks as the `evaluator` audience,
- * which withholds nothing.
+ * which withholds no valid reference. Public classification and report entry points decode each
+ * reference with the frozen codec before looking up either axis; malformed enums fail typed.
  */
+import { decode } from '../../protocol/index.js';
+import { storeOk } from '../index.js';
+import type { StoreResult } from '../index.js';
 import type { ArtifactRef, Audience, FeedbackPartition, Visibility } from './types.js';
 
 /** Increasing sensitivity. Used only to compare against an audience ceiling. */
@@ -55,32 +59,37 @@ export function visibilityCeiling(audience: Audience): Visibility {
   return AUDIENCE_CEILING[audience];
 }
 
-export function isRestrictedPartition(ref: ArtifactRef): boolean {
-  return RESTRICTED_PARTITION[ref.partition];
+export function isRestrictedPartition(ref: ArtifactRef): StoreResult<boolean> {
+  const decoded = decode('ArtifactRef', ref);
+  if (!decoded.ok) return decoded;
+  return storeOk(RESTRICTED_PARTITION[ref.partition]);
 }
 
 /** Why a reference is withheld from `audience`; `'none'` means it may be read. */
-export function withheldReason(ref: ArtifactRef, audience: Audience): 'none' | 'visibility' | 'partition' {
-  if (VISIBILITY_RANK[ref.visibility] > VISIBILITY_RANK[AUDIENCE_CEILING[audience]]) return 'visibility';
-  if (!AUDIENCE_SEES_RESTRICTED_PARTITION[audience] && RESTRICTED_PARTITION[ref.partition]) return 'partition';
-  return 'none';
+export function withheldReason(ref: ArtifactRef, audience: Audience): StoreResult<'none' | 'visibility' | 'partition'> {
+  const decoded = decode('ArtifactRef', ref);
+  if (!decoded.ok) return decoded;
+  if (VISIBILITY_RANK[ref.visibility] > VISIBILITY_RANK[AUDIENCE_CEILING[audience]]) return storeOk('visibility');
+  if (!AUDIENCE_SEES_RESTRICTED_PARTITION[audience] && RESTRICTED_PARTITION[ref.partition]) return storeOk('partition');
+  return storeOk('none');
 }
 
 /** Split a reference set into the part `audience` may read and a count of what it may not. */
-export function partitionFeedback(refs: readonly ArtifactRef[], audience: Audience): FeedbackPartition {
+export function partitionFeedback(refs: readonly ArtifactRef[], audience: Audience): StoreResult<FeedbackPartition> {
   const visible: ArtifactRef[] = [];
   let withheldVisibility = 0;
   let withheldPartition = 0;
   for (const ref of refs) {
     const reason = withheldReason(ref, audience);
-    if (reason === 'none') visible.push(ref);
-    else if (reason === 'visibility') withheldVisibility += 1;
+    if (!reason.ok) return reason;
+    if (reason.value === 'none') visible.push(ref);
+    else if (reason.value === 'visibility') withheldVisibility += 1;
     else withheldPartition += 1;
   }
-  return { audience, visible, withheldVisibility, withheldPartition };
+  return storeOk({ audience, visible, withheldVisibility, withheldPartition });
 }
 
 /** The default report view: everything an author-facing report may carry, and nothing else. */
-export function defaultReportRefs(refs: readonly ArtifactRef[]): FeedbackPartition {
+export function defaultReportRefs(refs: readonly ArtifactRef[]): StoreResult<FeedbackPartition> {
   return partitionFeedback(refs, 'report');
 }

@@ -10,7 +10,8 @@
  *   `Record<string, unknown>` because `Wire` maps the referenced schema node, not its `Decoded`
  *   form;
  * - an `anyOf` resolves to its first branch, so `binding` and `expiresAt` are typed non-null and
- *   `Binding.baseDigest` is typed as a plain `string`, although the frozen table allows `null`.
+ *   `Binding.baseDigest` and `hostSessionId` are typed as plain `string`s, although the frozen
+ *   table allows `null`.
  *
  * Every narrowing still points at the same frozen definition, so no field is renamed or re-declared.
  */
@@ -23,10 +24,11 @@ export type GraphRef = Decoded<'GraphRef'>;
 export type SchemaRef = Decoded<'SchemaRef'>;
 export type ActorRef = Omit<Decoded<'ActorRef'>, 'identityRef'> & { readonly identityRef: Wire | null };
 
-/** The attempt binding, with `graph` and `baseDigest` back to their frozen definitions. */
-export type Binding = Omit<Decoded<'Binding'>, 'graph' | 'baseDigest'> & {
+/** The attempt binding, with its graph and nullable slots back to their frozen definitions. */
+export type Binding = Omit<Decoded<'Binding'>, 'graph' | 'baseDigest' | 'hostSessionId'> & {
   readonly graph: GraphRef;
   readonly baseDigest: string | null;
+  readonly hostSessionId: Decoded<'Binding'>['hostSessionId'] | null;
 };
 
 /** An immutable artifact reference, with its nested references and nullable slots re-narrowed. */
@@ -55,14 +57,7 @@ export type ConsumerRole = 'workspace' | 'evaluator' | 'asset';
  * The attempt an artifact is expected to belong to. `baseDigest` is the workspace snapshot the
  * attempt started from, and `null` means the attempt has no workspace snapshot at all.
  */
-export interface BindingExpectation {
-  readonly graph: GraphRef;
-  readonly nodeId: string;
-  readonly attemptId: string;
-  readonly attemptOrdinal: number;
-  readonly epoch: number;
-  readonly baseDigest: string | null;
-}
+export type BindingExpectation = Binding;
 
 /**
  * What kind of reference a consumer is holding out for.
@@ -108,7 +103,9 @@ export type EvaluatorConsumerRequest = { readonly role: 'evaluator' } & BoundRef
 
 /**
  * Asset material. `contentRefs` and `sourceTraces` are the decoded arrays of a `CapabilityAsset`
- * (their `minItems: 1` is the codec's boundary, not re-checked here). `revokedDependencies` names
+ * (each must contain at least one reference, as required by the frozen `minItems: 1` rules). This
+ * request is also constructible directly, so the consumer rejects either empty list before reads.
+ * `revokedDependencies` names
  * the asset dependencies whose revocation has invalidated this qualification (S17); it is an input
  * because the registry that observed the revocation owns that fact.
  */

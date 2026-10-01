@@ -61,25 +61,25 @@ test('each audience has the documented information ceiling', () => {
 test('an author-facing audience is withheld from private, held-out and final artifacts', () => {
   for (const audience of ['author', 'report', 'asset-staging']) {
     for (const visibility of ['private', 'held-out', 'final']) {
-      assert.equal(withheldReason(artifact('art-1', { visibility }), audience), 'visibility', `${audience}/${visibility}`);
+      assert.equal(ok(withheldReason(artifact('art-1', { visibility }), audience)), 'visibility', `${audience}/${visibility}`);
     }
     for (const visibility of ['public', 'internal']) {
-      assert.equal(withheldReason(artifact('art-1', { visibility }), audience), 'none', `${audience}/${visibility}`);
+      assert.equal(ok(withheldReason(artifact('art-1', { visibility }), audience)), 'none', `${audience}/${visibility}`);
     }
   }
 });
 
 test('a held-out or final source partition is withheld from an author even at internal visibility', () => {
-  assert.equal(withheldReason(artifact('art-1', { partition: 'held-out' }), 'author'), 'partition');
-  assert.equal(withheldReason(artifact('art-1', { partition: 'final' }), 'report'), 'partition');
-  assert.equal(withheldReason(artifact('art-1', { partition: 'train' }), 'author'), 'none');
-  assert.equal(withheldReason(artifact('art-1', { partition: 'dev' }), 'author'), 'none');
+  assert.equal(ok(withheldReason(artifact('art-1', { partition: 'held-out' }), 'author')), 'partition');
+  assert.equal(ok(withheldReason(artifact('art-1', { partition: 'final' }), 'report')), 'partition');
+  assert.equal(ok(withheldReason(artifact('art-1', { partition: 'train' }), 'author')), 'none');
+  assert.equal(ok(withheldReason(artifact('art-1', { partition: 'dev' }), 'author')), 'none');
 });
 
 test('the evaluator audience withholds nothing', () => {
   for (const visibility of ['public', 'internal', 'private', 'held-out', 'final']) {
     for (const partition of ['train', 'dev', 'held-out', 'final', 'not-evaluation']) {
-      assert.equal(withheldReason(artifact('art-1', { visibility, partition }), 'evaluator'), 'none');
+      assert.equal(ok(withheldReason(artifact('art-1', { visibility, partition }), 'evaluator')), 'none');
     }
   }
 });
@@ -91,7 +91,7 @@ test('the default report carries the author-visible references and counts the re
     artifact('holdout', { visibility: 'internal', partition: 'held-out' }),
     artifact('final', { visibility: 'final' }),
   ];
-  const partition = defaultReportRefs(refs);
+  const partition = ok(defaultReportRefs(refs));
   assert.equal(partition.audience, 'report');
   assert.deepEqual(partition.visible.map((ref) => ref.id), ['reportable']);
   assert.equal(partition.withheldVisibility, 2);
@@ -103,7 +103,7 @@ test('the sensitive trace does not appear in the default report, not even by id'
     artifact('reportable', { visibility: 'internal' }),
     artifact('heldout-repo-42-patch', { visibility: 'held-out', partition: 'held-out', location: 'artifact://private/heldout-repo-42-patch' }),
   ];
-  const rendered = JSON.stringify(defaultReportRefs(refs));
+  const rendered = JSON.stringify(ok(defaultReportRefs(refs)));
   assert.doesNotMatch(rendered, /heldout-repo-42-patch/);
   assert.doesNotMatch(rendered, /private\/heldout/);
   assert.match(rendered, /reportable/);
@@ -114,8 +114,8 @@ test('partitionFeedback keeps some references for the evaluator that it withhold
     artifact('train-1', { partition: 'train' }),
     artifact('heldout-1', { visibility: 'held-out', partition: 'held-out' }),
   ];
-  assert.deepEqual(partitionFeedback(refs, 'author').visible.map((ref) => ref.id), ['train-1']);
-  assert.deepEqual(partitionFeedback(refs, 'evaluator').visible.map((ref) => ref.id), ['train-1', 'heldout-1']);
+  assert.deepEqual(ok(partitionFeedback(refs, 'author')).visible.map((ref) => ref.id), ['train-1']);
+  assert.deepEqual(ok(partitionFeedback(refs, 'evaluator')).visible.map((ref) => ref.id), ['train-1', 'heldout-1']);
 });
 
 test('a held-out reference is a privacy violation for the author and readable by the evaluator', () => {

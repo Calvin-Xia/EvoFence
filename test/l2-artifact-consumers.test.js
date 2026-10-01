@@ -125,18 +125,20 @@ test('the asset consumer admits train source traces and content references with 
 });
 
 test('an asset source trace that is not from train is an evaluation protocol mismatch', () => {
+  const content = artifact('asset-content', { partition: 'train' });
   const trace = artifact('dev-trace', { content: 'trace', partition: 'dev' });
   err(
-    verifyForConsumer({ role: 'asset', contentRefs: [], sourceTraces: [trace], revokedDependencies: [], at: 0 }, storeWith([[trace, 'trace']])),
+    verifyForConsumer({ role: 'asset', contentRefs: [content], sourceTraces: [trace], revokedDependencies: [], at: 0 }, storeWith([[content, content.id], [trace, 'trace']])),
     'EFK_EVALUATION_PROTOCOL_MISMATCH',
   );
 });
 
 test('asset content from held-out or final never becomes asset material', () => {
+  const trace = artifact('train-trace', { partition: 'train' });
   for (const partition of ['held-out', 'final']) {
     const ref = artifact(`content-${partition}`, { content: 'x', partition });
     err(
-      verifyForConsumer({ role: 'asset', contentRefs: [ref], sourceTraces: [], revokedDependencies: [], at: 0 }, storeWith([[ref, 'x']])),
+      verifyForConsumer({ role: 'asset', contentRefs: [ref], sourceTraces: [trace], revokedDependencies: [], at: 0 }, storeWith([[ref, 'x']])),
       'EFK_EVALUATION_PROTOCOL_MISMATCH',
       partition,
     );
@@ -144,9 +146,10 @@ test('asset content from held-out or final never becomes asset material', () => 
 });
 
 test('private asset material is a privacy violation for the asset-staging audience', () => {
+  const trace = artifact('train-trace', { partition: 'train' });
   const ref = artifact('private-content', { content: 'secret', visibility: 'private', partition: 'train' });
   err(
-    verifyForConsumer({ role: 'asset', contentRefs: [ref], sourceTraces: [], revokedDependencies: [], at: 0 }, storeWith([[ref, 'secret']])),
+    verifyForConsumer({ role: 'asset', contentRefs: [ref], sourceTraces: [trace], revokedDependencies: [], at: 0 }, storeWith([[ref, 'secret']])),
     'EFK_PRIVACY_VIOLATION',
   );
 });

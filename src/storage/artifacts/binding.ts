@@ -1,6 +1,6 @@
 /**
  * cp1 — attempt binding. S09: a node/effect product must carry a complete binding whose graph,
- * node, attempt, epoch and base revision match, and a mismatched binding is
+ * session, host session, node, attempt, epoch and base revision match, and a mismatched binding is
  * `EFK_ARTIFACT_BINDING_MISMATCH` with no partial acceptance.
  *
  * The base revision is the load-bearing one for evolution: an artifact produced against a
@@ -18,6 +18,8 @@ import type { ArtifactExpectation, ArtifactRef, Binding, BindingExpectation } fr
 /** Frozen field names that disagree between a reference and the attempt about to consume it. */
 export function bindingMismatches(binding: Binding, expected: BindingExpectation): readonly string[] {
   const mismatched: string[] = [];
+  if (binding.sessionId !== expected.sessionId) mismatched.push('sessionId');
+  if (binding.hostSessionId !== expected.hostSessionId) mismatched.push('hostSessionId');
   if (binding.graph.graphId !== expected.graph.graphId) mismatched.push('graph.graphId');
   if (binding.graph.revision !== expected.graph.revision) mismatched.push('graph.revision');
   if (binding.graph.digest !== expected.graph.digest) mismatched.push('graph.digest');
