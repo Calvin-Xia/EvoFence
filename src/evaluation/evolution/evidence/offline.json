@@ -1,0 +1,167 @@
+{
+  "evidenceKind": "real-offline",
+  "corpus": "six dev instances of numeric string addition",
+  "paidRequests": 0,
+  "baseDigest": "sha256:509859fd273894ff84934e85e7ffa9d967cdc9e4b956fc15a40a8a71cc03280e",
+  "actualGitDiffs": {
+    "A": "diff --git a/program.js b/program.js\nindex 280ff8e..5d440be 100644\n--- a/program.js\n+++ b/program.js\n@@ -1 +1 @@\n-const sum = xs => null;\n+const sum = xs => xs.reduce((a, b) => a + b, 0);\n\\ No newline at end of file\n",
+    "B": "diff --git a/program.js b/program.js\nindex 280ff8e..af41865 100644\n--- a/program.js\n+++ b/program.js\n@@ -1 +1 @@\n-const sum = xs => null;\n+const sum = xs => xs.reduce((a, b) => a + Number(b), 0);\n\\ No newline at end of file\n"
+  },
+  "observations": [
+    {
+      "opaqueId": "blind-0",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'022' !== 4\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '022',\r\n  expected: 4,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:a1a8c086a0525687b8be48ca11dc3405ecd9c1bc96657c5064441b15af5a37c1",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:b99d9592afd60d6f3c3318b8eef6fc2686e665c0cfff408015fc22dc54f14a1b"
+    },
+    {
+      "opaqueId": "blind-1",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:7f8c727a33f9656daf195a2f2d8491df967f30798425b7d6ada1404bc40aa516",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:632aaa93637247bb535fee846db97798602f1d883989294a7d7942212ba62907"
+    },
+    {
+      "opaqueId": "blind-2",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:446dd1960b87bbab74c55b3167472f4aeee5c69a0141e18ee0dbf05dadb8c05b",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:0288687d9408adccdaebcfee71035fbdc5cf78f89599b991b4af6a2411c6558c"
+    },
+    {
+      "opaqueId": "blind-3",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:3db5ce6b596c8828cb203d1b65bd36a1e3ed5fdd47f5bee7a5eec3ab0ffc1367",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:725ca76f8413406b5eeabde20b3c3c0b1966fa463d2ab924c685cd2206ad9756"
+    },
+    {
+      "opaqueId": "blind-4",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'032' !== 5\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '032',\r\n  expected: 5,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:3533e83bd2e3b5fde93fc101dab912bae7966661c919fc75c41b5eb349c6fea2",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:725ca76f8413406b5eeabde20b3c3c0b1966fa463d2ab924c685cd2206ad9756"
+    },
+    {
+      "opaqueId": "blind-5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'042' !== 6\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '042',\r\n  expected: 6,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:864c2394eba671155a8682c1a00e624323c23fa9eb20bc4a1f0ca472a311f3a5",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:0288687d9408adccdaebcfee71035fbdc5cf78f89599b991b4af6a2411c6558c"
+    },
+    {
+      "opaqueId": "blind-6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'052' !== 7\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '052',\r\n  expected: 7,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:6a1a243851c1942c464877fb889157a05ccb98ab8d9a32dec0989d7647383e38",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:06141a495b64f0a7c92eaa79446157873bfefb9b442d524e4f32a24a3e7dad24"
+    },
+    {
+      "opaqueId": "blind-7",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:95f3d17901f97ed6e0e602ea565f57b465b763082731e279cc7d0d3213c550ef",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:06141a495b64f0a7c92eaa79446157873bfefb9b442d524e4f32a24a3e7dad24"
+    },
+    {
+      "opaqueId": "blind-8",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'012' !== 3\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '012',\r\n  expected: 3,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:c261b613690075ee1ca2717915186309014a76352c74bc3d44bc54c3dfe9e4e7",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:2cf6607fb1990c1c583a70de1dae4c3dd77bd0ca76bac9ffb3b2eee000e06a5f"
+    },
+    {
+      "opaqueId": "blind-9",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:06af549da5a5310a1d4e0dc93e9348df0da7256f38a7db2a3c4783e214874367",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:b99d9592afd60d6f3c3318b8eef6fc2686e665c0cfff408015fc22dc54f14a1b"
+    },
+    {
+      "opaqueId": "blind-10",
+      "status": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n'002' !== 2\r\n\r\n    at file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/[eval1]:2:49\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:268:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:265:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: '002',\r\n  expected: 2,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n",
+      "outputHash": "sha256:2bfd9cb75858527087160139296aa5fda6789baa682934d8342d19d48caaf810",
+      "programDigest": "sha256:95fef71c306ddd6c99d9afc25958fdd5d74c7a6fbda1bb24df2a3d9ffc3cad25",
+      "checksDigest": "sha256:632aaa93637247bb535fee846db97798602f1d883989294a7d7942212ba62907"
+    },
+    {
+      "opaqueId": "blind-11",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputHash": "sha256:9c96ce81c477f6dc95a676f97cf4215164a292b0737cefa2cfe05b9b5c18d2ac",
+      "programDigest": "sha256:f7947f2d6762f8fb89df91f682bb135a2bc85df056b23ac5aff0d03876d48cde",
+      "checksDigest": "sha256:2cf6607fb1990c1c583a70de1dae4c3dd77bd0ca76bac9ffb3b2eee000e06a5f"
+    }
+  ],
+  "analysis": {
+    "n": 6,
+    "delta": 1,
+    "metrics": {
+      "control": {
+        "costMicros": 0,
+        "costPerSuccess": null,
+        "humanWaitMs": 0,
+        "incompleteRate": 0,
+        "ittComposite": 0,
+        "n": 6,
+        "qualityMean": null,
+        "qualityStatus": "reported",
+        "successes": 0,
+        "wallP90": 1000
+      },
+      "guardrailCost": "unknown",
+      "guardrailTruncation": "passed",
+      "guardrailWall": "passed",
+      "treatment": {
+        "costMicros": 0,
+        "costPerSuccess": 0,
+        "humanWaitMs": 0,
+        "incompleteRate": 0,
+        "ittComposite": 0.7999999999999999,
+        "n": 6,
+        "qualityMean": 80,
+        "qualityStatus": "reported",
+        "successes": 6,
+        "wallP90": 1000
+      }
+    },
+    "statistical": {
+      "continueSampling": false,
+      "look": "other",
+      "reason": "budget-missing",
+      "verdict": "inconclusive"
+    }
+  },
+  "verdict": "inconclusive",
+  "benefitClaimAllowed": false,
+  "limitations": [
+    "Small dev sample; no held-out data",
+    "No provider/host session trial",
+    "same-user subprocess, no OS sandbox",
+    "No authorized trial budget or signed T0"
+  ]
+}

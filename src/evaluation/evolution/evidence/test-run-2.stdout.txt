@@ -1,0 +1,47 @@
+✔ cp1: preregistration binds candidate/base/hosts/model/protocol/splits and cannot be rewritten after results (272.5838ms)
+✔ cp1: forged preregistration/authority cannot become a registered evaluator (60.6701ms)
+✔ cp1: candidate/base/dependency/version/model/payload/seed/resource drift is rejected (321.9747ms)
+✔ cp1: disjoint repo/family/instance splits and private test audience are mandatory (89.713ms)
+✔ cp1: actual product/base binding and bytes cannot be substituted with author summaries (131.1774ms)
+✔ cp3: held-out/final receipts and detailed feedback never enter author/report/asset-staging audience (243.0168ms)
+✔ cp1: construction performs zero port I/O and issuer is copied from registration (8.3617ms)
+✔ cp3: trusted provenance prevents offline records from being relabeled as unseen (89.8564ms)
+✔ cp1: host manifest bytes must match the declared host version/model/payload (11.1502ms)
+✔ cp3: receipt qualification expires with its underlying evidence; public benefit booleans are ignored (432.6834ms)
+✔ test\l4-evo-eval-fixtures.test.js (134.7236ms)
+✔ DoD1 budget-missing blocks benefit and promotion despite apparently excellent results (277.4246ms)
+✔ DoD1 insufficient-samples cannot become positive or qualify for promotion (187.6675ms)
+✔ DoD1 uncertain measurements block a directional conclusion (253.5228ms)
+✔ cp2 same seeds replay identically; different seeds/trials are retained and never chosen by their best result (1334.5034ms)
+✔ cp2 discordance floor and ci-spans-mve prevent point-estimate success claims (413.1114ms)
+✔ cp2 quality is secondary; cost/wall/stability guardrails remain conjunctive with statistical positive (767.9453ms)
+✔ cp2 futility look continues or stops without efficacy; offline/dev/draft remains exploratory (304.892ms)
+✔ cp2 per-host fixed B-A -> C-B sequence cannot let a good host cancel a blocked host (563.769ms)
+✔ cp3 selection-bias negative control: all cheap trials are kept, even when one has negative evidence (344.7994ms)
+✔ cp3 duplicate samples and undeclared seeds/trials cannot be presented as additional independent evidence (127.9872ms)
+✔ cp3 leakage negative control: author-visible held-out/final refs are rejected even when public (211.4076ms)
+✔ cp3 usage negative control: missing telemetry stays null, keeps reservation, and blocks promotion (183.7382ms)
+✔ cp3 telemetry checks implicit requests, duplicate request identity, contradictory completeness and reasoning subset (664.783ms)
+✔ DoD2 production consumer uses the real receipt: registry validates then separately promotes; failed eval cannot transition (401.322ms)
+✔ DoD2 authority negative control: forged issuer/signature or substituted receipt never qualifies (189.7213ms)
+✔ DoD2 task-verdict negative control: even an attested task DecisionRecord cannot supply evolution qualification (192.1704ms)
+✔ cp3 independent verifier omissions/fake producer are rejected and judge costs are fully reported (403.2771ms)
+▶ mutation evidence: production guards turn red under mutation and green after restoration
+  ✔ budget-bypass (1574.0112ms)
+  ✔ sample-bypass (1140.3904ms)
+  ✔ selection-bias (1867.1983ms)
+  ✔ leakage-bypass (1327.7253ms)
+  ✔ usage-as-zero (1300.8004ms)
+  ✔ forged-authority (1274.4183ms)
+  ✔ task-as-evolution (1266.6396ms)
+✔ mutation evidence: production guards turn red under mutation and green after restoration (9752.9944ms)
+✔ real offline measurements: fresh Node process runs actual coding artifacts/private checks; no unseen claim (1075.4421ms)
+✔ statistics use stratified paired SE/MVE, 10000 draws, BCa and the frozen formula; seed affects draws only (486.987ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9946.0336

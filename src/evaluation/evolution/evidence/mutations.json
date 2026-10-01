@@ -1,0 +1,89 @@
+{
+  "evidenceKind": "production-module-mutation",
+  "controls": [
+    {
+      "id": "budget-bypass",
+      "module": "judgement.js",
+      "from": "if (!registered.budgetAuthorized)",
+      "to": "if (false)",
+      "pattern": "DoD1 budget-missing",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "17a9b50ad786ec4cb0f1a57dfb207595fba219e1748786c03c77af3bdc9bbf9a",
+      "diskUnchanged": true
+    },
+    {
+      "id": "sample-bypass",
+      "module": "judgement.js",
+      "from": "if (look !== 'CONFIRMATORY_LOOK' || stats.n < p.plannedN)",
+      "to": "if (false)",
+      "pattern": "DoD1 insufficient-samples",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "17a9b50ad786ec4cb0f1a57dfb207595fba219e1748786c03c77af3bdc9bbf9a",
+      "diskUnchanged": true
+    },
+    {
+      "id": "selection-bias",
+      "module": "service.js",
+      "from": "judgements.every(j => j.verdict === 'positive'",
+      "to": "judgements.some(j => j.verdict === 'positive'",
+      "pattern": "cp3 selection-bias negative control",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "ea69f32faa4244ef5346813b7d8af51fb839fd51692ae2343a33c90ffb8b57ba",
+      "diskUnchanged": true
+    },
+    {
+      "id": "leakage-bypass",
+      "module": "observations.js",
+      "from": "if (access.value !== 'none')",
+      "to": "if (false)",
+      "pattern": "cp3 leakage negative control",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "e458632780ff61023f0ca218047716d2cb16e4f97ddad27925a9735affb799dc",
+      "diskUnchanged": true
+    },
+    {
+      "id": "usage-as-zero",
+      "module": "observations.js",
+      "from": "const known = usage.value.knownMicros;",
+      "to": "const known = 0;",
+      "pattern": "cp3 usage negative control",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "e458632780ff61023f0ca218047716d2cb16e4f97ddad27925a9735affb799dc",
+      "diskUnchanged": true
+    },
+    {
+      "id": "forged-authority",
+      "module": "service.js",
+      "from": "const proof = ports.authority.verify(ref);",
+      "to": "const proof = storeOk(true);",
+      "pattern": "DoD2 authority negative control",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "ea69f32faa4244ef5346813b7d8af51fb839fd51692ae2343a33c90ffb8b57ba",
+      "diskUnchanged": true
+    },
+    {
+      "id": "task-as-evolution",
+      "module": "service.js",
+      "from": "evaluation.decision.kind !== 'candidate'",
+      "to": "false",
+      "pattern": "DoD2 task-verdict negative control",
+      "green": 0,
+      "red": 1,
+      "restored": 0,
+      "productionModuleSha256": "ea69f32faa4244ef5346813b7d8af51fb839fd51692ae2343a33c90ffb8b57ba",
+      "diskUnchanged": true
+    }
+  ]
+}

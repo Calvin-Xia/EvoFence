@@ -1,0 +1,33 @@
+✖ DoD1 insufficient-samples cannot become positive or qualify for promotion (175.4072ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 338.3451
+
+✖ failing tests:
+
+test at test\l4-evo-eval-guards.test.js:15:1
+✖ DoD1 insufficient-samples cannot become positive or qualify for promotion (175.4072ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'positive'
+  - 'exploratory_only'
+  
+      at TestContext.<anonymous> (file:///C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence/test/l4-evo-eval-guards.test.js:17:45)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'positive',
+    expected: 'exploratory_only',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
