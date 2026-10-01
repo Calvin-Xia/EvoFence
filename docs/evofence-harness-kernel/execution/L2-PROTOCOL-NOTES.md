@@ -132,3 +132,9 @@ npm run dep:check        # src 无环
 ```
 
 > 本工作区有多个 pane 并发执行 `npm run build`；`dist/**` 是构建产物、会被随时重生成。任何在 `dist/` 上手工注入的验证必须在**同一条命令里**注入、跑测试、恢复，否则会被并发 build 抹掉（本节点做 negative control 时实测到过这个现象）。
+
+## 7. 复验后更新（2026-10-01，B1 修复）
+
+- 独立复核发现 B1：`decode()` 的版本门最初用 runtime 的 `$defs/ProtocolVersion` 去校验所有声明了 `protocol` 的定义，导致合法资产封套（`evofence.assets/1 @ 1.0.0`）的 `AssetRef`/`CapabilityAsset` 被误拒。已修复：门的真相源按被声明属性自身的 `$ref` 选择（资产域用 `AssetProtocolVersion`，两域不共用枚举）。
+- 因此协议层断言数由 **26 → 28**；上文 §5 的 “26/423/397” 是**交付时快照**，修复后协议三文件为 28/28/0（`rev-protocol` 复验 7 项探针全过）。
+- 已知非阻塞遗留（复核登记）：`README` 有一处悬空的小节引用、`npx tsc` 仍解析到别名 6.0.3（`npm run build` 已显式走 7.0.2）、I04/I05 为静态 best-effort 盲区、guard 对任意反射/间接回调的完整 provenance 未证明。
