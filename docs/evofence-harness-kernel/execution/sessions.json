@@ -5,7 +5,7 @@
   "model": "gpt-6.1-sol",
   "thinking": "xhigh",
   "executionMode": "Orchestrated multi-harness fleet: one orchestrator session (pi) holds sole graph-write authority; codex panes are the sole shared-source writers; pi+deepseek panes are read-only verifiers/drafters. Parallel windows across herdr tabs, per user instruction.",
-  "currentOwner": "S04",
+  "currentOwner": "S05",
   "sessions": [
     {
       "id": "S00",
@@ -137,16 +137,22 @@
       "threadId": "01a0f7f0-a51d-7391-a4f5-33fbc7b9115f",
       "harness": "pi (orchestrator) + herdr fleet",
       "role": "Continuous execution of the evofence-harness-kernel graph; sole graph-write authority; integration point owner; per-phase handoffs",
-      "status": "active",
+      "status": "handoff-complete",
       "predecessor": "S03",
-      "successor": null,
+      "successor": "S05",
       "inputHandoff": "docs/evofence-harness-kernel/execution/SESSION-003-HANDOFF.md",
       "model": "pi: deepseek/deepseek-flash max (orchestrator) / verifiers pi+deepseek high / writers pi+deepseek high and codex gpt-6.1-sol xhigh",
       "thinking": "max (orchestrator) / high (verifiers, lane writers) / xhigh (codex)",
       "startedAt": "2026-10-01T14:48:58.398Z",
       "phase": "L2",
       "currentNode": "l2_public_contracts",
-      "completedNodes": [],
+      "completedNodes": [
+        "l2_public_contracts",
+        "l2_state_store",
+        "l2_policy",
+        "l2_graph_model",
+        "l2_host_port"
+      ],
       "fleet": {
         "orchestrator": {
           "harness": "pi",
@@ -213,6 +219,63 @@
             "model": "deepseek/deepseek-flash",
             "thinking": "high",
             "role": "independent cross-review"
+          }
+        ]
+      },
+      "handoff": "docs/evofence-harness-kernel/execution/SESSION-004-HANDOFF.md",
+      "completedAt": "2026-10-01T15:45:00.000Z",
+      "nextPhase": "L2",
+      "nextTask": "l2_artifact_port"
+    },
+    {
+      "id": "S05",
+      "threadId": null,
+      "harness": "pi (orchestrator) + herdr fleet",
+      "role": "L2 close-out (artifact/scheduler/runtime/kernel-verification) then L3 entry; sole graph-write authority; per-phase handoffs",
+      "status": "active",
+      "predecessor": "S04",
+      "successor": null,
+      "inputHandoff": "docs/evofence-harness-kernel/execution/SESSION-004-HANDOFF.md",
+      "model": "pi: deepseek/deepseek-flash max (orchestrator) / pi reviewers deepseek high / codex gpt-6.1-sol xhigh (execution)",
+      "thinking": "max (orchestrator) / high (reviewers) / xhigh (codex)",
+      "startedAt": "2026-10-01T15:45:00.000Z",
+      "phase": "L2",
+      "currentNode": "l2_scheduler",
+      "completedNodes": [],
+      "routingPolicy": "User directive 2026-10-01: execution-class work goes to codex CLI; review/verification to fresh pi+deepseek tabs (new tab per review, no long-context reuse); hand off the orchestrator when its context grows; enable /goal-focus in the successor pi.",
+      "fleet": {
+        "orchestrator": {
+          "harness": "pi",
+          "model": "deepseek/deepseek-flash",
+          "thinking": "max",
+          "kind": "pi",
+          "paneId": null,
+          "role": "graph writes, integration, dispatch, verdicts, handoffs"
+        },
+        "activePanes": [
+          {
+            "paneId": "wG:pS",
+            "name": "l2-runtime-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l2_runtime implementation lane"
+          },
+          {
+            "paneId": "wG:pT",
+            "name": "l2-artifact-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l2_artifact_port minor fixes"
+          },
+          {
+            "paneId": "wG:pV",
+            "name": "l2-scheduler-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l2_scheduler blocker/major/minor fixes"
           }
         ]
       }
