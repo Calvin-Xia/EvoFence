@@ -1,0 +1,76 @@
+{
+  "baseline": "d2e311df7b7fbf18c28c7c849126d3be3bd6f1cb",
+  "branch": "refactor/hk-l5-legacy",
+  "trackedDiffAgainstBaseline": [],
+  "allowedUntrackedOnly": true,
+  "files": [
+    {
+      "file": "src/storage/legacy/boundary.ts",
+      "lines": 78,
+      "digest": "sha256:ed6d5c9f87b561ac741b5f906576dd6f2320ff45f94441d930eb0a33fb63b5d3"
+    },
+    {
+      "file": "src/storage/legacy/breaking.ts",
+      "lines": 46,
+      "digest": "sha256:ba096d4b0b06af11da2c1f18030eb1c940de64403396eee76d63c9c16cbcdcf1"
+    },
+    {
+      "file": "src/storage/legacy/exporter.ts",
+      "lines": 50,
+      "digest": "sha256:35453b4e1d1391676a669059ab215c4137d920c391a136a964f5ff4541cf16b9"
+    },
+    {
+      "file": "src/storage/legacy/formats.ts",
+      "lines": 31,
+      "digest": "sha256:595f92cc913d428c2bbfcd47cf8356d304ef2a73725703703c846c665ac52341"
+    },
+    {
+      "file": "src/storage/legacy/importer.ts",
+      "lines": 89,
+      "digest": "sha256:e85221de18261363e49a0d88c4d3da4c057b85650009d5aaddac4400339cfda6"
+    },
+    {
+      "file": "src/storage/legacy/index.ts",
+      "lines": 8,
+      "digest": "sha256:ba7fe37a1cbd20be542c99566bbf095e33ca182bd9a42304496fa5d1892ed57f"
+    },
+    {
+      "file": "src/storage/legacy/ledger.ts",
+      "lines": 71,
+      "digest": "sha256:c693c1ae560d93fd91b53185a3b2a67cb39069c44a17899aebe27cdc14fd5a42"
+    },
+    {
+      "file": "src/storage/legacy/sqlite.ts",
+      "lines": 41,
+      "digest": "sha256:869ff4782131dc3ec5f5bb121680f6549c2b92a3bf498259edb7ff857a6f2472"
+    },
+    {
+      "file": "src/storage/legacy/types.ts",
+      "lines": 54,
+      "digest": "sha256:46f50b6708b51db67fc78183c8d917f2eea7d2f633b03b0a8e1b5ffb9536cc1d"
+    },
+    {
+      "file": "test/l5-legacy-checklist.test.js",
+      "lines": 31,
+      "digest": "sha256:d440e84021980711d58379ebcaac7cf97f68ed542ddf2b482bf6b3d4a105cf63"
+    },
+    {
+      "file": "test/l5-legacy-export.test.js",
+      "lines": 126,
+      "digest": "sha256:a0d2e92bdc16f619e135d58ca286dda43295a4d189f776042cc0a39c99cb0290"
+    },
+    {
+      "file": "test/l5-legacy-import.test.js",
+      "lines": 179,
+      "digest": "sha256:44cce9e8d4c7af69e0352606e512a13eb60b0a6123cd841c0175990c7b1d4841"
+    },
+    {
+      "file": "test/l5-legacy-negative-controls.test.js",
+      "lines": 68,
+      "digest": "sha256:a348e3437640993a0fdbfc3cf20e60543125eefc6946af8d8b7cef7149c62580"
+    }
+  ],
+  "laneTsCount": 9,
+  "laneTestFileCount": 4,
+  "note": "Git-normalized tracked content is unchanged. Real ledger/config state was never read or written; native fixtures use temporary paths only."
+}

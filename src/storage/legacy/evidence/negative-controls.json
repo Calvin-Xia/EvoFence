@@ -1,0 +1,110 @@
+[
+  {
+    "id": "unknown-version-accepted",
+    "dod": "DoD1",
+    "module": "sqlite",
+    "edits": [
+      [
+        "if (version?.value !== '2')",
+        "if (false)"
+      ]
+    ],
+    "green": [
+      0,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "source-writeback",
+    "dod": "DoD1",
+    "module": "exporter",
+    "edits": [
+      [
+        "return { protocol: EXPORT_PROTOCOL, classification: 'historical-source', executable: false,",
+        "mutantWrite(source.file, Buffer.concat([source.bytes, Buffer.from('mutant-write')]));\\nreturn { protocol: EXPORT_PROTOCOL, classification: 'historical-source', executable: false,"
+      ]
+    ],
+    "green": [
+      0,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "history-as-execution-evidence",
+    "dod": "DoD2",
+    "module": "importer",
+    "edits": [
+      [
+        "records: bundle.records.map(record => ({ ...record, executable: false,",
+        "records: bundle.records.map(record => ({ ...record, executable: true,"
+      ]
+    ],
+    "green": [
+      0,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "breaking-command-omitted",
+    "dod": "DoD2",
+    "module": "breaking",
+    "edits": [
+      [
+        "['cli:doctor', 'old --fix only with the old CLI; no remediation or discovery in this lane'],",
+        ""
+      ]
+    ],
+    "green": [
+      0,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  }
+]
