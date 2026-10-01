@@ -27,3 +27,4 @@
 | task · passed | l2_scheduler | 租约、资源冲突与公平调度 | 2026-10-01T16:05:49.572Z |
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
 | task · passed | l3_context_router | 节点上下文与反馈路由 | 2026-10-01T17:58:33.111Z |
+| task · passed | l3_task_evaluation | 任务完成的唯一裁决入口 | 2026-10-01T18:07:48.667Z |
