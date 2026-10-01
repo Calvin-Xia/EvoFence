@@ -240,12 +240,19 @@
       "thinking": "max (orchestrator) / high (reviewers) / xhigh (codex)",
       "startedAt": "2026-10-01T15:45:00.000Z",
       "phase": "L2",
-      "currentNode": "l2_kernel_verification",
+      "nextPhase": "L3",
+      "nextTask": "l3_pi_session / l3_dsh_session / l3_context_router / l3_workspace_txn / l3_task_evaluation (L3 entry; all eligible after l2_kernel_verification passed)",
+      "currentNode": null,
+      "handoff": "docs/evofence-harness-kernel/execution/SESSION-005-HANDOFF.md",
       "completedNodes": [
         "l2_artifact_port",
         "l2_scheduler",
-        "l2_runtime"
+        "l2_runtime",
+        "l2_kernel_verification"
       ],
+      "l2Stage": "complete (9/9); 16/40 graph-wide (L1 7 + L2 9); I01 core-boundary drift found by the gate and fixed by a behaviour-preserving relocation (4734088)",
+      "successorPlan": "S06 (L3): spawn a fresh pi orchestrator at the L3 boundary or when S05 context exceeds ~700k (user directive 2026-10-02); cross-L handoff docs still required",
+      "userAuthorization20261002": "commit allowed; push/PR and CI waiting allowed; merge NOT allowed; no publish/tag",
       "routingPolicy": "User directive 2026-10-01: execution-class work goes to codex CLI; review/verification to fresh pi+deepseek tabs (new tab per review, no long-context reuse); hand off the orchestrator when its context grows; enable /goal-focus in the successor pi.",
       "fleet": {
         "orchestrator": {
@@ -257,16 +264,7 @@
           "role": "graph writes, integration, dispatch, verdicts, handoffs",
           "cwd": "C:/Users/Calvin-Xia/EvoFence"
         },
-        "activePanes": [
-          {
-            "paneId": "wG:p11",
-            "name": "l2-kernel-verify",
-            "harness": "codex",
-            "model": "gpt-6.1-sol",
-            "thinking": "xhigh",
-            "role": "l2_kernel_verification execution lane (integration worktree, sole writer)"
-          }
-        ],
+        "activePanes": [],
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
@@ -274,6 +272,8 @@
           "wG:pY verify-artifact-fix (accepted dossier, pane closed)",
           "wG:pZ verify-scheduler-fix (accepted dossier, pane closed)",
           "wG:p0 verify-runtime (accepted dossier, pane closed)",
+          "wG:p11 l2-kernel-verify codex (I01 fix + verification package merged 4734088, pane closed)",
+          "wG:p12 verify-kernel (accepted dossier 0B/0M/1m, pane closed)",
           "wG:pC S04 orchestrator (handoff complete, pane closed)"
         ]
       },
