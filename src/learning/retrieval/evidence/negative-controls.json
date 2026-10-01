@@ -1,0 +1,118 @@
+[
+  {
+    "id": "qualification-bypass",
+    "dod": "DoD1",
+    "module": "retrieval/retrieve",
+    "mutation": [
+      "if (!q.ok || !q.value.eligible)",
+      "if (!q.ok)"
+    ],
+    "test": "DoD1 qualification rejects unverified and metadata-mismatched experience before material reads",
+    "green": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "revocation-bypass",
+    "dod": "DoD1",
+    "module": "retrieval/retrieve",
+    "mutation": [
+      "if (!q.ok || !q.value.eligible)",
+      "if (!q.ok)"
+    ],
+    "test": "cp3 revocation propagation removes transitive dependents on the next retrieval without stale injection",
+    "green": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "empty-injection",
+    "dod": "DoD2",
+    "module": "retrieval/retrieve",
+    "mutation": [
+      "mode: assets.length === 0 ? 'base' : 'candidate'",
+      "mode: 'candidate'"
+    ],
+    "test": "DoD2 empty registry returns exact base execution with reproducible non-free overhead",
+    "green": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  },
+  {
+    "id": "unaccounted-overhead",
+    "dod": "DoD2",
+    "module": "retrieval/retrieve",
+    "mutation": [
+      "materialReads, materialCodeUnits, tokenizerCalls, tokensCounted, modelRequests:",
+      "materialReads, materialCodeUnits, tokenizerCalls: 0, tokensCounted: 0, modelRequests:"
+    ],
+    "test": "DoD2 empty registry returns exact base execution with reproducible non-free overhead",
+    "green": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "red": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "restored": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "distUnchanged": true
+  }
+]

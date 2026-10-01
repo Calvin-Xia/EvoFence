@@ -1,0 +1,1206 @@
+{
+  "evidenceLevel": "synthetic-fixture",
+  "result": {
+    "mode": "candidate",
+    "fallbackReason": null,
+    "candidate": {
+      "assets": [
+        {
+          "assetId": "experience",
+          "revision": 1,
+          "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012"
+        }
+      ],
+      "context": {
+        "packet": {
+          "role": "executor",
+          "binding": {
+            "sessionId": "session-1",
+            "hostSessionId": "host-session",
+            "graph": {
+              "graphId": "graph-1",
+              "revision": 2,
+              "digest": "sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d"
+            },
+            "nodeId": "retrieval-node",
+            "attemptId": "retrieval-attempt",
+            "attemptOrdinal": 1,
+            "epoch": 1,
+            "baseDigest": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2"
+          },
+          "isolation": "fresh",
+          "preserveHostResources": true,
+          "task": {
+            "acceptance": {
+              "baselineRequired": false,
+              "checkRefs": [],
+              "evaluatorId": "eval-1",
+              "evaluatorVersion": "1",
+              "outcomeSchema": {
+                "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "name": "Result",
+                "version": "1"
+              },
+              "protocolRef": null,
+              "requiredBranchPolicy": "explicit-complete-report"
+            },
+            "authorityGrant": {
+              "actor": {
+                "actorId": "human-1",
+                "identityRef": {
+                  "id": "identity-1",
+                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "visibility": "internal",
+                  "partition": "not-evaluation",
+                  "schema": {
+                    "name": "Artifact",
+                    "version": "1.1.0",
+                    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "kernel-1",
+                    "kind": "kernel"
+                  }
+                },
+                "kind": "human"
+              },
+              "approvalRef": null,
+              "capabilities": [],
+              "expiresAt": null,
+              "grantId": "grant-root",
+              "maxDelegationDepth": 3,
+              "nodeIds": [],
+              "parentGrantRef": null,
+              "revocationEpoch": 0,
+              "rootAuthorityRef": "root-1",
+              "scope": {
+                "artifactScopes": [
+                  "assets"
+                ],
+                "readResources": [
+                  "repo"
+                ],
+                "trustDomain": "same-user",
+                "workspaceRef": null,
+                "writeResources": [
+                  "project-staging"
+                ]
+              },
+              "sessionId": "session-1"
+            },
+            "budget": {
+              "authorizationRef": null,
+              "category": "development",
+              "maxConcurrentRequests": 20,
+              "maxInputTokens": 60000,
+              "maxOutputTokens": 4096,
+              "maxRequests": 20,
+              "maxUsdMicros": 190940,
+              "maxWallMs": 1200000,
+              "missingUsagePolicy": "retain-reservation",
+              "poolId": "pool-1",
+              "priceRef": {
+                "id": "price-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "PriceTable",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              }
+            },
+            "degradations": [],
+            "goal": "do the thing",
+            "privacy": {
+              "feedbackVisibility": "internal",
+              "finalFeedback": "no-optimization",
+              "privateTests": "evaluator-only",
+              "secretPolicy": "forbidden",
+              "visibility": "internal"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "requiredBranches": [],
+            "requiredGuarantees": [
+              {
+                "alternativeIds": [],
+                "capability": "cap",
+                "coverage": [
+                  "cov"
+                ],
+                "evidenceKinds": [
+                  "native-disk"
+                ],
+                "mode": "hard"
+              }
+            ],
+            "requiredOutcomes": [
+              {
+                "description": "produce the artifact",
+                "evidenceKinds": [
+                  "native-disk"
+                ],
+                "outcomeId": "out-1",
+                "schema": {
+                  "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "name": "Result",
+                  "version": "1"
+                }
+              }
+            ],
+            "scope": {
+              "artifactScopes": [
+                "assets"
+              ],
+              "readResources": [
+                "repo"
+              ],
+              "trustDomain": "same-user",
+              "workspaceRef": null,
+              "writeResources": [
+                "project-staging"
+              ]
+            },
+            "taskId": "task-1",
+            "termination": {
+              "cancelMode": "stop-and-confirm",
+              "excludeHumanWait": true,
+              "maxActiveWallMs": 60000,
+              "maxAttempts": 3,
+              "unknownPolicy": "reconcile"
+            },
+            "version": 1
+          },
+          "entries": [
+            {
+              "ref": {
+                "id": "material-5",
+                "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                "visibility": "internal",
+                "partition": "train",
+                "schema": {
+                  "name": "Material",
+                  "version": "1.1.0",
+                  "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "training-source",
+                  "kind": "kernel"
+                }
+              },
+              "purpose": "evidence",
+              "mode": "full",
+              "text": "check the failing reproduction before editing"
+            }
+          ],
+          "audit": [
+            {
+              "ref": {
+                "id": "identity-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "Artifact",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              },
+              "source": "TaskContract",
+              "reason": "visible-contract-reference"
+            },
+            {
+              "ref": {
+                "id": "price-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "PriceTable",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              },
+              "source": "TaskContract",
+              "reason": "visible-contract-reference"
+            },
+            {
+              "ref": {
+                "id": "material-5",
+                "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                "visibility": "internal",
+                "partition": "train",
+                "schema": {
+                  "name": "Material",
+                  "version": "1.1.0",
+                  "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "training-source",
+                  "kind": "kernel"
+                }
+              },
+              "source": "ContextPlan.inputRefs",
+              "reason": "evidence"
+            }
+          ],
+          "withheld": {
+            "visibility": 0,
+            "partition": 0
+          }
+        },
+        "serialized": "{\"audit\":[{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"ContextPlan.inputRefs\"}],\"binding\":{\"attemptId\":\"retrieval-attempt\",\"attemptOrdinal\":1,\"baseDigest\":\"sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2\",\"epoch\":1,\"graph\":{\"digest\":\"sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d\",\"graphId\":\"graph-1\",\"revision\":2},\"hostSessionId\":\"host-session\",\"nodeId\":\"retrieval-node\",\"sessionId\":\"session-1\"},\"entries\":[{\"mode\":\"full\",\"purpose\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"text\":\"check the failing reproduction before editing\"}],\"isolation\":\"fresh\",\"preserveHostResources\":true,\"role\":\"executor\",\"task\":{\"acceptance\":{\"baselineRequired\":false,\"checkRefs\":[],\"evaluatorId\":\"eval-1\",\"evaluatorVersion\":\"1\",\"outcomeSchema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"},\"protocolRef\":null,\"requiredBranchPolicy\":\"explicit-complete-report\"},\"authorityGrant\":{\"actor\":{\"actorId\":\"human-1\",\"identityRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"kind\":\"human\"},\"approvalRef\":null,\"capabilities\":[],\"expiresAt\":null,\"grantId\":\"grant-root\",\"maxDelegationDepth\":3,\"nodeIds\":[],\"parentGrantRef\":null,\"revocationEpoch\":0,\"rootAuthorityRef\":\"root-1\",\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"sessionId\":\"session-1\"},\"budget\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":20,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":20,\"maxUsdMicros\":190940,\"maxWallMs\":1200000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-1\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"degradations\":[],\"goal\":\"do the thing\",\"privacy\":{\"feedbackVisibility\":\"internal\",\"finalFeedback\":\"no-optimization\",\"privateTests\":\"evaluator-only\",\"secretPolicy\":\"forbidden\",\"visibility\":\"internal\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"requiredBranches\":[],\"requiredGuarantees\":[{\"alternativeIds\":[],\"capability\":\"cap\",\"coverage\":[\"cov\"],\"evidenceKinds\":[\"native-disk\"],\"mode\":\"hard\"}],\"requiredOutcomes\":[{\"description\":\"produce the artifact\",\"evidenceKinds\":[\"native-disk\"],\"outcomeId\":\"out-1\",\"schema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"}}],\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"taskId\":\"task-1\",\"termination\":{\"cancelMode\":\"stop-and-confirm\",\"excludeHumanWait\":true,\"maxActiveWallMs\":60000,\"maxAttempts\":3,\"unknownPolicy\":\"reconcile\"},\"version\":1},\"withheld\":{\"partition\":0,\"visibility\":0}}",
+        "tokenCount": 4978,
+        "tokenLimit": 59900,
+        "tokenizerId": "fixture:utf8-byte/v1",
+        "compressed": false
+      }
+    },
+    "context": {
+      "packet": {
+        "role": "executor",
+        "binding": {
+          "sessionId": "session-1",
+          "hostSessionId": "host-session",
+          "graph": {
+            "graphId": "graph-1",
+            "revision": 2,
+            "digest": "sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d"
+          },
+          "nodeId": "retrieval-node",
+          "attemptId": "retrieval-attempt",
+          "attemptOrdinal": 1,
+          "epoch": 1,
+          "baseDigest": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2"
+        },
+        "isolation": "fresh",
+        "preserveHostResources": true,
+        "task": {
+          "acceptance": {
+            "baselineRequired": false,
+            "checkRefs": [],
+            "evaluatorId": "eval-1",
+            "evaluatorVersion": "1",
+            "outcomeSchema": {
+              "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "name": "Result",
+              "version": "1"
+            },
+            "protocolRef": null,
+            "requiredBranchPolicy": "explicit-complete-report"
+          },
+          "authorityGrant": {
+            "actor": {
+              "actorId": "human-1",
+              "identityRef": {
+                "id": "identity-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "Artifact",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              },
+              "kind": "human"
+            },
+            "approvalRef": null,
+            "capabilities": [],
+            "expiresAt": null,
+            "grantId": "grant-root",
+            "maxDelegationDepth": 3,
+            "nodeIds": [],
+            "parentGrantRef": null,
+            "revocationEpoch": 0,
+            "rootAuthorityRef": "root-1",
+            "scope": {
+              "artifactScopes": [
+                "assets"
+              ],
+              "readResources": [
+                "repo"
+              ],
+              "trustDomain": "same-user",
+              "workspaceRef": null,
+              "writeResources": [
+                "project-staging"
+              ]
+            },
+            "sessionId": "session-1"
+          },
+          "budget": {
+            "authorizationRef": null,
+            "category": "development",
+            "maxConcurrentRequests": 20,
+            "maxInputTokens": 60000,
+            "maxOutputTokens": 4096,
+            "maxRequests": 20,
+            "maxUsdMicros": 190940,
+            "maxWallMs": 1200000,
+            "missingUsagePolicy": "retain-reservation",
+            "poolId": "pool-1",
+            "priceRef": {
+              "id": "price-1",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "visibility": "internal",
+              "partition": "not-evaluation",
+              "schema": {
+                "name": "PriceTable",
+                "version": "1.1.0",
+                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              "binding": null,
+              "expiresAt": null,
+              "producer": {
+                "actorId": "kernel-1",
+                "kind": "kernel"
+              }
+            }
+          },
+          "degradations": [],
+          "goal": "do the thing",
+          "privacy": {
+            "feedbackVisibility": "internal",
+            "finalFeedback": "no-optimization",
+            "privateTests": "evaluator-only",
+            "secretPolicy": "forbidden",
+            "visibility": "internal"
+          },
+          "protocol": {
+            "namespace": "evofence.runtime/1",
+            "schemaVersion": "1.1.0"
+          },
+          "requiredBranches": [],
+          "requiredGuarantees": [
+            {
+              "alternativeIds": [],
+              "capability": "cap",
+              "coverage": [
+                "cov"
+              ],
+              "evidenceKinds": [
+                "native-disk"
+              ],
+              "mode": "hard"
+            }
+          ],
+          "requiredOutcomes": [
+            {
+              "description": "produce the artifact",
+              "evidenceKinds": [
+                "native-disk"
+              ],
+              "outcomeId": "out-1",
+              "schema": {
+                "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "name": "Result",
+                "version": "1"
+              }
+            }
+          ],
+          "scope": {
+            "artifactScopes": [
+              "assets"
+            ],
+            "readResources": [
+              "repo"
+            ],
+            "trustDomain": "same-user",
+            "workspaceRef": null,
+            "writeResources": [
+              "project-staging"
+            ]
+          },
+          "taskId": "task-1",
+          "termination": {
+            "cancelMode": "stop-and-confirm",
+            "excludeHumanWait": true,
+            "maxActiveWallMs": 60000,
+            "maxAttempts": 3,
+            "unknownPolicy": "reconcile"
+          },
+          "version": 1
+        },
+        "entries": [
+          {
+            "ref": {
+              "id": "material-5",
+              "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+              "visibility": "internal",
+              "partition": "train",
+              "schema": {
+                "name": "Material",
+                "version": "1.1.0",
+                "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+              },
+              "binding": null,
+              "expiresAt": null,
+              "producer": {
+                "actorId": "training-source",
+                "kind": "kernel"
+              }
+            },
+            "purpose": "evidence",
+            "mode": "full",
+            "text": "check the failing reproduction before editing"
+          }
+        ],
+        "audit": [
+          {
+            "ref": {
+              "id": "identity-1",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "visibility": "internal",
+              "partition": "not-evaluation",
+              "schema": {
+                "name": "Artifact",
+                "version": "1.1.0",
+                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              "binding": null,
+              "expiresAt": null,
+              "producer": {
+                "actorId": "kernel-1",
+                "kind": "kernel"
+              }
+            },
+            "source": "TaskContract",
+            "reason": "visible-contract-reference"
+          },
+          {
+            "ref": {
+              "id": "price-1",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "visibility": "internal",
+              "partition": "not-evaluation",
+              "schema": {
+                "name": "PriceTable",
+                "version": "1.1.0",
+                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              "binding": null,
+              "expiresAt": null,
+              "producer": {
+                "actorId": "kernel-1",
+                "kind": "kernel"
+              }
+            },
+            "source": "TaskContract",
+            "reason": "visible-contract-reference"
+          },
+          {
+            "ref": {
+              "id": "material-5",
+              "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+              "visibility": "internal",
+              "partition": "train",
+              "schema": {
+                "name": "Material",
+                "version": "1.1.0",
+                "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+              },
+              "binding": null,
+              "expiresAt": null,
+              "producer": {
+                "actorId": "training-source",
+                "kind": "kernel"
+              }
+            },
+            "source": "ContextPlan.inputRefs",
+            "reason": "evidence"
+          }
+        ],
+        "withheld": {
+          "visibility": 0,
+          "partition": 0
+        }
+      },
+      "serialized": "{\"audit\":[{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"ContextPlan.inputRefs\"}],\"binding\":{\"attemptId\":\"retrieval-attempt\",\"attemptOrdinal\":1,\"baseDigest\":\"sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2\",\"epoch\":1,\"graph\":{\"digest\":\"sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d\",\"graphId\":\"graph-1\",\"revision\":2},\"hostSessionId\":\"host-session\",\"nodeId\":\"retrieval-node\",\"sessionId\":\"session-1\"},\"entries\":[{\"mode\":\"full\",\"purpose\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"text\":\"check the failing reproduction before editing\"}],\"isolation\":\"fresh\",\"preserveHostResources\":true,\"role\":\"executor\",\"task\":{\"acceptance\":{\"baselineRequired\":false,\"checkRefs\":[],\"evaluatorId\":\"eval-1\",\"evaluatorVersion\":\"1\",\"outcomeSchema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"},\"protocolRef\":null,\"requiredBranchPolicy\":\"explicit-complete-report\"},\"authorityGrant\":{\"actor\":{\"actorId\":\"human-1\",\"identityRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"kind\":\"human\"},\"approvalRef\":null,\"capabilities\":[],\"expiresAt\":null,\"grantId\":\"grant-root\",\"maxDelegationDepth\":3,\"nodeIds\":[],\"parentGrantRef\":null,\"revocationEpoch\":0,\"rootAuthorityRef\":\"root-1\",\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"sessionId\":\"session-1\"},\"budget\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":20,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":20,\"maxUsdMicros\":190940,\"maxWallMs\":1200000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-1\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"degradations\":[],\"goal\":\"do the thing\",\"privacy\":{\"feedbackVisibility\":\"internal\",\"finalFeedback\":\"no-optimization\",\"privateTests\":\"evaluator-only\",\"secretPolicy\":\"forbidden\",\"visibility\":\"internal\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"requiredBranches\":[],\"requiredGuarantees\":[{\"alternativeIds\":[],\"capability\":\"cap\",\"coverage\":[\"cov\"],\"evidenceKinds\":[\"native-disk\"],\"mode\":\"hard\"}],\"requiredOutcomes\":[{\"description\":\"produce the artifact\",\"evidenceKinds\":[\"native-disk\"],\"outcomeId\":\"out-1\",\"schema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"}}],\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"taskId\":\"task-1\",\"termination\":{\"cancelMode\":\"stop-and-confirm\",\"excludeHumanWait\":true,\"maxActiveWallMs\":60000,\"maxAttempts\":3,\"unknownPolicy\":\"reconcile\"},\"version\":1},\"withheld\":{\"partition\":0,\"visibility\":0}}",
+      "tokenCount": 4978,
+      "tokenLimit": 59900,
+      "tokenizerId": "fixture:utf8-byte/v1",
+      "compressed": false
+    },
+    "attribution": [
+      {
+        "asset": {
+          "assetId": "experience",
+          "revision": 1,
+          "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012"
+        },
+        "qualification": {
+          "assetId": "experience",
+          "revision": 1,
+          "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012",
+          "state": "promoted",
+          "validity": "valid",
+          "eligible": true,
+          "usable": false,
+          "reasons": []
+        },
+        "retrieved": true,
+        "disposition": "pending",
+        "reasons": [],
+        "contentTokens": 45,
+        "entryIds": [
+          "material-5"
+        ],
+        "feedbackReason": null
+      }
+    ],
+    "cost": {
+      "basis": "injected-tokenizer-estimate",
+      "tokenizerId": "fixture:utf8-byte/v1",
+      "baselineInputTokens": 4088,
+      "candidateInputTokens": 4978,
+      "inputTokenDelta": 890,
+      "chargedAddedTokens": 890,
+      "qualificationQueries": 1,
+      "materialReads": 2,
+      "materialCodeUnits": 66,
+      "tokenizerCalls": 3,
+      "tokensCounted": 9111,
+      "modelRequests": 0,
+      "wallMs": null,
+      "usdMicros": null
+    }
+  },
+  "feedback": {
+    "ok": true,
+    "value": {
+      "mode": "candidate",
+      "fallbackReason": null,
+      "candidate": {
+        "assets": [
+          {
+            "assetId": "experience",
+            "revision": 1,
+            "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012"
+          }
+        ],
+        "context": {
+          "packet": {
+            "role": "executor",
+            "binding": {
+              "sessionId": "session-1",
+              "hostSessionId": "host-session",
+              "graph": {
+                "graphId": "graph-1",
+                "revision": 2,
+                "digest": "sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d"
+              },
+              "nodeId": "retrieval-node",
+              "attemptId": "retrieval-attempt",
+              "attemptOrdinal": 1,
+              "epoch": 1,
+              "baseDigest": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2"
+            },
+            "isolation": "fresh",
+            "preserveHostResources": true,
+            "task": {
+              "acceptance": {
+                "baselineRequired": false,
+                "checkRefs": [],
+                "evaluatorId": "eval-1",
+                "evaluatorVersion": "1",
+                "outcomeSchema": {
+                  "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "name": "Result",
+                  "version": "1"
+                },
+                "protocolRef": null,
+                "requiredBranchPolicy": "explicit-complete-report"
+              },
+              "authorityGrant": {
+                "actor": {
+                  "actorId": "human-1",
+                  "identityRef": {
+                    "id": "identity-1",
+                    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "visibility": "internal",
+                    "partition": "not-evaluation",
+                    "schema": {
+                      "name": "Artifact",
+                      "version": "1.1.0",
+                      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                    },
+                    "binding": null,
+                    "expiresAt": null,
+                    "producer": {
+                      "actorId": "kernel-1",
+                      "kind": "kernel"
+                    }
+                  },
+                  "kind": "human"
+                },
+                "approvalRef": null,
+                "capabilities": [],
+                "expiresAt": null,
+                "grantId": "grant-root",
+                "maxDelegationDepth": 3,
+                "nodeIds": [],
+                "parentGrantRef": null,
+                "revocationEpoch": 0,
+                "rootAuthorityRef": "root-1",
+                "scope": {
+                  "artifactScopes": [
+                    "assets"
+                  ],
+                  "readResources": [
+                    "repo"
+                  ],
+                  "trustDomain": "same-user",
+                  "workspaceRef": null,
+                  "writeResources": [
+                    "project-staging"
+                  ]
+                },
+                "sessionId": "session-1"
+              },
+              "budget": {
+                "authorizationRef": null,
+                "category": "development",
+                "maxConcurrentRequests": 20,
+                "maxInputTokens": 60000,
+                "maxOutputTokens": 4096,
+                "maxRequests": 20,
+                "maxUsdMicros": 190940,
+                "maxWallMs": 1200000,
+                "missingUsagePolicy": "retain-reservation",
+                "poolId": "pool-1",
+                "priceRef": {
+                  "id": "price-1",
+                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "visibility": "internal",
+                  "partition": "not-evaluation",
+                  "schema": {
+                    "name": "PriceTable",
+                    "version": "1.1.0",
+                    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "kernel-1",
+                    "kind": "kernel"
+                  }
+                }
+              },
+              "degradations": [],
+              "goal": "do the thing",
+              "privacy": {
+                "feedbackVisibility": "internal",
+                "finalFeedback": "no-optimization",
+                "privateTests": "evaluator-only",
+                "secretPolicy": "forbidden",
+                "visibility": "internal"
+              },
+              "protocol": {
+                "namespace": "evofence.runtime/1",
+                "schemaVersion": "1.1.0"
+              },
+              "requiredBranches": [],
+              "requiredGuarantees": [
+                {
+                  "alternativeIds": [],
+                  "capability": "cap",
+                  "coverage": [
+                    "cov"
+                  ],
+                  "evidenceKinds": [
+                    "native-disk"
+                  ],
+                  "mode": "hard"
+                }
+              ],
+              "requiredOutcomes": [
+                {
+                  "description": "produce the artifact",
+                  "evidenceKinds": [
+                    "native-disk"
+                  ],
+                  "outcomeId": "out-1",
+                  "schema": {
+                    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                    "name": "Result",
+                    "version": "1"
+                  }
+                }
+              ],
+              "scope": {
+                "artifactScopes": [
+                  "assets"
+                ],
+                "readResources": [
+                  "repo"
+                ],
+                "trustDomain": "same-user",
+                "workspaceRef": null,
+                "writeResources": [
+                  "project-staging"
+                ]
+              },
+              "taskId": "task-1",
+              "termination": {
+                "cancelMode": "stop-and-confirm",
+                "excludeHumanWait": true,
+                "maxActiveWallMs": 60000,
+                "maxAttempts": 3,
+                "unknownPolicy": "reconcile"
+              },
+              "version": 1
+            },
+            "entries": [
+              {
+                "ref": {
+                  "id": "material-5",
+                  "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                  "visibility": "internal",
+                  "partition": "train",
+                  "schema": {
+                    "name": "Material",
+                    "version": "1.1.0",
+                    "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "training-source",
+                    "kind": "kernel"
+                  }
+                },
+                "purpose": "evidence",
+                "mode": "full",
+                "text": "check the failing reproduction before editing"
+              }
+            ],
+            "audit": [
+              {
+                "ref": {
+                  "id": "identity-1",
+                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "visibility": "internal",
+                  "partition": "not-evaluation",
+                  "schema": {
+                    "name": "Artifact",
+                    "version": "1.1.0",
+                    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "kernel-1",
+                    "kind": "kernel"
+                  }
+                },
+                "source": "TaskContract",
+                "reason": "visible-contract-reference"
+              },
+              {
+                "ref": {
+                  "id": "price-1",
+                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "visibility": "internal",
+                  "partition": "not-evaluation",
+                  "schema": {
+                    "name": "PriceTable",
+                    "version": "1.1.0",
+                    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "kernel-1",
+                    "kind": "kernel"
+                  }
+                },
+                "source": "TaskContract",
+                "reason": "visible-contract-reference"
+              },
+              {
+                "ref": {
+                  "id": "material-5",
+                  "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                  "visibility": "internal",
+                  "partition": "train",
+                  "schema": {
+                    "name": "Material",
+                    "version": "1.1.0",
+                    "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "training-source",
+                    "kind": "kernel"
+                  }
+                },
+                "source": "ContextPlan.inputRefs",
+                "reason": "evidence"
+              }
+            ],
+            "withheld": {
+              "visibility": 0,
+              "partition": 0
+            }
+          },
+          "serialized": "{\"audit\":[{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"ContextPlan.inputRefs\"}],\"binding\":{\"attemptId\":\"retrieval-attempt\",\"attemptOrdinal\":1,\"baseDigest\":\"sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2\",\"epoch\":1,\"graph\":{\"digest\":\"sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d\",\"graphId\":\"graph-1\",\"revision\":2},\"hostSessionId\":\"host-session\",\"nodeId\":\"retrieval-node\",\"sessionId\":\"session-1\"},\"entries\":[{\"mode\":\"full\",\"purpose\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"text\":\"check the failing reproduction before editing\"}],\"isolation\":\"fresh\",\"preserveHostResources\":true,\"role\":\"executor\",\"task\":{\"acceptance\":{\"baselineRequired\":false,\"checkRefs\":[],\"evaluatorId\":\"eval-1\",\"evaluatorVersion\":\"1\",\"outcomeSchema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"},\"protocolRef\":null,\"requiredBranchPolicy\":\"explicit-complete-report\"},\"authorityGrant\":{\"actor\":{\"actorId\":\"human-1\",\"identityRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"kind\":\"human\"},\"approvalRef\":null,\"capabilities\":[],\"expiresAt\":null,\"grantId\":\"grant-root\",\"maxDelegationDepth\":3,\"nodeIds\":[],\"parentGrantRef\":null,\"revocationEpoch\":0,\"rootAuthorityRef\":\"root-1\",\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"sessionId\":\"session-1\"},\"budget\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":20,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":20,\"maxUsdMicros\":190940,\"maxWallMs\":1200000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-1\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"degradations\":[],\"goal\":\"do the thing\",\"privacy\":{\"feedbackVisibility\":\"internal\",\"finalFeedback\":\"no-optimization\",\"privateTests\":\"evaluator-only\",\"secretPolicy\":\"forbidden\",\"visibility\":\"internal\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"requiredBranches\":[],\"requiredGuarantees\":[{\"alternativeIds\":[],\"capability\":\"cap\",\"coverage\":[\"cov\"],\"evidenceKinds\":[\"native-disk\"],\"mode\":\"hard\"}],\"requiredOutcomes\":[{\"description\":\"produce the artifact\",\"evidenceKinds\":[\"native-disk\"],\"outcomeId\":\"out-1\",\"schema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"}}],\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"taskId\":\"task-1\",\"termination\":{\"cancelMode\":\"stop-and-confirm\",\"excludeHumanWait\":true,\"maxActiveWallMs\":60000,\"maxAttempts\":3,\"unknownPolicy\":\"reconcile\"},\"version\":1},\"withheld\":{\"partition\":0,\"visibility\":0}}",
+          "tokenCount": 4978,
+          "tokenLimit": 59900,
+          "tokenizerId": "fixture:utf8-byte/v1",
+          "compressed": false
+        }
+      },
+      "context": {
+        "packet": {
+          "role": "executor",
+          "binding": {
+            "sessionId": "session-1",
+            "hostSessionId": "host-session",
+            "graph": {
+              "graphId": "graph-1",
+              "revision": 2,
+              "digest": "sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d"
+            },
+            "nodeId": "retrieval-node",
+            "attemptId": "retrieval-attempt",
+            "attemptOrdinal": 1,
+            "epoch": 1,
+            "baseDigest": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2"
+          },
+          "isolation": "fresh",
+          "preserveHostResources": true,
+          "task": {
+            "acceptance": {
+              "baselineRequired": false,
+              "checkRefs": [],
+              "evaluatorId": "eval-1",
+              "evaluatorVersion": "1",
+              "outcomeSchema": {
+                "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "name": "Result",
+                "version": "1"
+              },
+              "protocolRef": null,
+              "requiredBranchPolicy": "explicit-complete-report"
+            },
+            "authorityGrant": {
+              "actor": {
+                "actorId": "human-1",
+                "identityRef": {
+                  "id": "identity-1",
+                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "visibility": "internal",
+                  "partition": "not-evaluation",
+                  "schema": {
+                    "name": "Artifact",
+                    "version": "1.1.0",
+                    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                  },
+                  "binding": null,
+                  "expiresAt": null,
+                  "producer": {
+                    "actorId": "kernel-1",
+                    "kind": "kernel"
+                  }
+                },
+                "kind": "human"
+              },
+              "approvalRef": null,
+              "capabilities": [],
+              "expiresAt": null,
+              "grantId": "grant-root",
+              "maxDelegationDepth": 3,
+              "nodeIds": [],
+              "parentGrantRef": null,
+              "revocationEpoch": 0,
+              "rootAuthorityRef": "root-1",
+              "scope": {
+                "artifactScopes": [
+                  "assets"
+                ],
+                "readResources": [
+                  "repo"
+                ],
+                "trustDomain": "same-user",
+                "workspaceRef": null,
+                "writeResources": [
+                  "project-staging"
+                ]
+              },
+              "sessionId": "session-1"
+            },
+            "budget": {
+              "authorizationRef": null,
+              "category": "development",
+              "maxConcurrentRequests": 20,
+              "maxInputTokens": 60000,
+              "maxOutputTokens": 4096,
+              "maxRequests": 20,
+              "maxUsdMicros": 190940,
+              "maxWallMs": 1200000,
+              "missingUsagePolicy": "retain-reservation",
+              "poolId": "pool-1",
+              "priceRef": {
+                "id": "price-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "PriceTable",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              }
+            },
+            "degradations": [],
+            "goal": "do the thing",
+            "privacy": {
+              "feedbackVisibility": "internal",
+              "finalFeedback": "no-optimization",
+              "privateTests": "evaluator-only",
+              "secretPolicy": "forbidden",
+              "visibility": "internal"
+            },
+            "protocol": {
+              "namespace": "evofence.runtime/1",
+              "schemaVersion": "1.1.0"
+            },
+            "requiredBranches": [],
+            "requiredGuarantees": [
+              {
+                "alternativeIds": [],
+                "capability": "cap",
+                "coverage": [
+                  "cov"
+                ],
+                "evidenceKinds": [
+                  "native-disk"
+                ],
+                "mode": "hard"
+              }
+            ],
+            "requiredOutcomes": [
+              {
+                "description": "produce the artifact",
+                "evidenceKinds": [
+                  "native-disk"
+                ],
+                "outcomeId": "out-1",
+                "schema": {
+                  "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "name": "Result",
+                  "version": "1"
+                }
+              }
+            ],
+            "scope": {
+              "artifactScopes": [
+                "assets"
+              ],
+              "readResources": [
+                "repo"
+              ],
+              "trustDomain": "same-user",
+              "workspaceRef": null,
+              "writeResources": [
+                "project-staging"
+              ]
+            },
+            "taskId": "task-1",
+            "termination": {
+              "cancelMode": "stop-and-confirm",
+              "excludeHumanWait": true,
+              "maxActiveWallMs": 60000,
+              "maxAttempts": 3,
+              "unknownPolicy": "reconcile"
+            },
+            "version": 1
+          },
+          "entries": [
+            {
+              "ref": {
+                "id": "material-5",
+                "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                "visibility": "internal",
+                "partition": "train",
+                "schema": {
+                  "name": "Material",
+                  "version": "1.1.0",
+                  "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "training-source",
+                  "kind": "kernel"
+                }
+              },
+              "purpose": "evidence",
+              "mode": "full",
+              "text": "check the failing reproduction before editing"
+            }
+          ],
+          "audit": [
+            {
+              "ref": {
+                "id": "identity-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "Artifact",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              },
+              "source": "TaskContract",
+              "reason": "visible-contract-reference"
+            },
+            {
+              "ref": {
+                "id": "price-1",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "visibility": "internal",
+                "partition": "not-evaluation",
+                "schema": {
+                  "name": "PriceTable",
+                  "version": "1.1.0",
+                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "kernel-1",
+                  "kind": "kernel"
+                }
+              },
+              "source": "TaskContract",
+              "reason": "visible-contract-reference"
+            },
+            {
+              "ref": {
+                "id": "material-5",
+                "digest": "sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b",
+                "visibility": "internal",
+                "partition": "train",
+                "schema": {
+                  "name": "Material",
+                  "version": "1.1.0",
+                  "digest": "sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf"
+                },
+                "binding": null,
+                "expiresAt": null,
+                "producer": {
+                  "actorId": "training-source",
+                  "kind": "kernel"
+                }
+              },
+              "source": "ContextPlan.inputRefs",
+              "reason": "evidence"
+            }
+          ],
+          "withheld": {
+            "visibility": 0,
+            "partition": 0
+          }
+        },
+        "serialized": "{\"audit\":[{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"visible-contract-reference\",\"ref\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"TaskContract\"},{\"reason\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"source\":\"ContextPlan.inputRefs\"}],\"binding\":{\"attemptId\":\"retrieval-attempt\",\"attemptOrdinal\":1,\"baseDigest\":\"sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2\",\"epoch\":1,\"graph\":{\"digest\":\"sha256:eef93e1d14482804277fca0172464032d1a4fdbcc338524059fa1e861454ad4d\",\"graphId\":\"graph-1\",\"revision\":2},\"hostSessionId\":\"host-session\",\"nodeId\":\"retrieval-node\",\"sessionId\":\"session-1\"},\"entries\":[{\"mode\":\"full\",\"purpose\":\"evidence\",\"ref\":{\"binding\":null,\"digest\":\"sha256:4916841782dae64a988936e7c8bfc13f933e3407c08bf7b29240d11346815f7b\",\"expiresAt\":null,\"id\":\"material-5\",\"partition\":\"train\",\"producer\":{\"actorId\":\"training-source\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:8cbd60454d07f5bb8bd2acfc20e751e04fc5b13c9d4811eece38732b01da77cf\",\"name\":\"Material\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"text\":\"check the failing reproduction before editing\"}],\"isolation\":\"fresh\",\"preserveHostResources\":true,\"role\":\"executor\",\"task\":{\"acceptance\":{\"baselineRequired\":false,\"checkRefs\":[],\"evaluatorId\":\"eval-1\",\"evaluatorVersion\":\"1\",\"outcomeSchema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"},\"protocolRef\":null,\"requiredBranchPolicy\":\"explicit-complete-report\"},\"authorityGrant\":{\"actor\":{\"actorId\":\"human-1\",\"identityRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"identity-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"Artifact\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"},\"kind\":\"human\"},\"approvalRef\":null,\"capabilities\":[],\"expiresAt\":null,\"grantId\":\"grant-root\",\"maxDelegationDepth\":3,\"nodeIds\":[],\"parentGrantRef\":null,\"revocationEpoch\":0,\"rootAuthorityRef\":\"root-1\",\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"sessionId\":\"session-1\"},\"budget\":{\"authorizationRef\":null,\"category\":\"development\",\"maxConcurrentRequests\":20,\"maxInputTokens\":60000,\"maxOutputTokens\":4096,\"maxRequests\":20,\"maxUsdMicros\":190940,\"maxWallMs\":1200000,\"missingUsagePolicy\":\"retain-reservation\",\"poolId\":\"pool-1\",\"priceRef\":{\"binding\":null,\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":null,\"id\":\"price-1\",\"partition\":\"not-evaluation\",\"producer\":{\"actorId\":\"kernel-1\",\"kind\":\"kernel\"},\"schema\":{\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"name\":\"PriceTable\",\"version\":\"1.1.0\"},\"visibility\":\"internal\"}},\"degradations\":[],\"goal\":\"do the thing\",\"privacy\":{\"feedbackVisibility\":\"internal\",\"finalFeedback\":\"no-optimization\",\"privateTests\":\"evaluator-only\",\"secretPolicy\":\"forbidden\",\"visibility\":\"internal\"},\"protocol\":{\"namespace\":\"evofence.runtime/1\",\"schemaVersion\":\"1.1.0\"},\"requiredBranches\":[],\"requiredGuarantees\":[{\"alternativeIds\":[],\"capability\":\"cap\",\"coverage\":[\"cov\"],\"evidenceKinds\":[\"native-disk\"],\"mode\":\"hard\"}],\"requiredOutcomes\":[{\"description\":\"produce the artifact\",\"evidenceKinds\":[\"native-disk\"],\"outcomeId\":\"out-1\",\"schema\":{\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"name\":\"Result\",\"version\":\"1\"}}],\"scope\":{\"artifactScopes\":[\"assets\"],\"readResources\":[\"repo\"],\"trustDomain\":\"same-user\",\"workspaceRef\":null,\"writeResources\":[\"project-staging\"]},\"taskId\":\"task-1\",\"termination\":{\"cancelMode\":\"stop-and-confirm\",\"excludeHumanWait\":true,\"maxActiveWallMs\":60000,\"maxAttempts\":3,\"unknownPolicy\":\"reconcile\"},\"version\":1},\"withheld\":{\"partition\":0,\"visibility\":0}}",
+        "tokenCount": 4978,
+        "tokenLimit": 59900,
+        "tokenizerId": "fixture:utf8-byte/v1",
+        "compressed": false
+      },
+      "attribution": [
+        {
+          "asset": {
+            "assetId": "experience",
+            "revision": 1,
+            "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012"
+          },
+          "qualification": {
+            "assetId": "experience",
+            "revision": 1,
+            "digest": "sha256:7d1a8b7f707d597adfcba348bfb4f64671600cc881357e8b2bd393e8225b6012",
+            "state": "promoted",
+            "validity": "valid",
+            "eligible": true,
+            "usable": false,
+            "reasons": []
+          },
+          "retrieved": true,
+          "disposition": "used",
+          "reasons": [],
+          "contentTokens": 45,
+          "entryIds": [
+            "material-5"
+          ],
+          "feedbackReason": "fixture executor reports adoption in repair path"
+        }
+      ],
+      "cost": {
+        "basis": "injected-tokenizer-estimate",
+        "tokenizerId": "fixture:utf8-byte/v1",
+        "baselineInputTokens": 4088,
+        "candidateInputTokens": 4978,
+        "inputTokenDelta": 890,
+        "chargedAddedTokens": 890,
+        "qualificationQueries": 1,
+        "materialReads": 2,
+        "materialCodeUnits": 66,
+        "tokenizerCalls": 3,
+        "tokensCounted": 9111,
+        "modelRequests": 0,
+        "wallMs": null,
+        "usdMicros": null
+      }
+    }
+  }
+}
