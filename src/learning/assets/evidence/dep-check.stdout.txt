@@ -1,0 +1,8 @@
+
+> evofence@0.4.2 dep:check
+> node scripts/check-deps.mjs
+
+modules: 216
+edges: 811
+cycles: 0
+acyclic: true

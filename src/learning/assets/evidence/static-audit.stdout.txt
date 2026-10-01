@@ -1,0 +1,6618 @@
+{
+  "checkpoint": "cp3",
+  "status": "passed",
+  "parser": "typescript6 6.0.3",
+  "ruleSource": "docs/evofence-harness-kernel/spec/contracts/OWNERSHIP.md I01 + L1-REPLAN-DECISION.md R1",
+  "frozenAllowedEdges": {
+    "protocol": [
+      "protocol"
+    ],
+    "kernel": [
+      "protocol",
+      "kernel"
+    ],
+    "runtime": [
+      "protocol",
+      "kernel",
+      "runtime"
+    ]
+  },
+  "moduleCount": 85,
+  "edgeCount": 349,
+  "entrypoints": [
+    {
+      "file": "src/runtime/session/plans.ts",
+      "exported": "decide",
+      "target": "src/kernel/policy/index.ts",
+      "callLines": [
+        44
+      ]
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "exported": "computeFrontier",
+      "target": "src/kernel/scheduler/index.ts",
+      "callLines": [
+        57
+      ]
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "exported": "dispatchRound",
+      "target": "src/kernel/scheduler/index.ts",
+      "callLines": [
+        65
+      ]
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "exported": "decide",
+      "target": "src/kernel/graph/index.ts",
+      "callLines": [
+        115
+      ]
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "exported": "planRound",
+      "target": "src/runtime/session/plans.ts",
+      "callLines": [
+        74
+      ]
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "exported": "project",
+      "target": "src/runtime/session/project.ts",
+      "callLines": [
+        30,
+        44
+      ]
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "exported": "reserve",
+      "target": "src/kernel/policy/index.ts",
+      "callLines": [
+        46
+      ]
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "exported": "settle",
+      "target": "src/kernel/policy/index.ts",
+      "callLines": [
+        75
+      ]
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "exported": "evaluateReadiness",
+      "target": "src/kernel/graph/index.ts",
+      "callLines": [
+        64
+      ]
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "exported": "decide",
+      "target": "src/kernel/graph/decide.ts",
+      "callLines": [
+        71
+      ]
+    }
+  ],
+  "factsEntry": "runtime/session/plans.factsFor consumes journal-derived current attempts, applied receipts, resource holders",
+  "secondDecisionCalls": [],
+  "concreteBackendsViaStorageBarrel": [
+    "./memory-event-store.js",
+    "./memory-snapshot-store.js",
+    "./memory-artifact-store.js"
+  ],
+  "backendConstructionSitesInApplication": [],
+  "violations": [],
+  "edges": [
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 17,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 18,
+      "target": "src/protocol/errors.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 19,
+      "target": "src/protocol/objects/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 20,
+      "target": "src/protocol/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 21,
+      "target": "src/protocol/version.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/errors.ts",
+      "line": 11,
+      "target": "src/protocol/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 13,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 14,
+      "target": "src/protocol/ids.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 15,
+      "target": "src/protocol/errors.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 16,
+      "target": "src/protocol/objects/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 17,
+      "target": "src/protocol/version.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 31,
+      "target": "src/protocol/codec.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/index.ts",
+      "line": 32,
+      "target": "src/protocol/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/assets.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/core.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/evaluation.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/graph.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 9,
+      "target": "src/protocol/objects/assets.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 10,
+      "target": "src/protocol/objects/core.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 11,
+      "target": "src/protocol/objects/evaluation.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 12,
+      "target": "src/protocol/objects/graph.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 13,
+      "target": "src/protocol/objects/policy.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/index.ts",
+      "line": 14,
+      "target": "src/protocol/objects/runtime.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/objects/policy.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/objects/runtime.ts",
+      "line": 8,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/types.ts",
+      "line": 12,
+      "target": "src/protocol/defs.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/types.ts",
+      "line": 13,
+      "target": "src/protocol/objects/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/protocol/version.ts",
+      "line": 13,
+      "target": "src/protocol/objects/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/version.ts",
+      "line": 14,
+      "target": "src/protocol/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 15,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 16,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 17,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 18,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 14,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 15,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 16,
+      "target": "src/kernel/artifacts/binding.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 17,
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 18,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 12,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 13,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 14,
+      "target": "src/kernel/artifacts/access.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 15,
+      "target": "src/kernel/artifacts/binding.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 16,
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 17,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 14,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 15,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 16,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 21,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 22,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 23,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 24,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 25,
+      "target": "src/kernel/artifacts/access.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 26,
+      "target": "src/kernel/artifacts/availability.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 27,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 13,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 14,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 15,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 13,
+      "target": "src/kernel/artifacts/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 36,
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 37,
+      "target": "src/kernel/artifacts/binding.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 38,
+      "target": "src/kernel/artifacts/access.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 45,
+      "target": "src/kernel/artifacts/availability.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 46,
+      "target": "src/kernel/artifacts/admit.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/index.ts",
+      "line": 47,
+      "target": "src/kernel/artifacts/consumer.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/types.ts",
+      "line": 18,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/artifacts/types.ts",
+      "line": 19,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 3,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 4,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 5,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 6,
+      "target": "src/kernel/evaluation/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 2,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 3,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 4,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 5,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 6,
+      "target": "src/kernel/evaluation/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/index.ts",
+      "line": 1,
+      "target": "src/kernel/evaluation/service.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/index.ts",
+      "line": 2,
+      "target": "src/kernel/evaluation/providers.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/index.ts",
+      "line": 3,
+      "target": "src/kernel/evaluation/feedback.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/index.ts",
+      "line": 4,
+      "target": "src/kernel/evaluation/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 3,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 4,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 5,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 6,
+      "target": "src/kernel/evaluation/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 3,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 4,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 5,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 6,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 7,
+      "target": "src/kernel/evaluation/branches.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 8,
+      "target": "src/kernel/evaluation/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/types.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/types.ts",
+      "line": 3,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/evaluation/types.ts",
+      "line": 4,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/abandonment.ts",
+      "line": 14,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/artifacts.ts",
+      "line": 14,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/artifacts.ts",
+      "line": 15,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/bounds.ts",
+      "line": 14,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/bounds.ts",
+      "line": 15,
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 9,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 10,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 18,
+      "target": "src/kernel/graph/validate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/cycle.ts",
+      "line": 12,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/cycle.ts",
+      "line": 13,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 16,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 17,
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 18,
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 19,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/edges.ts",
+      "line": 9,
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/edges.ts",
+      "line": 10,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 14,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 53,
+      "target": "src/kernel/graph/compile.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 54,
+      "target": "src/kernel/graph/patch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 55,
+      "target": "src/kernel/graph/decide.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 64,
+      "target": "src/kernel/graph/readiness.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 65,
+      "target": "src/kernel/graph/loop.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 77,
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 78,
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 88,
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 89,
+      "target": "src/kernel/graph/validate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 90,
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 91,
+      "target": "src/kernel/graph/cycle.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 92,
+      "target": "src/kernel/graph/bounds.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/index.ts",
+      "line": 93,
+      "target": "src/kernel/graph/abandonment.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/loop.ts",
+      "line": 13,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 14,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 15,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 16,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 28,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 29,
+      "target": "src/kernel/graph/abandonment.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 30,
+      "target": "src/kernel/graph/compile.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 31,
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 32,
+      "target": "src/kernel/graph/validate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 33,
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/predicate.ts",
+      "line": 15,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/predicate.ts",
+      "line": 16,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 12,
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 13,
+      "target": "src/kernel/graph/decide.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 14,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/structural.ts",
+      "line": 9,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/structural.ts",
+      "line": 10,
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/types.ts",
+      "line": 14,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 20,
+      "target": "src/kernel/graph/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 21,
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 22,
+      "target": "src/kernel/graph/abandonment.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 23,
+      "target": "src/kernel/graph/bounds.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 24,
+      "target": "src/kernel/graph/cycle.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 25,
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/authority.ts",
+      "line": 18,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/authority.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/authority.ts",
+      "line": 20,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/authority.ts",
+      "line": 21,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 16,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 17,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 18,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 19,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 9,
+      "target": "src/kernel/policy/authority.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 10,
+      "target": "src/kernel/policy/authority.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 12,
+      "target": "src/kernel/policy/negotiate.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 13,
+      "target": "src/kernel/policy/negotiate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 15,
+      "target": "src/kernel/policy/usage.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 16,
+      "target": "src/kernel/policy/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 18,
+      "target": "src/kernel/policy/budget.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 30,
+      "target": "src/kernel/policy/budget.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 43,
+      "target": "src/kernel/policy/risk.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 44,
+      "target": "src/kernel/policy/risk.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 46,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/index.ts",
+      "line": 48,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 16,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 17,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 18,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 19,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 14,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 15,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 16,
+      "target": "src/kernel/policy/authority.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 17,
+      "target": "src/kernel/policy/budget.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 18,
+      "target": "src/kernel/policy/usage.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 19,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 20,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/types.ts",
+      "line": 9,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 13,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 14,
+      "target": "src/kernel/policy/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 15,
+      "target": "src/kernel/policy/wire.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/policy/wire.ts",
+      "line": 10,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/activity.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/activity.ts",
+      "line": 3,
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/activity.ts",
+      "line": 4,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/claim.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/claim.ts",
+      "line": 20,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/claim.ts",
+      "line": 21,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 23,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 24,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 25,
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 26,
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 27,
+      "target": "src/kernel/scheduler/fairness.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 28,
+      "target": "src/kernel/scheduler/frontier.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 29,
+      "target": "src/kernel/scheduler/lease.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 30,
+      "target": "src/kernel/scheduler/resources.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 31,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/fairness.ts",
+      "line": 15,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/fanin.ts",
+      "line": 13,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/fanin.ts",
+      "line": 14,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/fanin.ts",
+      "line": 15,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 19,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 20,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 21,
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 22,
+      "target": "src/kernel/scheduler/fanin.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 23,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 20,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 44,
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 45,
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 47,
+      "target": "src/kernel/scheduler/lease.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 62,
+      "target": "src/kernel/scheduler/resources.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 63,
+      "target": "src/kernel/scheduler/frontier.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 64,
+      "target": "src/kernel/scheduler/fairness.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 65,
+      "target": "src/kernel/scheduler/dispatch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 72,
+      "target": "src/kernel/scheduler/fanin.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/index.ts",
+      "line": 73,
+      "target": "src/kernel/scheduler/progress.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 18,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 20,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 20,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 21,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 22,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 23,
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 24,
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 25,
+      "target": "src/kernel/scheduler/fanin.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 26,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/resources.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/resources.ts",
+      "line": 20,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/resources.ts",
+      "line": 21,
+      "target": "src/kernel/scheduler/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/types.ts",
+      "line": 17,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/types.ts",
+      "line": 18,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/scheduler/types.ts",
+      "line": 19,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/store/contracts.ts",
+      "line": 28,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/contracts.ts",
+      "line": 29,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/store/index.ts",
+      "line": 2,
+      "target": "src/kernel/store/outbox.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/index.ts",
+      "line": 3,
+      "target": "src/kernel/store/projection.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/index.ts",
+      "line": 4,
+      "target": "src/kernel/store/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/index.ts",
+      "line": 5,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/index.ts",
+      "line": 6,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 17,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 18,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 17,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 18,
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 19,
+      "target": "src/kernel/store/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/capabilities.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/capabilities.ts",
+      "line": 20,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 11,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 12,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 21,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 22,
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 23,
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 24,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 9,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 10,
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 11,
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 12,
+      "target": "src/runtime/host-port/grant.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 13,
+      "target": "src/runtime/host-port/grant.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 14,
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 15,
+      "target": "src/runtime/host-port/replay.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 16,
+      "target": "src/runtime/host-port/replay.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 17,
+      "target": "src/runtime/host-port/verify.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 18,
+      "target": "src/runtime/host-port/verify.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 19,
+      "target": "src/runtime/host-port/host-fake.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/index.ts",
+      "line": 20,
+      "target": "src/runtime/host-port/host-fake.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/replay.ts",
+      "line": 10,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/types.ts",
+      "line": 23,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/host-port/usage.ts",
+      "line": 13,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/usage.ts",
+      "line": 14,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 19,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 20,
+      "target": "src/runtime/host-port/grant.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 21,
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 22,
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 3,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 4,
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 5,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 6,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 7,
+      "target": "src/runtime/session/dispatch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 8,
+      "target": "src/runtime/session/receipts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 9,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 2,
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 3,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 4,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 5,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 6,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 7,
+      "target": "src/runtime/session/plans.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 8,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 9,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 3,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 4,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 5,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 6,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 7,
+      "target": "src/kernel/evaluation/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 8,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 9,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 10,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 11,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/index.ts",
+      "line": 2,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/index.ts",
+      "line": 3,
+      "target": "src/runtime/session/service.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/index.ts",
+      "line": 4,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/index.ts",
+      "line": 5,
+      "target": "src/runtime/session/plans.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 3,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 4,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 5,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 2,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 3,
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 4,
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 5,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 6,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 7,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 8,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 9,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 2,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 3,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 4,
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 5,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 6,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 7,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 8,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 3,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 4,
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 5,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 6,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 7,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 8,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 9,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 2,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 3,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 4,
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 5,
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 6,
+      "target": "src/runtime/session/receipts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 7,
+      "target": "src/runtime/session/dispatch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 8,
+      "target": "src/runtime/session/controls.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 9,
+      "target": "src/runtime/session/evaluation.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 10,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 11,
+      "target": "src/runtime/session/types.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 2,
+      "target": "src/protocol/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 3,
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 4,
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 5,
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 6,
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": true
+    },
+    {
+      "file": "src/runtime/session/types.ts",
+      "line": 11,
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": true
+    }
+  ],
+  "calls": [
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 227,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/errors.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 248,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/errors.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 275,
+      "local": "gateRuntimeVersion",
+      "exported": "gateRuntimeVersion",
+      "target": "src/protocol/version.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/protocol/codec.ts",
+      "line": 277,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/errors.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 63,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 65,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 70,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 72,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 73,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 74,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/access.ts",
+      "line": 89,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 36,
+      "local": "attributeProducer",
+      "exported": "attributeProducer",
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 39,
+      "local": "matchSchema",
+      "exported": "matchSchema",
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 42,
+      "local": "checkBinding",
+      "exported": "checkBinding",
+      "target": "src/kernel/artifacts/binding.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/admit.ts",
+      "line": 48,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 22,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 24,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 39,
+      "local": "withheldReason",
+      "exported": "withheldReason",
+      "target": "src/kernel/artifacts/access.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 42,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 50,
+      "local": "attributeProducer",
+      "exported": "attributeProducer",
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 52,
+      "local": "matchSchema",
+      "exported": "matchSchema",
+      "target": "src/kernel/artifacts/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/availability.ts",
+      "line": 54,
+      "local": "checkBinding",
+      "exported": "checkBinding",
+      "target": "src/kernel/artifacts/binding.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 43,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 46,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 54,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/binding.ts",
+      "line": 60,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 66,
+      "local": "readArtifact",
+      "exported": "readArtifact",
+      "target": "src/kernel/artifacts/availability.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 69,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 83,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 88,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 96,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 103,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 109,
+      "local": "isRestrictedPartition",
+      "exported": "isRestrictedPartition",
+      "target": "src/kernel/artifacts/access.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 114,
+      "local": "readArtifact",
+      "exported": "readArtifact",
+      "target": "src/kernel/artifacts/availability.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 120,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 125,
+      "local": "readArtifact",
+      "exported": "readArtifact",
+      "target": "src/kernel/artifacts/availability.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/consumer.ts",
+      "line": 130,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 23,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 29,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 36,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/artifacts/identity.ts",
+      "line": 42,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 21,
+      "local": "bindingMismatches",
+      "exported": "bindingMismatches",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 27,
+      "local": "checkBinding",
+      "exported": "checkBinding",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 28,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 29,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 29,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 33,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 33,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 40,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 42,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 42,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 46,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 46,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 49,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 49,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 54,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 56,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 56,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 57,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 57,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 58,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 58,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 59,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 59,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 60,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 60,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/branches.ts",
+      "line": 74,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 18,
+      "local": "partitionFeedback",
+      "exported": "partitionFeedback",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 28,
+      "local": "withheldReason",
+      "exported": "withheldReason",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/feedback.ts",
+      "line": 35,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 10,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 13,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 23,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 23,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 24,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 24,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 25,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 42,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 48,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 64,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 72,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 82,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 82,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 85,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 97,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 98,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 99,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 99,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 100,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/providers.ts",
+      "line": 106,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 15,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 16,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 17,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 18,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 24,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 27,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 28,
+      "local": "bindingMismatches",
+      "exported": "bindingMismatches",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 29,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 32,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 32,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 33,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 42,
+      "local": "checkBinding",
+      "exported": "checkBinding",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 43,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 47,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 50,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 50,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 53,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 53,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 56,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 56,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 68,
+      "local": "withheldReason",
+      "exported": "withheldReason",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 70,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 77,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 77,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 82,
+      "local": "evaluateBranches",
+      "exported": "evaluateBranches",
+      "target": "src/kernel/evaluation/branches.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 86,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 86,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 110,
+      "local": "withheldReason",
+      "exported": "withheldReason",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 114,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 118,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 121,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 124,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 126,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 131,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/evaluation/service.ts",
+      "line": 137,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/artifacts.ts",
+      "line": 94,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/bounds.ts",
+      "line": 60,
+      "local": "hasRealConsumer",
+      "exported": "hasRealConsumer",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 62,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 67,
+      "local": "decodeRuntimeVersion",
+      "exported": "decodeRuntimeVersion",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 69,
+      "local": "validateGraph",
+      "exported": "validateGraph",
+      "target": "src/kernel/graph/validate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/compile.ts",
+      "line": 70,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 82,
+      "local": "matchingOutgoing",
+      "exported": "matchingOutgoing",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 85,
+      "local": "matchingOutgoing",
+      "exported": "matchingOutgoing",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 100,
+      "local": "matchingOutgoing",
+      "exported": "matchingOutgoing",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 105,
+      "local": "hasRoutingOutgoing",
+      "exported": "hasRoutingOutgoing",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 109,
+      "local": "hasBlockingConsumer",
+      "exported": "hasBlockingConsumer",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 117,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 124,
+      "local": "hasDeclaredCover",
+      "exported": "hasDeclaredCover",
+      "target": "src/kernel/graph/edges.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/decide.ts",
+      "line": 171,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/edges.ts",
+      "line": 49,
+      "local": "evalPredicate",
+      "exported": "evalPredicate",
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 63,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 70,
+      "local": "sameSchema",
+      "exported": "sameSchema",
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 72,
+      "local": "sameSchema",
+      "exported": "sameSchema",
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 85,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 88,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 92,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 98,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 113,
+      "local": "joinNodeIds",
+      "exported": "joinNodeIds",
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 136,
+      "local": "decodeRuntimeVersion",
+      "exported": "decodeRuntimeVersion",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 176,
+      "local": "validateGraph",
+      "exported": "validateGraph",
+      "target": "src/kernel/graph/validate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 183,
+      "local": "checkAuthority",
+      "exported": "checkAuthority",
+      "target": "src/kernel/graph/abandonment.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/patch.ts",
+      "line": 191,
+      "local": "buildGraph",
+      "exported": "buildGraph",
+      "target": "src/kernel/graph/compile.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/predicate.ts",
+      "line": 97,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 51,
+      "local": "evaluateJoin",
+      "exported": "evaluateJoin",
+      "target": "src/kernel/graph/decide.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 71,
+      "local": "decide",
+      "exported": "decide",
+      "target": "src/kernel/graph/decide.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/readiness.ts",
+      "line": 75,
+      "local": "consumable",
+      "exported": "consumable",
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/structural.ts",
+      "line": 103,
+      "local": "validatePredicate",
+      "exported": "validatePredicate",
+      "target": "src/kernel/graph/predicate.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 36,
+      "local": "dataEdgeIssues",
+      "exported": "dataEdgeIssues",
+      "target": "src/kernel/graph/artifacts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 44,
+      "local": "checkReferences",
+      "exported": "checkReferences",
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 45,
+      "local": "checkDependencyAcyclic",
+      "exported": "checkDependencyAcyclic",
+      "target": "src/kernel/graph/cycle.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 47,
+      "local": "checkFanIn",
+      "exported": "checkFanIn",
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 48,
+      "local": "checkResources",
+      "exported": "checkResources",
+      "target": "src/kernel/graph/structural.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 49,
+      "local": "checkBounds",
+      "exported": "checkBounds",
+      "target": "src/kernel/graph/bounds.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 50,
+      "local": "checkTermination",
+      "exported": "checkTermination",
+      "target": "src/kernel/graph/cycle.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 51,
+      "local": "checkTerminalRequired",
+      "exported": "checkTerminalRequired",
+      "target": "src/kernel/graph/bounds.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/graph/validate.ts",
+      "line": 52,
+      "local": "checkAbandonment",
+      "exported": "checkAbandonment",
+      "target": "src/kernel/graph/abandonment.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/authority.ts",
+      "line": 128,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 62,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 140,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 144,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 147,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 150,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 155,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 191,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 194,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 197,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 236,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 242,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 247,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 251,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 262,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 291,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 298,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 302,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/budget.ts",
+      "line": 305,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 121,
+      "local": "offersVersion",
+      "exported": "offersVersion",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 124,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/negotiate.ts",
+      "line": 138,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 85,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 103,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 114,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 121,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/risk.ts",
+      "line": 130,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 41,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 51,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/policy/usage.ts",
+      "line": 59,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/claim.ts",
+      "line": 74,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/claim.ts",
+      "line": 84,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 46,
+      "local": "emptyLeaseTable",
+      "exported": "emptyLeaseTable",
+      "target": "src/kernel/scheduler/lease.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 65,
+      "local": "settle",
+      "exported": "settle",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 97,
+      "local": "grantLease",
+      "exported": "grantLease",
+      "target": "src/kernel/scheduler/lease.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 101,
+      "local": "claimIdFor",
+      "exported": "claimIdFor",
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 147,
+      "local": "resourceConflicts",
+      "exported": "resourceConflicts",
+      "target": "src/kernel/scheduler/resources.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 161,
+      "local": "computeFrontier",
+      "exported": "computeFrontier",
+      "target": "src/kernel/scheduler/frontier.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 162,
+      "local": "orderFrontier",
+      "exported": "orderFrontier",
+      "target": "src/kernel/scheduler/fairness.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 163,
+      "local": "dispatchableEntries",
+      "exported": "dispatchableEntries",
+      "target": "src/kernel/scheduler/frontier.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 177,
+      "local": "declarationsOf",
+      "exported": "declarationsOf",
+      "target": "src/kernel/scheduler/resources.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 178,
+      "local": "liveGrants",
+      "exported": "liveGrants",
+      "target": "src/kernel/scheduler/lease.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 184,
+      "local": "liveAttemptClaims",
+      "exported": "liveAttemptClaims",
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 204,
+      "local": "claimIdFor",
+      "exported": "claimIdFor",
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 205,
+      "local": "reserve",
+      "exported": "reserve",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 217,
+      "local": "claimFor",
+      "exported": "claimFor",
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 218,
+      "local": "recordClaim",
+      "exported": "recordClaim",
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 219,
+      "local": "classifyClaim",
+      "exported": "classifyClaim",
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/dispatch.ts",
+      "line": 244,
+      "local": "advanceFairness",
+      "exported": "advanceFairness",
+      "target": "src/kernel/scheduler/fairness.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/fanin.ts",
+      "line": 28,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/fanin.ts",
+      "line": 30,
+      "local": "evaluateJoin",
+      "exported": "evaluateJoin",
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 61,
+      "local": "findClaim",
+      "exported": "findClaim",
+      "target": "src/kernel/scheduler/claim.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 63,
+      "local": "joinGate",
+      "exported": "joinGate",
+      "target": "src/kernel/scheduler/fanin.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/frontier.ts",
+      "line": 64,
+      "local": "evaluateReadiness",
+      "exported": "evaluateReadiness",
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 97,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 131,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/lease.ts",
+      "line": 184,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 63,
+      "local": "hasDeclaredCover",
+      "exported": "hasDeclaredCover",
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 82,
+      "local": "joinGate",
+      "exported": "joinGate",
+      "target": "src/kernel/scheduler/fanin.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 158,
+      "local": "classifyClaim",
+      "exported": "classifyClaim",
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/progress.ts",
+      "line": 180,
+      "local": "liveAttemptClaims",
+      "exported": "liveAttemptClaims",
+      "target": "src/kernel/scheduler/activity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/resources.ts",
+      "line": 26,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/scheduler/resources.ts",
+      "line": 32,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/contracts.ts",
+      "line": 73,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 35,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 38,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 41,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 50,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 54,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 57,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 65,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 68,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 72,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 84,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/outbox.ts",
+      "line": 94,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 59,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 75,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 78,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 81,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 88,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 92,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 98,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 103,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 117,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 134,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 134,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/identity.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/kernel/store/projection.ts",
+      "line": 135,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/contracts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/capabilities.ts",
+      "line": 208,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/capabilities.ts",
+      "line": 224,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/capabilities.ts",
+      "line": 225,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 24,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 80,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 80,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 81,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 81,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 82,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 84,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 87,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 90,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 92,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 93,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 95,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 95,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/grant.ts",
+      "line": 97,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 97,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 98,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 136,
+      "local": "stableStringify",
+      "exported": "stableStringify",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 149,
+      "local": "capabilityStatus",
+      "exported": "capabilityStatus",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 149,
+      "local": "cancelConfirmationCapability",
+      "exported": "cancelConfirmationCapability",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 160,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 172,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 183,
+      "local": "stableStringify",
+      "exported": "stableStringify",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 187,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 187,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 189,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 191,
+      "local": "capabilityGate",
+      "exported": "capabilityGate",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 191,
+      "local": "requiredCapabilities",
+      "exported": "requiredCapabilities",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 199,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 206,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 208,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 213,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 216,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 216,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 223,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 227,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 231,
+      "local": "capabilityGate",
+      "exported": "capabilityGate",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 233,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 237,
+      "local": "capabilityGate",
+      "exported": "capabilityGate",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 237,
+      "local": "contextRequirements",
+      "exported": "contextRequirements",
+      "target": "src/runtime/host-port/capabilities.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 239,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 245,
+      "local": "dedupeUsage",
+      "exported": "dedupeUsage",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 247,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 247,
+      "local": "usageIsComplete",
+      "exported": "usageIsComplete",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/host-fake.ts",
+      "line": 251,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/usage.ts",
+      "line": 46,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/usage.ts",
+      "line": 46,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/usage.ts",
+      "line": 49,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 55,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 56,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 62,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 62,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 64,
+      "local": "grantIsLive",
+      "exported": "grantIsLive",
+      "target": "src/runtime/host-port/grant.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 65,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 67,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 68,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 72,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 72,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 75,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 75,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 78,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 78,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 80,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 95,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 96,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 99,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 100,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 106,
+      "local": "stableStringify",
+      "exported": "stableStringify",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 106,
+      "local": "stableStringify",
+      "exported": "stableStringify",
+      "target": "src/runtime/host-port/usage.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 107,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 109,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 123,
+      "local": "err",
+      "exported": "err",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 123,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/host-port/verify.ts",
+      "line": 125,
+      "local": "ok",
+      "exported": "ok",
+      "target": "src/runtime/host-port/types.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 14,
+      "local": "priorCommand",
+      "exported": "priorCommand",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 16,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 17,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 17,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 19,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 19,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 23,
+      "local": "priorCommand",
+      "exported": "priorCommand",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 25,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 26,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 29,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 29,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 31,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 32,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 33,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 39,
+      "local": "priorCommand",
+      "exported": "priorCommand",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 42,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 42,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 44,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 52,
+      "local": "notExecutedReceipt",
+      "exported": "notExecutedReceipt",
+      "target": "src/runtime/session/receipts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 53,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 55,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 57,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 58,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 64,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 65,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 67,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 67,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 69,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 70,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 72,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 76,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 78,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 81,
+      "local": "grantCovers",
+      "exported": "grantCovers",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 82,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 83,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 84,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 91,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 94,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 97,
+      "local": "dispatchPending",
+      "exported": "dispatchPending",
+      "target": "src/runtime/session/dispatch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 102,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/controls.ts",
+      "line": 103,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 21,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 24,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 30,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 32,
+      "local": "dispatchAdmission",
+      "exported": "dispatchAdmission",
+      "target": "src/runtime/session/plans.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 35,
+      "local": "verifyEffect",
+      "exported": "verifyEffect",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 37,
+      "local": "grantCovers",
+      "exported": "grantCovers",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 38,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 41,
+      "local": "readArtifact",
+      "exported": "readArtifact",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 44,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 58,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 68,
+      "local": "verifyBoardAuthority",
+      "exported": "verifyBoardAuthority",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 70,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 72,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 73,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 74,
+      "local": "planRound",
+      "exported": "planRound",
+      "target": "src/runtime/session/plans.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/dispatch.ts",
+      "line": 77,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 26,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 30,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 30,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 32,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 32,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 33,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 52,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 53,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 53,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 57,
+      "local": "verifyForConsumer",
+      "exported": "verifyForConsumer",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 61,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 66,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 67,
+      "local": "createTaskEvaluator",
+      "exported": "createTaskEvaluator",
+      "target": "src/kernel/evaluation/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 78,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 80,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 82,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 83,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 87,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 91,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 91,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 92,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 92,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 94,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 97,
+      "local": "verifyForConsumer",
+      "exported": "verifyForConsumer",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 105,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 107,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 109,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 109,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 110,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 110,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 111,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 115,
+      "local": "decide",
+      "exported": "decide",
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 117,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 121,
+      "local": "withheldReason",
+      "exported": "withheldReason",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 125,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 128,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 131,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 133,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 135,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 139,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 139,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 142,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 144,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 145,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 146,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 146,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 148,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 149,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 150,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 150,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/evaluation.ts",
+      "line": 153,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 11,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 27,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 30,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 33,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 38,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 44,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 45,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 46,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/journal.ts",
+      "line": 48,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 13,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 13,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 21,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 30,
+      "local": "liveGrants",
+      "exported": "liveGrants",
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 39,
+      "local": "budgetSnapshot",
+      "exported": "budgetSnapshot",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 44,
+      "local": "policyDecide",
+      "exported": "decide",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 45,
+      "local": "usageCompleteness",
+      "exported": "usageCompleteness",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 50,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 57,
+      "local": "computeFrontier",
+      "exported": "computeFrontier",
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 62,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 65,
+      "local": "dispatchRound",
+      "exported": "dispatchRound",
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 66,
+      "local": "emptyFairness",
+      "exported": "emptyFairness",
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 66,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 70,
+      "local": "bindingFor",
+      "exported": "bindingFor",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 73,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 75,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 85,
+      "local": "grantCovers",
+      "exported": "grantCovers",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 85,
+      "local": "budgetWithin",
+      "exported": "budgetWithin",
+      "target": "src/runtime/host-port/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 86,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 90,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 91,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 92,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 93,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 94,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/plans.ts",
+      "line": 97,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 14,
+      "local": "openBudgetLedger",
+      "exported": "openBudgetLedger",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 18,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 19,
+      "local": "emptyReplayState",
+      "exported": "emptyReplayState",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 29,
+      "local": "replay",
+      "exported": "replay",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 32,
+      "local": "projectOutbox",
+      "exported": "projectOutbox",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 46,
+      "local": "reserve",
+      "exported": "reserve",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 56,
+      "local": "releaseUnspent",
+      "exported": "releaseUnspent",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 64,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 70,
+      "local": "fail",
+      "exported": "fail",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 73,
+      "local": "normalizeUsage",
+      "exported": "normalizeUsage",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 75,
+      "local": "settle",
+      "exported": "settle",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 75,
+      "local": "usageIdentity",
+      "exported": "usageIdentity",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 83,
+      "local": "intendedIds",
+      "exported": "intendedIds",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 95,
+      "local": "claimFor",
+      "exported": "claimFor",
+      "target": "src/kernel/scheduler/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 95,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 97,
+      "local": "asInstant",
+      "exported": "asInstant",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 104,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/project.ts",
+      "line": 106,
+      "local": "reconcileIds",
+      "exported": "reconcileIds",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 14,
+      "local": "nodeStateOf",
+      "exported": "nodeStateOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 18,
+      "local": "transition",
+      "exported": "transition",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 38,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 41,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 41,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 45,
+      "local": "decode",
+      "exported": "decode",
+      "target": "src/protocol/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 49,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 52,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 52,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 52,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 53,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 57,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 57,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 58,
+      "local": "currentAttemptOf",
+      "exported": "currentAttemptOf",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 61,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 63,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 66,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 69,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 75,
+      "local": "sameSchema",
+      "exported": "sameSchema",
+      "target": "src/kernel/graph/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 76,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 77,
+      "local": "verifyForConsumer",
+      "exported": "verifyForConsumer",
+      "target": "src/kernel/artifacts/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 82,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 92,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 99,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 103,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/receipts.ts",
+      "line": 108,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 17,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 17,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 26,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 27,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 28,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 30,
+      "local": "project",
+      "exported": "project",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 37,
+      "local": "planReceipt",
+      "exported": "planReceipt",
+      "target": "src/runtime/session/receipts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 39,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 44,
+      "local": "project",
+      "exported": "project",
+      "target": "src/runtime/session/project.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 53,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 55,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 67,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 71,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 75,
+      "local": "notExecutedReceipt",
+      "exported": "notExecutedReceipt",
+      "target": "src/runtime/session/receipts.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 82,
+      "local": "storeOk",
+      "exported": "storeOk",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 86,
+      "local": "openBudgetLedger",
+      "exported": "openBudgetLedger",
+      "target": "src/kernel/policy/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 89,
+      "local": "canonical",
+      "exported": "canonical",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 90,
+      "local": "storeFail",
+      "exported": "storeFail",
+      "target": "src/kernel/store/index.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 98,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 98,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 100,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 101,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 101,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 103,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 104,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 105,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 117,
+      "local": "stepSession",
+      "exported": "stepSession",
+      "target": "src/runtime/session/dispatch.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 121,
+      "local": "pauseSession",
+      "exported": "pauseSession",
+      "target": "src/runtime/session/controls.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 126,
+      "local": "resumeSession",
+      "exported": "resumeSession",
+      "target": "src/runtime/session/controls.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 131,
+      "local": "cancelSession",
+      "exported": "cancelSession",
+      "target": "src/runtime/session/controls.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 136,
+      "local": "evaluateSession",
+      "exported": "evaluateSession",
+      "target": "src/runtime/session/evaluation.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 143,
+      "local": "idFor",
+      "exported": "idFor",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 144,
+      "local": "putObject",
+      "exported": "putObject",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 147,
+      "local": "commit",
+      "exported": "commit",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    },
+    {
+      "file": "src/runtime/session/service.ts",
+      "line": 148,
+      "local": "event",
+      "exported": "event",
+      "target": "src/runtime/session/journal.ts",
+      "typeOnly": false
+    }
+  ],
+  "limitations": [
+    "I04/I05 are not formally proved",
+    "evofence/core package export is not yet present",
+    "dependency-cycle gate does not enforce frozen domain boundaries",
+    "passive imports still violate I01 even without construction"
+  ]
+}

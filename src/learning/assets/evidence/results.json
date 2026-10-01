@@ -1,0 +1,291 @@
+{
+  "repeatability": {
+    "countsEqual": true,
+    "titlesEqual": true,
+    "mutationResultsEqual": true
+  },
+  "policy": {
+    "maxLines": 350,
+    "typescriptFiles": 216,
+    "javascriptFiles": 0
+  },
+  "staticAudit": {
+    "exit": 0,
+    "violations": 0,
+    "edges": 349,
+    "modules": 85
+  },
+  "preservation": {
+    "trackedDiffExit": 0,
+    "committed": false,
+    "installed": false,
+    "graphOperated": false,
+    "allUntrackedWithinLane": true,
+    "coreChanged": false
+  },
+  "dependencies": {
+    "cycles": 0,
+    "edges": 811,
+    "modules": 216
+  },
+  "tests": [
+    {
+      "exit": 0,
+      "run": 1,
+      "counts": {
+        "fail": 0,
+        "tests": 29,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "pass": 29
+      }
+    },
+    {
+      "exit": 0,
+      "run": 2,
+      "counts": {
+        "fail": 0,
+        "tests": 29,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "pass": 29
+      }
+    }
+  ],
+  "branch": "refactor/hk-l4-assets",
+  "negativeControls": [
+    {
+      "id": "compatibility-bypass",
+      "dod": "DoD1",
+      "module": "compatibility",
+      "edits": [
+        [
+          "const allowed = revision.compatibility;",
+          "return true; const allowed = revision.compatibility;"
+        ]
+      ],
+      "test": "DoD1 compatibility rejects host/model/repository/task/scope drift deterministically",
+      "green": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "restored": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "distUnchanged": true
+    },
+    {
+      "id": "validated-autoactivation",
+      "dod": "DoD2",
+      "module": "qualification",
+      "edits": [
+        [
+          "const active = eligible &&",
+          "const active = state === 'validated' || eligible &&"
+        ]
+      ],
+      "test": "DoD2 validated never automatically activates; explicit promotion and scoped receipt are required",
+      "green": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "restored": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "distUnchanged": true
+    },
+    {
+      "id": "revocation-no-propagation",
+      "dod": "DoD2",
+      "module": "qualification",
+      "edits": [
+        [
+          "for (const dep of asset.dependencies)",
+          "for (const dep of [])"
+        ],
+        [
+          "const deps = revision.candidate.dependencies.map(",
+          "const deps = [].map("
+        ]
+      ],
+      "test": "DoD2 revocation propagates transitively and preserves every revision and prior event",
+      "green": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "restored": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "distUnchanged": true
+    },
+    {
+      "id": "outside-write",
+      "dod": "DoD2",
+      "module": "writer",
+      "edits": [
+        [
+          "if (!inside(project, staging) || !inside(staging, parent) ||\n            readOnly.some(root => inside(root, staging) || inside(root, parent))) {",
+          "if (false) {"
+        ]
+      ],
+      "test": "DoD2 out-of-project writes reject traversal, absolute paths and sibling prefix tricks",
+      "green": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "restored": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "distUnchanged": true
+    },
+    {
+      "id": "history-erasure",
+      "dod": "DoD2",
+      "module": "registry",
+      "edits": [
+        [
+          "history: [...snapshot.history, { ...event, sequence: snapshot.history.length }]",
+          "history: [{ ...event, sequence: snapshot.history.length }]"
+        ]
+      ],
+      "test": "DoD2 history survives revocation and revision replacement without erasing earlier observations",
+      "green": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "restored": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "distUnchanged": true
+    }
+  ],
+  "sourceHashes": [
+    {
+      "path": "src/learning/assets/writer.ts",
+      "sha256": "ac0c81eb11f8d5e2f3fbebfa8a7437f85c7c19a1a0cdcaf0d4ba5fc6b1914625"
+    },
+    {
+      "path": "src/learning/assets/types.ts",
+      "sha256": "0b378b6725c306a341d0c88eb50cb54ac1ffb3a4671cde9adbfd0d5ae07e9d69"
+    },
+    {
+      "path": "src/learning/assets/registry.ts",
+      "sha256": "c1aca4bca0c450386c3e9a3ebb12debe1ff15302741a288c258aeb436f54d002"
+    },
+    {
+      "path": "src/learning/assets/qualification.ts",
+      "sha256": "35240dc60ce5d995a9faee9e21c191c01212b98248658a8baf539f6ac98015f8"
+    },
+    {
+      "path": "src/learning/assets/index.ts",
+      "sha256": "f22ab759f6821417dc8f2591c60ae7ee1a695920f38c9f3f05cfcdfb777bf793"
+    },
+    {
+      "path": "src/learning/assets/identity.ts",
+      "sha256": "7206007fef264f577f384c92d206bb66e47b9efee6f8919471bdd05c6cd5756b"
+    },
+    {
+      "path": "src/learning/assets/decisions.ts",
+      "sha256": "2c07a2a3b608a7d70b0c996ca64fa2000440b00ec6b9d5768dcc5e4453c2da3c"
+    },
+    {
+      "path": "src/learning/assets/compatibility.ts",
+      "sha256": "7d717343b0a3168ba006430f2bc3bf3d1615c159533b5a6c85c8da20be4c8f9e"
+    },
+    {
+      "path": "test/l4-assets-negative-controls.test.js",
+      "sha256": "148e59fe7cd84e124b14a696fdfa6c41d284be233e6f67d4ea58eae7fc981b85"
+    },
+    {
+      "path": "test/l4-assets-registry.test.js",
+      "sha256": "07aa47d882e12c87eb5b3796e3cfab093b84063c0a543cbc09e6f3b88c945768"
+    },
+    {
+      "path": "test/l4-assets-writer.test.js",
+      "sha256": "f156a87ef3ea50c54184b261b20d21f1beb9feb824f65a7d6aca15193665c8b6"
+    }
+  ],
+  "node": "v24.12.0",
+  "baseline": "6728aae860d4434f8acde554d059a1d344a8bf60",
+  "commands": [
+    {
+      "exit": 0,
+      "command": "npm run build"
+    },
+    {
+      "exit": 0,
+      "command": "npm run typecheck"
+    },
+    {
+      "exit": 0,
+      "command": "npm run src:policy"
+    },
+    {
+      "exit": 0,
+      "command": "npm run dep:check"
+    },
+    {
+      "exit": 0,
+      "command": "node verification/kernel/static-audit.mjs"
+    }
+  ],
+  "evidenceLevel": "unit and negative control; actual temporary filesystem; synthetic evaluation and host receipts",
+  "lane": "l4-assets"
+}

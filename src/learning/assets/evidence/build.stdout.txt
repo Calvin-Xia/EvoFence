@@ -1,0 +1,4 @@
+
+> evofence@0.4.2 build
+> node node_modules/typescript/bin/tsc
+
