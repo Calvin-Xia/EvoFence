@@ -229,7 +229,7 @@
     },
     {
       "id": "S05",
-      "threadId": null,
+      "threadId": "01a0f820-780b-73d6-9700-64caf5cd1bf4",
       "harness": "pi (orchestrator) + herdr fleet",
       "role": "L2 close-out (artifact/scheduler/runtime/kernel-verification) then L3 entry; sole graph-write authority; per-phase handoffs",
       "status": "active",
@@ -249,8 +249,9 @@
           "model": "deepseek/deepseek-flash",
           "thinking": "max",
           "kind": "pi",
-          "paneId": null,
-          "role": "graph writes, integration, dispatch, verdicts, handoffs"
+          "paneId": "wG:pX",
+          "role": "graph writes, integration, dispatch, verdicts, handoffs",
+          "cwd": "C:/Users/Calvin-Xia/EvoFence"
         },
         "activePanes": [
           {
@@ -278,7 +279,9 @@
             "role": "l2_scheduler blocker/major/minor fixes"
           }
         ]
-      }
+      },
+      "cwd": "C:/Users/Calvin-Xia/EvoFence",
+      "cwdNote": "The successor orchestrator runs in the primary checkout (same directory as the user goal); all graph/git/npm work is executed with absolute paths against the integration worktree C:/Users/Calvin-Xia/.codex/worktrees/72a4/EvoFence."
     }
   ],
   "sessionCreationPolicy": {
