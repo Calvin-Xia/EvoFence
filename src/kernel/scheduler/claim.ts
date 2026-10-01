@@ -13,8 +13,8 @@
  *     returns `EFK_REVISION_CONFLICT` / `EFK_CLAIM_CONFLICT` instead of writing. `INTERFACES.md §4`
  *     fixes the losing side of a claim race: it stays `ready` and is rescheduled, so refusing is a
  *     normal answer, not an error state.
- *   - `recordClaim` is the pure insert used by the dispatch round, which has just computed the
- *     frontier from this very state — the "is it claimed" question was already answered there.
+ *   - `recordClaim` is the low-level pure insert used by the dispatch round. Consumers of injected
+ *     state must handle multiple attempts of a node; `findClaim` selects one deterministically.
  */
 import { fail } from '../../protocol/index.js';
 import type { ErrorEnvelope, Instant } from '../../protocol/index.js';
@@ -36,7 +36,23 @@ export function claimFor(binding: Binding, claimedAt: Instant): Claim {
 }
 
 export function findClaim(claims: readonly Claim[], nodeId: string): Claim | undefined {
-  return claims.find((claim) => claim.binding.nodeId === nodeId);
+  return [...claims].sort(compareClaims).find((claim) => claim.binding.nodeId === nodeId);
+}
+
+/** Stable attempt order, independent of store row order and the host locale. */
+export function compareClaims(left: Claim, right: Claim): number {
+  const key = (claim: Claim) => JSON.stringify([
+    claim.binding.sessionId, claim.binding.nodeId, claim.binding.attemptOrdinal,
+    claim.binding.epoch, claim.binding.attemptId, claim.claimId, claim.claimedAt, claim.binding,
+  ]);
+  const a = key(left);
+  const b = key(right);
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function sameAttempt(left: Binding, right: Binding): boolean {
+  return left.sessionId === right.sessionId && left.nodeId === right.nodeId &&
+    left.attemptOrdinal === right.attemptOrdinal && left.epoch === right.epoch;
 }
 
 /** Pure insert. Does not check the uniqueness key — the caller computed the frontier from this state. */
@@ -60,7 +76,7 @@ export function claimNode(
       ]),
     };
   }
-  const existing = findClaim(state.claims, binding.nodeId);
+  const existing = state.claims.find((claim) => sameAttempt(claim.binding, binding));
   if (existing !== undefined) {
     return {
       state,

@@ -22,6 +22,7 @@
  */
 import { reserve, settle } from '../policy/index.js';
 import type { BudgetLedger, BudgetTransition, RequestRole } from '../policy/index.js';
+import { classifyClaim, liveAttemptClaims } from './activity.js';
 import { claimFor, claimIdFor, recordClaim } from './claim.js';
 import { advanceFairness, orderFrontier } from './fairness.js';
 import { computeFrontier, dispatchableEntries } from './frontier.js';
@@ -105,14 +106,14 @@ function grantAll(
       },
       now,
     );
-    if (attempt.grant === null) {
+    if (attempt.verdict === 'capacity') {
       return {
         leases: table,
         granted: [],
         reasons: [
           {
             code: declaration.mode === 'exclusive' ? 'writer-held' : 'quota-full',
-            detail: attempt.error?.message ?? declaration.resourceId,
+            detail: attempt.detail,
           },
         ],
       };
@@ -137,7 +138,7 @@ function preGates(
   if (inFlight >= maxConcurrentAgents) {
     reasons.push({
       code: 'concurrency-limit',
-      detail: `${inFlight} native session(s) in flight, cap is ${maxConcurrentAgents}`,
+      detail: `${inFlight} live session(s) or pending dispatch(es), cap is ${maxConcurrentAgents}`,
     });
   }
   if (depth >= maxDepth) {
@@ -166,7 +167,8 @@ export function dispatchRound(input: DispatchInput): DispatchRound {
 
   let state = input.state;
   let budget = input.budget;
-  let inFlight = state.claims.length;
+  // Lease-less launches reserve only this round's dispatch slots; they do not become live claims.
+  let pendingUnleased = 0;
   const decisions: DispatchDecision[] = [];
   const dispatched: string[] = [];
   const deferred: string[] = [];
@@ -179,7 +181,7 @@ export function dispatchRound(input: DispatchInput): DispatchRound {
         entry,
         declarations,
         live,
-        inFlight,
+        liveAttemptClaims(frontier, state, input.now).length + pendingUnleased,
         input.maxConcurrentAgents,
         input.depth,
         input.maxDepth,
@@ -214,7 +216,7 @@ export function dispatchRound(input: DispatchInput): DispatchRound {
     budget = reservation.ledger;
     const claim = claimFor(binding, input.now);
     state = recordClaim({ ...state, leases: leaseAttempt.leases }, claim);
-    inFlight += 1;
+    if (classifyClaim(claim, state.leases, input.now) !== 'live') pendingUnleased += 1;
     dispatched.push(entry.nodeId);
     decisions.push({
       nodeId: entry.nodeId,
@@ -239,7 +241,7 @@ export function dispatchRound(input: DispatchInput): DispatchRound {
   return {
     state,
     budget,
-    fairness: advanceFairness(input.fairness, dispatched, deferred),
+    fairness: advanceFairness(input.fairness, dispatched, deferred, frontier.map((entry) => entry.nodeId)),
     frontier,
     decisions,
   };

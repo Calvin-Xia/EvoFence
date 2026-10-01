@@ -16,17 +16,21 @@
  * Capacity (`maxHolders`) is a separate question, answered by the lease table: two holders of the
  * same mode is contention, not a clash, and a mode difference is a clash.
  */
+import { fail } from '../../protocol/index.js';
 import type { CompiledGraph } from '../graph/index.js';
 import type { LeaseGrant, ResourceConflict, ResourceDeclaration } from './types.js';
 
 /** What one node asks for, in the frozen `exclusive`/`shared` split. */
 export function declarationsOf(graph: CompiledGraph, nodeId: string): readonly ResourceDeclaration[] {
   const node = graph.node(nodeId);
-  if (node === undefined) return [];
+  if (node === undefined) throw fail('EFK_GRAPH_REFERENCE_INVALID', `unknown resource node ${nodeId}`, [nodeId]);
   return [...node.resources.exclusive, ...node.resources.shared].map((resourceId) => {
     // Check 7 (`SEMANTICS.md §5.1`) refuses a graph that declares a resource with no policy or with
     // the wrong mode, so a compiled graph always has the entry.
-    const policy = graph.resourcePolicy.get(resourceId)!;
+    const policy = graph.resourcePolicy.get(resourceId);
+    if (policy === undefined) {
+      throw fail('EFK_INVARIANT_VIOLATION', `compiled resource ${resourceId} has no policy`, [nodeId, resourceId]);
+    }
     return { resourceId, mode: policy.mode, maxHolders: policy.maxHolders };
   });
 }

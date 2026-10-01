@@ -37,12 +37,13 @@ export interface LeaseRequest {
   readonly ttlMs: number;
 }
 
-export interface LeaseTransition {
-  readonly table: LeaseTable;
-  /** The grant that was created, or `null` when the resource was already at capacity. */
-  readonly grant: LeaseGrant | null;
-  readonly error: ErrorEnvelope | null;
-}
+/** Capacity contention is a business outcome, not a graph compilation error (retry=never). */
+export type LeaseTransition =
+  | { readonly verdict: 'granted'; readonly table: LeaseTable; readonly grant: LeaseGrant; readonly error: null }
+  | {
+      readonly verdict: 'capacity'; readonly table: LeaseTable; readonly grant: null;
+      readonly error: null; readonly detail: string;
+    };
 
 export interface ReleaseTransition {
   readonly table: LeaseTable;
@@ -80,13 +81,11 @@ export function grantLease(table: LeaseTable, request: LeaseRequest, now: Instan
   const holders = liveGrants(table, now).filter((grant) => grant.resourceId === request.resourceId);
   if (holders.length >= request.maxHolders) {
     return {
+      verdict: 'capacity',
       table,
       grant: null,
-      error: fail(
-        'EFK_GRAPH_RESOURCE_CONFLICT',
-        `resource ${request.resourceId} has ${holders.length} live holder(s); maxHolders is ${request.maxHolders}`,
-        [request.resourceId],
-      ),
+      error: null,
+      detail: `resource ${request.resourceId} has ${holders.length} live holder(s); maxHolders is ${request.maxHolders}`,
     };
   }
   const grant: LeaseGrant = {
@@ -98,6 +97,7 @@ export function grantLease(table: LeaseTable, request: LeaseRequest, now: Instan
     expiresAt: asInstant(now + request.ttlMs),
   };
   return {
+    verdict: 'granted',
     table: { grants: [...table.grants, grant], nextFencingToken: table.nextFencingToken + 1 },
     grant,
     error: null,

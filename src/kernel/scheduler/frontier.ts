@@ -19,6 +19,7 @@
 import { evaluateReadiness } from '../graph/index.js';
 import type { CompiledGraph, NodeFacts, NodeState, Readiness } from '../graph/index.js';
 import { findClaim } from './claim.js';
+import { joinGate } from './fanin.js';
 import type { Claim, FrontierDisposition, FrontierEntry, SchedulerState } from './types.js';
 
 function settled(state: NodeState | null): boolean {
@@ -58,12 +59,16 @@ export function computeFrontier(
     const nodeState = facts.states.get(node.nodeId) ?? null;
     if (settled(nodeState)) continue;
     const claim: Claim | null = findClaim(state.claims, node.nodeId) ?? null;
+    // Optional branch facts are valid for non-join graphs, but not for an outstanding join.
+    if (node.kind === 'join') joinGate(graph, facts, node.nodeId);
     const readiness = evaluateReadiness(graph, node.nodeId, facts);
+    const disposition = dispositionOf(nodeState, readiness);
     entries.push({
       nodeId: node.nodeId,
       kind: node.kind,
       state: nodeState,
-      disposition: claim === null ? dispositionOf(nodeState, readiness) : 'claimed',
+      disposition: claim !== null && (nodeState === null || nodeState === 'pending' || nodeState === 'ready')
+        ? 'claimed' : disposition,
       readiness,
       claim,
     });

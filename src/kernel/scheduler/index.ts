@@ -42,6 +42,8 @@ export type {
 } from './types.js';
 
 export { claimFor, claimIdFor, claimNode, findClaim, recordClaim, type ClaimTransition } from './claim.js';
+export { classifyClaim, liveAttemptClaims, reclaimExpiredClaims, type ClaimActivity, type ReclaimTransition }
+  from './activity.js';
 export {
   applyLeaseReceipt,
   emptyLeaseTable,

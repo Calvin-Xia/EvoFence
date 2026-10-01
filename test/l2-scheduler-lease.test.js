@@ -136,7 +136,8 @@ test('cp1 lease — capacity zero means the resource cannot be handed out', () =
     1000,
   );
   assert.equal(refused.grant, null);
-  assert.equal(refused.error.code, 'EFK_GRAPH_RESOURCE_CONFLICT');
+  assert.equal(refused.verdict, 'capacity');
+  assert.equal(refused.error, null);
   assert.equal(refused.table.grants.length, 0);
 });
 

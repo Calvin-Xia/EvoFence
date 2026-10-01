@@ -42,11 +42,12 @@ export function orderFrontier(
   });
 }
 
-/** Fold one round's outcome back into the counters. */
+/** Fold one round's outcome and retain counters only for nodes still in the frontier. */
 export function advanceFairness(
   fairness: FairnessState,
   dispatched: readonly string[],
   deferred: readonly string[],
+  frontierIds: readonly string[],
 ): FairnessState {
   const deferStreak: Record<string, number> = { ...fairness.deferStreak };
   const dispatches: Record<string, number> = { ...fairness.dispatches };
@@ -55,5 +56,8 @@ export function advanceFairness(
     deferStreak[nodeId] = 0;
     dispatches[nodeId] = dispatchesOf(fairness, nodeId) + 1;
   }
+  const keep = new Set(frontierIds);
+  for (const nodeId of Object.keys(deferStreak)) if (!keep.has(nodeId)) delete deferStreak[nodeId];
+  for (const nodeId of Object.keys(dispatches)) if (!keep.has(nodeId)) delete dispatches[nodeId];
   return { deferStreak, dispatches };
 }

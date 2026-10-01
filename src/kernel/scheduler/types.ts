@@ -200,6 +200,7 @@ export type StallReason =
   | 'awaiting-new-attempt'
   | 'reconcile-required'
   | 'cancellation-in-flight'
+  | 'claim-without-lease'
   | 'lease-expired';
 
 export interface StallEntry {
@@ -207,7 +208,7 @@ export interface StallEntry {
   readonly disposition: FrontierDisposition;
   readonly reason: StallReason;
   readonly detail: string;
-  /** Every blocker the wait is about, unfiltered; `[]` when the node is stuck on its own state. */
+  /** Every blocker, unfiltered; a lease-less claim names its own node explicitly. */
   readonly blockedBy: readonly string[];
 }
 

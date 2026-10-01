@@ -11,6 +11,7 @@
  * every required branch succeeded — that part comes from readiness, not from here.
  */
 import { evaluateJoin } from '../graph/index.js';
+import { fail } from '../../protocol/index.js';
 import type { BranchEvidence, CompiledGraph, NodeFacts } from '../graph/index.js';
 
 export interface JoinGate {
@@ -23,9 +24,12 @@ export interface JoinGate {
 }
 
 export function joinGate(graph: CompiledGraph, facts: NodeFacts, joinId: string): JoinGate {
+  if (facts.branches === undefined) {
+    throw fail('EFK_INVARIANT_VIOLATION', `join ${joinId} requires explicit branch facts`, [joinId]);
+  }
   const evaluation = evaluateJoin(graph, joinId, {
     seq: facts.seq,
-    branches: facts.branches ?? new Map(),
+    branches: facts.branches,
   });
   return {
     joinId,

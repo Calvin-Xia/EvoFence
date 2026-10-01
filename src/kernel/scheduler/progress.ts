@@ -10,9 +10,9 @@
  *   - `blocked-by-terminated-worker` — the blocker terminated and **nothing covers it**. No amount
  *     of waiting changes it; only a graph patch does. This is the state that must be surfaced, not
  *     sat on: `progress.status` is `stalled`, never `dispatchable`.
- *   - `lease-expired` — a claim holds no live lease at the injected instant (the worker was claimed
- *     and leased, then died without a receipt). The claim is dead weight; the round must not count
- *     it as in-flight work, or the graph would wait on a corpse forever.
+ *   - `lease-expired` / `claim-without-lease` — the exact attempt has no live lease, including an
+ *     attempt that never had a resource. That is insufficient evidence of worker liveness; it
+ *     needs explicit reclamation/reconciliation rather than an indefinite in-flight wait.
  *
  * `blockedBy` is the unfiltered list of blockers that terminated — failed *and* cancelled — so a
  * cancelled branch cannot quietly vanish from the report (`SEMANTICS.md §5.3`, `SCHEMAS.md` S20).
@@ -20,13 +20,12 @@
 import { hasDeclaredCover } from '../graph/index.js';
 import type { CompiledGraph, NodeFacts, NodeState } from '../graph/index.js';
 import type { Instant } from '../../protocol/index.js';
+import { classifyClaim, liveAttemptClaims } from './activity.js';
+import { compareClaims } from './claim.js';
 import { joinGate } from './fanin.js';
-import { liveGrants } from './lease.js';
 import type {
-  Claim,
   DispatchRound,
   FrontierEntry,
-  LeaseTable,
   ProgressReport,
   ProgressStatus,
   SchedulerState,
@@ -55,13 +54,15 @@ function terminated(state: NodeState | null | undefined): boolean {
 
 function classify(
   graph: CompiledGraph,
-  facts: NodeFacts,
+  states: ReadonlyMap<string, NodeState | null>,
   detail: string,
   subject: readonly string[],
 ): WaitReason {
-  const gone = subject.filter((nodeId) => terminated(facts.states.get(nodeId)));
+  const gone = subject.filter((nodeId) => terminated(states.get(nodeId)));
+  const uncertain = subject.filter((nodeId) => states.get(nodeId) === 'unknown');
   const hard = gone.filter((nodeId) => !hasDeclaredCover(graph.edgesTo(nodeId), nodeId));
   if (hard.length > 0) return { reason: 'blocked-by-terminated-worker', detail, blockedBy: gone };
+  if (uncertain.length > 0) return { reason: 'reconcile-required', detail, blockedBy: uncertain };
   if (gone.length > 0) return { reason: 'waiting-on-repair', detail, blockedBy: gone };
   return { reason: 'waiting-on-live-upstream', detail, blockedBy: [] };
 }
@@ -84,7 +85,7 @@ function waitingStall(graph: CompiledGraph, facts: NodeFacts, entry: FrontierEnt
       disposition: entry.disposition,
       ...classify(
         graph,
-        facts,
+        new Map(gate.branchReport.map((branch) => [branch.nodeId, branch.state])),
         `required branch(es) ${gate.missing.join(', ')} are not succeeded; join status is ${gate.status}`,
         gate.missing,
       ),
@@ -102,19 +103,20 @@ function waitingStall(graph: CompiledGraph, facts: NodeFacts, entry: FrontierEnt
   return {
     nodeId: entry.nodeId,
     disposition: entry.disposition,
-    ...classify(graph, facts, `upstream ${gap.node} has not succeeded (gap ${gap.kind})`, [gap.node]),
+    ...classify(graph, facts.states, `upstream ${gap.node} has not succeeded (gap ${gap.kind})`, [gap.node]),
   };
 }
 
-/** Owned a lease, and none of them is live at `now`: the claim's worker is gone. */
-function hasExpiredLease(claim: Claim, table: LeaseTable, now: Instant): boolean {
-  const owned = table.grants.filter((grant) => grant.ownerClaimId === claim.claimId);
-  if (owned.length === 0) return false;
-  return !liveGrants(table, now).some((grant) => grant.ownerClaimId === claim.claimId);
-}
-
-function stateStall(entry: FrontierEntry): StallEntry | null {
+function stateStall(entry: FrontierEntry, liveClaim: boolean): StallEntry | null {
   switch (entry.disposition) {
+    case 'active':
+      return liveClaim ? null : {
+        nodeId: entry.nodeId,
+        disposition: entry.disposition,
+        reason: 'reconcile-required',
+        detail: 'active journal state has no live claim; establish the actual effect before retrying',
+        blockedBy: [entry.nodeId],
+      };
     case 'halted':
       return {
         nodeId: entry.nodeId,
@@ -147,34 +149,37 @@ function stateStall(entry: FrontierEntry): StallEntry | null {
 export function progress(input: ProgressInput): ProgressReport {
   const { graph, facts, state, now, round } = input;
   const stalls: StallEntry[] = [];
-  const expired = new Set<string>();
 
   for (const entry of round.frontier) {
-    if (entry.claim !== null && hasExpiredLease(entry.claim, state.leases, now)) {
-      expired.add(entry.nodeId);
+    // Read all current claims, including this round's new ones and multiple attempts of a node.
+    const claims = state.claims.filter((claim) => claim.binding.nodeId === entry.nodeId).sort(compareClaims);
+    let liveClaim = false;
+    for (const claim of claims) {
+      const activity = classifyClaim(claim, state.leases, now);
+      if (activity === 'live') {
+        liveClaim = true;
+        continue;
+      }
       stalls.push({
         nodeId: entry.nodeId,
         disposition: entry.disposition,
-        reason: 'lease-expired',
-        detail: `claim ${entry.claim.claimId} holds no live lease at ${now}; not counted as in-flight work`,
-        blockedBy: [],
+        reason: activity,
+        detail: `claim ${claim.claimId} (${entry.nodeId},${claim.binding.attemptOrdinal},${claim.binding.epoch}) holds no live lease at ${now}; reclaim explicitly, not counted as in-flight work`,
+        blockedBy: [entry.nodeId],
       });
-      continue;
     }
+    if (claims.length > 0 && !liveClaim && (entry.disposition === 'claimed' || entry.disposition === 'active')) continue;
     if (entry.disposition === 'waiting') {
       stalls.push(waitingStall(graph, facts, entry));
       continue;
     }
-    const stuck = stateStall(entry);
+    const stuck = stateStall(entry, liveClaim);
     if (stuck !== null) stalls.push(stuck);
   }
 
-  const dispatched = round.decisions.some((decision) => decision.verdict === 'dispatch');
-  const inFlight = round.frontier.some(
-    (entry) => (entry.disposition === 'claimed' || entry.disposition === 'active') && !expired.has(entry.nodeId),
-  );
+  const inFlight = liveAttemptClaims(round.frontier, state, now).length > 0;
   const status: ProgressStatus =
-    round.frontier.length === 0 ? 'complete' : dispatched || inFlight ? 'dispatchable' : 'stalled';
+    round.frontier.length === 0 ? 'complete' : inFlight ? 'dispatchable' : 'stalled';
 
   return {
     status,
