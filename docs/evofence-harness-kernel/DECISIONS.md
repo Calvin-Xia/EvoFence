@@ -30,3 +30,4 @@
 | task · passed | l3_task_evaluation | 任务完成的唯一裁决入口 | 2026-10-01T18:07:48.667Z |
 | task · passed | l3_workspace_txn | 代码与技能产物事务 | 2026-10-01T21:48:41.001Z |
 | task · passed | l4_asset_registry | 能力资产版本与资格 | 2026-10-01T22:03:10.358Z |
+| task · passed | l4_retrieval | 适用经验检索与注入 | 2026-10-01T22:26:51.375Z |
