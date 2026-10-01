@@ -271,7 +271,7 @@
             "harness": "codex",
             "model": "gpt-6.1-sol",
             "thinking": "xhigh",
-            "role": "l3_pi_session execution lane (worktree EvoFence-wt/harness-kernel/l3-pi, branch refactor/hk-l3-pi)"
+            "role": "l3_pi_session execution lane (version-gated: pinned 0.87.1 unavailable, global 0.99.2)"
           },
           {
             "paneId": "wG:p14",
@@ -279,10 +279,26 @@
             "harness": "codex",
             "model": "gpt-6.1-sol",
             "thinking": "xhigh",
-            "role": "l3_context_router execution lane (worktree EvoFence-wt/harness-kernel/l3-router, branch refactor/hk-l3-router)"
+            "role": "l3_context_router execution lane"
+          },
+          {
+            "paneId": "wG:p15",
+            "name": "l3-workspace-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l3_workspace_txn execution lane"
+          },
+          {
+            "paneId": "wG:p16",
+            "name": "l3-eval-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l3_task_evaluation execution lane"
           }
         ],
-        "l3Progress": "wave-1 lanes running (l3_pi_session, l3_context_router; both claimed by S05). l3_dsh_session NOT started: pending user decision on the DSH version policy (docs/evofence-harness-kernel/execution/L3-DSH-VERSION-DECISION.md). Wave-2 briefs ready: L3-workspace-txn-brief.md, L3-task-evaluation-brief.md. PR #21 (draft) open; CI running; merge NOT allowed.",
+        "l3Progress": "wave-1+2 lanes running (l3_pi_session p13, l3_context_router p14, l3_workspace_txn p15, l3_task_evaluation p16; all claimed by S05). l3_dsh_session NOT started: pending user version decision (L3-DSH-VERSION-DECISION.md). l3_pi_session version-gated: pinned Pi 0.87.1 not installed (global 0.99.2); lane continues version-independent work and records blocked-on-version evidence (L3-PI-VERSION-DECISION.md). PR #21 (draft) CI 8/8 pass; no merge.",
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
