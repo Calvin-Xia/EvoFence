@@ -1,0 +1,1331 @@
+{
+  "base": {
+    "protocol/index.ts": "export type Pair = {count:number};\nexport interface Ports {HostPort:{execute(value:unknown):unknown};Clock:{now():number};}\nexport const version=Object.freeze({namespace:'evofence.runtime/1'});\nexport function shadow(fetch:()=>string){return fetch();}\n",
+    "kernel/index.ts": "import type {Pair} from '../protocol/index.js';\nexport function reduce(state:Pair,event:{value:number}){return {count:state.count+event.value};}\n",
+    "runtime/index.ts": "import {reduce} from '../kernel/index.js';\nimport type {Ports} from '../protocol/index.js';\nexport function createKernel(ports:Ports){return {reduce,run:()=>ports.HostPort.execute({})};}\n"
+  },
+  "vectors": [
+    {
+      "name": "clean",
+      "expect": 0,
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I01-direction",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "protocol/index.ts": "export * from '../runtime/index.js';\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I01-barrel",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "runtime/index.ts": "export * from './barrel.js';\n",
+        "runtime/barrel.ts": "export * from '../host/index.js';\n",
+        "host/index.ts": "export const backend=1;\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I02-builtin",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Stats} from 'node:fs';export type Value=Stats;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-builtin-alias",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import fs from 'fs';export const read=fs.readFile;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-path-alias",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "export * from '@hidden/index.js';\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "project": {
+        "compilerOptions": {
+          "target": "ES2023",
+          "module": "NodeNext",
+          "moduleResolution": "NodeNext",
+          "baseUrl": ".",
+          "paths": {
+            "@hidden/*": [
+              "runtime/*"
+            ]
+          },
+          "verbatimModuleSyntax": true
+        },
+        "include": [
+          "**/*.ts"
+        ]
+      },
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I03-dynamic",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export async function load(name:string){return import(name);}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-require-alias",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "const load=require;export function read(){return load('node:fs');}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-indirect-eval",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "const execute=eval;export function run(){return (0,execute)('1');}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-Function",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export function run(){return new Function('return 1')();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-global-literal",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "export function run(){return globalThis['fetch'];}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-one-alias",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "const getTime=Date.now;export function run(){return getTime();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-destructure",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "const {now}=Date;export function run(){return now();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-shadow",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "export function run(fetch:()=>number){return fetch();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-computed-unexecuted-blind",
+      "expect": 0,
+      "blind": [
+        "I04"
+      ],
+      "files": {
+        "protocol/index.ts": "export function readRandom(){return (Math as any)['ran'+'dom']();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-computed-probed",
+      "expect": 1,
+      "rule": "I07",
+      "files": {
+        "protocol/index.ts": "export function readRandom(){return (Math as any)['ran'+'dom']();}\n"
+      },
+      "roots": [
+        "protocol"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "protocol",
+            "export": "readRandom",
+            "args": []
+          }
+        ]
+      },
+      "blind": [
+        "I04"
+      ]
+    },
+    {
+      "name": "I05-top-io",
+      "expect": 1,
+      "rule": "I05",
+      "files": {
+        "protocol/index.ts": "declare const store:{read():number};export const snapshot=store.read();\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I05-static-block",
+      "expect": 1,
+      "rule": "I05",
+      "files": {
+        "protocol/index.ts": "declare const store:{read():number};export class Schema {static {store.read();}}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I05-callback-blind-runtime-red",
+      "expect": 1,
+      "rule": "I07",
+      "blind": [
+        "I05"
+      ],
+      "files": {
+        "protocol/index.ts": "function hidden(){return (Math as any)['ran'+'dom']();}\nexport const values=[0].map(hidden);\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I06-built-drift",
+      "expect": 1,
+      "rule": "I06",
+      "files": {
+        "index.js": "import './cli.js'; export const packageRoot=1;\n",
+        "cli.js": "export const started=globalThis.fetch('https://example.invalid');\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "export * from '../../index.js';\n"
+      }
+    },
+    {
+      "name": "I06-built-clean",
+      "expect": 0,
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {}
+    },
+    {
+      "name": "I07-factory-spy",
+      "expect": 1,
+      "rule": "I07",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';export function createKernel(ports:Ports){const stamp=ports.Clock['n'+'ow']();return {stamp};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I07-determinism",
+      "expect": 1,
+      "rule": "I07",
+      "files": {
+        "kernel/index.ts": "let serial=0;export function reduce(state:{count:number},event:{value:number}){return {count:state.count+event.value+(serial++)};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I07-missing-probe",
+      "expect": 1,
+      "rule": "I07",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-fallback",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';export function createKernel(ports:Ports){const host=ports.HostPort ?? {execute(){return 1;}};return {host};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-global-singleton",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';let shared:Ports;export function createKernel(ports:Ports){shared=ports;return {run:()=>shared.HostPort.execute({})};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-destructured-default",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';export function createKernel(ports:Ports){const {HostPort={execute(){return 1;}}}=ports;return {HostPort};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I01-unresolved",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "protocol/index.ts": "export * from './missing.js';\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I01-syntax",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "protocol/index.ts": "export const x = ;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I01-empty",
+      "expect": 1,
+      "rule": "I01",
+      "files": {},
+      "roots": [
+        "protocol"
+      ],
+      "empty": true
+    },
+    {
+      "name": "I01-junction",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "outside/index.ts": "export const host=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ],
+      "junction": {
+        "from": "protocol/escape",
+        "to": "outside"
+      }
+    },
+    {
+      "name": "I06-inline-type-exports",
+      "expect": 0,
+      "files": {
+        "protocol/types.ts": "export type T={value:string};\n",
+        "protocol/index.ts": "export {type T} from './types.js';\nimport {type T} from './types.js';\nexport const tag='type-inline';\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I06-built-export-drift",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "protocol/index.js": "export const wrongExport=1;\n"
+      }
+    },
+    {
+      "name": "I07-built-factory-spy",
+      "expect": 1,
+      "rule": "I07",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js';\nexport function createKernel(ports){ports.Clock.now(); return {reduce};}\n"
+      }
+    },
+    {
+      "name": "I04-Date-call",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "export function clock(){return Date();}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I08-port-alias-fallback",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nexport function createKernel(ports:Ports){const host=ports.HostPort; const chosen=host ?? {execute(){return 0;}}; return {chosen};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I08-untyped-module-capture",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nlet captured;\nexport function createKernel(ports:Ports){captured=ports.HostPort; return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I06-built-dynamic-import",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js';\nexport function createKernel(ports){return {reduce,run:()=>import('hidden-package')};}\n"
+      }
+    },
+    {
+      "name": "I08-assignment-fallback",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js';\nexport function createKernel(ports:Ports){ports.HostPort ??= {execute(){return 0;}}; return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I01-kernel-host-barrel",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "kernel/index.ts": "export * from './barrel.js';\n",
+        "kernel/barrel.ts": "export * from '../host/pi/index.js';\n",
+        "host/pi/index.ts": "export const native=1;\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel"
+      ]
+    },
+    {
+      "name": "I01-type-only-edge",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "protocol/index.ts": "export type {Ports} from '../runtime/index.js';\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I01-import-type-expression",
+      "expect": 1,
+      "rule": "I01",
+      "files": {
+        "protocol/index.ts": "export type Hidden=import('../host/index.js').Hidden;\n",
+        "host/index.ts": "export type Hidden=string;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-node-child_process",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'node:child_process'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-child_process",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'child_process'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-node-path",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'node:path'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-node-crypto",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'node:crypto'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-node-sqlite",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'node:sqlite'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-better-sqlite3",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'better-sqlite3'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-simple-git",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'simple-git'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-super-plumber",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from 'super-plumber'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I02-example-host-sdk",
+      "expect": 1,
+      "rule": "I02",
+      "files": {
+        "protocol/index.ts": "import type {Hidden} from '@example/host-sdk'; export type Value=Hidden;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-literal-dynamic",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export const read=()=>import('./other.js');\n",
+        "protocol/other.ts": "export const value=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-createRequire-alias",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "const load=createRequire; export const read=()=>load('file:///x');\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-import-equals",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "import load=require('./other.js'); export const value=load;\n",
+        "protocol/other.ts": "export const value=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-reflected-eval",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export const read=()=>globalThis['eval'];\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-reflected-constructor",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export const read=()=> (()=>0).constructor('return 1')();\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I06-built-require",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js'; export function createKernel(ports){return {reduce,run:()=>require('node:fs')};}\n"
+      }
+    },
+    {
+      "name": "I06-built-eval",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js'; export function createKernel(ports){return {reduce,run:()=>eval('1')};}\n"
+      }
+    },
+    {
+      "name": "I06-built-ambient",
+      "expect": 1,
+      "rule": "I06",
+      "files": {},
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "built": {
+        "runtime/index.js": "import {reduce} from '../kernel/index.js'; export function createKernel(ports){return {reduce,run:()=>process.env};}\n"
+      }
+    },
+    {
+      "name": "I07-non-json-result",
+      "expect": 1,
+      "rule": "I07",
+      "files": {
+        "kernel/index.ts": "let serial=0; export function reduce(){return new Map([['count',serial++]]);}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I07-input-mutation",
+      "expect": 1,
+      "rule": "I07",
+      "files": {
+        "kernel/index.ts": "export function reduce(state:{count:number},event:{value:number}){state.count+=event.value;return state;}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I08-if-default",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; export function createKernel(ports:Ports){if(!ports.HostPort)ports.HostPort={execute(){return 1;}};return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-nested-module-capture",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; let shared; export function createKernel(ports:Ports){shared={host:ports.HostPort};return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-closure-module-capture",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; let shared; export function createKernel(ports:Ports){shared=()=>ports.HostPort.execute({});return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-parameter-default",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; export function createKernel(ports:Ports={} as Ports){return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I04-cross-function-unexecuted-blind",
+      "expect": 0,
+      "blind": [
+        "I04"
+      ],
+      "files": {
+        "protocol/index.ts": "function hidden(){return (Math as any)['ran'+'dom']();}\nfunction deferred(){return hidden;}\nexport const callbacks=[0].map(deferred);\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-shorthand-global",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "export function read(){return {fetch};}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I04-unused-clock-binding",
+      "expect": 1,
+      "rule": "I04",
+      "files": {
+        "protocol/index.ts": "const {now:clock}=Date; export const value=1;\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I03-commonjs-export",
+      "expect": 1,
+      "rule": "I03",
+      "files": {
+        "protocol/index.ts": "export = {value:1};\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "I08-implicit-singleton",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; declare const backend:{execute():number}; export function createKernel(ports:Ports){return {run:()=>backend.execute()};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-helper-default",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; function choose(value:unknown){return value ?? {execute(){return 1;}};} export function createKernel(ports:Ports){return {host:choose(ports.HostPort)};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I08-helper-capture",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "runtime/index.ts": "import type {Ports} from '../protocol/index.js'; let shared; function save(value:unknown){shared=value;} export function createKernel(ports:Ports){save(ports.HostPort);return {};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "I04-shadow-shorthand",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "export function read(fetch:()=>number){return {fetch};}\n"
+      },
+      "roots": [
+        "protocol"
+      ]
+    },
+    {
+      "name": "pure-json-resource",
+      "expect": 0,
+      "files": {
+        "protocol/index.ts": "import schema from './schema.json' with {type:'json'}; export {schema};\n",
+        "protocol/schema.json": "{\"version\":1,\"fields\":[\"id\"]}\n"
+      },
+      "roots": [
+        "protocol"
+      ],
+      "built": {}
+    },
+    {
+      "name": "I08-implements-backend",
+      "expect": 1,
+      "rule": "I08",
+      "files": {
+        "protocol/index.ts": "export interface HostPort{execute(value:unknown):unknown;}\nexport interface Ports{HostPort:HostPort;}\n",
+        "runtime/index.ts": "import type {Ports,HostPort} from '../protocol/index.js'; class LocalBackend implements HostPort{execute(value:unknown){return value;}} export function createKernel(ports:Ports){return {host:new LocalBackend()};}\n"
+      },
+      "roots": [
+        "protocol",
+        "runtime"
+      ]
+    },
+    {
+      "name": "allowed-realpath-edge",
+      "expect": 0,
+      "files": {
+        "runtime/index.ts": "import {reduce} from './linked/index.js'; import type {Ports} from '../protocol/index.js'; export function createKernel(ports:Ports){return {reduce,run:()=>ports.HostPort.execute({})};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "junction": {
+        "from": "runtime/linked",
+        "to": "kernel"
+      }
+    },
+    {
+      "name": "allowed-built-realpath-edge",
+      "expect": 0,
+      "files": {
+        "runtime/index.ts": "import {reduce} from './linked/index.js'; import type {Ports} from '../protocol/index.js'; export function createKernel(ports:Ports){return {reduce,run:()=>ports.HostPort.execute({})};}\n"
+      },
+      "roots": [
+        "protocol",
+        "kernel",
+        "runtime"
+      ],
+      "probes": {
+        "version": 1,
+        "cases": [
+          {
+            "module": "kernel",
+            "export": "reduce",
+            "args": [
+              {
+                "count": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "junction": {
+        "from": "runtime/linked",
+        "to": "kernel"
+      },
+      "built": {},
+      "builtJunction": {
+        "from": "runtime/linked",
+        "to": "kernel"
+      }
+    }
+  ]
+}

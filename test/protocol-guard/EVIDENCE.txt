@@ -1,0 +1,414 @@
+▶ core guard I01-I08: green baseline and red counterexamples
+  ✔ clean (1201.0423ms)
+  ✔ I01-direction (953.2677ms)
+  ✔ I01-barrel (970.478ms)
+  ✔ I02-builtin (928.5099ms)
+  ✔ I02-builtin-alias (899.9728ms)
+  ✔ I02-path-alias (1069.8865ms)
+  ✔ I03-dynamic (927.2097ms)
+  ✔ I03-require-alias (1038.3679ms)
+  ✔ I03-indirect-eval (1056.0434ms)
+  ✔ I03-Function (936.817ms)
+  ✔ I04-global-literal (830.9917ms)
+  ✔ I04-one-alias (820.6446ms)
+  ✔ I04-destructure (918.1035ms)
+  ✔ I04-shadow (951.0111ms)
+  ✔ I04-computed-unexecuted-blind (1008.6441ms)
+  ✔ I04-computed-probed (1196.6336ms)
+  ✔ I05-top-io (928.5474ms)
+  ✔ I05-static-block (956.7342ms)
+  ✔ I05-callback-blind-runtime-red (1251.9167ms)
+  ✔ I06-built-drift (1438.1359ms)
+  ✔ I06-built-clean (1626.5516ms)
+  ✔ I07-factory-spy (1119.9965ms)
+  ✔ I07-determinism (1157.0514ms)
+  ✔ I07-missing-probe (928.0413ms)
+  ✔ I08-fallback (886.7018ms)
+  ✔ I08-global-singleton (986.7996ms)
+  ✔ I08-destructured-default (858.1015ms)
+  ✔ I01-unresolved (820.8332ms)
+  ✔ I01-syntax (876.3207ms)
+  ✔ I01-empty (159.4035ms)
+  ✔ I01-junction (166.9839ms)
+  ✔ I06-inline-type-exports (1054.8623ms)
+  ✔ I06-built-export-drift (1001.2424ms)
+  ✔ I07-built-factory-spy (1193.5002ms)
+  ✔ I04-Date-call (676.4621ms)
+  ✔ I08-port-alias-fallback (666.9682ms)
+  ✔ I08-untyped-module-capture (706.6499ms)
+  ✔ I06-built-dynamic-import (1024.4863ms)
+  ✔ I08-assignment-fallback (681.3134ms)
+  ✔ I01-kernel-host-barrel (691.0965ms)
+  ✔ I01-type-only-edge (646.7593ms)
+  ✔ I01-import-type-expression (752.1527ms)
+  ✔ I02-node-child_process (646.9827ms)
+  ✔ I02-child_process (586.575ms)
+  ✔ I02-node-path (607.4258ms)
+  ✔ I02-node-crypto (591.4661ms)
+  ✔ I02-node-sqlite (684.8047ms)
+  ✔ I02-better-sqlite3 (621.0943ms)
+  ✔ I02-simple-git (668.1127ms)
+  ✔ I02-super-plumber (640.5153ms)
+  ✔ I02-example-host-sdk (654.0322ms)
+  ✔ I03-literal-dynamic (654.1596ms)
+  ✔ I03-createRequire-alias (603.1171ms)
+  ✔ I03-import-equals (636.2406ms)
+  ✔ I03-reflected-eval (564.6412ms)
+  ✔ I03-reflected-constructor (696.5758ms)
+  ✔ I06-built-require (878.3854ms)
+  ✔ I06-built-eval (894.7409ms)
+  ✔ I06-built-ambient (938.2785ms)
+  ✔ I07-non-json-result (830.4583ms)
+  ✔ I07-input-mutation (708.5648ms)
+  ✔ I08-if-default (646.593ms)
+  ✔ I08-nested-module-capture (569.7153ms)
+  ✔ I08-closure-module-capture (684.5988ms)
+  ✔ I08-parameter-default (589.5043ms)
+  ✔ I04-cross-function-unexecuted-blind (706.9813ms)
+  ✔ I04-shorthand-global (588.982ms)
+  ✔ I04-unused-clock-binding (631.4202ms)
+  ✔ I03-commonjs-export (788.7709ms)
+  ✔ I08-implicit-singleton (771.522ms)
+  ✔ I08-helper-default (608.5873ms)
+  ✔ I08-helper-capture (760.2833ms)
+  ✔ I04-shadow-shorthand (766.5711ms)
+  ✔ pure-json-resource (901.3738ms)
+  ✔ I08-implements-backend (624.7017ms)
+  ✔ allowed-realpath-edge (701.3911ms)
+  ✔ allowed-built-realpath-edge (1215.988ms)
+  ✔ argv rejects unknown flags (128.632ms)
+  ✔ missing declared root never passes (141.7194ms)
+  ✔ global compiler escape hatch is removed (128.0091ms)
+✔ core guard I01-I08: green baseline and red counterexamples (64518.7733ms)
+ℹ clean exit=0 passed
+ℹ clean stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":0}
+ℹ I01-direction exit=1 [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-direction\protocol\index.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-direction\runtime\index.ts
+ℹ I01-direction stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I01-barrel exit=1 [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-barrel\runtime\barrel.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-barrel\host\index.ts
+ℹ I01-barrel stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":4,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-builtin exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-builtin\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: node:fs
+ℹ I02-builtin stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-builtin-alias exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-builtin-alias\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: fs
+ℹ I02-builtin-alias stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-path-alias exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-path-alias\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: @hidden/index.js
+ℹ I02-path-alias stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-dynamic exit=1 [I03/DYNAMIC_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-dynamic\protocol\index.ts: dynamic import forbidden, including literal targets
+ℹ I03-dynamic stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-require-alias exit=1 [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-require-alias\protocol\index.ts: code-loading alias/reference forbidden: require | [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-require-alias\protocol\index.ts: code-loading alias/reference forbidden: require
+ℹ I03-require-alias stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I03-indirect-eval exit=1 [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-indirect-eval\protocol\index.ts: code-loading alias/reference forbidden: eval | [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-indirect-eval\protocol\index.ts: code-loading alias/reference forbidden: eval
+ℹ I03-indirect-eval stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I03-Function exit=1 [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-function\protocol\index.ts: code-loading alias/reference forbidden: Function
+ℹ I03-Function stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I04-global-literal exit=1 [I04/AMBIENT_MEMBER] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-global-literal\protocol\index.ts: ambient member/one-layer alias forbidden: globalThis.fetch | [I04/AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-global-literal\protocol\index.ts: ambient reference forbidden: globalThis
+ℹ I04-global-literal stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I04-one-alias exit=1 [I04/AMBIENT_MEMBER] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-one-alias\protocol\index.ts: ambient member/one-layer alias forbidden: Date.now | [I04/AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-one-alias\protocol\index.ts: ambient reference forbidden: Date.now
+ℹ I04-one-alias stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I04-destructure exit=1 [I04/AMBIENT_BINDING] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-destructure\protocol\index.ts: destructuring captures ambient capability: Date.now | [I04/AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-destructure\protocol\index.ts: ambient reference forbidden: Date.now
+ℹ I04-destructure stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I04-shadow exit=0 passed
+ℹ I04-shadow stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ I04-computed-unexecuted-blind exit=0 passed
+ℹ I04-computed-unexecuted-blind stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ I04-computed-probed exit=1 [I07/PROBE_EXECUTION] <probe>: ambient call Math.random | [I07/OBSERVABLE_CALL] <probe>: Math.random
+ℹ I04-computed-probed stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":1}
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"PROBE_EXECUTION","message":"ambient call Math.random"},{"rule":"I07","code":"OBSERVABLE_CALL","message":"Math.random"}],"importEntries":1,"factories":0,"deterministicCases":0,"calls":["Math.random"]},"violations":2}
+ℹ I05-top-io exit=1 [I05/TOP_CALL_UNPROVEN] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i05-top-io\protocol\index.ts: top-level/static call is not a recognized pure initializer: store.read | [I08/UNINJECTED_GLOBAL] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i05-top-io\protocol\index.ts: external capability must come from a lexical port parameter: store
+ℹ I05-top-io stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I05-static-block exit=1 [I05/TOP_CALL_UNPROVEN] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i05-static-block\protocol\index.ts: top-level/static call is not a recognized pure initializer: store.read | [I08/UNINJECTED_GLOBAL] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i05-static-block\protocol\index.ts: external capability must come from a lexical port parameter: store
+ℹ I05-static-block stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I05-callback-blind-runtime-red exit=1 [I07/PROBE_EXECUTION] <probe>: ambient call Math.random | [I07/OBSERVABLE_CALL] <probe>: Math.random
+ℹ I05-callback-blind-runtime-red stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":1}
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"PROBE_EXECUTION","message":"ambient call Math.random"},{"rule":"I07","code":"OBSERVABLE_CALL","message":"Math.random"}],"importEntries":1,"factories":0,"deterministicCases":0,"calls":["Math.random"]},"violations":2}
+ℹ I06-built-drift exit=1 [I06/EMIT_UNRESOLVED] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-drift\built\runtime\index.js: unresolved emitted import: ../../index.js | [I06/CLOSURE_DRIFT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-drift\built\runtime\index.js: supplied build differs from source runtime-edge projection | [I06/EXPORT_DRIFT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-drift\built\runtime\index.js: supplied build changes the emitted public export surface
+ℹ I06-built-drift stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":3}
+ℹ I06-built-clean exit=0 passed
+ℹ I06-built-clean stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":0}
+ℹ I07-factory-spy exit=1 [I07/OBSERVABLE_CALL] <probe>: ports.Clock.now
+ℹ I07-factory-spy stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":1}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"OBSERVABLE_CALL","message":"ports.Clock.now"}],"importEntries":3,"factories":1,"deterministicCases":1,"calls":["ports.Clock.now"]},"violations":1}
+ℹ I07-determinism exit=1 [I07/NON_DETERMINISTIC] <probe>: reduce differs for repeated identical data
+ℹ I07-determinism stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"NON_DETERMINISTIC","message":"reduce differs for repeated identical data"}],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":1}
+ℹ I07-missing-probe exit=1 [I07/PROBE_REQUIRED] <probe>: explicit deterministic input required for kernel.reduce
+ℹ I07-missing-probe stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"PROBE_REQUIRED","message":"explicit deterministic input required for kernel.reduce"}],"importEntries":3,"factories":1,"deterministicCases":0,"calls":[]},"violations":1}
+ℹ I08-fallback exit=1 [I08/PORT_FALLBACK] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-fallback\runtime\index.ts: injected capability cannot fall back to a default backend
+ℹ I08-fallback stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-global-singleton exit=1 [I08/PORT_SINGLETON] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-global-singleton\runtime\index.ts: module-scoped port/backend storage forbidden | [I08/PORT_REPLACEMENT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-global-singleton\runtime\index.ts: core cannot replace an injected capability or its alias | [I08/PORT_CAPTURE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-global-singleton\runtime\index.ts: injected port escapes into module-scoped storage
+ℹ I08-global-singleton stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":3}
+ℹ I08-destructured-default exit=1 [I08/PORT_DESTRUCTURING_DEFAULT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-destructured-default\runtime\index.ts: injected destructured capability has a default backend
+ℹ I08-destructured-default stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I01-unresolved exit=1 [I01/UNRESOLVED_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-unresolved\protocol\index.ts: cannot resolve ./missing.js
+ℹ I01-unresolved stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I01-syntax exit=1 [I01/PARSE_ERROR] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-syntax\protocol\index.ts: Expression expected. | [I08/UNINJECTED_GLOBAL] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-syntax\protocol\index.ts: external capability must come from a lexical port parameter: 
+ℹ I01-syntax stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I01-empty exit=1 [I01/ENTRY_REQUIRED] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-empty\protocol: exactly one index.ts|mts|js|mjs is required; missing/ambiguous roots cannot pass
+ℹ I01-empty stdout:
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":0,"stage":"roots","violations":1}
+ℹ I01-junction exit=1 [I01/REALPATH_ESCAPE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-junction\protocol\escape: symlink/junction has a forbidden real module target
+ℹ I01-junction stdout:
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"roots","violations":1}
+ℹ I06-inline-type-exports exit=0 passed
+ℹ I06-inline-type-exports stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ I06-built-export-drift exit=1 [I06/EXPORT_DRIFT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-export-drift\built\protocol\index.js: supplied build changes the emitted public export surface
+ℹ I06-built-export-drift stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":1}
+ℹ I07-built-factory-spy exit=1 [I07/OBSERVABLE_CALL] <probe>: ports.Clock.now
+ℹ I07-built-factory-spy stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":1}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"OBSERVABLE_CALL","message":"ports.Clock.now"}],"importEntries":3,"factories":1,"deterministicCases":1,"calls":["ports.Clock.now"]},"violations":1}
+ℹ I04-Date-call exit=1 [I04/AMBIENT_DATE_CALL] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-date-call\protocol\index.ts: Date() reads ambient time
+ℹ I04-Date-call stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-port-alias-fallback exit=1 [I08/PORT_FALLBACK] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-port-alias-fallback\runtime\index.ts: injected capability cannot fall back to a default backend
+ℹ I08-port-alias-fallback stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-untyped-module-capture exit=1 [I08/PORT_CAPTURE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-untyped-module-capture\runtime\index.ts: injected port escapes into module-scoped storage
+ℹ I08-untyped-module-capture stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I06-built-dynamic-import exit=1 [I06/BUILD_I03_DYNAMIC_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-dynamic-import\built\runtime\index.js: dynamic import forbidden, including literal targets
+ℹ I06-built-dynamic-import stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":1}
+ℹ I08-assignment-fallback exit=1 [I08/PORT_FALLBACK] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-assignment-fallback\runtime\index.ts: injected capability cannot fall back to a default backend
+ℹ I08-assignment-fallback stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I01-kernel-host-barrel exit=1 [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-kernel-host-barrel\kernel\barrel.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-kernel-host-barrel\host\pi\index.ts
+ℹ I01-kernel-host-barrel stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I01-type-only-edge exit=1 [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-type-only-edge\protocol\index.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-type-only-edge\runtime\index.ts | [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-type-only-edge\runtime\index.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-type-only-edge\kernel\index.ts
+ℹ I01-type-only-edge stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I01-import-type-expression exit=1 [I01/FORBIDDEN_EDGE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-import-type-expression\protocol\index.ts: disallowed real import target: c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i01-import-type-expression\host\index.ts
+ℹ I01-import-type-expression stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-node-child_process exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-node-child_process\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: node:child_process
+ℹ I02-node-child_process stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-child_process exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-child_process\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: child_process
+ℹ I02-child_process stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-node-path exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-node-path\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: node:path
+ℹ I02-node-path stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-node-crypto exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-node-crypto\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: node:crypto
+ℹ I02-node-crypto stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-node-sqlite exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-node-sqlite\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: node:sqlite
+ℹ I02-node-sqlite stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-better-sqlite3 exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-better-sqlite3\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: better-sqlite3
+ℹ I02-better-sqlite3 stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-simple-git exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-simple-git\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: simple-git
+ℹ I02-simple-git stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-super-plumber exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-super-plumber\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: super-plumber
+ℹ I02-super-plumber stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I02-example-host-sdk exit=1 [I02/NON_RELATIVE_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i02-example-host-sdk\protocol\index.ts: bare/builtin/alias/absolute specifier forbidden: @example/host-sdk
+ℹ I02-example-host-sdk stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-literal-dynamic exit=1 [I03/DYNAMIC_IMPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-literal-dynamic\protocol\index.ts: dynamic import forbidden, including literal targets
+ℹ I03-literal-dynamic stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-createRequire-alias exit=1 [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-createrequire-alias\protocol\index.ts: code-loading alias/reference forbidden: createRequire | [I03/CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-createrequire-alias\protocol\index.ts: code-loading alias/reference forbidden: createRequire
+ℹ I03-createRequire-alias stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":2}
+ℹ I03-import-equals exit=1 [I03/IMPORT_EQUALS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-import-equals\protocol\index.ts: CommonJS import-equals forbidden
+ℹ I03-import-equals stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-reflected-eval exit=1 [I03/CODE_MEMBER] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-reflected-eval\protocol\index.ts: code-loading member/alias forbidden: globalThis.eval | [I04/AMBIENT_MEMBER] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-reflected-eval\protocol\index.ts: ambient member/one-layer alias forbidden: globalThis.eval | [I04/AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-reflected-eval\protocol\index.ts: ambient reference forbidden: globalThis
+ℹ I03-reflected-eval stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":3}
+ℹ I03-reflected-constructor exit=1 [I03/REFLECTED_CONSTRUCTOR] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-reflected-constructor\protocol\index.ts: function-constructor reflection cannot load code in core
+ℹ I03-reflected-constructor stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I06-built-require exit=1 [I06/BUILD_I03_CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-require\built\runtime\index.js: code-loading alias/reference forbidden: require
+ℹ I06-built-require stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":1}
+ℹ I06-built-eval exit=1 [I06/BUILD_I03_CODE_ALIAS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-eval\built\runtime\index.js: code-loading alias/reference forbidden: eval
+ℹ I06-built-eval stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":1}
+ℹ I06-built-ambient exit=1 [I06/BUILD_I04_AMBIENT_MEMBER] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-ambient\built\runtime\index.js: ambient member/one-layer alias forbidden: process.env | [I06/BUILD_I04_AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i06-built-ambient\built\runtime\index.js: ambient reference forbidden: process
+ℹ I06-built-ambient stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"static/emit","compiler":"6.0.3","violations":2}
+ℹ I07-non-json-result exit=1 [I07/PROBE_EXECUTION] <probe>: probe result must be a plain JSON object, not Map/Set/class
+ℹ I07-non-json-result stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"PROBE_EXECUTION","message":"probe result must be a plain JSON object, not Map/Set/class"}],"importEntries":3,"factories":1,"deterministicCases":0,"calls":[]},"violations":1}
+ℹ I07-input-mutation exit=1 [I07/INPUT_MUTATION] <probe>: reduce mutates supplied data | [I07/INPUT_MUTATION] <probe>: reduce mutates supplied data
+ℹ I07-input-mutation stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"failed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[{"rule":"I07","code":"INPUT_MUTATION","message":"reduce mutates supplied data"},{"rule":"I07","code":"INPUT_MUTATION","message":"reduce mutates supplied data"}],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":2}
+ℹ I08-if-default exit=1 [I08/PORT_REPLACEMENT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-if-default\runtime\index.ts: core cannot replace an injected capability or its alias
+ℹ I08-if-default stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-nested-module-capture exit=1 [I08/PORT_CAPTURE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-nested-module-capture\runtime\index.ts: injected port escapes into module-scoped storage
+ℹ I08-nested-module-capture stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-closure-module-capture exit=1 [I08/PORT_CAPTURE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-closure-module-capture\runtime\index.ts: injected port escapes into module-scoped storage
+ℹ I08-closure-module-capture stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-parameter-default exit=1 [I08/PORT_PARAMETER_DEFAULT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-parameter-default\runtime\index.ts: injected ports have no default backend
+ℹ I08-parameter-default stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I04-cross-function-unexecuted-blind exit=0 passed
+ℹ I04-cross-function-unexecuted-blind stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ I04-shorthand-global exit=1 [I04/AMBIENT_READ] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-shorthand-global\protocol\index.ts: ambient reference forbidden: fetch
+ℹ I04-shorthand-global stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I04-unused-clock-binding exit=1 [I04/AMBIENT_BINDING] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i04-unused-clock-binding\protocol\index.ts: destructuring captures ambient capability: Date.now
+ℹ I04-unused-clock-binding stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I03-commonjs-export exit=1 [I03/COMMONJS_EXPORT] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i03-commonjs-export\protocol\index.ts: core requires ESM, not export-equals
+ℹ I03-commonjs-export stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-implicit-singleton exit=1 [I08/UNINJECTED_GLOBAL] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-implicit-singleton\runtime\index.ts: external capability must come from a lexical port parameter: backend
+ℹ I08-implicit-singleton stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-helper-default exit=1 [I08/PORT_FALLBACK] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-helper-default\runtime\index.ts: injected capability cannot fall back to a default backend
+ℹ I08-helper-default stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I08-helper-capture exit=1 [I08/PORT_CAPTURE] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-helper-capture\runtime\index.ts: injected port escapes into module-scoped storage
+ℹ I08-helper-capture stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ I04-shadow-shorthand exit=0 passed
+ℹ I04-shadow-shorthand stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":1,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ pure-json-resource exit=0 passed
+ℹ pure-json-resource stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":1,"factories":0,"deterministicCases":0,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":1,"factories":0,"deterministicCases":0,"calls":[]},"violations":0}
+ℹ I08-implements-backend exit=1 [I08/CORE_BACKEND_CLASS] c:\users\calvin-xia\.codex\worktrees\72a4\evofence\test\protocol-guard\.work\run-ggcwtg\i08-implements-backend\runtime\index.ts: concrete port implementation belongs outside core
+ℹ I08-implements-backend stdout:
+parser: typescript6 6.0.3 (project dependency)
+{"status":"failed","modules":["protocol","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":2,"stage":"source","compiler":"6.0.3","violations":1}
+ℹ allowed-realpath-edge exit=0 passed
+ℹ allowed-realpath-edge stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-in-memory-ESM-emit","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":0}
+ℹ allowed-built-realpath-edge exit=0 passed
+ℹ allowed-built-realpath-edge stdout:
+parser: typescript6 6.0.3 (project dependency)
+I07 evidence: {"imports":3,"factories":1,"deterministicCases":1,"portOrAmbientCalls":0}
+{"status":"passed","modules":["protocol","kernel","runtime"],"rules":["I01","I02","I03","I04","I05","I06","I07","I08"],"coverage":{"I04":"static-best-effort","I05":"static-best-effort","I06":"source-and-supplied-build","I07":"import/factory/explicit-input-cases","I08":"lexical-port-flow-and-defaults"},"files":3,"stage":"complete","compiler":"6.0.3","probe":{"violations":[],"importEntries":3,"factories":1,"deterministicCases":1,"calls":[]},"violations":0}
+ℹ tests 81
+ℹ suites 0
+ℹ pass 81
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65095.0208
