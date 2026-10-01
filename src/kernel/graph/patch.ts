@@ -4,9 +4,9 @@
  * A `GraphPatch` is committed whole or not at all: revision CAS, active-node protection, the eleven
  * atomic checks, and the abandonment rules all run before a new revision is published. The two
  * protected things are exactly the DoD: inputs of a `leased`/`running`/`verifying`/`unknown`/
- * `cancelling` node cannot change in place (change the node, or rebind its `data` edge, and the
- * transaction is refused), and a branch can only leave by being abandoned — with a reason — never by
- * deleting its evidence.
+ * `cancelling` node cannot change in place (change the node, or rebind, drop or retype its `data`
+ * edge, and the transaction is refused), and a branch can only leave by being abandoned — with a
+ * reason — never by deleting its evidence.
  *
  * `typedEdges` is the revision's **complete** edge set (the frozen field is "显式完整新边集"), so a
  * patch that omits an edge removes it; there is no implicit carry-over.
@@ -151,6 +151,14 @@ export function applyGraphPatch(current: CompiledGraph, patch: GraphPatch, conte
   for (const nodeId of [...patch.changes.map((node) => node.nodeId), ...patch.removals]) {
     if (locked.has(nodeId)) {
       return refuse('EFK_GRAPH_ACTIVE_NODE_MUTATION', `node ${nodeId} is mid-flight and cannot be changed in place`);
+    }
+  }
+  const nextEdges = new Map(patch.typedEdges.map((edge) => [edge.edgeId, edge]));
+  for (const previous of current.edges) {
+    if (previous.type !== 'data' || !locked.has(previous.to)) continue;
+    const next = nextEdges.get(previous.edgeId);
+    if (next === undefined || next.type !== 'data' || next.to !== previous.to || edgeBindingChanged(next, previous)) {
+      return refuse('EFK_GRAPH_ACTIVE_NODE_MUTATION', `data input of mid-flight node ${previous.to} cannot change in place`);
     }
   }
   for (const edge of patch.typedEdges) {

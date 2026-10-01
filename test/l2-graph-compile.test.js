@@ -50,7 +50,9 @@ test('example 2 is accepted by validateGraph with no issue (negative control for
 test('check 1 — an unsupported namespace is refused by the codec before anything else', () => {
   const spec = fx.singleAgentSpec();
   spec.protocol = { namespace: 'evofence.runtime/2', schemaVersion: '1.1.0' };
-  assert.equal(refusal(compileGraph(spec)), 'EFK_SCHEMA_INVALID');
+  // The codec's envelope gate owns the namespace/schemaVersion pair (`L2-PROTOCOL-NOTES.md` §4.2):
+  // a value mismatch is `EFK_PROTOCOL_UNSUPPORTED`, a missing/misshaped field is `EFK_SCHEMA_INVALID`.
+  assert.equal(refusal(compileGraph(spec)), 'EFK_PROTOCOL_UNSUPPORTED');
 });
 
 test('check 1 — a missing required field is refused', () => {

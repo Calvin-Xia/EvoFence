@@ -181,6 +181,39 @@ test('example 4 path C — rebinding a mid-flight consumer is refused', () => {
   assert.equal(refusal(result), 'EFK_GRAPH_ACTIVE_NODE_MUTATION');
 });
 
+test('mid-flight input protection — dropping a data edge by omission is refused, and commits once ready', () => {
+  const graph = graphOf(fx.dataSpec({ bound: 'e' }));
+  // `typedEdges` is the complete new set, so omitting `e-g-c` would silently drop nC's input.
+  const dropped = fx.patch(graph.graphId, { typedEdges: [] });
+  const refused = applyGraphPatch(graph, dropped, {
+    authority: AUTHORITY,
+    activeNodes: [{ nodeId: 'nC', state: 'running' }],
+  });
+  assert.equal(refusal(refused), 'EFK_GRAPH_ACTIVE_NODE_MUTATION');
+  // The discriminating commit: the same edge movement is legal once nC is not mid-flight.
+  const retyped = fx.edge('e-g-c', 'dependency', 'nG', 'nC');
+  const ready = applyGraphPatch(graph, fx.patch(graph.graphId, { typedEdges: [retyped] }), {
+    authority: AUTHORITY,
+    activeNodes: [{ nodeId: 'nC', state: 'ready' }],
+  });
+  assert.deepEqual(committed(ready).diff.changedEdges, ['e-g-c']);
+});
+
+test('mid-flight input protection — retyping, retargeting or replacing a data edge is refused', () => {
+  const graph = graphOf(fx.dataSpec({ bound: 'e' }));
+  const retyped = fx.edge('e-g-c', 'dependency', 'nG', 'nC');
+  const retargeted = fx.edge('e-g-c', 'data', 'nG', 'nG');
+  // Replacing the bound edge with a new, unbound edge id would leave nC's locked input unbacked.
+  const replaced = [fx.edge('e-g-c-new', 'data', 'nG', 'nC')];
+  for (const edges of [[retyped], [retargeted], replaced]) {
+    const result = applyGraphPatch(graph, fx.patch(graph.graphId, { typedEdges: edges }), {
+      authority: AUTHORITY,
+      activeNodes: [{ nodeId: 'nC', state: 'verifying' }],
+    });
+    assert.equal(refusal(result), 'EFK_GRAPH_ACTIVE_NODE_MUTATION');
+  }
+});
+
 test('example 4 path B — an explicit rebind commits and shows up as a changed edge', () => {
   const graph = graphOf(fx.dataSpec({ bound: 'e' }));
   const rebound = fx.edge('e-g-c', 'data', 'nG', 'nC', { expect: fx.SCHEMA_REPORT, artifact: fx.artifact('a-report', '1', 'nG', 'g-data') });
