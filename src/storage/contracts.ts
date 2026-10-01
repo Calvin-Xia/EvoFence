@@ -11,6 +11,12 @@
  * referenced by `$ref` is widened by the `Wire` mapping, so the fields a consumer actually reads are
  * re-narrowed below. Nothing is re-declared: each narrowing points at the same frozen definition.
  *
+ * Boundary: the store consumes values that `src/protocol`'s codec has already decoded — every port
+ * signature takes `Decoded<K>`. The store does not re-decode them (the protocol layer documents
+ * that callers decode once and then trust the result); what it does verify at its own persistence
+ * boundary is identity, protocol version and journal continuity, not schema shape. Effect and
+ * receipt content is additionally version-gated against the session's pinned protocol.
+ *
  * Two store-internal concepts have no wire object on purpose (`SCHEMAS.md` §3): the dispatch claim
  * and the idempotency request index. Their whole lifetime is inside one `EventStore` CAS
  * transaction; only their ids cross a boundary.
@@ -107,10 +113,15 @@ export interface ReplayState {
 }
 
 export interface JournalProjection extends ReplayState {
-  /** Effects committed but not yet claimed for dispatch. Safe to send. */
+  /** Effects committed, unclaimed and dispatchable at the current epoch. Safe to send. */
   readonly pendingEffectIds: readonly string[];
   /** Effects claimed (or reported unknown) whose actual outcome must be reconciled, never resent. */
   readonly unknownEffectIds: readonly string[];
+  /**
+   * Effects intended at an earlier epoch. Their lease is stale, so they are not dispatchable until
+   * they are re-authorized under the current epoch; they are surfaced rather than silently dropped.
+   */
+  readonly staleEffectIds: readonly string[];
 }
 
 export interface OutboxEntryProjection {
@@ -199,6 +210,7 @@ export interface Recovery {
 }
 
 export interface SnapshotStore {
+  /** `save` stores a projection verbatim and version-gates it; `recover` is what checks it against the journal. */
   save(input: SnapshotInput): StoreResult<StoredSnapshot>;
   load(sessionId: string): StoreResult<StoredSnapshot | null>;
   recover(sessionId: string, events: readonly Event[]): StoreResult<Recovery>;

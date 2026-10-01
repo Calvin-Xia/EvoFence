@@ -283,6 +283,59 @@ test('cp1 a committed epoch change moves the session and gates writers from the 
   assert.equal(ok(store.replay(SESSION)).epoch, 2);
 });
 
+test('BLOCKER fix B2: a non-advancing epoch change is refused at commit, keeping the journal replayable', () => {
+  const store = openStore();
+  ok(append(store, { requestId: 'c1', expectedRevision: 0, events: [draft('session.paused', { eventId: 'p1' })] }));
+  // (a) an epoch change that does not advance the epoch
+  err(
+    append(store, { requestId: 'c2', expectedRevision: 1, epoch: 1, events: [draft('session.epoch-changed', { eventId: 'e1', epoch: 1 })] }),
+    'EFK_INVARIANT_VIOLATION',
+  );
+  // (a2) two epoch changes in one transaction
+  err(
+    append(store, {
+      requestId: 'c3',
+      expectedRevision: 1,
+      epoch: 2,
+      events: [draft('session.epoch-changed', { eventId: 'e2', epoch: 2 }), draft('session.epoch-changed', { eventId: 'e3', epoch: 2 })],
+    }),
+    'EFK_INVARIANT_VIOLATION',
+  );
+  // (f) an event carrying the new epoch before the epoch-change event
+  err(
+    append(store, {
+      requestId: 'c4',
+      expectedRevision: 1,
+      epoch: 2,
+      events: [
+        draft('node.transition', { eventId: 't1', epoch: 2, payload: payload({ binding: binding({ epoch: 2 }), before: 'pending', after: 'ready' }) }),
+        draft('session.epoch-changed', { eventId: 'e4', epoch: 2 }),
+      ],
+    }),
+    'EFK_INVARIANT_VIOLATION',
+  );
+  // none of the refused batches moved the journal, and what is committed still replays
+  assert.equal(ok(store.exportSession(SESSION)).revision, 1);
+  ok(store.replay(SESSION));
+  // control: a properly advancing epoch change is accepted and replays
+  ok(append(store, { requestId: 'c5', expectedRevision: 1, epoch: 2, events: [draft('session.epoch-changed', { eventId: 'e5', epoch: 2 })] }));
+  assert.equal(ok(store.replay(SESSION)).epoch, 2);
+});
+
+test('MINOR fix N1: effect content is version-gated against the pinned session protocol', () => {
+  const store = openStore();
+  err(
+    append(store, {
+      requestId: 'c1',
+      expectedRevision: 0,
+      events: [draft('effect.intended', { eventId: 'i1', payload: payload({ effectId: 'fx1' }) })],
+      effects: [effect('fx1', { protocol: { namespace: 'evofence.runtime/1', schemaVersion: '1.0.0' } })],
+    }),
+    'EFK_PROTOCOL_UNSUPPORTED',
+  );
+  assert.equal(ok(store.exportSession(SESSION)).events.length, 0);
+});
+
 test('negative control: the CAS guard is not a no-op (two writers at revision 0)', () => {
   const store = openStore();
   ok(append(store, { requestId: 'w1', expectedRevision: 0, events: [draft('session.paused', { eventId: 'p1' })] }));

@@ -22,6 +22,11 @@ function stateKey(nodeId: string, attemptOrdinal: number): string {
   return `${nodeId}#${attemptOrdinal}`;
 }
 
+/** The derived state of a session with no committed events yet. */
+export function emptyReplayState(sessionId: string, epoch: number): ReplayState {
+  return { sessionId, revision: 0, epoch, lastSequence: null, dispatchMode: 'active', nodeStates: [] };
+}
+
 function compareState(a: NodeStateEntry, b: NodeStateEntry): number {
   if (a.nodeId !== b.nodeId) return a.nodeId < b.nodeId ? -1 : 1;
   return a.attemptOrdinal - b.attemptOrdinal;

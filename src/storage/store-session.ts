@@ -15,7 +15,7 @@ import type { AppendOutcome, Effect, Event, EventDraft, ExportedSession, Protoco
 import { storeFail, storeOk } from './contracts.js';
 import { canonical, identityDigest, type DigestPort } from './identity.js';
 import { projectOutbox } from './outbox.js';
-import { replay } from './projection.js';
+import { emptyReplayState, replay } from './projection.js';
 
 export interface SessionRecord {
   readonly sessionId: string;
@@ -143,8 +143,8 @@ function planReceipts(
     additions.push(receipt);
   }
   for (const receiptId of referenced) {
-    if (!receipts.some((receipt) => receipt.receiptId === receiptId)) {
-      return storeFail('EFK_INVARIANT_VIOLATION', `receipt event references ${receiptId} but the content is not in this transaction`, [receiptId]);
+    if (!receipts.some((receipt) => receipt.receiptId === receiptId) && !session.receipts.has(receiptId)) {
+      return storeFail('EFK_INVARIANT_VIOLATION', `receipt event references ${receiptId}, which is neither in this transaction nor already committed`, [receiptId]);
     }
   }
   return storeOk(additions);
@@ -172,6 +172,16 @@ export function commitBatch(
       return storeFail('EFK_PROTOCOL_UNSUPPORTED', `event ${draft.eventId} uses ${draft.protocol.schemaVersion}, session is pinned to ${session.protocol.schemaVersion}`, [session.sessionId]);
     }
   }
+  for (const effect of effects) {
+    if (canonical(effect.protocol) !== canonical(session.protocol)) {
+      return storeFail('EFK_PROTOCOL_UNSUPPORTED', `effect ${effect.effectId} uses ${effect.protocol.schemaVersion}, session is pinned to ${session.protocol.schemaVersion}`, [effect.effectId]);
+    }
+  }
+  for (const receipt of receipts) {
+    if (canonical(receipt.protocol) !== canonical(session.protocol)) {
+      return storeFail('EFK_PROTOCOL_UNSUPPORTED', `receipt ${receipt.receiptId} uses ${receipt.protocol.schemaVersion}, session is pinned to ${session.protocol.schemaVersion}`, [receipt.receiptId]);
+    }
+  }
 
   const requestDigest = identityDigest(digest, { sessionId: session.sessionId, expectedRevision, epoch, drafts, effects, receipts });
   const previous = session.requestIndex.get(requestId);
@@ -186,7 +196,7 @@ export function commitBatch(
   }
 
   const epochChange = drafts.some((draft) => draft.type === 'session.epoch-changed');
-  if (epoch !== session.epoch && !(epochChange && epoch === session.epoch + 1)) {
+  if (!epochChange && epoch !== session.epoch) {
     return storeFail('EFK_REVISION_CONFLICT', `transaction epoch ${epoch} is not the current session epoch ${session.epoch}`, [session.sessionId]);
   }
   for (const draft of drafts) {
@@ -194,6 +204,12 @@ export function commitBatch(
       return storeFail('EFK_INVARIANT_VIOLATION', `event ${draft.eventId} carries epoch ${draft.epoch} outside transaction epoch ${epoch}`);
     }
   }
+
+  // Pre-simulate with the same reducer the read path uses: a batch is accepted only if the reducer
+  // would accept it, so an accepted journal can never be unreplayable (e.g. a non-advancing or
+  // duplicate session.epoch-changed, or a transition with no binding/after).
+  const produced = session.events.length === 0 ? storeOk(emptyReplayState(session.sessionId, session.epoch)) : replay(session.events);
+  if (!produced.ok) return produced;
 
   const batchIds = new Set<string>();
   const nextEvents: Event[] = [];
@@ -228,6 +244,8 @@ export function commitBatch(
   if (!plannedEffects.ok) return plannedEffects;
   const plannedReceipts = planReceipts(session, drafts, receipts);
   if (!plannedReceipts.ok) return plannedReceipts;
+  const simulated = replay(nextEvents, produced.value);
+  if (!simulated.ok) return simulated;
 
   for (const event of nextEvents) {
     session.events.push(event);

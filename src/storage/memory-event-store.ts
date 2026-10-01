@@ -7,9 +7,11 @@
  * reference (effects and receipts) and the request-identity index used to answer a repeated
  * submission with `duplicate` instead of a second commit.
  *
- * `nextEffects` returns only `intended` effects; once `effect.dispatched` is committed the effect is
- * `unknown` and `reconcileEffect` is the only way forward. That is the store-side meaning of "an
- * unknown external effect is reconciled, not resent".
+ * `nextEffects` returns only `intended` effects whose binding is still at the current epoch; once
+ * `effect.dispatched` is committed the effect is `unknown` and `reconcileEffect` is the only way
+ * forward. Effects intended at an earlier epoch surface as `staleEffectIds` instead of being handed
+ * out as sendable. That is the store-side meaning of "an unknown external effect is reconciled, not
+ * resent".
  */
 import { decodeProtocolVersion, gateRuntimeVersion } from '../protocol/index.js';
 import type {
@@ -95,7 +97,10 @@ export function createMemoryEventStore(options: { readonly digest: DigestPort })
     if (entry.state !== 'dispatched' && entry.state !== 'unknown') {
       return storeFail('EFK_CLAIM_CONFLICT', `effect ${receipt.effectId} is ${entry.state}; a receipt requires a dispatched effect`, [receipt.effectId]);
     }
-    const stale = receipt.binding.epoch !== input.epoch || receipt.binding.epoch !== effect.binding.epoch;
+    const stale = receipt.binding.epoch !== input.epoch || canonical(receipt.binding) !== canonical(effect.binding);
+    if (receipt.status !== 'unknown' && receipt.observability.length === 0) {
+      return storeFail('EFK_EFFECT_UNKNOWN', `receipt ${receipt.receiptId} claims ${receipt.status} for effect ${receipt.effectId} without observability`, [receipt.effectId]);
+    }
     const draft: EventDraft = {
       protocol: session.protocol,
       eventId: receipt.receiptId,
@@ -202,14 +207,22 @@ export function createMemoryEventStore(options: { readonly digest: DigestPort })
     replay(sessionId: string): StoreResult<JournalProjection> {
       const found = requireSession(sessionId);
       if (!found.ok) return found;
-      const state = replay(found.value.events);
+      const session = found.value;
+      const state = replay(session.events);
       if (!state.ok) return state;
-      const projection = project(found.value);
+      const projection = project(session);
       if (!projection.ok) return projection;
+      const pendingEffectIds: string[] = [];
+      const staleEffectIds: string[] = [];
+      for (const effectId of intendedIds(projection.value)) {
+        const effect = session.effects.get(effectId) as Effect;
+        (effect.binding.epoch === state.value.epoch ? pendingEffectIds : staleEffectIds).push(effectId);
+      }
       return storeOk({
         ...state.value,
-        pendingEffectIds: intendedIds(projection.value),
+        pendingEffectIds,
         unknownEffectIds: reconcileIds(projection.value),
+        staleEffectIds,
       });
     },
 
@@ -222,9 +235,15 @@ export function createMemoryEventStore(options: { readonly digest: DigestPort })
     nextEffects(sessionId: string): StoreResult<readonly Effect[]> {
       const found = requireSession(sessionId);
       if (!found.ok) return found;
-      const projection = project(found.value);
+      const session = found.value;
+      const projection = project(session);
       if (!projection.ok) return projection;
-      return storeOk(intendedIds(projection.value).map((effectId) => found.value.effects.get(effectId) as Effect));
+      const effects: Effect[] = [];
+      for (const effectId of intendedIds(projection.value)) {
+        const effect = session.effects.get(effectId) as Effect;
+        if (effect.binding.epoch === session.epoch) effects.push(effect);
+      }
+      return storeOk(effects);
     },
 
     dispatchEffect(sessionId: string, input: DispatchInput): StoreResult<AppendOutcome> {

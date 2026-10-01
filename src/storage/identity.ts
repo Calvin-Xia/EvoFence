@@ -19,11 +19,12 @@ export interface DigestPort {
 export function canonical(value: unknown): string {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
-  if (typeof value === 'number') return Object.is(value, -0) ? '0' : (JSON.stringify(value) ?? 'null');
+  if (typeof value === 'number') return String(value);
   if (Array.isArray(value)) return `[${value.map((item) => canonical(item)).join(',')}]`;
   if (typeof value === 'object') {
     const record = value as Record<string, unknown>;
     const fields = Object.keys(record)
+      .filter((key) => record[key] !== undefined)
       .sort()
       .map((key) => `${JSON.stringify(key)}:${canonical(record[key])}`);
     return `{${fields.join(',')}}`;

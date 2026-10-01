@@ -148,6 +148,22 @@ function transitionSession() {
   return store;
 }
 
+/** An intent committed and then dispatched at epoch 1; the store sits at revision 2. */
+function dispatchedSession() {
+  const store = createMemoryEventStore({ digest: digestPort });
+  ok(store.createSession({ sessionId: SESSION, epoch: 1, protocol: PROTOCOL }));
+  ok(
+    append(store, {
+      requestId: 'c1',
+      expectedRevision: 0,
+      events: [draft('effect.intended', { eventId: 'i1', payload: payload({ effectId: 'fx1' }) })],
+      effects: [effect('fx1')],
+    }),
+  );
+  ok(store.dispatchEffect(SESSION, { expectedRevision: 1, epoch: 1, effectId: 'fx1', claimId: 'claim-1' }));
+  return store;
+}
+
 test('cp3 replay rebuilds node state and dispatch mode from the journal only', () => {
   const store = transitionSession();
   ok(append(store, { requestId: 'c3', expectedRevision: 2, events: [draft('session.paused', { eventId: 'p1' })] }));
@@ -384,4 +400,91 @@ test('negative control: replay has no execution side effect on the outbox', () =
   ok(store.replay(SESSION));
   ok(store.replay(SESSION));
   assert.deepEqual(ok(store.nextEffects(SESSION)).map((candidate) => candidate.effectId), ['fx1'], 'replay must not consume or dispatch the intention');
+});
+
+test('BLOCKER fix B1: a receipt bound to a different attempt is archived, never applied', () => {
+  const store = dispatchedSession();
+  const foreign = receipt('r0', 'fx1', 'completed', {
+    binding: binding({ nodeId: 'other-node', attemptId: 'other-attempt', attemptOrdinal: 9 }),
+    observability: ['native-ack'],
+  });
+  const archived = ok(store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: foreign, objectRef: receiptRef('r0') }));
+  assert.equal(archived.disposition, 'archived', 'a same-epoch but foreign-attempt receipt must not settle the effect');
+  assert.equal(ok(store.outbox(SESSION)).entries[0].state, 'dispatched');
+  assert.deepEqual(ok(store.replay(SESSION)).unknownEffectIds, ['fx1']);
+});
+
+test('BLOCKER fix B1: a receipt bound to a different base or host session is archived too', () => {
+  const store = dispatchedSession();
+  const otherBase = receipt('r0', 'fx1', 'completed', {
+    binding: binding({ baseDigest: digestPort.digest('other-base') }),
+    observability: ['native-ack'],
+  });
+  assert.equal(
+    ok(store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: otherBase, objectRef: receiptRef('r0') })).disposition,
+    'archived',
+  );
+  const otherHost = receipt('r1', 'fx1', 'completed', {
+    binding: binding({ hostSessionId: 'host-elsewhere' }),
+    observability: ['native-ack'],
+  });
+  assert.equal(
+    ok(store.applyReceipt(SESSION, { expectedRevision: 3, epoch: 1, receipt: otherHost, objectRef: receiptRef('r1') })).disposition,
+    'archived',
+  );
+});
+
+test('MAJOR fix M1: an old-epoch intention is stale, never advertised as sendable', () => {
+  const store = createMemoryEventStore({ digest: digestPort });
+  ok(store.createSession({ sessionId: SESSION, epoch: 1, protocol: PROTOCOL }));
+  ok(
+    append(store, {
+      requestId: 'c1',
+      expectedRevision: 0,
+      events: [draft('effect.intended', { eventId: 'i1', payload: payload({ effectId: 'fx1' }) })],
+      effects: [effect('fx1')],
+    }),
+  );
+  ok(append(store, { requestId: 'c2', expectedRevision: 1, epoch: 2, events: [draft('session.epoch-changed', { eventId: 'e1', epoch: 2 })] }));
+  assert.deepEqual(ok(store.nextEffects(SESSION)), [], 'an effect the current epoch cannot dispatch must not be advertised');
+  const projection = ok(store.replay(SESSION));
+  assert.deepEqual(projection.pendingEffectIds, []);
+  assert.deepEqual(projection.staleEffectIds, ['fx1']);
+  err(store.dispatchEffect(SESSION, { expectedRevision: 2, epoch: 2, effectId: 'fx1', claimId: 'claim-1' }), 'EFK_LEASE_STALE');
+});
+
+test('MAJOR fix M2: applyReceipt shares reconcileEffect evidence floor', () => {
+  const store = dispatchedSession();
+  err(
+    store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: receipt('r0', 'fx1', 'completed'), objectRef: receiptRef('r0') }),
+    'EFK_EFFECT_UNKNOWN',
+    'a definitive status without observability must not settle the effect',
+  );
+  assert.deepEqual(ok(store.replay(SESSION)).unknownEffectIds, ['fx1']);
+  // a receipt that itself reports unknown is credible evidence of uncertainty and is recorded
+  const recorded = ok(store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: receipt('r1', 'fx1', 'unknown'), objectRef: receiptRef('r1') }));
+  assert.equal(recorded.disposition, 'applied');
+  assert.deepEqual(ok(store.replay(SESSION)).unknownEffectIds, ['fx1']);
+});
+
+test('MINOR fix N2: an already-committed receipt can be referenced without re-supplying it', () => {
+  const store = dispatchedSession();
+  ok(store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: receipt('r0', 'fx1', 'completed', { observability: ['a'] }), objectRef: receiptRef('r0') }));
+  const referenced = ok(
+    append(store, {
+      requestId: 'c2',
+      expectedRevision: 3,
+      events: [draft('receipt.applied', { eventId: 'manual-r0', payload: payload({ effectId: 'fx1', objectRef: receiptRef('r0') }) })],
+    }),
+  );
+  assert.equal(referenced.disposition, 'committed');
+});
+
+test('MINOR fix N1: receipt content is version-gated against the pinned session protocol', () => {
+  const store = dispatchedSession();
+  const foreign = receipt('r0', 'fx1', 'completed', {
+    protocol: { namespace: 'evofence.runtime/1', schemaVersion: '1.0.0' },
+    observability: ['native-ack'],
+  });
+  err(store.applyReceipt(SESSION, { expectedRevision: 2, epoch: 1, receipt: foreign, objectRef: receiptRef('r0') }), 'EFK_PROTOCOL_UNSUPPORTED');
 });
