@@ -28,3 +28,4 @@
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
 | task · passed | l3_context_router | 节点上下文与反馈路由 | 2026-10-01T17:58:33.111Z |
 | task · passed | l3_task_evaluation | 任务完成的唯一裁决入口 | 2026-10-01T18:07:48.667Z |
+| task · passed | l3_workspace_txn | 代码与技能产物事务 | 2026-10-01T21:48:41.001Z |
