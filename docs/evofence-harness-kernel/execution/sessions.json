@@ -298,7 +298,7 @@
             "role": "l3_task_evaluation execution lane"
           }
         ],
-        "l3Progress": "l3_context_router PASSED (17/40, review accepted 0B/0M/0m). Running/blocked: l3_pi_session (partial e6dd793; cp1 blocked-on-version — pinned Pi 0.87.1 unavailable, local 0.99.2), l3_task_evaluation (impl 3423ecf; review pane wG:p18 in progress), l3_workspace_txn (lane impl done: gates + 36/36 + static-audit 0; 3 mutation negatives + final report pending; CODEX QUOTA EXHAUSTED at 02:05, refresh 04:53 — lane paused per user directive, no model fallback). l3_dsh_session NOT started: pending user version decision (L3-DSH-VERSION-DECISION.md). Pending user decisions: DSH version, Pi version, scenario models/budget/task. PR #21 (draft) CI 8/8 pass; no merge.",
+        "l3Progress": "19/40 passed (48%). L3 passed: l3_context_router, l3_task_evaluation, l3_workspace_txn. L3 running: l3_pi_session (partial e6dd793; cp1 blocked-on-version — pinned Pi 0.87.1 unavailable, local 0.99.2). L3 pending user decisions: l3_dsh_session (DSH version), scenarios (models/budget/task). L4 started early: l4_asset_registry lane running (pane wG:p19; eligible with no unmet deps). Also eligible after asset_registry: l4_retrieval, l4_evolution_eval, l5_legacy_boundary. PR #21 (draft) CI green at c227f27; no merge.",
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
