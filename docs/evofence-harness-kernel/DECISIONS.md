@@ -19,6 +19,7 @@
 | task · passed | l1_graph_contract | 动态图与有界 loop 语义规格 | 2026-10-01T10:33:11.695Z |
 | task · passed | l1_pi_probe | Pi 原生扩展与委派能力探针 | 2026-10-01T07:21:58.476Z |
 | task · passed | l2_graph_model | 图编译器与原子修订 | 2026-10-01T15:28:11.131Z |
+| task · passed | l2_host_port | 宿主 ports 与委托协议 | 2026-10-01T15:31:33.718Z |
 | task · passed | l2_policy | 授权、观测与总预算服务 | 2026-10-01T15:28:01.162Z |
 | task · passed | l2_public_contracts | 实现无副作用协议层 | 2026-10-01T15:18:10.000Z |
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
