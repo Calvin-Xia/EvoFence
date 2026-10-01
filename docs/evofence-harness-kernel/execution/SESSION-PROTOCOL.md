@@ -64,6 +64,16 @@
 
 - `.graph/` 被 gitignore，因此 lane worktree 里**不存在**图，从机制上排除误写。
 - lane 之间必须**目录不重叠**；汇合由 orchestrator 做（review 后并入主 worktree，再记图状态）。
+- **已实测（2026-10-01，S02）**：从 `refactor/harness-kernel` 建一条 lane worktree 后——① 设计文档（`spec/`、`execution/` handoff）随基线一并到位；② `.graph/` **不存在**；③ 在 lane 内跑 `graph status` 直接失败：`❌ 未找到图（<lane> 无 graph.yaml）`。即 **lane 里的 agent 物理上无法写图状态**，不需靠纪律约束。探针 worktree 已清理（`git worktree remove --force` + `branch -D`）。
+
+**何时用 worktree、何时不用**（本轮实测结论）：
+
+| 情形 | 做法 |
+|---|---|
+| 多个 lane 改**互不重叠的不同文件**（例：`spec/contracts` 七份分给三个 pane） | **不用** worktree。同目录 + 每文件单 owner + 跳 lane 漂移登记（`OPEN-ITEMS §4`）+ orchestrator 集成收口。本轮 `l1_api_freeze` 就是这么做的，比建/合 worktree 快。 |
+| 多个 lane 需要**编译/测试同一套 `dist`**，或会改**同一目录/同一文件** | **必须**用 worktree，否则构建产物与 git index 互相踩。L2 起的 `packages/*` 属此类。 |
+
+**已发现的一个缺点（要记着）**：多 pane 并行时“投递 ≠ 消费”——`herdr_message_agent` 向已 settled 的 pane 投递后，`herdr agent wait <pane>` 会因“本就已 settled”**立即返回**，看起来像已完成。正确做法：先等到 agent 真的进入 `working`（或轮询会话文件的回合数增加），再 `wait`。本轮踩过一次。
 - 模型分工：`pi + deepseek/deepseek-flash high` 为**默认写作者**（spec、schema、映射表、脚本、简单修改）；`codex + gpt-6.1-sol xhigh` 仅用于真实宿主探针、内核并发/恢复、跨文档一致性裁定等难/险工作。
 - 理由（实测）：`l1_api_freeze` 单个节点让 codex 跑了 **1h19m**，而同类写作任务 pi+deepseek 在 10–20 分钟内完成并同样通过独立复核。
 
