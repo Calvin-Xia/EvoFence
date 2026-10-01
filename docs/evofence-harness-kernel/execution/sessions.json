@@ -264,7 +264,25 @@
           "role": "graph writes, integration, dispatch, verdicts, handoffs",
           "cwd": "C:/Users/Calvin-Xia/EvoFence"
         },
-        "activePanes": [],
+        "activePanes": [
+          {
+            "paneId": "wG:p13",
+            "name": "l3-pi-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l3_pi_session execution lane (worktree EvoFence-wt/harness-kernel/l3-pi, branch refactor/hk-l3-pi)"
+          },
+          {
+            "paneId": "wG:p14",
+            "name": "l3-router-codex",
+            "harness": "codex",
+            "model": "gpt-6.1-sol",
+            "thinking": "xhigh",
+            "role": "l3_context_router execution lane (worktree EvoFence-wt/harness-kernel/l3-router, branch refactor/hk-l3-router)"
+          }
+        ],
+        "l3Progress": "wave-1 lanes running (l3_pi_session, l3_context_router; both claimed by S05). l3_dsh_session NOT started: pending user decision on the DSH version policy (docs/evofence-harness-kernel/execution/L3-DSH-VERSION-DECISION.md). Wave-2 briefs ready: L3-workspace-txn-brief.md, L3-task-evaluation-brief.md. PR #21 (draft) open; CI running; merge NOT allowed.",
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
