@@ -23,5 +23,6 @@
 | task · passed | l2_host_port | 宿主 ports 与委托协议 | 2026-10-01T15:31:33.718Z |
 | task · passed | l2_policy | 授权、观测与总预算服务 | 2026-10-01T15:28:01.162Z |
 | task · passed | l2_public_contracts | 实现无副作用协议层 | 2026-10-01T15:18:10.000Z |
+| task · passed | l2_runtime | 会话归约与效果恢复 | 2026-10-01T16:32:05.622Z |
 | task · passed | l2_scheduler | 租约、资源冲突与公平调度 | 2026-10-01T16:05:49.572Z |
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
