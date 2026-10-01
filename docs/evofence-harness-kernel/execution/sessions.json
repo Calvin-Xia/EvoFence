@@ -298,7 +298,7 @@
             "role": "l3_task_evaluation execution lane"
           }
         ],
-        "l3Progress": "wave-1+2 lanes running (l3_pi_session p13, l3_context_router p14, l3_workspace_txn p15, l3_task_evaluation p16; all claimed by S05). l3_dsh_session NOT started: pending user version decision (L3-DSH-VERSION-DECISION.md). l3_pi_session version-gated: pinned Pi 0.87.1 not installed (global 0.99.2); lane continues version-independent work and records blocked-on-version evidence (L3-PI-VERSION-DECISION.md). PR #21 (draft) CI 8/8 pass; no merge.",
+        "l3Progress": "l3_context_router PASSED (17/40, review accepted 0B/0M/0m). Running/blocked: l3_pi_session (partial e6dd793; cp1 blocked-on-version — pinned Pi 0.87.1 unavailable, local 0.99.2), l3_task_evaluation (impl 3423ecf; review pane wG:p18 in progress), l3_workspace_txn (lane impl done: gates + 36/36 + static-audit 0; 3 mutation negatives + final report pending; CODEX QUOTA EXHAUSTED at 02:05, refresh 04:53 — lane paused per user directive, no model fallback). l3_dsh_session NOT started: pending user version decision (L3-DSH-VERSION-DECISION.md). Pending user decisions: DSH version, Pi version, scenario models/budget/task. PR #21 (draft) CI 8/8 pass; no merge.",
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
