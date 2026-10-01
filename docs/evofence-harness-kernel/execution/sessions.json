@@ -298,7 +298,7 @@
             "role": "l3_task_evaluation execution lane"
           }
         ],
-        "l3Progress": "21/40 passed (53%). L3 passed: context_router, task_evaluation, workspace_txn. L3 blocked: l3_pi_session (cp1 blocked-on-version; pinned Pi 0.87.1 unavailable, local 0.99.2), l3_dsh_session (not started; DSH 0.1.7-rc.1 pin vs 0.2.0-rc.2 — user decision). L4 passed: l4_asset_registry, l4_retrieval. L4 running: l4_evolution_eval (p1D), l5_legacy_boundary (p1E). Frontier note: the remaining graph converges on l3_dual_host_gate (needs both scenarios → delegations → sessions), so further progress needs the three user decisions (Pi version, DSH version, scenario models/budget/task). PR #21 (draft) CI green; no merge.",
+        "l3Progress": "23/40 passed (57.5%). L1 7/7, L2 9/9. L3: passed context_router/task_evaluation/workspace_txn; l3_pi_session partial (cp2/cp3 ok, cp1 blocked-on-version: pinned Pi 0.87.1 unavailable, local 0.99.2); l3_dsh_session gated on user DSH-version decision; delegations/scenarios/dual_host_gate all converge on those decisions. L4: passed asset_registry/retrieval/evolution_eval. L5: passed legacy_boundary. Frontier: only ready_eligible=l3_dsh_session (user-gated); everything else blocked on l3_dual_host_gate. Pending user decisions (docs/.../execution/L3-*-DECISION.md + L3-L4-STATUS.md): Pi version, DSH version, scenario models/budget/task. PR #21 (draft) CI green; no merge. codex weekly limit 21% (resets 2026-10-04 17:58).",
         "closedPanes": [
           "wG:pT l2-artifact-codex (fix merged 2bbbe30, pane closed)",
           "wG:pV l2-scheduler-codex (fix merged 8db1718, pane closed)",
