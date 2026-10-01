@@ -55,14 +55,14 @@
 
 ### 3.1 包络定义（按场景层，三臂完全相同）
 
-| 场景层 | 占比 | `request_cap` | `usd_cap` / run | `wall_cap` / run | 并发预留上限 |
-|---|---:|---:|---:|---:|---:|
-| S1 restricted | 40% | 20 | 0.1909 USD | 20 min | 20 |
-| S2 cross | 35% | 40 | 0.3819 USD | 45 min | 40 |
-| S3 repo | 25% | 80 | 0.7638 USD | 120 min | 80 |
+| 场景层 | 占比 | `request_cap` | `usd_cap` / run（µUSD，精确） | `usd_cap` / run (USD) | `wall_cap` / run | 并发预留上限 |
+|---|---:|---:|---:|---:|---:|---:|
+| S1 restricted | 40% | 20 | **190,940** | 0.190940 | 20 min | 20 |
+| S2 cross | 35% | 40 | **381,880** | 0.381880 | 45 min | 40 |
+| S3 repo | 25% | 80 | **763,760** | 0.763760 | 120 min | 80 |
 
 - 单请求上限：`max_input_tokens_per_request = 60,000`（含 cached）、`max_output_tokens_per_request = 4,096`。
-- 预留额 `reserve = 60,000 × p_uncached + 4,096 × p_output`（探针冻结价下 **0.009547 USD**）；**`usd_cap = request_cap × reserve` 逐字段相等**，故 `usd_cap` 永不阻塞合法请求数。
+- 预留额 `reserve = 60,000 × p_uncached + 4,096 × p_output` = **9,546.88 µUSD**，按**向上取整到 µUSD** 冻结为 **9,547 µUSD**（= 0.009547 USD）；**`usd_cap = request_cap × 9547` 逐字段精确相等**，故 `usd_cap` 永不阻塞合法请求数。**禁止用浮点 epsilon 少预留**（R4 裁决）。原文档的 `190900 / 381900 / 763800` 与“逐字段相等”不符（精确值 − 原值 = **+40 / −20 / +40 µUSD**，即原 S1/S3 少预留、S2 多预留），已废。
 - **校验口径冻结**：`settled_spend + outstanding_reservations ≤ usd_cap`（派发时检查）；完整 usage 后释放未用预留。v1 用整窗 reserve（0.14795）与 S1 cap 0.15 矛盾（只容 1 个并发预留），已按同式重算。
 - 命中任一 cap 即终止该 run，状态记 `incomplete`，在 ITT（intent-to-treat）中计为**失败**（不是排除）。
 - **并行不豁免**：三臂共用同一 `usd_cap`/`wall_cap`/`request_cap`；`usd_cap` 是父/子共享总账（planner、worker、verifier、learning、evaluation 全部计入）。
@@ -208,7 +208,7 @@ judge(cell, look):
 
 **thinking payload 的具体规则（v2 修正作用域）**：规则**只在宿主内部**成立——同一宿主上 A/B/C 三臂对同一任务必须发送逐字节相同的 thinking payload，这是可做到且必须做到的。**跨宿主**不要求一致：不同宿主的 payload 差异如实记录 `reasoning_effective`，**不构成 `blocked` 理由**（跨宿主本就不做合并统计，PER HOST 分别判定）。v1 把“某宿主做不到”与“另一臂只能发开关”混写成跨宿主约束，作用域错乱，已改。
 
-**pi 实测事实（必须遵守）**：Pi `0.87.1` 的 `high` 实际只发送 `thinking.type=enabled` + `reasoning_effort=high`，MiMo 官方仅文档化 thinking 开关，服务端是否存在独立 high 档位**未证实**（HostManifest `reasoningHighGuarantee: partial`）。因此本试验的结论对象是“**thinking enabled 且 reasoning_effort=high 的 payload**”，不是“high 档位”；宿主内三臂 payload 逐字节相同使该未知不影响臂间比较。
+**pi 实测事实（必须遵守）**：Pi `0.87.1` 的 `high` 实际只发送 `thinking.type=enabled` + `reasoning_effort=high`，MiMo 官方仅文档化 thinking 开关，服务端是否存在独立 high 档位**未证实**（HostManifest `reasoningHighGuarantee: partial`）。因此本试验的结论对象是“**thinking enabled 且 reasoning_effort=high 的 payload**”，不是“high 档位”；宿主内三臂 payload 逐字节相同使该未知不影响臂间比较。**R11（人审）裁决为 `payload-only`**：`ModelRequirement.reasoningGuarantee = payload-only`，任务与比较双方固定 payload，服务端不明如实披露。
 
 ---
 

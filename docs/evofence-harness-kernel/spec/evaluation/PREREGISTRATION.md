@@ -1,6 +1,7 @@
 # 预注册表（PREREGISTRATION）
 
 > 状态：**草案冻结（draft-frozen）**。本文列出的字段必须**在结果出现前**由人审确认并写入 `T0` 时间戳；`T0` 之后任何改动都是偏差，需登记在 §6。
+> **人审裁决已发生**：`l1_replan` cp3 已完成，逐项处置见 `execution/L1-REPLAN-DECISION.md`。其中 R4（包络精确值）与 R11（reasoning payload-only）已落地本文；**R12（T0 定案：设计/额度/模型/签署）仍为 `defer`**，故本表保持 `draft-frozen`，不是 `T0`。
 > 本表是 [PROTOCOL.md](PROTOCOL.md) / [SCENARIOS.md](SCENARIOS.md) / [METRICS.md](METRICS.md) / [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 的可机读摘要；冲突时以三份正文为准，并须修正本表。
 
 ---
@@ -13,7 +14,7 @@
 | 冻结人 / 凭据 | `<待填写>` | 同上 |
 | 试验预算授权 | `<未授权>`（详见 §3） | T0 |
 | `provider/model-id` | `<待授权>`（参考：`xiaomi/mimo-v2.6-flash`） | T0 |
-| `thinking_payload` | **宿主内**三臂逐字节一致；跨宿主差异记 `reasoning_effective`（不构成 blocked） | T0 |
+| `thinking_payload` | **宿主内**三臂逐字节一致；跨宿主差异记 `reasoning_effective`（不构成 blocked）。**结论对象是 payload（R11：`payload-only`），不是未证实的服务端独立档位**；`reasoningHighGuarantee: partial` 如实保留 | T0 |
 | `temperature` / 采样参数 | 显式写死，不用缺省 | T0 |
 | 宿主版本 | Pi `0.87.1`（已固定）；DSH `<待探针>` | T0 |
 | kernel commit | `<T0 时冻结>` | T0 |
@@ -62,8 +63,8 @@
 | judge | **臂外**独立盲评流水线；成本记 `judging_cost`（**不计入臂包络**但全额报告） |
 | 泄露阈值 | LCS token 重叠 ≥ 0.80 → `leak_risk=high`（度量见 SCENARIOS §4.1） |
 | 单请求上限 | input ≤ 60,000 tokens；output ≤ 4,096 tokens |
-| 包络（request_cap / usd_cap / 墙钟） | S1 20 / 0.1909 / 20min；S2 40 / 0.3819 / 45min；S3 80 / 0.7638 / 120min |
-| 包络自洽约束 | `usd_cap = request_cap × reserve`；`reserve = 60,000×p_unc + 4,096×p_out` |
+| 包络（request_cap / usd_cap µUSD / 墙钟） | S1 20 / **190940** / 20min；S2 40 / **381880** / 45min；S3 80 / **763760** / 120min（R4：`usd_cap = request_cap × 9547`，精确相等） |
+| 包络自洽约束 | `usd_cap = request_cap × 9547 µUSD`；`reserve = 60,000×p_unc + 4,096×p_out = 9,546.88 µUSD`，**向上取整到 µUSD**；禁止 epsilon 少预留 |
 | 产品级结论门槛 | **两个宿主都 `positive`** |
 | 试验预算 | T2 **请求额度** ≈ **943 USD**（**未授权**，见 §3）；开发期调用**无美元上限** |
 

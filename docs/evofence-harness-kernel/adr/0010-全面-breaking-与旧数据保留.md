@@ -2,7 +2,7 @@
 
 建议新版协议/config/runtime/assets 独立版本与 namespace；不兼容旧 API可明确移除，旧 ledger/config 只读导出、显式导入为历史来源，不原地覆盖或重写 hash chain。
 
-**Status：** proposed（待裁决）
+**Status：** accepted
 
 **Context：** 用户明确允许全面推倒、breaking change；历史图与 source 本轮保持原样。
 

@@ -240,15 +240,15 @@ judge(cell, look):
 |---|---|
 | `max_input_tokens` / request | 60,000（含 cached） |
 | `max_output_tokens` / request | 4,096 |
-| `reserve_per_request` | `60,000×p_unc + 4,096×p_out` = **0.009547 USD**（探针冻结价） |
+| `reserve_per_request` | `60,000×p_unc + 4,096×p_out` = **9,546.88 µUSD**，**向上取整到 µUSD = 9,547 µUSD**（= 0.009547 USD，探针冻结价） |
 
-| 层 | 占比 | `request_cap` | `usd_cap` | `wall_cap` | 并发预留上限 |
-|---|---:|---:|---:|---:|---:|
-| S1 restricted | 40% | 20 | 0.1909 | 20 min | 20 |
-| S2 cross | 35% | 40 | 0.3819 | 45 min | 40 |
-| S3 repo | 25% | 80 | 0.7638 | 120 min | 80 |
+| 层 | 占比 | `request_cap` | `usd_cap`（µUSD，精确） | `usd_cap`（USD） | `wall_cap` | 并发预留上限 |
+|---|---:|---:|---:|---:|---:|---:|
+| S1 restricted | 40% | 20 | **190,940** | 0.190940 | 20 min | 20 |
+| S2 cross | 35% | 40 | **381,880** | 0.381880 | 45 min | 40 |
+| S3 repo | 25% | 80 | **763,760** | 0.763760 | 120 min | 80 |
 
-`usd_cap = request_cap × reserve` 逐字段相等（自洽）；校验口径 `settled_spend + outstanding_reservations ≤ usd_cap`（派发时），完整 usage 后释放。命中即终止并记 `incomplete`。"并行不豁免"指三臂共用同一 `usd_cap`/`wall_cap`/`request_cap`。**`request_cap` 假设上限**：S1=20 对"planner + ≤6 worker + verifier + ≤1 repair"是否过紧，pilot 须核实（Q17）。
+`usd_cap = request_cap × 9547` **逐字段精确相等**（R4 人审裁决：按精确值重算；**禁止用浮点 epsilon 少预留**，预留额一律**向上取整到 µUSD**）。原文档的 `190900 / 381900 / 763800` 与“逐字段相等”不符（精确值 − 原值 = **+40 / −20 / +40 µUSD**，即原 S1/S3 少预留、S2 多预留），已废。校验口径 `settled_spend + outstanding_reservations ≤ usd_cap`（派发时），完整 usage 后释放。命中即终止并记 `incomplete`。"并行不豁免"指三臂共用同一 `usd_cap`/`wall_cap`/`request_cap`。**`request_cap` 假设上限**：S1=20 对"planner + ≤6 worker + verifier + ≤1 repair"是否过紧，pilot 须核实（Q17）。
 
 ### 7.3 人工等待
 
@@ -258,7 +258,7 @@ judge(cell, look):
 
 臂外 judge 的调用记入 `judging_cost`，**不计入臂包络**，但必须全额报告（§3.1）。
 
-### 7.5 预算（均值 0.4010 USD/task）
+### 7.5 预算（均值 0.400974 USD/task = `0.4×0.190940 + 0.35×0.381880 + 0.25×0.763760`，用 R4 重算后的精确 `usd_cap`）
 
 | 环节 | runs | 上界 (USD) |
 |---|---:|---:|

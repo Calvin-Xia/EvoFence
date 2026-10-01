@@ -2,7 +2,7 @@
 
 建议任务驱动动态图＋验证模板；节点可为 bounded agent/tool/evaluator/code loop。依赖投影无环，repair/fallback/route 独立且有停止条件。
 
-**Status：** proposed（待裁决）
+**Status：** accepted
 
 **Context：** 用户将 graph 澄清为 Graph Engineering，选择动态子图＋模板。SP 调度与知识边分离可借鉴。
 
