@@ -38,6 +38,7 @@
 | task · passed | l4_asset_registry | 能力资产版本与资格 | 2026-10-01T22:03:10.358Z |
 | task · passed | l4_evolution_eval | 候选与长期能力独立评价 | 2026-10-01T22:51:31.141Z |
 | task · passed | l4_experience | 轨迹提炼与候选生成 | 2026-10-02T12:23:47.142Z |
+| task · passed | l4_learning_scenario | 跨任务学习与可撤销演化场景 | 2026-10-02T15:02:04.444Z |
 | task · passed | l4_promotion | 验证晋升与宿主激活事务 | 2026-10-02T13:27:58.738Z |
 | task · passed | l4_regression_revocation | 退化检测与撤销传播 | 2026-10-02T14:07:21.509Z |
 | task · passed | l4_retrieval | 适用经验检索与注入 | 2026-10-01T22:26:51.375Z |
