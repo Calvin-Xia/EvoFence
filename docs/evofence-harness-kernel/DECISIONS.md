@@ -39,5 +39,6 @@
 | task · passed | l4_evolution_eval | 候选与长期能力独立评价 | 2026-10-01T22:51:31.141Z |
 | task · passed | l4_experience | 轨迹提炼与候选生成 | 2026-10-02T12:23:47.142Z |
 | task · passed | l4_promotion | 验证晋升与宿主激活事务 | 2026-10-02T13:27:58.738Z |
+| task · passed | l4_regression_revocation | 退化检测与撤销传播 | 2026-10-02T14:07:21.509Z |
 | task · passed | l4_retrieval | 适用经验检索与注入 | 2026-10-01T22:26:51.375Z |
 | task · passed | l5_legacy_boundary | 旧格式只读边界与 breaking 指南 | 2026-10-01T22:32:40.347Z |
