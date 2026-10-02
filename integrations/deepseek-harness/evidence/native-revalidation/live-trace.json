@@ -1,9 +1,0 @@
-{
-  "status": "not-run",
-  "reason": "Offline mechanism probe only; vendor usage/cancel/billing and Xiaomi high remain unverified",
-  "paidRequests": 0,
-  "credentialsRead": false,
-  "budgetMutated": false,
-  "evidenceLevel": "not-run",
-  "recordedAt": "2026-10-02T04:57:27.203Z"
-}

@@ -1,4 +1,0 @@
-
-> evofence@0.4.2 typecheck
-> node node_modules/typescript/bin/tsc --noEmit
-

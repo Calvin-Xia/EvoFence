@@ -25,3 +25,12 @@ test/protocol-guard/.work/
 
 # Process records (handoffs, lane briefs, review dossiers, status): kept locally, not in git/PR
 /docs/evofence-harness-kernel/execution/
+
+# Generated evidence / test-run artifacts: kept on disk, not part of the published tree
+/src/hosts/*/evidence/
+/src/learning/*/evidence/
+/src/storage/*/evidence/
+/src/evaluation/*/evidence/
+/verification/kernel/evidence/
+/integrations/deepseek-harness/evidence/*
+!/integrations/deepseek-harness/evidence/*.mjs

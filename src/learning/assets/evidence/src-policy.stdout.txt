@@ -1,6 +1,0 @@
-
-> evofence@0.4.2 src:policy
-> node scripts/check-src-policy.mjs
-
-src policy: 216 TypeScript file(s), largest 350 line(s) (src/lib/pi-tool-strategy.ts), limit 350; 0 JavaScript file(s)
-src policy check passed.
