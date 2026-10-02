@@ -323,11 +323,10 @@
     },
     {
       "id": "S06",
-      "threadId": null,
-      "threadIdNote": "filled in after the pi pane is spawned",
+      "threadId": "01a0fad6-2adc-7588-84ec-dc853f5eee0f",
       "harness": "pi (orchestrator) + herdr fleet",
       "role": "L3 close-out (Pi 0.99.2 re-pin, DSH 0.2.0-rc.2 binding, delegations, scenarios, dual-host gate) then L4/L5 to l5_accept; sole graph-write authority; per-phase handoffs",
-      "status": "starting",
+      "status": "active",
       "predecessor": "S05",
       "successor": null,
       "inputHandoff": "docs/evofence-harness-kernel/execution/SESSION-006-HANDOFF.md",
@@ -347,11 +346,20 @@
           "model": "deepseek/deepseek-flash",
           "thinking": "max",
           "kind": "pi",
-          "paneId": null,
+          "paneId": "wG:p1J",
           "role": "graph writes, integration, dispatch, verdicts, handoffs",
           "cwd": "C:/Users/Calvin-Xia/EvoFence"
         },
-        "activePanes": []
+        "activePanes": [
+          {
+            "paneId": "wG:p1J",
+            "name": "s06",
+            "harness": "pi",
+            "model": "deepseek/deepseek-flash",
+            "thinking": "max",
+            "role": "orchestrator (main agent, spawned 2026-10-02 ~07:19 local); takeover from S05"
+          }
+        ]
       }
     }
   ],
