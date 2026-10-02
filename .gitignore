@@ -22,3 +22,6 @@ docs/deep-research-report.md
 
 # guard test scratch (regenerated per run)
 test/protocol-guard/.work/
+
+# Process records (handoffs, lane briefs, review dossiers, status): kept locally, not in git/PR
+/docs/evofence-harness-kernel/execution/
