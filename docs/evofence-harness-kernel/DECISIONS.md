@@ -28,6 +28,7 @@
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
 | task · passed | l3_context_router | 节点上下文与反馈路由 | 2026-10-01T17:58:33.111Z |
 | task · passed | l3_dsh_session | DSH 原生会话绑定 | 2026-10-02T05:20:27.601Z |
+| task · passed | l3_pi_delegation | Pi 子会话与子图执行 | 2026-10-02T06:17:38.123Z |
 | task · passed | l3_pi_session | Pi 原生扩展绑定 | 2026-10-02T05:34:30.294Z |
 | task · passed | l3_task_evaluation | 任务完成的唯一裁决入口 | 2026-10-01T18:07:48.667Z |
 | task · passed | l3_workspace_txn | 代码与技能产物事务 | 2026-10-01T21:48:41.001Z |
