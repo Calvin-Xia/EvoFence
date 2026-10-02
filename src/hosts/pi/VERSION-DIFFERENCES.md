@@ -1,23 +1,63 @@
-# Pi 版本/证据差异表
+# Pi 0.87.1 → 0.99.2 版本与证据差异
 
-目标：**0.87.1**。2026-10-02 本机全局 `@earendil-works/pi-coding-agent` 为 **0.99.2**。用户确认没有 0.87.1 可运行包、不授权 install，要求保持 `blocked-on-version`，继续版本无关 cp2/cp3 与门禁。未修改 pin、未升级合同、未在 0.99.2 启用绑定。
+当前目标固定为 **@earendil-works/pi-coding-agent@0.99.2**，依据用户裁决 A（SESSION-006-HANDOFF §1、repin brief）。本机 pi --version、包元数据及关键文件哈希均已核实。VERSION-PIN.json 保留完整 0.87.1 pin 到 history[0].pin；L1 HOST-MANIFEST/live-trace/offline-trace/README 原样保留，均为 **0.87.1 历史证据**。
 
-| 行为 | 固定版 0.87.1 声明/历史实测 | 本 lane 实现与当前验证 | 当前本机 0.99.2 |
-|---|---|---|---|
-| 持久原生 session (P1) | L1 provider-live 两请求同 session；默认 SessionManager 持久化 | getter 注入既有 session，强制 native ID/持久路径；fixture 验证，无新 session/CLI | 包元数据已核实；版本门禁拒绝，DoD① **blocked/unknown** |
-| 生命周期 start/shutdown | extension `session_start` / `session_shutdown`；没有假定名为 session_end 的事件 | start 读回 custom entries，shutdown/switch 失效；fixture | 未在该版运行绑定；替换 session 重新绑定的语义不跨版本假定 |
-| context/tools/skills (P2) | L1 provider-live 的 controlled AGENTS/skill/read 保留 | 只追加有限 packet，普通 host tools 保留；fixture | 未验证用户 TUI/第三方 extensions/skills 共存 |
-| tool_call/tool_result (P3/P4) | L1 拒绝门禁是 native-fixture；result 有 provider-live | 原 callId/name/input/isError/usage 传给注入端口；block 拒绝、异常锁住 kernel；fixture | 未作该版 native tool 执行 |
-| appendEntry/session identity (P7/P9) | L1 native-disk reopen 恢复 custom entry 与同 ID | v1 entry 关联 kernel/native IDs，保留 dispatch/receipt/逐请求 usage；fixture reopen | **未**重跑本绑定的 native-disk reopen；custom entry 非 kernel journal |
-| usage (P5) | L1 provider raw 与 SDK receipt 一致，SDK input 为 uncached，reasoning 属于 output | 每 transport request 去重；每 invocation 汇总到 reservation；缺 meter 和 SDK 全零 error/abort 保留 unknown；fixture | 当前新 provider requests **0**，usage **null**，成本估价 **null** |
-| agent_end (P17) | awaited end 后仍可 retry/compaction/queued continuation | 不置 idle、不返回完成；源码变异改为早 settlement 会变红 | 当前版具体后处理未由 lane 进程核验 |
-| agent_settled / waitForIdle (P17) | 0.87.1 声明：settled 无 outcome 字段；历史实测 awaited end 后 settled | settled + SDK waitForIdle 双条件；active 锁拒绝重入；fixture | 不假定事件新增字段；固定版本门禁阻止套用 |
-| abort (P6) | SDK abort 返回 Promise 且等待 idle；extension ctx.abort 是 void；L1 本地 HTTP fixture 断连 | 调 SDK session.abort，只取消本 binding 已派发且被点名的 invocation；未确认仍 unknown；fixture | 供应商取消计费仍 unknown，未将 signal/断连当作免费 |
-| child/native board (P8/P12) | L1 独立 SDK child identity，无 paid child；Pi 无原生 team board | 当前 lane 拒绝 fresh/delegate/activation 等未接线操作；观察 boardOwners=[] | 未验证 child cascade 或外部 effect exactly-once |
-| unload/exception | SDK dispose 归宿主且使旧 context 失效 | 只卸载自身 hooks，保留 host work/transcript；异常上报并停止 kernel，fixture | 当前版 dispose 实跑未执行 |
+| 接口 | 0.87.1 历史声明/实测 | 0.99.2 实际包与本 lane 结论 |
+|---|---|---|
+| session_start / session_shutdown | start/readback、shutdown 后 context 失效 | start reason 为 startup/reload/new/resume/fork；shutdown 为 quit/reload/new/resume/fork；原生 ID/file 保留。真实 resume 使用同一个已存在的 disk session；用户 TUI 切换共存未测 |
+| agent_end | awaited end 后仍可能 retry/compaction/续跑；0.87.1 tag 已有 agent_before_settle | 仍是中间事件。_runAgentPrompt 先处理 post-agent work，再执行 agent_before_settle boundary（本轮新增实测覆盖，非该事件首次引入）；continue:true 可触发下一请求。native-fixture 两次 agent_end、三次 transport request、一个最终 receipt |
+| agent_settled / idle | settled 无 outcome 字段；idle 后可派发 | AgentSettledEvent 仍仅有 type。在 awaited settled handlers 前 SDK 将 _isAgentRunActive=false，所以 SDK isIdle 可先为 true；binding active 锁仍拒绝重入。等待外部 session.prompt 返回与 waitForIdle 后才发 receipt |
+| abort | SDK session.abort():Promise<void>；ctx.abort 为 void | SDK 设置 abort-requested，取消 retry/compaction/branch summary/agent，等待 idle；该版包含 boundary-abort 协调。真实本地 HTTP hold 被 native abort 断开；native-ack 不证明供应商计费，receipt usage incomplete/null |
+| tools | 原始 callId/name/input/result；block 阻断 | 新增可选 parentToolCallId，结构类型补齐该字段及 tool_result structuredContent（原事件直接转交，无字段丢弃）。tool_call input 可由 extension 就地修改，SDK 不重验后续改动，第三方共存边界未证明；不声称 OS 隔离 |
+| on / appendEntry | unregister function / void append | 本机 types/loader 确认 on 返回注销函数，appendEntry 仍 void。实际 custom binding/dispatch/receipt 在 JSONL reopen 后读回，同 ID |
+| usage | SDK input 是 uncached，reasoning 包含在 output，成本为估价 | 两条真实 DeepSeek raw SSE 与 SDK input/cache/output/total 一致。invocation 合并到唯一 reservation，逐请求记录保留。零填充 error/abort 仍 unknown，不释放为免费 |
+| child/board/reasoning | L1 child 与 MiMo payload 证据 | 不移植历史保证：local PI_SESSION_CAPABILITIES 将 child identity 与 server reasoning guarantee 标为 unknown；delegate/fresh/activation 明确拒绝。core 历史矩阵未修改 |
 
-固定版文档通过 Context7 `/earendil-works/pi/v0.87.1` 获取，但部分检索片段来自 main，因此 API 细节再与固定 tag 的 [types.ts](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/src/core/extensions/types.ts)、[agent-session.ts](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/src/core/agent-session.ts)、[SDK 文档](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/docs/sdk.md) 核对。当前本机关键文件哈希与 L1 pin 的对照见 [native-version-block.json](evidence/native-version-block.json)。历史 L1 轨迹只作合同参考，未升级为本 lane 的新 native/provider 证据。
+本机声明源 dist/core/extensions/types.d.ts，实现源 agent-session.js、extensions/loader.js、session-manager.js；SHA256 在新 pin。先查 Context7 /earendil-works/pi，其 main 片段只作定位（无 0.99.2 专用 ID），最终版本事实以哈希固定的本机包及真实轨迹为准。官方固定 tag 对照：[0.87.1 types](https://github.com/earendil-works/pi/blob/v0.87.1/packages/coding-agent/src/core/extensions/types.ts)；0.99.2 源码参照：[extension types](https://github.com/earendil-works/pi/blob/v0.99.2/packages/coding-agent/src/core/extensions/types.ts)、[agent-session](https://github.com/earendil-works/pi/blob/v0.99.2/packages/coding-agent/src/core/agent-session.ts)。
 
-复现版本阻塞：读取 `%APPDATA%/npm/node_modules/@earendil-works/pi-coding-agent/package.json`，得到 `0.99.2`；`bindPiSession` 必须返回 `EFK_SOURCE_PIN_DRIFT`，不注册 hook。具体独立 Node 预检命令、exit=1、stdout 与零请求记录在上述 JSON。版本政策未裁决前，cp1 和真实 DoD①不能 passed。
+## 逐项版本重验
 
-门禁证据：[gates.json](evidence/gates.json)。真实源码变异→编译→红→原字节恢复→编译→绿：[negative-controls.json](evidence/negative-controls.json)。fixture tests 不证明真实供应商调用、用户正在运行的 TUI、磁盘断电恢复或能力收益。
+| 索引 | 0.99.2 新证据 | 保证范围与未证明项 |
+|---|---|---|
+| **P1** | **provider-live**：[0992-live-trace.json](evidence/0992-live-trace.json) /checks/existingPersistentSession、/checks/realSessionUnchanged、/trace/6；native ID 01a0fae9-a776-7090-ad53-f4131b60b6b0 | 先用真实 Pi 本地 HTTP fixture 完成宿主 turn 并持久化，重新打开该既有 disk session、加载扩展和真实内核；两条付费请求同 ID。bootstrap 是 native-fixture，kernel smoke 才是 provider-live；当前用户 TUI unknown |
+| **P2** | **provider-live**：live 文件 /checks/contextAndResources、/checks/hostResourcesLoaded、/payloads | controlled AGENTS marker、skill 描述、read 工具与 host history 保留；context 只追加 node packet。全部用户 skills/第三方扩展共存 unknown |
+| **P3** | **native-fixture**：[0992-native-trace.json](evidence/0992-native-trace.json) /checks/blockedToolNeverExecutes、/toolCalls | 真实 native tool_call 拒绝 denied 工具，execute 计数零；付费路径未派 denied tool，该项 provider-live unknown |
+| **P4** | **provider-live**：live 文件 /checks/toolResultObserved、/toolCalls、/toolResults | echo 的 effectId、原生 toolCallId、name、input、isError 对应；完整嵌套工具/任意第三方改写未测 |
+| **P9** | **native-disk**（provider-live session 后读回）：live 文件 /checks/diskRestore、/trace/24，native 文件同名检查 | custom binding/dispatch/receipt 与 usage、同 ID、同 receiptId 读回，无追加模型请求。只是 native reopen，非 crash/断电或 kernel durable-store 恢复 |
+| **P17** | **provider-live**：live 文件 /checks/noEarlySettlement、/checks/receiptAfterSettlement、/trace/18、/trace/20、/trace/22；**native-fixture**：native 文件 /checks/continuation、/checks/settledReentryRefused、/checks/waitsForAsyncSettledHook、/trace | awaited agent_end 无 receipt；SDK 已 idle 的 settled hook 内仍拒绝 kernel 重入，hook 完成后才返回。新版 boundary continuation 保留 packet 至真正 settled。provider retry/compaction、全部第三方异步 actions unknown |
+
+P5 在 live raw/SDK 用量对应中重验；P6 在 0.99.2 本地 HTTP abort 重验；P7 同 native-disk reopen；P8/P12/P14/P15/P20 不借历史结果升级本轮证据。供应商 abort 计费、server-tier high、delegation、activation、OS sandbox、外部 effect exactly-once、收益均未证明。
+
+## DoD 与真实负对照
+
+**DoD①**：createSessionService 注入 binding.host，实际 step 调用真实 Pi。live 快照 [0992-live-trace.json.kernel.json](evidence/0992-live-trace.json.kernel.json) 中 journal 一个 applied receipt、node 停在 verifying、无 DecisionRecord；fake host executions=0。显式测试 policy/clock/seed 与 in-memory stores 仅提供 smoke 基础设施，没有执行 evaluator；不声称完整任务验收、长程场景或收益。
+
+**DoD②**：live awaited end/settled 顺序，加 native 三请求 continuation、async settled、reentry、unload 和 abort。abort 缺 meter 保留 null/incomplete，确认 stopped 与确认 spend 分开。
+
+实际源码变异、build、真实 0.99.2 子进程变红、原字节恢复、build、真实子进程复绿见 [0992-negative-controls.json](evidence/0992-negative-controls.json)。两项均 red exit=1、green exit=0，SHA256 恢复一致，**native-fixture、零付费请求**：
+
+- DoD①：删除持久路径门禁，让真实 SessionManager.inMemory 错误通过；nativeMemorySessionRefused 断言变红。
+- DoD②：在 agent_end 直接持久化 completed receipt；native boundary 续跑前 observer 看见早回执，DoD2 no receipt before native continuation/settlement 断言变红。
+
+拒绝路径：非 0.99.2 在注册 handler 或触碰 SDK 前返回 EFK_SOURCE_PIN_DRIFT；in-memory/错误 ID 拒绝，busy/reentry 拒绝，未知 dispatch 不盲重派，unknown usage 留预留。没有静默版本降级或无会话替代。
+
+## 用量与复现
+
+真实调用仅 **2** 条，deepseek/deepseek-flash high、thinking enabled、reasoning_effort high、max_tokens=2048；transport/agent retry、compaction、warming 关闭，最多两条请求，raw usage 缺失停止付费路径。参考输入窗口上界每条 $0.3024576；沿用本轮 DeepSeek 无美元硬上限、逐条记账授权。历史 MiMo $0.50 累计账未改变。
+
+| 请求 | prompt | cached | completion（含 reasoning） | reasoning 子集 | total | USD 参考估价 |
+|---|---:|---:|---:|---:|---:|---:|
+| provider-1 | 10841 | 0 | 59 | 12 | 10900 | 0.003323100 |
+| provider-2 | 10916 | 10752 | 104 | 99 | 11020 | 0.000238512 |
+| 合计 | 21757 | 10752 | 163 | 111 | 21920 | **0.003561612** |
+
+来源：[DeepSeek 官方价格](https://api-docs.deepseek.com/quick_start/pricing/)（2026-10-02 核对峰时 USD 输入/缓存/输出 .3/.006/1.2 每百万）。SDK/catalog 使用该参考价，实际非峰时折扣和账单未查询，不作为 invoice。SDK 每 transport cost 上取整 micro-USD 再汇总，与上表有舍入差异。请求前 reserved 与逐条 settled 见 [0992-live-trace.json.usage.json](evidence/0992-live-trace.json.usage.json)。凭据只通过用户既有认证进入内存，未输出/落盘。
+
+~~~powershell
+npm run build
+node test/l3-pi-native-session.test.js --probe --output=src/hosts/pi/evidence/0992-native-trace.json
+node test/l3-pi-negative-controls.test.js --mutate
+node --test test/l3-pi-*.test.js
+~~~
+
+test/l3-pi-native-session.test.js --probe --live --output=<file> 会消费请求，不能作为自动 CI，也不需为重述证据重跑。live source hashes 保存取证时实现；随后只调整 native 探针的断言位置、abort 搭建、hash 捕获及测试目录布局，未再付费；历史 hash 的 .mjs 路径对应迁移前探针，生产绑定运行逻辑 hash 仍一致，后补的 structuredContent 仅为类型声明及 fixture 字段转交断言。runtime JSONL/controlled resources 保留在证据注明的独立 TEMP 目录，便于审阅，没有复制到 Git。旧 evidence/SUMMARY、gates、native-version-block、negative-controls 保留为前轮历史，当前总结和门禁使用 **0992-** 前缀。

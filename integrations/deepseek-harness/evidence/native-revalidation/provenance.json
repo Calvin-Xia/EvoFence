@@ -1,0 +1,13 @@
+{
+  "probe": "scripts/probes/dsh-native-probe.mjs",
+  "probeSha256": "e1be9e8bc18084ac276cfec95d7f79bf38050e161d17f9929406b6713df26784",
+  "support": "scripts/probes/dsh-probe-support.mjs",
+  "supportSha256": "ef725a4027d075f53b058db63dc2141f54b53e5cdf65a556b7f421b0be314cc7",
+  "changes": [
+    "import uses absolute file URL",
+    "only writeJson output path redirected",
+    "printed outputRoot follows the redirected writer"
+  ],
+  "evidenceLevel": "native-fixture",
+  "providerLive": false
+}

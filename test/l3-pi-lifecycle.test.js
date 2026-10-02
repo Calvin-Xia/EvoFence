@@ -5,7 +5,9 @@ import { fixture, value, effect, authorized, deferred } from './l3-pi-fixtures.t
 
 test('DoD1 version mismatch rejects before touching SDK or registering hooks', () => {
   const deny = new Proxy({}, { get() { throw new Error('touched SDK'); } });
-  assert.equal(bindPiSession(deny, { version: '0.99.2' }).error.code, 'EFK_SOURCE_PIN_DRIFT');
+  for (const version of ['0.87.1', '0.99.0', '1.0.0']) {
+    assert.equal(bindPiSession(deny, { version }).error.code, 'EFK_SOURCE_PIN_DRIFT');
+  }
 });
 test('DoD1 persistent existing identity is mandatory; memory and foreign sessions refuse', async () => {
   const f = fixture(); f.diskFile(undefined); await f.start();

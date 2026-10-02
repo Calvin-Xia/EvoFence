@@ -50,7 +50,7 @@ export function fixture(options = {}) {
     async abort() { aborts++; if (options.abortError) throw new Error('fixture abort failure');
       await options.abort?.({ emit, finish, session }); },
   };
-  const binding = value(bindPiSession(api, { version: '0.87.1', kernelSessionId: 'kernel-1', hostSessionId: 'native-1',
+  const binding = value(bindPiSession(api, { version: '0.99.2', kernelSessionId: 'kernel-1', hostSessionId: 'native-1',
     session: () => session, clock: { now: () => 1000 }, prompt: async () => 'fixture prompt',
     context: async () => ({ ok: true, value: [{ role: 'user', content: 'node packet' }] }),
     toolGate: async (_a, event) => event.toolName === 'blocked'

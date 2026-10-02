@@ -1,6 +1,6 @@
 # Pi session binding (L3)
 
-目标固定为 `@earendil-works/pi-coding-agent` **0.87.1**。该层在 core 闭包之外；没有隐式 SDK/backend、包发现、凭据读取、CLI 子进程、session 创建/销毁或 tools/skills 重置。
+目标固定为 `@earendil-works/pi-coding-agent` **0.99.2**（用户裁决 A）。该层在 core 闭包之外；生产绑定没有隐式 SDK/backend、包发现、凭据读取、CLI 子进程、session 创建/销毁或 tools/skills 重置。`test/l3-pi-native-*.test.js` 是显式启动的 native 探针基础设施，不是生产入口。
 
 宿主在 extension factory 内调用 `bindPiSession(pi, options)`，传入已由宿主创建的持久 `AgentSession` getter、真实包版本、kernel/native session IDs 和显式的 context/tool/usage 端口。宿主 `bindExtensions` 发出的 `session_start` 激活绑定；`binding.host` 可直接作为 `SessionPorts.host` 注入 `createSessionService`。后台 `service.step()` 由宿主在 extension hook 返回之后的 SDK/command 安全点调用，不能在 awaited `agent_end`/`agent_settled` 中等待新的 loop。绑定不会替宿主调度第二个 agent loop。
 
@@ -14,4 +14,4 @@ custom entry `evofence.kernel.pi.v1` 持久化 binding/dispatch/receipt 关联�
 
 卸载只注销自身 handlers/清空 packet，不调用宿主 abort/dispose，也不删 transcript/资源。宿主 switch/shutdown 后该 binding 失效，替换 AgentSession 需重新创建 binding。异常由 `options.fault` 显式上报并锁住 kernel 进展，宿主普通工作保留。
 
-本 lane 的现有验证等级及版本阻塞见 [VERSION-DIFFERENCES.md](VERSION-DIFFERENCES.md) 和 `evidence/`。fixture reopen 不是 native disk crash 恢复；历史 L1 native/provider 轨迹不等于本绑定的真实宿主证明。
+本 lane 的 0.99.2 新证据、逐项版本重验、用量与真实负对照见 [VERSION-DIFFERENCES.md](VERSION-DIFFERENCES.md) 和 `evidence/0992-*.json`。真实持久会话内核 smoke、native boundary continuation、disk reopen 和 abort 已实跑；native reopen 不是 crash 恢复，历史 L1 0.87.1 轨迹原样保留。未重验的 child identity 和服务端 reasoning guarantee 在本 session capability view 中保持 unknown。

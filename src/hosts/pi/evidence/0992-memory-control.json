@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-10-02T04:39:23.845Z",
+  "pid": 44400,
+  "piVersion": "0.99.2",
+  "grade": "native-fixture",
+  "memoryControl": true,
+  "checks": {
+    "nativeMemorySessionRefused": true,
+    "extensionErrorsEmpty": true
+  },
+  "trace": [
+    {
+      "index": 0,
+      "type": "binding_fault",
+      "code": "EFK_HOST_SESSION_MISMATCH"
+    },
+    {
+      "index": 1,
+      "type": "extension_session_start",
+      "sessionId": "01a0fae8-eb8a-7162-8993-228eab0930ac"
+    }
+  ],
+  "requests": [],
+  "payloads": [],
+  "receipts": [],
+  "toolCalls": [],
+  "toolResults": [],
+  "faults": [
+    {
+      "code": "EFK_HOST_SESSION_MISMATCH",
+      "message": "Pi requires the existing disk-backed session",
+      "retry": "after-reconcile",
+      "refs": [],
+      "visibility": "internal"
+    }
+  ],
+  "errors": [],
+  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-clMBG9",
+  "paidRequests": 0,
+  "estimatedUsd": 0,
+  "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "costBasis": "catalog/official peak USD reference; no provider invoice",
+  "limitations": [
+    "Controlled host resources, not user TUI/all third-party extensions",
+    "Native disk reopen, not crash recovery",
+    "Native fixture abort, not provider abort billing",
+    "No delegation, activation, task verdict or capability uplift"
+  ]
+}

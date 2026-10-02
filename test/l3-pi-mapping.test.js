@@ -66,11 +66,13 @@ test('cp2 context adds packet to existing messages, tool callbacks retain identi
       const denied = await emit('tool_call', { toolName: 'blocked', toolCallId: 'call-denied', input: { path: 'x' } });
       assert.equal(denied.block, true);
       assert.equal(await emit('tool_call', { toolName: 'read', toolCallId: 'call-1', input: { path: 'x' } }), undefined);
-      await emit('tool_result', { toolName: 'read', toolCallId: 'call-1', input: { path: 'x' }, content: ['result'], isError: true });
+      await emit('tool_result', { toolName: 'read', toolCallId: 'call-1', parentToolCallId: 'parent-1',
+        input: { path: 'x' }, content: ['result'], structuredContent: { parsed: 'result' }, isError: true });
       await finish();
     } });
   await f.start(); assert.equal(value(await f.host.execute(authorized(effect()))).status, 'completed');
   assert.equal(seen.a.effect.effectId, 'effect-1'); assert.equal(seen.event.toolCallId, 'call-1'); assert.equal(seen.event.isError, true);
+  assert.equal(seen.event.parentToolCallId, 'parent-1'); assert.deepEqual(seen.event.structuredContent, { parsed: 'result' });
   assert.equal(await f.emit('tool_call', { toolName: 'blocked', toolCallId: 'ordinary', input: {} }), undefined);
   assert.equal(await f.emit('context', { messages: original }), undefined);
 });

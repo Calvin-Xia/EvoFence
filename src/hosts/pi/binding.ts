@@ -1,12 +1,13 @@
 import { fail, type ErrorEnvelope } from '../../protocol/index.js';
-import { PI_CAPABILITIES, err, ok, stableStringify, judgeRequirements, requiredCapabilities,
+import { err, ok, stableStringify, judgeRequirements, requiredCapabilities,
   capabilityGapError, usageIsComplete, type AuthorizedEffect, type ContextPlan, type HostResult,
   type Receipt, type Usage, type HostPort } from '../../runtime/host-port/index.js';
 import { appendPiRecord, readPiRecords, type PiRecord } from './entries.js';
 import { addPiUsage, mapPiUsage, invocationUsage } from './usage.js';
 import type { PiBinding, PiEvents, PiEventResults, PiExtensionAPI, PiOptions } from './types.js';
+import { PI_SESSION_CAPABILITIES } from './capabilities.js';
 
-export const PI_VERSION = '0.87.1';
+export const PI_VERSION = '0.99.2';
 interface Run {
   readonly authorized: AuthorizedEffect; readonly invocation: string;
   readonly requests: string[]; rows: readonly Usage[]; currentRequest: string | null;
@@ -196,7 +197,7 @@ export function bindPiSession(api: PiExtensionAPI, options: PiOptions): HostResu
       if (prior.receipt !== null && prior.receipt.status !== 'unknown') return ok(prior.receipt);
       return err(fail('EFK_EFFECT_NON_IDEMPOTENT_RETRY', 'Pi dispatch outcome is unknown; do not prompt again'));
     }
-    const gaps = judgeRequirements(PI_CAPABILITIES, requiredCapabilities(effect, authorized.demands ?? []));
+    const gaps = judgeRequirements(PI_SESSION_CAPABILITIES, requiredCapabilities(effect, authorized.demands ?? []));
     if (gaps.length > 0) return err(capabilityGapError(gaps, 'pi'));
     if (effect.kind !== 'host.agent') return err(fail('EFK_CAPABILITY_UNSUPPORTED', `${effect.kind} belongs to a separate host operation binding`));
     if (!isIdle()) return err(fail('EFK_HOST_REVISION_CONFLICT', 'Pi session is busy; dispatch only at an external safe point'));
@@ -212,7 +213,7 @@ export function bindPiSession(api: PiExtensionAPI, options: PiOptions): HostResu
     async observe(id) {
       const gate = sessionGate(id); if (!gate.ok) return gate;
       const guarantee = (status: 'partial' | 'verified', coverage: string[]) => ({ status, coverage, evidenceRefs: [] });
-      return ok({ host: 'pi', idle: isIdle(), capabilities: PI_CAPABILITIES,
+      return ok({ host: 'pi', idle: isIdle(), capabilities: PI_SESSION_CAPABILITIES,
         cancellation: guarantee('partial', ['native-session-abort; provider billing unknown']),
         recovery: guarantee('partial', ['transcript/custom-entry readback; not kernel journal']),
         isolation: guarantee('partial', ['same-user current-session packet']), boardOwners: [] });

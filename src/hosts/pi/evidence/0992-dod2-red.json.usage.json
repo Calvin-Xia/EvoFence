@@ -1,0 +1,59 @@
+[
+  {
+    "id": "native-1",
+    "status": "settled",
+    "reservedAt": "2026-10-02T04:55:42.482Z",
+    "referenceUpperUsd": null,
+    "httpStatus": 200,
+    "usage": {
+      "prompt_tokens": 200,
+      "completion_tokens": 20,
+      "total_tokens": 220,
+      "prompt_tokens_details": {
+        "cached_tokens": 40
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 4
+      }
+    },
+    "estimatedUsd": null
+  },
+  {
+    "id": "native-2",
+    "status": "settled",
+    "reservedAt": "2026-10-02T04:55:42.493Z",
+    "referenceUpperUsd": null,
+    "httpStatus": 200,
+    "usage": {
+      "prompt_tokens": 200,
+      "completion_tokens": 20,
+      "total_tokens": 220,
+      "prompt_tokens_details": {
+        "cached_tokens": 40
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 4
+      }
+    },
+    "estimatedUsd": null
+  },
+  {
+    "id": "native-3",
+    "status": "settled",
+    "reservedAt": "2026-10-02T04:55:42.517Z",
+    "referenceUpperUsd": null,
+    "httpStatus": 200,
+    "usage": {
+      "prompt_tokens": 200,
+      "completion_tokens": 20,
+      "total_tokens": 220,
+      "prompt_tokens_details": {
+        "cached_tokens": 40
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 4
+      }
+    },
+    "estimatedUsd": null
+  }
+]

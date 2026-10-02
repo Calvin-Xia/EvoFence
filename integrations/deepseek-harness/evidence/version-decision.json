@@ -1,0 +1,10 @@
+{
+  "decision": "A",
+  "declaredDsh": "0.2.0-rc.2",
+  "declaredToolsPeer": "0.2.0-rc.2",
+  "observedDsh": "0.2.0-rc.2",
+  "compatibleWithDeclaredExactVersions": true,
+  "profileInstallCompatibility": "unknown",
+  "manifestSha256": "482c84ced5398e6ae7a0c095b1bbb187f707cba1dc79125c8fae6e403afae7b2",
+  "historicalProbeCaveat": "The unchanged support script hardcodes integrationGap.compatibleWithDeclaredExactVersions=false; this fresh equality check supersedes that static field only."
+}

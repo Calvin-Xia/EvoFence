@@ -22,11 +22,15 @@ export interface PiMessage {
 }
 export interface PiToolCall {
   readonly type: 'tool_call'; readonly toolCallId: string; readonly toolName: string;
+  /** 0.99.2 nested tool calls retain their native parent identity. */
+  readonly parentToolCallId?: string;
   readonly input: Readonly<Record<string, unknown>>;
 }
 export interface PiToolResult {
   readonly type: 'tool_result'; readonly toolCallId: string; readonly toolName: string;
+  readonly parentToolCallId?: string;
   readonly input: Readonly<Record<string, unknown>>; readonly content: readonly unknown[];
+  readonly structuredContent?: unknown;
   readonly isError: boolean; readonly usage?: unknown; readonly details?: unknown;
 }
 export interface PiEvents {

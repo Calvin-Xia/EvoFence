@@ -1,0 +1,349 @@
+{
+  "recordedAt": "2026-10-02T04:40:14.130Z",
+  "pid": 13216,
+  "piVersion": "0.99.2",
+  "grade": "provider-live",
+  "memoryControl": false,
+  "checks": {
+    "existingPersistentSession": true,
+    "hostResourcesLoaded": true,
+    "journalNotSettledAtEnd": true,
+    "settledReentryRefused": true,
+    "waitsForAsyncSettledHook": true,
+    "kernelReceiptApplied": true,
+    "realSessionUnchanged": true,
+    "contextAndResources": true,
+    "toolResultObserved": true,
+    "noEarlySettlement": true,
+    "continuation": null,
+    "blockedToolNeverExecutes": null,
+    "usageComplete": true,
+    "rawMatchesSdk": true,
+    "receiptAfterSettlement": true,
+    "noFakeHostExecution": true,
+    "diskRestore": true,
+    "unloadRetainsHost": null,
+    "abortNativeAck": null,
+    "abortUnknownSpend": null,
+    "abortDisconnected": null,
+    "extensionErrorsEmpty": true
+  },
+  "trace": [
+    {
+      "index": 0,
+      "type": "session_agent_start"
+    },
+    {
+      "index": 1,
+      "type": "session_message_end",
+      "role": "system"
+    },
+    {
+      "index": 2,
+      "type": "session_message_end",
+      "role": "user"
+    },
+    {
+      "index": 3,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "stop"
+    },
+    {
+      "index": 4,
+      "type": "session_agent_end"
+    },
+    {
+      "index": 5,
+      "type": "session_agent_settled"
+    },
+    {
+      "index": 6,
+      "type": "existing_host_session",
+      "sessionId": "01a0fae9-a776-7090-ad53-f4131b60b6b0",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-KbtLdQ\\sessions\\2026-10-02T04-40-11-894Z_01a0fae9-a776-7090-ad53-f4131b60b6b0.jsonl",
+      "messages": 3,
+      "grade": "native-fixture"
+    },
+    {
+      "index": 7,
+      "type": "extension_session_start",
+      "sessionId": "01a0fae9-a776-7090-ad53-f4131b60b6b0",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-KbtLdQ\\sessions\\2026-10-02T04-40-11-894Z_01a0fae9-a776-7090-ad53-f4131b60b6b0.jsonl"
+    },
+    {
+      "index": 8,
+      "type": "session_agent_start"
+    },
+    {
+      "index": 9,
+      "type": "session_message_end",
+      "role": "system"
+    },
+    {
+      "index": 10,
+      "type": "session_message_end",
+      "role": "user"
+    },
+    {
+      "index": 11,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "toolUse"
+    },
+    {
+      "index": 12,
+      "type": "session_tool_execution_start"
+    },
+    {
+      "index": 13,
+      "type": "session_tool_execution_end"
+    },
+    {
+      "index": 14,
+      "type": "session_message_end",
+      "role": "toolResult"
+    },
+    {
+      "index": 15,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "stop"
+    },
+    {
+      "index": 16,
+      "type": "binding_agent_end_begin"
+    },
+    {
+      "index": 17,
+      "type": "binding_agent_end_done"
+    },
+    {
+      "index": 18,
+      "type": "after_awaited_agent_end",
+      "receiptPresent": false,
+      "idle": false,
+      "stepReturned": false
+    },
+    {
+      "index": 19,
+      "type": "session_agent_end"
+    },
+    {
+      "index": 20,
+      "type": "extension_settled",
+      "nativeIdle": true,
+      "bindingIdle": false,
+      "stepReturned": false
+    },
+    {
+      "index": 21,
+      "type": "session_agent_settled"
+    },
+    {
+      "index": 22,
+      "type": "kernel_step_returned"
+    },
+    {
+      "index": 23,
+      "type": "kernel_snapshot",
+      "effectId": "effect:round:ac77df292bbdb42cf7def2ec9d0f4feb:n0",
+      "nativeSessionId": "01a0fae9-a776-7090-ad53-f4131b60b6b0",
+      "status": "completed",
+      "appliedReceipts": 1
+    },
+    {
+      "index": 24,
+      "type": "extension_session_start",
+      "sessionId": "01a0fae9-a776-7090-ad53-f4131b60b6b0",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-KbtLdQ\\sessions\\2026-10-02T04-40-11-894Z_01a0fae9-a776-7090-ad53-f4131b60b6b0.jsonl"
+    }
+  ],
+  "requests": [
+    {
+      "id": "provider-1",
+      "status": "settled",
+      "reservedAt": "2026-10-02T04:40:12.099Z",
+      "referenceUpperUsd": 0.3024576,
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 10841,
+        "completion_tokens": 59,
+        "total_tokens": 10900,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 12
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 10841
+      },
+      "estimatedUsd": 0.0033231
+    },
+    {
+      "id": "provider-2",
+      "status": "settled",
+      "reservedAt": "2026-10-02T04:40:13.169Z",
+      "referenceUpperUsd": 0.3024576,
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 10916,
+        "completion_tokens": 104,
+        "total_tokens": 11020,
+        "prompt_tokens_details": {
+          "cached_tokens": 10752
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 99
+        },
+        "prompt_cache_hit_tokens": 10752,
+        "prompt_cache_miss_tokens": 164
+      },
+      "estimatedUsd": 0.000238512
+    }
+  ],
+  "payloads": [
+    {
+      "requestId": "provider-1",
+      "model": "deepseek-flash",
+      "origin": "https://api.deepseek.com",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "maxTokens": 2048,
+      "hostContextPreserved": true,
+      "hostSkillPreserved": true,
+      "nodeContextInjected": true,
+      "toolNames": [
+        "read",
+        "evofence_smoke_echo",
+        "evofence_smoke_denied"
+      ]
+    },
+    {
+      "requestId": "provider-2",
+      "model": "deepseek-flash",
+      "origin": "https://api.deepseek.com",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "maxTokens": 2048,
+      "hostContextPreserved": true,
+      "hostSkillPreserved": true,
+      "nodeContextInjected": true,
+      "toolNames": [
+        "read",
+        "evofence_smoke_echo",
+        "evofence_smoke_denied"
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "model": "deepseek-flash",
+      "stopReason": "toolUse",
+      "usage": {
+        "input": 10841,
+        "output": 59,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 12,
+        "totalTokens": 10900,
+        "cost": {
+          "input": 0.0032523,
+          "output": 0.0000708,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0033231000000000003
+        }
+      }
+    },
+    {
+      "model": "deepseek-flash",
+      "stopReason": "stop",
+      "usage": {
+        "input": 164,
+        "output": 104,
+        "cacheRead": 10752,
+        "cacheWrite": 0,
+        "reasoning": 99,
+        "totalTokens": 11020,
+        "cost": {
+          "input": 0.000049199999999999997,
+          "output": 0.0001248,
+          "cacheRead": 0.000064512,
+          "cacheWrite": 0,
+          "total": 0.000238512
+        }
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "effectId": "effect:round:ac77df292bbdb42cf7def2ec9d0f4feb:n0",
+      "toolCallId": "call_00_QmYUhe7JZ2a4hYjjHV1o5606",
+      "toolName": "evofence_smoke_echo",
+      "input": {
+        "text": "smoke-ok"
+      }
+    }
+  ],
+  "toolResults": [
+    {
+      "effectId": "effect:round:ac77df292bbdb42cf7def2ec9d0f4feb:n0",
+      "toolCallId": "call_00_QmYUhe7JZ2a4hYjjHV1o5606",
+      "toolName": "evofence_smoke_echo",
+      "input": {
+        "text": "smoke-ok"
+      },
+      "isError": false
+    }
+  ],
+  "faults": [],
+  "errors": [],
+  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-KbtLdQ",
+  "paidRequests": 2,
+  "estimatedUsd": 0.003561612,
+  "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "costBasis": "catalog/official peak USD reference; no provider invoice",
+  "limitations": [
+    "Controlled host resources, not user TUI/all third-party extensions",
+    "Native disk reopen, not crash recovery",
+    "Native fixture abort, not provider abort billing",
+    "No delegation, activation, task verdict or capability uplift"
+  ],
+  "sourceHashes": [
+    {
+      "file": "src/hosts/pi/binding.ts",
+      "sha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672"
+    },
+    {
+      "file": "src/hosts/pi/types.ts",
+      "sha256": "5b1d6360ff19fd43357eefc8f6bdfc97b1058333c82181d0477a81c55a69b7e4"
+    },
+    {
+      "file": "src/hosts/pi/usage.ts",
+      "sha256": "c8dff8241566bcd7f4b513d03f8a92ec66e598a38b18dcec1e2e3bc22095f5dc"
+    },
+    {
+      "file": "src/hosts/pi/entries.ts",
+      "sha256": "5dc07f02b0a599351fb6e2a82ada3422c777d667dfcfb924ea9aadf0d1c3365b"
+    },
+    {
+      "file": "src/hosts/pi/capabilities.ts",
+      "sha256": "90db2b5ca3dd02e34002d180ac615cf4d144199c0603ee76a97c719224c6a2a3"
+    },
+    {
+      "file": "src/hosts/pi/evidence/native-session.mjs",
+      "sha256": "74b6780eeaddd89f899e8564d2849321fb465a4cc21f796b3e908e4b4a34556e"
+    },
+    {
+      "file": "src/hosts/pi/evidence/native-support.mjs",
+      "sha256": "316a7602d18bcd1c5d7db229804be04d832a2e01f04a95a6243461ec54196291"
+    }
+  ],
+  "sourceHashCapture": "Recorded after live run and before further source changes; provider requests not repeated"
+}

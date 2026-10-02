@@ -1,0 +1,120 @@
+{
+  "recordedAt": "2026-10-02T04:55:44.265Z",
+  "controls": [
+    {
+      "dod": "DoD1",
+      "name": "remove native disk-backed session gate",
+      "from": "manager.getSessionFile() === undefined",
+      "to": "false",
+      "args": [
+        "--memory-control"
+      ],
+      "evidenceGrade": "native-fixture: actual Pi 0.99.2 SDK process, not hand-emitted hook events",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "98d7818952603062d71bc554abf37bcdb2033915d2b74f1a24e32f95951b9bee",
+      "build": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "node_modules/typescript/bin/tsc"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "red": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "test/l3-pi-native-session.test.js",
+          "--probe",
+          "--memory-control",
+          "--output=src/hosts/pi/evidence/0992-dod1-red.json"
+        ],
+        "exit": 1,
+        "signal": null,
+        "stdout": "{\"piVersion\":\"0.99.2\",\"pid\":30320,\"checks\":{\"nativeMemorySessionRefused\":false},\"paidRequests\":0,\"estimatedUsd\":0}\n",
+        "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: DoD1 rejects real native in-memory session\r\n\r\nfalse !== true\r\n\r\n    at runNative (file:///C:/Users/Calvin-Xia/EvoFence-wt/harness-kernel/l3-pi-b/test/l3-pi-native-session.test.js:87:12)\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\r\n    at async file:///C:/Users/Calvin-Xia/EvoFence-wt/harness-kernel/l3-pi-b/test/l3-pi-native-session.test.js:187:39 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: false,\r\n  expected: true,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n"
+      },
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "rebuild": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "node_modules/typescript/bin/tsc"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "green": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "test/l3-pi-native-session.test.js",
+          "--probe",
+          "--memory-control",
+          "--output=src/hosts/pi/evidence/0992-dod1-green.json"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "{\"piVersion\":\"0.99.2\",\"pid\":14760,\"checks\":{\"nativeMemorySessionRefused\":true,\"extensionErrorsEmpty\":true},\"paidRequests\":0,\"estimatedUsd\":0}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "dod": "DoD2",
+      "name": "publish completed native receipt inside agent_end before continuation/settlement",
+      "from": "active.ended = true;",
+      "to": "active.ended = true; record('receipt', active.authorized, makeReceipt(active, 'completed', null));",
+      "args": [],
+      "evidenceGrade": "native-fixture: actual Pi 0.99.2 SDK process, not hand-emitted hook events",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "660d1752822bcf70f2599b1cddd64a876ee7f7809d90fba3904045aa16ebe79b",
+      "build": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "node_modules/typescript/bin/tsc"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "red": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "test/l3-pi-native-session.test.js",
+          "--probe",
+          "--output=src/hosts/pi/evidence/0992-dod2-red.json"
+        ],
+        "exit": 1,
+        "signal": null,
+        "stdout": "{\"piVersion\":\"0.99.2\",\"pid\":16256,\"checks\":{\"existingPersistentSession\":true,\"hostResourcesLoaded\":true,\"journalNotSettledAtEnd\":true,\"settledReentryRefused\":true,\"waitsForAsyncSettledHook\":true,\"kernelReceiptApplied\":true,\"realSessionUnchanged\":true,\"contextAndResources\":true,\"toolResultObserved\":true,\"noEarlySettlement\":false},\"paidRequests\":0,\"estimatedUsd\":0}\n",
+        "stderr": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: DoD2 no receipt before native continuation/settlement\r\n\r\nfalse !== true\r\n\r\n    at runNative (file:///C:/Users/Calvin-Xia/EvoFence-wt/harness-kernel/l3-pi-b/test/l3-pi-native-session.test.js:115:12)\r\n    at async file:///C:/Users/Calvin-Xia/EvoFence-wt/harness-kernel/l3-pi-b/test/l3-pi-native-session.test.js:187:39 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: false,\r\n  expected: true,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.12.0\r\n"
+      },
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "rebuild": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "node_modules/typescript/bin/tsc"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "green": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "test/l3-pi-native-session.test.js",
+          "--probe",
+          "--output=src/hosts/pi/evidence/0992-dod2-green.json"
+        ],
+        "exit": 0,
+        "signal": null,
+        "stdout": "{\"piVersion\":\"0.99.2\",\"pid\":37868,\"checks\":{\"existingPersistentSession\":true,\"hostResourcesLoaded\":true,\"journalNotSettledAtEnd\":true,\"settledReentryRefused\":true,\"waitsForAsyncSettledHook\":true,\"kernelReceiptApplied\":true,\"realSessionUnchanged\":true,\"contextAndResources\":true,\"toolResultObserved\":true,\"noEarlySettlement\":true,\"continuation\":true,\"blockedToolNeverExecutes\":true,\"usageComplete\":true,\"rawMatchesSdk\":true,\"receiptAfterSettlement\":true,\"noFakeHostExecution\":true,\"diskRestore\":true,\"unloadRetainsHost\":true,\"abortNativeAck\":true,\"abortUnknownSpend\":true,\"abortDisconnected\":true,\"extensionErrorsEmpty\":true},\"paidRequests\":0,\"estimatedUsd\":0}\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "paidRequests": 0
+}
