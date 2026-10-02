@@ -8,7 +8,7 @@
 
 1. `promote` 消费一个 EvaluationReceipt，按可信 PolicyPort 提供的规则核验精确 revision、session、scope、权限交集、深度、能力、期限和撤销代数。原有 `recordDecision` 是评价完整绑定、guardrails 和资格转移的判定入口。临时策略还需要 `allowTemporary=true` 的明确规则。
 2. 完整旧指针（包含 version、scope、资产身份和实际 snapshot）参与 CAS。registry、正式指针和 PromotionRecord 原子写入同一 session journal；评价内容 digest 不重复消费。同请求同内容返回已有记录，改内容返回 `EFK_IDEMPOTENCY_COLLISION`。
-3. `activate` 经 HostPort.observe 确認安全点，重新核验当前资格、权限、grant、lease、deadline 与能力。先提交 outbox intention，再领取 dispatch claim，最后调用 `HostPort.execute` 的 `host.activate`。`previousSnapshot` 必须等于事务旧快照。
+3. `activate` 经 `HostPort.observe` 确认安全点，重新核验当前资格、权限、grant、lease、deadline 与能力。先提交 outbox intention，再领取 dispatch claim，最后调用 `HostPort.execute(authorized)`，其中 `authorized.effect.kind === 'host.activate'`。`previousSnapshot` 必须等于事务旧快照。
 4. HostPort Receipt 绑定原 effect/attempt；其唯一 ActivationReceipt 必须由注册 host adapter 签发，绑定 asset、host session、scope、authorization、evaluation 和 previousSnapshot。只有实际 `active` 与可读 newSnapshot 才能切换已激活指针；`failed` 保留原实际资产与快照。
 5. 同一 service 的修改串行排队。不同实例共享 EventStore CAS；同一 host session 有 pending activation 时拒绝其他指针变更和下一任务读取。并发提交不会覆盖已提交更新，冲突必须刷新后用新请求提交。
 
@@ -19,7 +19,7 @@
 - Receipt 已保存但 registry/pointer CAS 失败：从 journal 的原回执重建最终提交；无需调用宿主。并发 reconcile 只应用一次。
 - unknown 或缺失/绑定错误的激活证据：保留 pending 和旧指针，typed 拒绝后续任务。无法确认的外部动作不推断成失败，也不重发。
 - 已实际应用但提交时资格/授权失效：记录 `applied-unqualified` 与真实新快照，保留 typed 拒绝，禁止任务使用。不会把外部真实变更伪装成旧快照，也不会授予新资格；可以预授权的补偿回退恢复已验证版本。
-- `revoke` 复用原 registry 的撤销入口并保留证据。`rollback` 只选同 pointer/session/scope 的历史确认快照，要求目标目前仍有有效资格；经新的 `host.activate`、新 ActivationReceipt 和 ActivationDecision 确认精确恢复。恢复既有资格不产生第二次评价/晋升，不重新授予 registry 资格。失败回退保留当前实际快照。
+- `revoke` 复用原 registry 的撤销入口并保留证据。`rollback` 只选同 pointer/session/scope 的历史确认快照，要求目标目前仍有有效资格；经 `HostPort.observe` 和新的 `HostPort.execute(authorized)`（`authorized.effect.kind === 'host.activate'`）、新 ActivationReceipt 和 ActivationDecision 确认精确恢复。恢复既有资格不产生第二次评价/晋升，不重新授予 registry 资格。失败回退保留当前实际快照。
 - 撤销、rollback 是独立、明确的操作，不自动替用户选择目标版本。
 
 ## 验证记录（2026-10-02）

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { Worker } from 'node:worker_threads';
 import { createMemoryArtifactStore, createMemoryEventStore } from '../dist/storage/index.js';
 import { canonical, storeOk, storeFail } from '../dist/kernel/store/index.js';
 import { emptyRegistry, stageRevision, revisionDigest, recordDecision, qualification } from '../dist/learning/assets/index.js';
@@ -467,4 +468,100 @@ test('cp1 service construction reads no injected ports and initialization cannot
     journal: new Proxy({}, { get() { assert.fail('constructor read journal'); } }) });
   assert.equal(typeof service.promote, 'function');
   denied(await f.service.initialize(emptyRegistry(), []), 'EFK_IDEMPOTENCY_COLLISION');
+});
+
+test('F1 rejected evaluation and rejected activation judgement publish zero DecisionRecords', async () => {
+  const expired = await fixture({ evaluationExpiry: 30 }), before = expired.artifacts.ids();
+  const expiredWrites = [], expiredPut = expired.artifacts.put.bind(expired.artifacts);
+  expired.artifacts.put = (ref, bytes) => { expiredWrites.push({ ref, bytes }); return expiredPut(ref, bytes); };
+  expired.setNow(30);
+  denied(await expired.service.promote(expired.input()), 'EFK_ASSET_EXPIRED');
+  assert.deepEqual(expired.artifacts.ids(), before);
+  assert.equal(expiredWrites.filter(w => w.ref.schema.name === 'DecisionRecord').length, 0);
+  assert.equal(expiredWrites.filter(w => w.ref.schema.name === 'DecisionRecord' && JSON.parse(w.bytes).kind === 'promotion').length, 0);
+
+  const f = await fixture(), record = await f.promote(), writes = [], put = f.artifacts.put.bind(f.artifacts);
+  f.artifacts.put = (ref, bytes) => { writes.push({ ref, bytes }); return put(ref, bytes); };
+  f.registryPorts.authorize = action => action === 'activate' ? storeFail('EFK_AUTHORITY_DENIED', 'fixture commit-time refusal') : storeOk(true);
+  denied(await f.service.activate({ promotionId: record.promotionId, effect: f.effect(record) }), 'EFK_AUTHORITY_DENIED');
+  assert.equal(f.state().promotions[0].status, 'applied-unqualified');
+  assert.equal(writes.filter(w => w.ref.schema.name === 'DecisionRecord').length, 0);
+});
+
+test('F2 interleaved synchronous promotion writers reach journal CAS on the same loaded revision', { timeout: 15000 }, async () => {
+  const f = await fixture(), initialRevision = unwrap(f.ports.journal.exportSession(f.ports.sessionId)).revision;
+  const calls = [], held = [], loaded = [];
+  let bothLoaded;
+  const barrier = new Promise(resolve => { bothLoaded = resolve; });
+  // Each worker runs the unchanged synchronous promote. Synchronous port RPC provides a real
+  // pause after load without inserting an await or another execution path into product code.
+  const source = `
+    const { parentPort, workerData } = require('node:worker_threads');
+    const { createHash } = require('node:crypto');
+    const signal = new Int32Array(workerData.signal), buffer = new Uint8Array(workerData.buffer);
+    function call(domain, method, args) {
+      Atomics.store(signal, 0, 0);
+      parentPort.postMessage({ type: 'call', domain, method, args });
+      while (Atomics.load(signal, 0) === 0) Atomics.wait(signal, 0, 0);
+      return JSON.parse(new TextDecoder().decode(buffer.subarray(0, Atomics.load(signal, 1))));
+    }
+    const port = domain => new Proxy({}, { get: (_, method) => (...args) => call(domain, method, args) });
+    (async () => {
+      const { createPromotionService } = await import(workerData.entry);
+      const service = createPromotionService({ sessionId: workerData.sessionId, hostIssuer: workerData.hostIssuer,
+        journal: port('journal'), host: port('host'), clock: port('clock'), policy: port('policy'),
+        registry: { issuers: workerData.issuers, artifacts: port('artifacts'),
+          digest: { digest: bytes => 'sha256:' + createHash('sha256').update(bytes).digest('hex') },
+          authorize: (...args) => call('registry', 'authorize', args) } });
+      parentPort.postMessage({ type: 'result', result: await service.promote(workerData.input) });
+    })().catch(error => parentPort.postMessage({ type: 'error', message: error.stack }));
+  `;
+  const targets = { journal: f.ports.journal, artifacts: f.artifacts, host: f.ports.host,
+    clock: f.ports.clock, policy: f.ports.policy, registry: f.registryPorts };
+  function start(input) {
+    const signal = new SharedArrayBuffer(8), buffer = new SharedArrayBuffer(1024 * 1024);
+    const control = new Int32Array(signal), bytes = new Uint8Array(buffer);
+    const worker = new Worker(source, { eval: true, workerData: { signal, buffer, input,
+      entry: new URL('../dist/learning/promotion/index.js', import.meta.url).href,
+      sessionId: f.ports.sessionId, hostIssuer: f.ports.hostIssuer, issuers: f.registryPorts.issuers } });
+    let resolve, reject;
+    const result = new Promise((yes, no) => { resolve = yes; reject = no; });
+    const run = { worker, result };
+    function respond(value) {
+      const encoded = new TextEncoder().encode(JSON.stringify(value));
+      assert.ok(encoded.length <= bytes.length);
+      bytes.set(encoded); Atomics.store(control, 1, encoded.length); Atomics.store(control, 0, 1); Atomics.notify(control, 0);
+    }
+    worker.on('error', reject);
+    worker.on('message', message => {
+      try {
+        if (message.type === 'result') { resolve(message.result); return; }
+        if (message.type === 'error') { reject(new Error(message.message)); return; }
+        if (message.domain === 'journal' && message.method === 'append') {
+          calls.push({ expected: message.args[0].expectedRevision,
+            actual: unwrap(f.ports.journal.exportSession(f.ports.sessionId)).revision });
+        }
+        const value = targets[message.domain][message.method](...message.args);
+        if (message.domain === 'journal' && message.method === 'exportSession') loaded.push(unwrap(value).revision);
+        if (message.domain === 'policy' && message.method === 'rule') {
+          held.push({ run, resume: () => respond(value) });
+          if (held.length === 2) bothLoaded();
+        } else respond(value);
+      } catch (error) { reject(error); }
+    });
+    return run;
+  }
+  const runs = [start(f.input(1)), start(f.input(2))];
+  try {
+    await Promise.race([barrier, ...runs.map(run => run.result.then(() => assert.fail('writer completed before both load pauses')))]);
+    assert.deepEqual(loaded, [initialRevision, initialRevision]);
+    assert.equal(calls.length, 0); assert.equal(unwrap(f.ports.journal.exportSession(f.ports.sessionId)).revision, initialRevision);
+    held[0].resume(); unwrap(await held[0].run.result);
+    const winner = canonical(f.state()), winningRevision = unwrap(f.ports.journal.exportSession(f.ports.sessionId)).revision;
+    held[1].resume(); denied(await held[1].run.result, 'EFK_REVISION_CONFLICT');
+    assert.deepEqual(calls, [{ expected: initialRevision, actual: initialRevision }, { expected: initialRevision, actual: winningRevision }]);
+    assert.equal(canonical(f.state()), winner);
+    assert.equal(unwrap(f.ports.journal.exportSession(f.ports.sessionId)).revision, winningRevision);
+    assert.equal(f.state().promotions.length, 1);
+  } finally { await Promise.all(runs.map(run => run.worker.terminate())); }
 });

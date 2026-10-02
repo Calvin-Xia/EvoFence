@@ -6,14 +6,20 @@ import type { EventDraft, ExportedSession, StoreResult } from '../../kernel/stor
 import type { Effect } from '../../runtime/host-port/index.js';
 import type { PromotionPorts, PromotionState } from './types.js';
 
-export function publish(ports: PromotionPorts, value: unknown, name: string, producer: ActorRef,
-  id?: string): StoreResult<ArtifactRef> {
+/** Prepare immutable bytes for judgement without publishing them to the backing store. */
+export function prepareArtifact(ports: PromotionPorts, value: unknown, name: string, producer: ActorRef,
+  id?: string): { ref: ArtifactRef; bytes: string } {
   const bytes = canonical(value), digest = ports.registry.digest.digest(bytes);
   const ref: ArtifactRef = { protocol: { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' },
     id: id === undefined ? `promotion-artifact:${digest.slice(7)}` : id, digest, producer, binding: null,
     schema: { name, version: '1.1.0', digest: ports.registry.digest.digest(name) }, location: `promotion:${digest.slice(7)}`,
     visibility: name === 'PromotionState' || name === 'DecisionRecord' ? 'private' : 'internal',
     expiresAt: null, partition: 'not-evaluation' };
+  return { ref, bytes };
+}
+export function publish(ports: PromotionPorts, value: unknown, name: string, producer: ActorRef,
+  id?: string): StoreResult<ArtifactRef> {
+  const { ref, bytes } = prepareArtifact(ports, value, name, producer, id);
   const saved = ports.registry.artifacts.put(ref, bytes);
   return saved.ok ? storeOk(ref) : saved;
 }
