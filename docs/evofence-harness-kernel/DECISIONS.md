@@ -37,5 +37,6 @@
 | task · passed | l3_workspace_txn | 代码与技能产物事务 | 2026-10-01T21:48:41.001Z |
 | task · passed | l4_asset_registry | 能力资产版本与资格 | 2026-10-01T22:03:10.358Z |
 | task · passed | l4_evolution_eval | 候选与长期能力独立评价 | 2026-10-01T22:51:31.141Z |
+| task · passed | l4_experience | 轨迹提炼与候选生成 | 2026-10-02T12:23:47.142Z |
 | task · passed | l4_retrieval | 适用经验检索与注入 | 2026-10-01T22:26:51.375Z |
 | task · passed | l5_legacy_boundary | 旧格式只读边界与 breaking 指南 | 2026-10-01T22:32:40.347Z |
