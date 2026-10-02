@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { copyFileSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { copyFileSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { Ledger } from '../dist/lib/ledger.js';
@@ -12,6 +12,7 @@ import { createMemoryEventStore, createMemoryArtifactStore } from '../dist/stora
 import { emptyRegistry, stageRevision } from '../dist/learning/assets/index.js';
 import { decode } from '../dist/protocol/index.js';
 import { canonical } from '../dist/kernel/store/index.js';
+import { testLoaderArgs } from '../scripts/probes/loader-support.mjs';
 
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const unwrap = r => { assert.equal(r.ok, true, JSON.stringify(r)); return r.value; };
@@ -137,7 +138,7 @@ test('cp2 actual process termination before publication recovers through explici
     import { importLegacy } from './dist/storage/legacy/importer.js';
     importLegacy(JSON.parse(readFileSync(process.argv[1], 'utf8')), process.argv[2], 111);`;
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
-  const killed = spawnSync(process.execPath, ['--experimental-loader', pathToFileURL(loader).href,
+  const killed = spawnSync(process.execPath, [...testLoaderArgs(loader),
     '--input-type=module', '-e', script, input, f.archive], { cwd: root, env, encoding: 'utf8', timeout: 15000 });
   assert.equal(killed.error, undefined); assert.equal(killed.status, 73, killed.stdout + killed.stderr);
   const namespace = path.join(f.archive, SOURCE_DIRECTORY), interrupted = readdirSync(namespace);
@@ -165,6 +166,22 @@ test('cp3 source directory, namespace links and source hardlinks never become wr
   assert.equal(importLegacy(f.bundle, f.archive, 123).error.code, 'EFK_SCHEMA_INVALID');
   assert.equal(hash(readFileSync(f.file)), before); assert.equal(hash(readFileSync(destination)), before);
 });
+test('cp3 canonical source directory aliases reject archive writes with present or removed source bytes', t => {
+  for (const missing of [false, true]) {
+    const f = fixture(t), sourceDirectory = realpathSync.native(f.sourceDir);
+    const before = hash(readFileSync(f.file));
+    if (missing) rmSync(f.file);
+    const entries = readdirSync(f.sourceDir);
+    const result = importLegacy(f.bundle, sourceDirectory, 123);
+    // Windows 8.3 spelling and native long spelling name the same source directory.
+    // POSIX has no short-name alias; the same source-directory denial still applies.
+    assert.equal(result.ok, false, 'canonical source alias became an archive write target');
+    assert.equal(result.error.code, 'EFK_AUTHORITY_DENIED');
+    assert.deepEqual(readdirSync(f.sourceDir), entries, 'denial created a source namespace');
+    if (!missing) assert.equal(hash(readFileSync(f.file)), before);
+  }
+});
+
 test('cp3 altered per-record provenance and execution metadata are refused on archive read', t => {
   const f = fixture(t), first = unwrap(importLegacy(f.bundle, f.archive, 123));
   for (const mutate of [a => a.records[0].executable = true, a => a.records[0].provenance.sourceDigest = hash('forged'),

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { testLoaderArgs, namedTapFailure } from '../scripts/probes/loader-support.mjs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -28,7 +29,7 @@ const controls = [
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 function run(control, loader) {
   const args = ['--test', '--test-reporter=tap', `--test-name-pattern=${control.title}`, `test/l5-legacy-${control.file}.test.js`];
-  if (loader) args.unshift('--experimental-loader', pathToFileURL(loader).href);
+  if (loader) args.unshift(...testLoaderArgs(loader));
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(process.execPath, args, { cwd: root, env, encoding: 'utf8', timeout: 15000 });
   assert.equal(result.error, undefined); assert.equal(result.signal, null);
@@ -44,7 +45,8 @@ for (const control of controls) {
       writeFileSync(loader, `export async function load(url, context, nextLoad) {
         const result = await nextLoad(url, context);
         if (!url.endsWith('/dist/storage/legacy/${control.module}.js')) return result;
-        let source = String(result.source);
+        // Match code across LF/CRLF while preserving exact on-disk digest checks.
+        let source = String(result.source).replace(/\\r\\n/g, '\\n');
         for (const [from, to] of ${JSON.stringify(control.edits)}) {
           if (source.split(from).length !== 2) throw Error('mutation site missing or duplicated');
           source = source.replace(from, to);
@@ -54,7 +56,7 @@ for (const control of controls) {
       const green = run(control), red = run(control, loader), restored = run(control);
       assert.deepEqual([green.exit, green.pass, green.fail], [0, 1, 0]);
       assert.deepEqual([red.exit, red.pass, red.fail], [1, 0, 1]);
-      assert.ok(red.stdout.includes(`not ok 1 - ${control.title}`), red.stdout + red.stderr);
+      assert.ok(namedTapFailure(red.stdout, control.title), red.stdout + red.stderr);
       assert.ok(red.stdout.includes('AssertionError'), red.stdout + red.stderr);
       assert.deepEqual([restored.exit, restored.pass, restored.fail], [0, 1, 0]);
       assert.equal(hash(readFileSync(target)), before, 'negative control modified dist');

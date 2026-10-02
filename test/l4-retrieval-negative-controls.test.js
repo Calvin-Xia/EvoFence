@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { testLoaderArgs, namedTapFailure } from '../scripts/probes/loader-support.mjs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -28,7 +29,7 @@ function run(control, loader) {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const args = ['--test', '--test-reporter=tap', `--test-name-pattern=${control.title}`,
     `test/l4-retrieval-${control.file}.test.js`];
-  if (loader) args.unshift('--experimental-loader', pathToFileURL(loader).href);
+  if (loader) args.unshift(...testLoaderArgs(loader));
   const result = spawnSync(process.execPath, args, { cwd: root, env, encoding: 'utf8', timeout: 15000 });
   assert.equal(result.error, undefined); assert.equal(result.signal, null);
   return { exit: result.status, tests: Number(result.stdout.match(/^# tests (\d+)$/m)?.[1]),
@@ -44,7 +45,8 @@ for (const control of controls) {
       writeFileSync(loader, `export async function load(url, context, nextLoad) {
         const result = await nextLoad(url, context);
         if (!url.endsWith('/dist/learning/retrieval/retrieve.js')) return result;
-        const source = String(result.source), from = ${JSON.stringify(control.from)};
+        // Normalize only the in-memory injection source; raw dist bytes stay pinned.
+        const source = String(result.source).replace(/\\r\\n/g, '\\n'), from = ${JSON.stringify(control.from)};
         if (source.split(from).length !== 2) throw Error('mutation site missing or duplicated');
         return { ...result, source: source.replace(from, ${JSON.stringify(control.to)}) };
       }`, 'utf8');
@@ -52,7 +54,7 @@ for (const control of controls) {
       assert.deepEqual([green.exit, green.pass, green.fail], [0, 1, 0]);
       assert.deepEqual([red.exit, red.pass, red.fail], [1, 0, 1], red.stdout + red.stderr);
       assert.ok(red.stdout.includes('AssertionError'), red.stdout + red.stderr);
-      assert.ok(red.stdout.includes(control.title));
+      assert.ok(namedTapFailure(red.stdout, control.title), red.stdout + red.stderr);
       assert.deepEqual([restored.exit, restored.pass, restored.fail], [0, 1, 0]);
       assert.equal(green.tests, red.tests); assert.equal(green.tests, restored.tests);
       assert.equal(sha(readFileSync(file)), sha(original));

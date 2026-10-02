@@ -41,10 +41,17 @@ function inside(parent: string, child: string): boolean {
   const relative = path.relative(parent, child);
   return relative === '' || (!path.isAbsolute(relative) && relative !== '..' && !relative.startsWith(`..${path.sep}`));
 }
+function sourcePath(file: string): string {
+  if (existsSync(file)) return realpathSync.native(file);
+  const absolute = path.resolve(file), parent = path.dirname(absolute);
+  // Source-less history remains readable, but an existing parent still has a
+  // native identity: Windows 8.3 aliases cannot turn it into an archive target.
+  return existsSync(parent) ? path.join(realpathSync.native(parent), path.basename(absolute)) : absolute;
+}
 function destination(archiveRoot: string, bundle: LegacyExport): string {
-  const root = external('EFK_ARTIFACT_UNAVAILABLE', 'archiveRoot must be an existing directory', () => realpathSync(archiveRoot));
+  const root = external('EFK_ARTIFACT_UNAVAILABLE', 'archiveRoot must be an existing directory', () => realpathSync.native(archiveRoot));
   if (!lstatSync(root).isDirectory()) reject('EFK_AUTHORITY_DENIED', 'archiveRoot is not a directory');
-  const source = existsSync(bundle.source.file) ? realpathSync(bundle.source.file) : path.resolve(bundle.source.file);
+  const source = sourcePath(bundle.source.file);
   const directory = path.join(root, SOURCE_DIRECTORY);
   if (inside(path.dirname(source), directory) || inside(directory, source)) {
     reject('EFK_AUTHORITY_DENIED', 'historical namespace must be separate from the source directory');

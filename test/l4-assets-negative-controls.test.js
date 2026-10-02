@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { testLoaderArgs, namedTapFailure } from '../scripts/probes/loader-support.mjs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -30,7 +31,7 @@ const controls = [
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 function run(control, loader) {
   const args = ['--test', '--test-reporter=tap', `--test-name-pattern=${control.title}`, `test/l4-assets-${control.file}.test.js`];
-  if (loader) args.unshift('--experimental-loader', pathToFileURL(loader).href);
+  if (loader) args.unshift(...testLoaderArgs(loader));
   // A nested runner must not inherit the parent runner's binary IPC reporter context.
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(process.execPath, args, { cwd: root, env, encoding: 'utf8', timeout: 15000 });
@@ -48,7 +49,8 @@ for (const control of controls) {
       writeFileSync(loader, `export async function load(url, context, nextLoad) {
         const result = await nextLoad(url, context);
         if (!url.endsWith('/dist/learning/assets/${control.module}.js')) return result;
-        let source = String(result.source);
+        // Match emitted code across LF/CRLF without changing the file on disk.
+        let source = String(result.source).replace(/\\r\\n/g, '\\n');
         for (const [from, to] of ${JSON.stringify(control.edits)}) {
           if (source.split(from).length !== 2) throw Error('mutation site missing or duplicated');
           source = source.replace(from, to);
@@ -59,7 +61,7 @@ for (const control of controls) {
       // Older supported Node runners include pattern-skipped cases in `tests`.
       assert.deepEqual([green.exit, green.pass, green.fail], [0, 1, 0]);
       assert.deepEqual([red.exit, red.pass, red.fail], [1, 0, 1]);
-      assert.ok(red.stdout.includes(`not ok 1 - ${control.title}`), red.stdout + red.stderr);
+      assert.ok(namedTapFailure(red.stdout, control.title), red.stdout + red.stderr);
       assert.ok(red.stdout.includes('AssertionError'), red.stdout + red.stderr);
       assert.deepEqual([restored.exit, restored.pass, restored.fail], [0, 1, 0]);
       assert.equal(green.tests, red.tests); assert.equal(green.tests, restored.tests);
