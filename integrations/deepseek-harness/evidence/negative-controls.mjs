@@ -7,6 +7,8 @@ import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const output = path.join(root, '.evofence/out/dsh-evidence');
+fs.mkdirSync(output, { recursive: true });
 const results = [];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 function run(args) {
@@ -44,5 +46,5 @@ for (const mutation of mutations) {
   results.push({ ...mutation, originalSha256: hash(original), restoredSha256, baseline, red, green });
 }
 const report = { evidenceLevel: 'fault-injection-on-native-fixture', version: '0.2.0-rc.2', results };
-fs.writeFileSync(path.join(root, 'integrations/deepseek-harness/evidence/negative-controls.json'), JSON.stringify(report, null, 2) + '\n');
+fs.writeFileSync(path.join(output, 'negative-controls.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(results.map(r => ({ dod: r.dod, baseline: r.baseline.exitCode, mutated: r.red.exitCode, restored: r.green.exitCode, sourceRestored: r.originalSha256 === r.restoredSha256 }))));

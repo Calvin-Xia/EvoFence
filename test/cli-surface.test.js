@@ -346,7 +346,7 @@ test('every write-file --json form prints a bare JSON envelope and really writes
 test('the envelope path survives a root spelled differently from the target (symlink / 8.3 alias)', async (t) => {
   // `path.relative` is purely lexical, so a root and a target that name the same directory
   // through different spellings cannot be related: it returns a `../..` chain. CI temp dirs
-  // carry 8.3 short names (`C:\Users\RUNNER~1\...`) while git reports the long spelling, which
+  // carry 8.3 short user-directory names while git reports the long spelling, which
   // is how windows-latest exposed this in `ledger export`. A link reproduces the same mismatch
   // deterministically on every platform instead of waiting for a short-named temp directory.
   const base = await mkdtemp(path.join(os.tmpdir(), 'evofence-repo-rel-'));
@@ -374,7 +374,7 @@ test('the envelope path survives a root spelled differently from the target (sym
 test('the write-file envelope reports an in-repo path when the cwd is spelled differently from the git root', async (t) => {
   // `git rev-parse --show-toplevel` resolves a directory link to its real path while
   // `process.cwd()` keeps the link spelling, so root and target disagree lexically — the same
-  // mismatch a CI temp directory causes through its 8.3 short name (`C:\Users\RUNNER~1\...`),
+  // mismatch a CI temp directory causes through its 8.3 short user-directory name,
   // which is how windows-latest caught the bare `path.relative` in `ledger export`.
   const { directory, root } = await makeRepo('envelope-link');
   try {

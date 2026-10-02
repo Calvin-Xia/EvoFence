@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const npm = path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js');
-const evidence = path.join(root, 'integrations/deepseek-harness/evidence');
+const evidence = path.join(root, '.evofence/out/dsh-evidence');
+fs.mkdirSync(evidence, { recursive: true });
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const outputs = [];
 function run(executable, args, command) {

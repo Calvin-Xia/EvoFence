@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, basename } from 'node:path';
 import { canonical, storeOk } from '../dist/kernel/store/index.js';
@@ -70,8 +70,7 @@ test('real offline measurements: fresh Node process runs actual coding artifacts
     observations: observed, analysis: { n: a.statistics.n, delta: a.statistics.delta, metrics: a.metrics, statistical: a.statistical },
     verdict: evaluation.decision.outcome, benefitClaimAllowed: evaluation.benefitClaimAllowed,
     limitations: ['Small dev sample; no held-out data', 'No provider/host session trial', 'same-user subprocess, no OS sandbox', 'No authorized trial budget or signed T0'] };
-  const folder = new URL('../src/evaluation/evolution/evidence/', import.meta.url);
-  mkdirSync(folder, { recursive: true }); writeFileSync(new URL('offline.json', folder), `${JSON.stringify(evidence, null, 2)}\n`);
+  writeFileSync(join(temporary, 'offline.json'), `${JSON.stringify(evidence, null, 2)}\n`);
 });
 test('statistics use stratified paired SE/MVE, 10000 draws, BCa and the frozen formula; seed affects draws only', () => {
   const f = fixture(), reg = f.register(); f.populate(reg);

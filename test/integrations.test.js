@@ -79,6 +79,7 @@ const INTEGRATION_DOC_FILES = [
   'integrations/codex/README.md',
   'integrations/codex/skills/inspect-ledger/SKILL.md',
   'integrations/codex/skills/run-evolution/SKILL.md',
+  'integrations/deepseek-harness/L3-DSH-REPORT.md',
   'integrations/deepseek-harness/README.md',
   'integrations/opencode/README.md',
   'integrations/pi/README.md',
@@ -348,7 +349,7 @@ test('every EvoFence CLI invocation shipped with an integration exists in the co
   assert.ok(harnessReadme.includes(`evofence@${rootPackage.version}`), 'the harness README must document the pinned package version');
 });
 
-test('all five host integrations expose the read-only doctor preflight', async () => {
+test('all five host integrations document admission; CLI integrations expose the read-only doctor preflight', async () => {
   const doctor = COMMANDS.find((command) => command.name === 'doctor');
   assert.ok(doctor, 'doctor must remain in the CLI catalog');
   assert.equal(doctor.usage, 'doctor [--adapter <name>] [--fix] [--json]');
@@ -358,7 +359,6 @@ test('all five host integrations expose the read-only doctor preflight', async (
     'integrations/codex/skills/run-evolution/SKILL.md',
     'integrations/pi/evofence.js',
     'integrations/opencode/plugins/evofence.js',
-    'integrations/deepseek-harness/README.md',
   ];
   for (const file of files) {
     const source = await read(file);
@@ -380,7 +380,20 @@ test('all five host integrations expose the read-only doctor preflight', async (
   assert.match(await read(files[2]), /registerCommand\('evofence-doctor'/);
   assert.match(await read(files[2]), /name: 'evofence_doctor'/);
   assert.match(await read(files[3]), /evofence_doctor/);
-  assert.match(await read(files[4]), /Preflight is outside this library surface/);
+  // DSH now binds the existing native session, rather than dispatching the legacy CLI.
+  // Check its explicit admission seam without imposing CLI configuration on the native host.
+  const nativeReadme = await read('integrations/deepseek-harness/README.md');
+  assert.match(nativeReadme, /explicit `evofenceRuntime` service/);
+  assert.match(nativeReadme, /Exact host `version`/);
+  assert.match(nativeReadme, /caller must provision the composition service before mounting the plugin/);
+  assert.match(nativeReadme, /launches no CLI subprocess/);
+  const entry = await import('../integrations/deepseek-harness/index.js');
+  assert.equal(entry.name, 'evofence-cordis-runtime');
+  assert.deepEqual(entry.inject, ['tools', 'agents', 'sessionProjections', 'evofenceRuntime']);
+  assert.equal(typeof entry.apply, 'function');
+  const source = await read('integrations/deepseek-harness/index.js');
+  assert.match(source, /from ['"]\.\.\/\.\.\/dist\/hosts\/dsh\/index\.js['"]/);
+  assert.doesNotMatch(source, /node:child_process|runEvolution|runEvoFence/);
 });
 
 test('the public package API adds verifyBundle without changing existing export shapes', () => {
@@ -411,13 +424,12 @@ test('Pi and OpenCode expose a bundle-file parameter for offline verification', 
   assert.equal(verify.usage, 'ledger verify [--bundle <file>] [--json]');
 });
 
-test('each host documents its USD budget support, refusal, and alternative', async () => {
+test('each host documents its budget authority and unknown costs; CLI hosts document max_usd alternatives', async () => {
   const docs = {
     claude: await read('integrations/claude-code/README.md'),
     codex: await read('integrations/codex/README.md'),
     pi: await read('integrations/pi/README.md'),
     opencode: await read('integrations/opencode/README.md'),
-    deepseek: await read('integrations/deepseek-harness/README.md'),
   };
   for (const [host, text] of Object.entries(docs)) {
     assert.match(text, /budgets\.max_usd/, `${host} must describe max_usd`);
@@ -430,7 +442,12 @@ test('each host documents its USD budget support, refusal, and alternative', asy
   assert.match(docs.pi, /not the service provider's final bill/);
   assert.match(docs.codex, /UNSUPPORTED_COST_BUDGET/);
   assert.match(docs.opencode, /UNSUPPORTED_COST_BUDGET/);
-  assert.match(docs.deepseek, /does not run an EvoFence adapter/);
+  const nativeReadme = await read('integrations/deepseek-harness/README.md');
+  assert.match(nativeReadme, /Kernel policy, reservations, claims and independent evaluation remain in the injected runtime ports/);
+  assert.match(nativeReadme, /missing counters and absent USD\/invoice values remain `null`/);
+  assert.match(nativeReadme, /runtime retains reservations when cost is unknown/);
+  assert.match(nativeReadme, /implicit extra loop steps are rejected/);
+  assert.match(nativeReadme, /SDK\/provider retries within that step are not a proven budget bound/);
 });
 
 test('JS integrations surface structured CLI errors and retain a fallback for non-JSON stderr', async () => {
@@ -594,7 +611,7 @@ test('all root-release hand-copy points read the root version without changing v
     { file: 'integrations/codex/plugin.json', field: 'version', value: codexPortable.version },
     { file: 'integrations/codex/.codex-plugin/plugin.json', field: 'version', value: codexManifest.version },
     { file: 'integrations/deepseek-harness/package.json', field: 'dependencies.evofence', value: harnessPackage.dependencies.evofence },
-    { file: 'integrations/deepseek-harness/README.md', field: 'Runtime dependency evofence@<version>', value: harnessReadme.match(/Runtime dependency:\s*`evofence@([^`]+)`/)?.[1] },
+    { file: 'integrations/deepseek-harness/README.md', field: 'retained checkout dependency evofence@<version>', value: harnessReadme.match(/The retained `evofence@([^`]+)` dependency/)?.[1] },
     { file: 'test/release.test.js', field: "assert.equal(pkg.version, '<version>')", value: releaseTestVersion },
   ];
   assert.equal(points.length, 8);

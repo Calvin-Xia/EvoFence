@@ -1,12 +1,13 @@
 // Recheck S05's non-semantic edit boundary against the captured, pre-fix source bytes.
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { digest } from './fixtures.mjs';
 const ts = createRequire(import.meta.url)('typescript6');
 const evidence = 'verification/kernel/evidence';
+const output = '.evofence/out/kernel-evidence';
 const original = JSON.parse(readFileSync(`${evidence}/pre-fix/relocation-sources.json`, 'utf8'));
 const migration = JSON.parse(readFileSync(`${evidence}/relocation.json`, 'utf8'));
 function normalize(text, file) {
@@ -30,7 +31,7 @@ const expectedBarrel = '/** Core store ports and deterministic journal/identity 
   + oldBarrel.slice(oldBarrel.indexOf('export { intendedIds'));
 assert.equal(readFileSync('src/kernel/store/index.ts', 'utf8'), expectedBarrel);
 const baseline = readFileSync(`${evidence}/pre-fix/repeatability.json`);
-const current = readFileSync(`${evidence}/repeatability.json`);
+const current = readFileSync(`${output}/repeatability.json`);
 assert.equal(baseline.compare(current), 0, 'STOP: pre-fix trajectory summaries changed');
 const git = args => {
   const r = spawnSync('git', args, { encoding: 'utf8' });
@@ -49,7 +50,7 @@ assert.equal(head, 'aca28835110bf6717936d8e73f79dc7095a20711');
 const countFiles = dir => readdirSync(dir, { withFileTypes: true }).reduce((count, e) => count +
   (e.isDirectory() ? countFiles(path.join(dir, e.name)) : 1), 0);
 const sourceCount = countFiles('src');
-const audit = JSON.parse(readFileSync(`${evidence}/static-audit.json`, 'utf8'));
+const audit = JSON.parse(readFileSync(`${output}/static-audit.json`, 'utf8'));
 assert.equal(audit.status, 'passed');
 assert.equal(audit.violations.length, 0);
 const result = { authorization: 'S05 relocation only', head, verified, newBarrelExact: true,
@@ -58,8 +59,9 @@ const result = { authorization: 'S05 relocation only', head, verified, newBarrel
   trackedChanges: changed, addedCoreFiles: [...authorizedCore], sourceFiles: sourceCount,
   frozenContractUnchanged: true, testAssertionsUnchanged: true, sessionPortsSignatureUnchanged: true,
   status, commitsCreated: false, graphOperations: false };
-writeFileSync(`${evidence}/relocation-verification.json`, JSON.stringify(result, null, 2) + '\n');
-writeFileSync(`${evidence}/scope-check.json`, JSON.stringify({ head, trackedChanges: changed, untracked,
+mkdirSync(output, { recursive: true });
+writeFileSync(`${output}/relocation-verification.json`, JSON.stringify(result, null, 2) + '\n');
+writeFileSync(`${output}/scope-check.json`, JSON.stringify({ head, trackedChanges: changed, untracked,
   allChangesAuthorized: true, frozenContractsUnchanged: true, testsAssertionsUnchanged: true,
   sourceFiles: sourceCount, preFixTraceSummariesUnchanged: true, staticViolations: 0,
   commitsCreated: false, graphOperations: false }, null, 2) + '\n');

@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 export const root = process.cwd();
 export const packageRoot = process.env.EVOFENCE_PI_PACKAGE_ROOT ?? path.join(os.homedir(), 'AppData/Roaming/npm/node_modules/@earendil-works/pi-coding-agent');
 export const privateRoot = path.join(root, '.graph/execution-private/pi-s01');
-export const outputRoot = path.join(root, 'docs/evofence-harness-kernel/probes/pi');
+export const outputRoot = path.join(root, '.evofence/out/probes/pi');
 export const pricingSource = 'https://mimo.mi.com/docs/en-US/price/pay-as-you-go';
 export const thinkingSource = 'https://mimo.mi.com/docs/en-US/quick-start/usage-guide/text-generation/deep-thinking';
 export const price = { input: 0.14, output: 0.28, cacheRead: 0.0028, cacheWrite: 0 };

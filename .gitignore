@@ -31,6 +31,11 @@ test/protocol-guard/.work/
 /src/learning/*/evidence/
 /src/storage/*/evidence/
 /src/evaluation/*/evidence/
-/verification/kernel/evidence/
+/verification/kernel/evidence/*
+!/verification/kernel/evidence/relocation.json
+!/verification/kernel/evidence/pre-fix/
+/verification/kernel/evidence/pre-fix/*
+!/verification/kernel/evidence/pre-fix/relocation-sources.json
+!/verification/kernel/evidence/pre-fix/repeatability.json
 /integrations/deepseek-harness/evidence/*
 !/integrations/deepseek-harness/evidence/*.mjs

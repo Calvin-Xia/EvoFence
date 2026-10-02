@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { digest } from './fixtures.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const output = path.join(root, 'verification/kernel/evidence/gates');
+const output = path.join(root, '.evofence/out/kernel-evidence/gates');
 mkdirSync(output, { recursive: true });
 function filesAt(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory()
@@ -29,7 +29,7 @@ async function run(name, args) {
   };
   const result = { command: `npm ${args.join(' ')}`, exit,
     tests: number('tests'), pass: number('pass'), fail: number('fail'), cancelled: number('cancelled'),
-    stdout: `verification/kernel/evidence/gates/${name}.stdout.txt`, stderr: `verification/kernel/evidence/gates/${name}.stderr.txt` };
+    stdout: `.evofence/out/kernel-evidence/gates/${name}.stdout.txt`, stderr: `.evofence/out/kernel-evidence/gates/${name}.stderr.txt` };
   process.stdout.write(`${result.command}: exit=${exit} tests=${result.tests} pass=${result.pass} fail=${result.fail}\n`);
   return result;
 }

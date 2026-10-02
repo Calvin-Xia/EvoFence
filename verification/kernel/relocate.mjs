@@ -5,11 +5,12 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { digest } from './fixtures.mjs';
 const ts = createRequire(import.meta.url)('typescript6');
-const beforeDir = 'verification/kernel/evidence/pre-fix';
-assert.ok(!existsSync(`${beforeDir}/relocation-sources.json`), 'relocation has already been recorded; do not rerun');
+const evidence = 'verification/kernel/evidence';
+const beforeDir = '.evofence/out/kernel-evidence/pre-fix';
+assert.ok(!existsSync(`${evidence}/pre-fix/relocation-sources.json`), 'relocation has already been recorded; do not rerun');
 mkdirSync(beforeDir, { recursive: true });
 for (const file of ['repeatability.json', 'static-audit.json', 'summary.json', 'command-repeatability.json']) {
-  writeFileSync(`${beforeDir}/${file}`, readFileSync(`verification/kernel/evidence/${file}`));
+  writeFileSync(`${beforeDir}/${file}`, readFileSync(`${evidence}/${file}`));
 }
 const moves = ['contracts', 'identity', 'projection', 'outbox'].map(n =>
   ({ from: `src/storage/${n}.ts`, to: `src/kernel/store/${n}.ts` }));
@@ -78,7 +79,7 @@ for (const r of records) {
   r.resultDigest = digest.digest(after);
   r.nonImportBytesIdentical = true;
 }
-writeFileSync('verification/kernel/evidence/relocation.json', JSON.stringify({ authorization: 'orchestrator S05',
+writeFileSync('.evofence/out/kernel-evidence/relocation.json', JSON.stringify({ authorization: 'orchestrator S05',
   boundaryUnchanged: true, movedFiles: moves.length, modifiedFiles: backend.length + runtime.length + tests.length,
   newFiles: [newFile], records }, null, 2) + '\n');
 process.stdout.write(JSON.stringify({ moved: moves.length, rewritten: backend.length + runtime.length + tests.length,

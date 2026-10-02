@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 
 export const expectedVersion = '0.2.0-rc.2';
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-export const outputRoot = path.join(root, 'docs/evofence-harness-kernel/probes/dsh');
+export const outputRoot = path.join(root, '.evofence/out/probes/dsh');
 export const packageRoot = path.resolve(process.env.EVOFENCE_DSH_PACKAGE_ROOT
   ?? path.join(os.homedir(), 'AppData/Roaming/npm/node_modules/@deepseek-ai/dsh'));
 export const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));

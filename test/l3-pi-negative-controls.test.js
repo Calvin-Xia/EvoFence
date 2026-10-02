@@ -1,10 +1,13 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { writeJson } from './l3-pi-native-support.test.js';
 
 export function runNegativeControls() {
+const output = '.evofence/out/pi-evidence';
+fs.mkdirSync(output, { recursive: true });
 const source = 'src/hosts/pi/binding.ts', original = fs.readFileSync(source);
 const hash = b => createHash('sha256').update(b).digest('hex');
 function run(args) {
@@ -31,8 +34,8 @@ for (const c of [
   const mutated = Buffer.from(original.toString().replace(c.from, c.to));
   const result = { ...c, evidenceGrade: 'native-fixture: actual Pi 0.99.2 SDK process, not hand-emitted hook events',
     originalSha256: hash(original), mutatedSha256: hash(mutated),
-    redTrace: `src/hosts/pi/evidence/0992-${c.id}-red.json`,
-    greenTrace: `src/hosts/pi/evidence/0992-${c.id}-green.json` };
+    redTrace: path.join(output, `0992-${c.id}-red.json`),
+    greenTrace: path.join(output, `0992-${c.id}-green.json`) };
   try {
     fs.writeFileSync(source, mutated);
     result.build = build(); assert.equal(result.build.exit, 0);
@@ -57,7 +60,7 @@ for (const c of [
   controls.push(result);
   const sourceHashes = ['test/l3-pi-negative-controls.test.js', 'test/l3-pi-native-session.test.js',
     'test/l3-pi-native-support.test.js', source].map(file => ({ file, sha256: hash(fs.readFileSync(file)) }));
-  writeJson('src/hosts/pi/evidence/0992-negative-controls.json', { recordedAt: new Date().toISOString(), controls, paidRequests: 0, sourceHashes });
+  writeJson(path.join(output, '0992-negative-controls.json'), { recordedAt: new Date().toISOString(), controls, paidRequests: 0, sourceHashes });
 }
 console.log(JSON.stringify(controls.map(c => ({ dod: c.dod, id: c.id, check: c.check, red: c.red.exit, green: c.green.exit, restored: c.originalSha256 === c.restoredSha256 }))));
 }

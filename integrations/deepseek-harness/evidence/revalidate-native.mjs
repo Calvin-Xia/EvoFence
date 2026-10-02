@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const probe = path.join(root, 'scripts/probes/dsh-native-probe.mjs');
 const support = path.join(root, 'scripts/probes/dsh-probe-support.mjs');
-const output = path.join(root, 'integrations/deepseek-harness/evidence/native-revalidation');
+const output = path.join(root, '.evofence/out/dsh-evidence/native-revalidation');
 const original = fs.readFileSync(probe, 'utf8');
 const imported = original.replace(' writeJson,', ' writeJson as historicalWriteJson,')
   .replace('root, outputRoot,', 'root, outputRoot as historicalOutputRoot,')

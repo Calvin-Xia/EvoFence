@@ -30,9 +30,9 @@ const named = argv.includes('--scenario') ? argv[argv.indexOf('--scenario') + 1]
 assert.ok(named === null || Object.hasOwn(scenarios, named), `unknown scenario: ${named}`);
 const selected = named === null ? Object.entries(scenarios) : [[named, scenarios[named]]];
 const output = path.resolve(root, argv.includes('--output') ? argv[argv.indexOf('--output') + 1]
-  : named === null ? 'verification/kernel/evidence' : `verification/kernel/evidence/reproduce/${named}`);
-const allowedOutput = path.join(root, 'verification', 'kernel');
-assert.ok(output === allowedOutput || output.startsWith(allowedOutput + path.sep), 'output must stay inside verification/kernel');
+  : named === null ? '.evofence/out/kernel-evidence' : `.evofence/out/kernel-evidence/reproduce/${named}`);
+const allowedOutput = path.join(root, '.evofence', 'out');
+assert.ok(output === allowedOutput || output.startsWith(allowedOutput + path.sep), 'output must stay inside the ignored .evofence/out directory');
 mkdirSync(output, { recursive: true });
 const write = (name, data) => writeFileSync(path.join(output, name), `${JSON.stringify(data, null, 2)}\n`);
 const traces = [], repeatability = [];

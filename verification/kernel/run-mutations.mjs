@@ -6,7 +6,7 @@ import path from 'node:path';
 import { mutations } from './mutations.mjs';
 import { digest } from './fixtures.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const output = path.join(root, 'verification/kernel/evidence/mutations');
+const output = path.join(root, '.evofence/out/kernel-evidence/mutations');
 mkdirSync(output, { recursive: true });
 const records = [];
 const loader = new URL('./mutation-loader.mjs', import.meta.url).href;

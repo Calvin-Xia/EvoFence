@@ -2,8 +2,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const controls = [
   { id: 'budget-bypass', module: 'judgement.js', from: 'if (!registered.budgetAuthorized)', to: 'if (false)', pattern: 'DoD1 budget-missing' },
@@ -14,10 +16,10 @@ const controls = [
   { id: 'forged-authority', module: 'service.js', from: 'const proof = ports.authority.verify(ref);', to: 'const proof = storeOk(true);', pattern: 'DoD2 authority negative control' },
   { id: 'task-as-evolution', module: 'service.js', from: "evaluation.decision.kind !== 'candidate'", to: 'false', pattern: 'DoD2 task-verdict negative control' },
 ];
-const results = [];
-const directory = new URL('../src/evaluation/evolution/evidence/', import.meta.url);
 test('mutation evidence: production guards turn red under mutation and green after restoration', async t => {
-  mkdirSync(directory, { recursive: true });
+  const results = [];
+  const directory = mkdtempSync(join(tmpdir(), 'evofence-l4-mutations-'));
+  t.after(() => rmSync(directory, { recursive: true }));
   for (const control of controls) await t.test(control.id, () => {
     const url = new URL(`../dist/evaluation/evolution/${control.module}`, import.meta.url).href;
     const original = readFileSync(new URL(url), 'utf8');
@@ -33,7 +35,7 @@ test('mutation evidence: production guards turn red under mutation and green aft
     const green = execute(false), red = execute(true), restored = execute(false);
     for (const [phase, output] of [['green', green], ['red', red], ['restored', restored]]) {
       assert.equal(output.error, undefined);
-      writeFileSync(new URL(`${control.id}.${phase}.txt`, directory), `${output.stdout}\n${output.stderr}`);
+      writeFileSync(join(directory, `${control.id}.${phase}.txt`), `${output.stdout}\n${output.stderr}`);
     }
     assert.equal(green.status, 0, green.stdout + green.stderr); assert.equal(red.status, 1, red.stdout + red.stderr);
     assert.match(red.stdout + red.stderr, /AssertionError|ERR_ASSERTION/); assert.equal(restored.status, 0, restored.stdout + restored.stderr);
@@ -41,5 +43,5 @@ test('mutation evidence: production guards turn red under mutation and green aft
     results.push({ ...control, green: green.status, red: red.status, restored: restored.status,
       productionModuleSha256: createHash('sha256').update(after).digest('hex'), diskUnchanged: true });
   });
-  writeFileSync(new URL('mutations.json', directory), `${JSON.stringify({ evidenceKind: 'production-module-mutation', controls: results }, null, 2)}\n`);
+  writeFileSync(join(directory, 'mutations.json'), `${JSON.stringify({ evidenceKind: 'production-module-mutation', controls: results }, null, 2)}\n`);
 });

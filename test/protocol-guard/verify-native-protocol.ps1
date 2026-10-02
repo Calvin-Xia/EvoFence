@@ -1,5 +1,5 @@
-# Regenerates the tracked test/protocol-guard/EVIDENCE-PROTOCOL.txt, including on failure.
-# Product src/dist/config stay read-only; this evidence file is an explicit output.
+# Writes native protocol verification evidence to the ignored .work directory, including on failure.
+# Product src/dist/config and tracked evidence stay read-only.
 $ErrorActionPreference = 'Stop'
 Push-Location (Resolve-Path (Join-Path $PSScriptRoot '../..'))
 try {
@@ -62,8 +62,7 @@ try {
     assert.match(negative.stderr, diagnostic);
   }
 } finally {
-  // Deliberately regenerate the evidence artifact; this script is not repository-read-only.
-  writeFileSync(path.join(here, 'EVIDENCE-PROTOCOL.txt'), records.join('\n'));
+  writeFileSync(path.join(workspace, 'EVIDENCE-PROTOCOL.txt'), records.join('\n'));
   // Remove only this invocation's directory, after checking its resolved parent.
   const realArea = realpathSync(area);
   assert.equal(path.dirname(realArea), realpathSync(workspace));
