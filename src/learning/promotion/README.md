@@ -24,7 +24,7 @@
 
 ## 验证记录（2026-10-02）
 
-`test/l4-promotion.test.js`：38 个独立顶层用例，最后两轮均 38/38，0 failed / skipped。
+`test/l4-promotion.test.js`：40 个独立顶层用例，最后两轮均 40/40，0 failed / skipped。
 
 | 要求 | 证据 |
 |---|---|
@@ -53,5 +53,7 @@
 ## 证据边界
 
 以上是离线 synthetic fixture、内存 EventStore / ArtifactStore、真实构建与源码变异证据。真实 DSH/Pi 激活、宿主 safe-point 与实际执行之间的原生原子性、真实快照恢复、数据库/进程崩溃持久性、完整 runtime/task/retrieval E2E、能力收益、供应商 billing 均未证明；全量 `npm test` 和 `test:e2e` 未运行。无法满足冻结 HostPort 的宿主仍应 typed 拒绝，不能用 fixture 证明其支持激活。
+
+已知受限行为（交叉复核 F1，delta 复核判定**保持**）：判定期拒绝的路径不再落任何 DecisionRecord / PromotionState；但 CAS/commit 失败路径仍会在只增的 ArtifactStore 留下 1 条 DecisionRecord 与 1 条 PromotionState。冻结端口下无法消除：`publish(PromotionState)` 必须先于 `journal.append`（append 的 `objectRef` 与 `load()` 都依赖它），而 DecisionRecord 按真相源方向应写在 commit 之前。该残余是 private 分区、从不被指针或 journal 投影引用的记录，不影响晋升结果与可检索状态。
 
 真实宿主/模型请求：0；本 lane 探针 usage：0 requests、0 input/output tokens、0 USD。没有 commit、install 或 `.graph` 操作。
