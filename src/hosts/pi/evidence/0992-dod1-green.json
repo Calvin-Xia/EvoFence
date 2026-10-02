@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-10-02T04:55:40.970Z",
-  "pid": 14760,
+  "recordedAt": "2026-10-02T05:25:10.023Z",
+  "pid": 6656,
   "piVersion": "0.99.2",
   "grade": "native-fixture",
   "memoryControl": true,
@@ -17,7 +17,7 @@
     {
       "index": 1,
       "type": "extension_session_start",
-      "sessionId": "01a0faf7-d471-73f1-9dd2-32e1189cf2f9"
+      "sessionId": "01a0fb12-d2c8-7749-9d92-902c6108ba6b"
     }
   ],
   "requests": [],
@@ -65,7 +65,7 @@
       "sha256": "e06e93913403066960ff181285b00b76b9f72f393cab30327c39d5ad854d7398"
     }
   ],
-  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-pDmK1V",
+  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-6N4xaf",
   "paidRequests": 0,
   "estimatedUsd": 0,
   "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",

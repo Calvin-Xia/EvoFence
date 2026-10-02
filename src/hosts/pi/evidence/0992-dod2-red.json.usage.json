@@ -2,7 +2,7 @@
   {
     "id": "native-1",
     "status": "settled",
-    "reservedAt": "2026-10-02T04:55:42.482Z",
+    "reservedAt": "2026-10-02T05:25:11.774Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {
@@ -21,7 +21,7 @@
   {
     "id": "native-2",
     "status": "settled",
-    "reservedAt": "2026-10-02T04:55:42.493Z",
+    "reservedAt": "2026-10-02T05:25:11.788Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {
@@ -40,7 +40,7 @@
   {
     "id": "native-3",
     "status": "settled",
-    "reservedAt": "2026-10-02T04:55:42.517Z",
+    "reservedAt": "2026-10-02T05:25:11.813Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {

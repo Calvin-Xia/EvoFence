@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-10-02T04:55:44.244Z",
-  "pid": 37868,
+  "recordedAt": "2026-10-02T05:25:14.294Z",
+  "pid": 27024,
   "piVersion": "0.99.2",
   "grade": "native-fixture",
   "memoryControl": false,
@@ -60,16 +60,16 @@
     {
       "index": 6,
       "type": "existing_host_session",
-      "sessionId": "01a0faf7-dff0-743e-a40b-b999ac758197",
-      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-4EmtIQ\\sessions\\2026-10-02T04-55-43-856Z_01a0faf7-dff0-743e-a40b-b999ac758197.jsonl",
+      "sessionId": "01a0fb12-e1ec-761c-856e-9a882ee8d7fa",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-OLRXMC\\sessions\\2026-10-02T05-25-13-836Z_01a0fb12-e1ec-761c-856e-9a882ee8d7fa.jsonl",
       "messages": 3,
       "grade": "native-fixture"
     },
     {
       "index": 7,
       "type": "extension_session_start",
-      "sessionId": "01a0faf7-dff0-743e-a40b-b999ac758197",
-      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-4EmtIQ\\sessions\\2026-10-02T04-55-43-856Z_01a0faf7-dff0-743e-a40b-b999ac758197.jsonl"
+      "sessionId": "01a0fb12-e1ec-761c-856e-9a882ee8d7fa",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-OLRXMC\\sessions\\2026-10-02T05-25-13-836Z_01a0fb12-e1ec-761c-856e-9a882ee8d7fa.jsonl"
     },
     {
       "index": 8,
@@ -196,15 +196,15 @@
       "index": 33,
       "type": "kernel_snapshot",
       "effectId": "effect:round:ac77df292bbdb42cf7def2ec9d0f4feb:n0",
-      "nativeSessionId": "01a0faf7-dff0-743e-a40b-b999ac758197",
+      "nativeSessionId": "01a0fb12-e1ec-761c-856e-9a882ee8d7fa",
       "status": "completed",
       "appliedReceipts": 1
     },
     {
       "index": 34,
       "type": "extension_session_start",
-      "sessionId": "01a0faf7-dff0-743e-a40b-b999ac758197",
-      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-4EmtIQ\\sessions\\2026-10-02T04-55-43-856Z_01a0faf7-dff0-743e-a40b-b999ac758197.jsonl"
+      "sessionId": "01a0fb12-e1ec-761c-856e-9a882ee8d7fa",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-OLRXMC\\sessions\\2026-10-02T05-25-13-836Z_01a0fb12-e1ec-761c-856e-9a882ee8d7fa.jsonl"
     },
     {
       "index": 35,
@@ -263,7 +263,7 @@
     {
       "id": "native-1",
       "status": "settled",
-      "reservedAt": "2026-10-02T04:55:44.057Z",
+      "reservedAt": "2026-10-02T05:25:14.086Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -282,7 +282,7 @@
     {
       "id": "native-2",
       "status": "settled",
-      "reservedAt": "2026-10-02T04:55:44.068Z",
+      "reservedAt": "2026-10-02T05:25:14.099Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -301,7 +301,7 @@
     {
       "id": "native-3",
       "status": "settled",
-      "reservedAt": "2026-10-02T04:55:44.092Z",
+      "reservedAt": "2026-10-02T05:25:14.128Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -320,7 +320,7 @@
     {
       "id": "native-4",
       "status": "settled",
-      "reservedAt": "2026-10-02T04:55:44.172Z",
+      "reservedAt": "2026-10-02T05:25:14.225Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -339,7 +339,7 @@
     {
       "id": "native-5",
       "status": "unknown",
-      "reservedAt": "2026-10-02T04:55:44.211Z",
+      "reservedAt": "2026-10-02T05:25:14.268Z",
       "referenceUpperUsd": null,
       "httpStatus": null,
       "usage": null,
@@ -350,7 +350,7 @@
     {
       "requestId": "native-1",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:3925",
+      "origin": "http://127.0.0.1:4290",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -368,7 +368,7 @@
     {
       "requestId": "native-2",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:3925",
+      "origin": "http://127.0.0.1:4290",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -386,7 +386,7 @@
     {
       "requestId": "native-3",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:3925",
+      "origin": "http://127.0.0.1:4290",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -404,7 +404,7 @@
     {
       "requestId": "native-4",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:3925",
+      "origin": "http://127.0.0.1:4290",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -422,7 +422,7 @@
     {
       "requestId": "native-5",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:3925",
+      "origin": "http://127.0.0.1:4290",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -575,7 +575,7 @@
       "sha256": "e06e93913403066960ff181285b00b76b9f72f393cab30327c39d5ad854d7398"
     }
   ],
-  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-4EmtIQ",
+  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-OLRXMC",
   "paidRequests": 0,
   "estimatedUsd": 0,
   "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",

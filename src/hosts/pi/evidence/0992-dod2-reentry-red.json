@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-10-02T05:25:11.846Z",
-  "pid": 1436,
+  "recordedAt": "2026-10-02T05:25:16.524Z",
+  "pid": 39488,
   "piVersion": "0.99.2",
   "grade": "native-fixture",
   "memoryControl": false,
@@ -8,13 +8,25 @@
     "existingPersistentSession": true,
     "hostResourcesLoaded": true,
     "journalNotSettledAtEnd": true,
-    "settledReentryRefused": true,
+    "settledReentryRefused": false,
     "waitsForAsyncSettledHook": true,
     "kernelReceiptApplied": true,
     "realSessionUnchanged": true,
-    "contextAndResources": true,
+    "contextAndResources": false,
     "toolResultObserved": true,
-    "noEarlySettlement": false
+    "noEarlySettlement": true,
+    "continuation": false,
+    "blockedToolNeverExecutes": true,
+    "usageComplete": true,
+    "rawMatchesSdk": true,
+    "receiptAfterSettlement": true,
+    "noFakeHostExecution": true,
+    "diskRestore": true,
+    "unloadRetainsHost": true,
+    "abortNativeAck": true,
+    "abortUnknownSpend": true,
+    "abortDisconnected": true,
+    "extensionErrorsEmpty": true
   },
   "trace": [
     {
@@ -48,16 +60,16 @@
     {
       "index": 6,
       "type": "existing_host_session",
-      "sessionId": "01a0fb12-d8e6-7002-88eb-1c9331db0edd",
-      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-ItCRYC\\sessions\\2026-10-02T05-25-11-527Z_01a0fb12-d8e6-7002-88eb-1c9331db0edd.jsonl",
+      "sessionId": "01a0fb12-ea93-7185-b46c-4d2de767249a",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-oHWUw6\\sessions\\2026-10-02T05-25-16-052Z_01a0fb12-ea93-7185-b46c-4d2de767249a.jsonl",
       "messages": 3,
       "grade": "native-fixture"
     },
     {
       "index": 7,
       "type": "extension_session_start",
-      "sessionId": "01a0fb12-d8e6-7002-88eb-1c9331db0edd",
-      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-ItCRYC\\sessions\\2026-10-02T05-25-11-527Z_01a0fb12-d8e6-7002-88eb-1c9331db0edd.jsonl"
+      "sessionId": "01a0fb12-ea93-7185-b46c-4d2de767249a",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-oHWUw6\\sessions\\2026-10-02T05-25-16-052Z_01a0fb12-ea93-7185-b46c-4d2de767249a.jsonl"
     },
     {
       "index": 8,
@@ -122,7 +134,7 @@
     {
       "index": 21,
       "type": "after_awaited_agent_end",
-      "receiptPresent": true,
+      "receiptPresent": false,
       "idle": false,
       "stepReturned": false
     },
@@ -157,7 +169,7 @@
     {
       "index": 28,
       "type": "after_awaited_agent_end",
-      "receiptPresent": true,
+      "receiptPresent": false,
       "idle": false,
       "stepReturned": false
     },
@@ -178,14 +190,110 @@
     },
     {
       "index": 32,
+      "type": "session_agent_start"
+    },
+    {
+      "index": 33,
+      "type": "session_message_end",
+      "role": "user"
+    },
+    {
+      "index": 34,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "stop"
+    },
+    {
+      "index": 35,
+      "type": "session_agent_end"
+    },
+    {
+      "index": 36,
+      "type": "extension_settled",
+      "nativeIdle": true,
+      "bindingIdle": true,
+      "stepReturned": false
+    },
+    {
+      "index": 37,
+      "type": "session_agent_settled"
+    },
+    {
+      "index": 38,
       "type": "kernel_step_returned"
+    },
+    {
+      "index": 39,
+      "type": "kernel_snapshot",
+      "effectId": "effect:round:ac77df292bbdb42cf7def2ec9d0f4feb:n0",
+      "nativeSessionId": "01a0fb12-ea93-7185-b46c-4d2de767249a",
+      "status": "completed",
+      "appliedReceipts": 1
+    },
+    {
+      "index": 40,
+      "type": "extension_session_start",
+      "sessionId": "01a0fb12-ea93-7185-b46c-4d2de767249a",
+      "file": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-oHWUw6\\sessions\\2026-10-02T05-25-16-052Z_01a0fb12-ea93-7185-b46c-4d2de767249a.jsonl"
+    },
+    {
+      "index": 41,
+      "type": "session_agent_start"
+    },
+    {
+      "index": 42,
+      "type": "session_message_end",
+      "role": "user"
+    },
+    {
+      "index": 43,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "stop"
+    },
+    {
+      "index": 44,
+      "type": "session_agent_end"
+    },
+    {
+      "index": 45,
+      "type": "extension_settled",
+      "nativeIdle": true,
+      "bindingIdle": false,
+      "stepReturned": true
+    },
+    {
+      "index": 46,
+      "type": "session_agent_settled"
+    },
+    {
+      "index": 47,
+      "type": "native_abort_ack",
+      "status": "cancelled",
+      "receipt": "unknown",
+      "usage": [
+        {
+          "requestId": "node0:a1:e1",
+          "source": "host-normalized",
+          "inputUncached": null,
+          "cacheRead": null,
+          "cacheWrite": null,
+          "output": null,
+          "reasoning": null,
+          "total": null,
+          "estimatedUsdMicros": null,
+          "invoiceUsdMicros": null,
+          "complete": false,
+          "evidenceRefs": []
+        }
+      ]
     }
   ],
   "requests": [
     {
       "id": "native-1",
       "status": "settled",
-      "reservedAt": "2026-10-02T05:25:11.774Z",
+      "reservedAt": "2026-10-02T05:25:16.296Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -204,7 +312,7 @@
     {
       "id": "native-2",
       "status": "settled",
-      "reservedAt": "2026-10-02T05:25:11.788Z",
+      "reservedAt": "2026-10-02T05:25:16.312Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -223,7 +331,7 @@
     {
       "id": "native-3",
       "status": "settled",
-      "reservedAt": "2026-10-02T05:25:11.813Z",
+      "reservedAt": "2026-10-02T05:25:16.336Z",
       "referenceUpperUsd": null,
       "httpStatus": 200,
       "usage": {
@@ -238,13 +346,60 @@
         }
       },
       "estimatedUsd": null
+    },
+    {
+      "id": "native-4",
+      "status": "settled",
+      "reservedAt": "2026-10-02T05:25:16.392Z",
+      "referenceUpperUsd": null,
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 200,
+        "completion_tokens": 20,
+        "total_tokens": 220,
+        "prompt_tokens_details": {
+          "cached_tokens": 40
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 4
+        }
+      },
+      "estimatedUsd": null
+    },
+    {
+      "id": "native-5",
+      "status": "settled",
+      "reservedAt": "2026-10-02T05:25:16.443Z",
+      "referenceUpperUsd": null,
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 200,
+        "completion_tokens": 20,
+        "total_tokens": 220,
+        "prompt_tokens_details": {
+          "cached_tokens": 40
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 4
+        }
+      },
+      "estimatedUsd": null
+    },
+    {
+      "id": "native-6",
+      "status": "unknown",
+      "reservedAt": "2026-10-02T05:25:16.489Z",
+      "referenceUpperUsd": null,
+      "httpStatus": null,
+      "usage": null,
+      "estimatedUsd": null
     }
   ],
   "payloads": [
     {
       "requestId": "native-1",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:12873",
+      "origin": "http://127.0.0.1:5285",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -262,7 +417,7 @@
     {
       "requestId": "native-2",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:12873",
+      "origin": "http://127.0.0.1:5285",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -280,7 +435,7 @@
     {
       "requestId": "native-3",
       "model": "deepseek-flash",
-      "origin": "http://127.0.0.1:12873",
+      "origin": "http://127.0.0.1:5285",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
@@ -294,12 +449,102 @@
         "evofence_smoke_echo",
         "evofence_smoke_denied"
       ]
+    },
+    {
+      "requestId": "native-4",
+      "model": "deepseek-flash",
+      "origin": "http://127.0.0.1:5285",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "maxTokens": 2048,
+      "hostContextPreserved": true,
+      "hostSkillPreserved": true,
+      "nodeContextInjected": false,
+      "toolNames": [
+        "read",
+        "evofence_smoke_echo",
+        "evofence_smoke_denied"
+      ]
+    },
+    {
+      "requestId": "native-5",
+      "model": "deepseek-flash",
+      "origin": "http://127.0.0.1:5285",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "maxTokens": 2048,
+      "hostContextPreserved": true,
+      "hostSkillPreserved": true,
+      "nodeContextInjected": false,
+      "toolNames": [
+        "read",
+        "evofence_smoke_echo",
+        "evofence_smoke_denied"
+      ]
+    },
+    {
+      "requestId": "native-6",
+      "model": "deepseek-flash",
+      "origin": "http://127.0.0.1:5285",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "maxTokens": 2048,
+      "hostContextPreserved": true,
+      "hostSkillPreserved": true,
+      "nodeContextInjected": false,
+      "toolNames": [
+        "read"
+      ]
     }
   ],
   "receipts": [
     {
       "model": "deepseek-flash",
       "stopReason": "toolUse",
+      "usage": {
+        "input": 160,
+        "output": 20,
+        "cacheRead": 40,
+        "cacheWrite": 0,
+        "reasoning": 4,
+        "totalTokens": 220,
+        "cost": {
+          "input": 0.000048,
+          "output": 0.000024,
+          "cacheRead": 2.4e-7,
+          "cacheWrite": 0,
+          "total": 0.00007224
+        }
+      }
+    },
+    {
+      "model": "deepseek-flash",
+      "stopReason": "stop",
+      "usage": {
+        "input": 160,
+        "output": 20,
+        "cacheRead": 40,
+        "cacheWrite": 0,
+        "reasoning": 4,
+        "totalTokens": 220,
+        "cost": {
+          "input": 0.000048,
+          "output": 0.000024,
+          "cacheRead": 2.4e-7,
+          "cacheWrite": 0,
+          "total": 0.00007224
+        }
+      }
+    },
+    {
+      "model": "deepseek-flash",
+      "stopReason": "stop",
       "usage": {
         "input": 160,
         "output": 20,
@@ -389,7 +634,7 @@
   "sourceHashes": [
     {
       "file": "src/hosts/pi/binding.ts",
-      "sha256": "660d1752822bcf70f2599b1cddd64a876ee7f7809d90fba3904045aa16ebe79b"
+      "sha256": "4d03406e52832489a65e9d6c57f996c24add6b6b05fda34fd7ff1ca1b5447ff6"
     },
     {
       "file": "src/hosts/pi/types.ts",
@@ -416,7 +661,7 @@
       "sha256": "e06e93913403066960ff181285b00b76b9f72f393cab30327c39d5ad854d7398"
     }
   ],
-  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-ItCRYC",
+  "privateRuntime": "C:\\Users\\Calvin-Xia\\AppData\\Local\\Temp\\evofence-pi-0992-oHWUw6",
   "paidRequests": 0,
   "estimatedUsd": 0,
   "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",

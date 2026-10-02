@@ -31,7 +31,8 @@ audit.violations = parsed.violations.length;
 writeJson('src/hosts/pi/evidence/0992-static-audit.json', parsed);
 const hashes = ['src/hosts/pi/binding.ts', 'src/hosts/pi/types.ts', 'src/hosts/pi/usage.ts', 'src/hosts/pi/entries.ts',
   'src/hosts/pi/capabilities.ts', 'src/hosts/pi/index.ts', 'test/l3-pi-native-session.test.js', 'test/l3-pi-native-support.test.js',
-  'test/l3-pi-native.test.js', 'docs/evofence-harness-kernel/probes/pi/VERSION-PIN.json'].map(file => ({ file,
+  'test/l3-pi-native.test.js', 'test/l3-pi-negative-controls.test.js', 'test/l3-pi-gates.test.js',
+  'docs/evofence-harness-kernel/probes/pi/VERSION-PIN.json'].map(file => ({ file,
     sha256: createHash('sha256').update(fs.readFileSync(file)).digest('hex') }));
 writeJson('src/hosts/pi/evidence/0992-gates.json', { recordedAt: new Date().toISOString(),
   invocationNote: 'Direct node argv execute exactly package.json npm script bodies, avoiding shell quoting; test follows this build',

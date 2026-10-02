@@ -2,7 +2,7 @@
   {
     "id": "native-1",
     "status": "settled",
-    "reservedAt": "2026-10-02T05:25:14.086Z",
+    "reservedAt": "2026-10-02T05:25:16.296Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {
@@ -21,7 +21,7 @@
   {
     "id": "native-2",
     "status": "settled",
-    "reservedAt": "2026-10-02T05:25:14.099Z",
+    "reservedAt": "2026-10-02T05:25:16.312Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {
@@ -40,7 +40,26 @@
   {
     "id": "native-3",
     "status": "settled",
-    "reservedAt": "2026-10-02T05:25:14.128Z",
+    "reservedAt": "2026-10-02T05:25:16.336Z",
+    "referenceUpperUsd": null,
+    "httpStatus": 200,
+    "usage": {
+      "prompt_tokens": 200,
+      "completion_tokens": 20,
+      "total_tokens": 220,
+      "prompt_tokens_details": {
+        "cached_tokens": 40
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 4
+      }
+    },
+    "estimatedUsd": null
+  },
+  {
+    "id": "native-4",
+    "status": "settled",
+    "reservedAt": "2026-10-02T05:25:16.392Z",
     "referenceUpperUsd": null,
     "httpStatus": 200,
     "usage": {

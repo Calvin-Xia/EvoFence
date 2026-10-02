@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-02T04:57:17.545Z",
+  "recordedAt": "2026-10-02T05:28:54.334Z",
   "lane": "l3-pi-b",
   "branch": "refactor/hk-l3-pi-b",
   "base": "4ef60221af06556473212efcaaea29939c1c8c23",
@@ -33,17 +33,63 @@
   "negativeControls": [
     {
       "dod": "DoD1",
+      "id": "dod1",
+      "name": "remove native disk-backed session gate",
+      "check": "nativeMemorySessionRefused",
       "redExit": 1,
       "greenExit": 0,
       "restored": true,
-      "grade": "native-fixture real Pi process"
+      "grade": "native-fixture real Pi process",
+      "redTrace": "src/hosts/pi/evidence/0992-dod1-red.json",
+      "greenTrace": "src/hosts/pi/evidence/0992-dod1-green.json",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "98d7818952603062d71bc554abf37bcdb2033915d2b74f1a24e32f95951b9bee",
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672"
     },
     {
       "dod": "DoD2",
+      "id": "dod2",
+      "name": "publish completed native receipt inside agent_end before continuation/settlement",
+      "check": "noEarlySettlement",
       "redExit": 1,
       "greenExit": 0,
       "restored": true,
-      "grade": "native-fixture real Pi process"
+      "grade": "native-fixture real Pi process",
+      "redTrace": "src/hosts/pi/evidence/0992-dod2-red.json",
+      "greenTrace": "src/hosts/pi/evidence/0992-dod2-green.json",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "660d1752822bcf70f2599b1cddd64a876ee7f7809d90fba3904045aa16ebe79b",
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672"
+    },
+    {
+      "dod": "DoD2",
+      "id": "dod2-reentry",
+      "name": "remove execute busy guard during awaited native settlement",
+      "check": "settledReentryRefused",
+      "redExit": 1,
+      "greenExit": 0,
+      "restored": true,
+      "grade": "native-fixture real Pi process",
+      "redTrace": "src/hosts/pi/evidence/0992-dod2-reentry-red.json",
+      "greenTrace": "src/hosts/pi/evidence/0992-dod2-reentry-green.json",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "4d03406e52832489a65e9d6c57f996c24add6b6b05fda34fd7ff1ca1b5447ff6",
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672"
+    },
+    {
+      "dod": "DoD2",
+      "id": "dod2-context",
+      "name": "invalidate node context packet at agent_end before native boundary continuation",
+      "check": "contextAndResources",
+      "redExit": 1,
+      "greenExit": 0,
+      "restored": true,
+      "grade": "native-fixture real Pi process",
+      "redTrace": "src/hosts/pi/evidence/0992-dod2-context-red.json",
+      "greenTrace": "src/hosts/pi/evidence/0992-dod2-context-green.json",
+      "originalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+      "mutatedSha256": "3b1c3309860b2f01ac1ae739414f93df5c4fd808c2e256048854b285aa711226",
+      "restoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672"
     }
   ],
   "gates": [
@@ -186,7 +232,19 @@
       "test/l3-pi-native-session.test.js",
       "test/l3-pi-native-support.test.js",
       "test/l3-pi-native.test.js",
-      "test/l3-pi-negative-controls.test.js"
+      "test/l3-pi-negative-controls.test.js",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.usage.json"
     ],
     "coreChanged": false,
     "integrationsChanged": false,
@@ -195,7 +253,36 @@
     "committed": false,
     "mappingDiff": "exactly one PV version row; P1-P17 L1 rows remain historical",
     "oldPinPreserved": true,
-    "credentialExactMatchLeaks": 0
+    "credentialExactMatchLeaks": 0,
+    "fix1ChangedPaths": [
+      "src/hosts/pi/VERSION-DIFFERENCES.md",
+      "src/hosts/pi/evidence/0992-SUMMARY.json",
+      "src/hosts/pi/evidence/0992-dod1-green.json",
+      "src/hosts/pi/evidence/0992-dod1-red.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-red.json",
+      "src/hosts/pi/evidence/0992-dod2-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-gates.json",
+      "src/hosts/pi/evidence/0992-memory-control.json",
+      "src/hosts/pi/evidence/0992-negative-controls.json",
+      "src/hosts/pi/evidence/LANE-REPORT.md",
+      "test/l3-pi-gates.test.js",
+      "test/l3-pi-negative-controls.test.js"
+    ]
   },
   "limits": [
     "Existing controlled native session reopened for smoke, not current user TUI",
@@ -243,9 +330,79 @@
       "sha256": "65acb10a05ea7013b5315b2e08c9c3923f4d95d760575014cf299804dd5634ba"
     },
     {
+      "file": "test/l3-pi-negative-controls.test.js",
+      "sha256": "505bb210dda81c9525a9269f5ab1686833cf2919fea8e1422dbe90e40235a819"
+    },
+    {
+      "file": "test/l3-pi-gates.test.js",
+      "sha256": "e12bf59f77627ce75782ae113a2283b73e212f72934f943f51d80e9a782c8043"
+    },
+    {
       "file": "docs/evofence-harness-kernel/probes/pi/VERSION-PIN.json",
       "sha256": "212dbd5d7848a27e73ecbf6d91748be5cb8af7ea7b2e03e18a3a0d9010f7a166"
     }
   ],
-  "sourceProvenance": "Live runtime implementation hashes still match; only type-only structuredContent added later. Original probe .mjs paths moved to explicit test/l3-pi-*.test.js entries; post-live probe refinements are described in VERSION-DIFFERENCES.md."
+  "sourceProvenance": "Live runtime implementation hashes still match; only type-only structuredContent added later. Original probe .mjs paths moved to explicit test/l3-pi-*.test.js entries; post-live probe refinements are described in VERSION-DIFFERENCES.md.",
+  "fix1": {
+    "request": "l3-pi-b-fix1.txt",
+    "reviewedCommit": "6f0ad16",
+    "evidenceGrade": "native-fixture",
+    "additionalPaidRequests": 0,
+    "major1": {
+      "status": "evidence-complete",
+      "dod1Controls": 1,
+      "dod2Controls": 3,
+      "newControls": [
+        "dod2-reentry",
+        "dod2-context"
+      ]
+    },
+    "minor1": {
+      "status": "explained",
+      "basis": "SESSION-006-HANDOFF.md section 1.3 user decision: deepseek/deepseek-flash high; both providers available; historical MiMo budget unchanged; pin not changed in FIX1"
+    },
+    "minor2": {
+      "status": "preserved-unproved",
+      "limitation": "Original paid trace records pre-migration .mjs harness hashes and cannot be reproduced byte-for-byte with the current test harness; binding runtime hash matches; historical live artifacts untouched"
+    },
+    "nit1": {
+      "status": "rerun-with-source-hashes",
+      "trace": "src/hosts/pi/evidence/0992-memory-control.json",
+      "sourceHashCount": 7,
+      "exit": 0,
+      "paidRequests": 0
+    },
+    "bindingOriginalSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+    "bindingRestoredSha256": "401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672",
+    "pinAndMappingUnchangedFromFix1Start": true,
+    "changedPaths": [
+      "src/hosts/pi/VERSION-DIFFERENCES.md",
+      "src/hosts/pi/evidence/0992-SUMMARY.json",
+      "src/hosts/pi/evidence/0992-dod1-green.json",
+      "src/hosts/pi/evidence/0992-dod1-red.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-context-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-red.json",
+      "src/hosts/pi/evidence/0992-dod2-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-green.json.usage.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.kernel.json",
+      "src/hosts/pi/evidence/0992-dod2-reentry-red.json.usage.json",
+      "src/hosts/pi/evidence/0992-gates.json",
+      "src/hosts/pi/evidence/0992-memory-control.json",
+      "src/hosts/pi/evidence/0992-negative-controls.json",
+      "src/hosts/pi/evidence/LANE-REPORT.md",
+      "test/l3-pi-gates.test.js",
+      "test/l3-pi-negative-controls.test.js"
+    ]
+  }
 }

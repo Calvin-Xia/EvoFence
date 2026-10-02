@@ -2,6 +2,8 @@
 
 当前目标固定为 **@earendil-works/pi-coding-agent@0.99.2**，依据用户裁决 A（SESSION-006-HANDOFF §1、repin brief）。本机 pi --version、包元数据及关键文件哈希均已核实。VERSION-PIN.json 保留完整 0.87.1 pin 到 history[0].pin；L1 HOST-MANIFEST/live-trace/offline-trace/README 原样保留，均为 **0.87.1 历史证据**。
 
+模型选择单独依据 [SESSION-006-HANDOFF §1.3](../../../docs/evofence-harness-kernel/execution/SESSION-006-HANDOFF.md)：用户已裁决本轮 Pi 使用 `deepseek/deepseek-flash` high、无美元硬上限且逐请求记账。本机 Xiaomi/MiMo 与 DeepSeek 均可选，此次切换来自本轮场景选择。历史 MiMo 模型与 $0.50 累计预算保留；SDK 版本重定与模型选择是两项分别记录的决定。本次 FIX1 只补说明，VERSION-PIN.json 未再修改。
+
 | 接口 | 0.87.1 历史声明/实测 | 0.99.2 实际包与本 lane 结论 |
 |---|---|---|
 | session_start / session_shutdown | start/readback、shutdown 后 context 失效 | start reason 为 startup/reload/new/resume/fork；shutdown 为 quit/reload/new/resume/fork；原生 ID/file 保留。真实 resume 使用同一个已存在的 disk session；用户 TUI 切换共存未测 |
@@ -34,10 +36,14 @@ P5 在 live raw/SDK 用量对应中重验；P6 在 0.99.2 本地 HTTP abort 重�
 
 **DoD②**：live awaited end/settled 顺序，加 native 三请求 continuation、async settled、reentry、unload 和 abort。abort 缺 meter 保留 null/incomplete，确认 stopped 与确认 spend 分开。
 
-实际源码变异、build、真实 0.99.2 子进程变红、原字节恢复、build、真实子进程复绿见 [0992-negative-controls.json](evidence/0992-negative-controls.json)。两项均 red exit=1、green exit=0，SHA256 恢复一致，**native-fixture、零付费请求**：
+实际源码变异、build、真实 0.99.2 子进程变红、原字节恢复、build、真实子进程复绿见 [0992-negative-controls.json](evidence/0992-negative-controls.json)。共四项（DoD① 一项、DoD② 三项）均 red exit=1、green exit=0，SHA256 恢复一致，**native-fixture、零付费请求**；各自记录独立 red/green 文件、断言名及取证时源码哈希：
 
 - DoD①：删除持久路径门禁，让真实 SessionManager.inMemory 错误通过；nativeMemorySessionRefused 断言变红。
 - DoD②：在 agent_end 直接持久化 completed receipt；native boundary 续跑前 observer 看见早回执，DoD2 no receipt before native continuation/settlement 断言变红。
+- DoD② 重入：删除 execute 的 `!isIdle()` 拒绝门禁；真实 awaited settled handler 尝试第二个 effect，`settledReentryRefused` 断言变红。见 [0992-dod2-reentry-red.json](evidence/0992-dod2-reentry-red.json) 与 [复绿轨迹](evidence/0992-dod2-reentry-green.json)。该变异也产生后续 context/continuation 检查失败，首个失败断言为重入拒绝。
+- DoD② context 失效：在 agent_end 设置 `packet = []`；真实 boundary continuation 的第三条请求缺 node context，host context/skill 仍在，`contextAndResources` 断言变红。见 [0992-dod2-context-red.json](evidence/0992-dod2-context-red.json) 与 [复绿轨迹](evidence/0992-dod2-context-green.json)。
+
+FIX1 重跑 [0992-memory-control.json](evidence/0992-memory-control.json)，真实 in-memory session 拒绝检查通过，补入本次实际使用的七个 `sourceHashes`，paidRequests=0。所有变异后 `binding.ts` 原字节均已恢复，SHA256=`401fb5ce46258074d25af30c313f5d95c91395e0c2be2c6031aa738201482672`。
 
 拒绝路径：非 0.99.2 在注册 handler 或触碰 SDK 前返回 EFK_SOURCE_PIN_DRIFT；in-memory/错误 ID 拒绝，busy/reentry 拒绝，未知 dispatch 不盲重派，unknown usage 留预留。没有静默版本降级或无会话替代。
 
@@ -61,3 +67,5 @@ node --test test/l3-pi-*.test.js
 ~~~
 
 test/l3-pi-native-session.test.js --probe --live --output=<file> 会消费请求，不能作为自动 CI，也不需为重述证据重跑。live source hashes 保存取证时实现；随后只调整 native 探针的断言位置、abort 搭建、hash 捕获及测试目录布局，未再付费；历史 hash 的 .mjs 路径对应迁移前探针，生产绑定运行逻辑 hash 仍一致，后补的 structuredContent 仅为类型声明及 fixture 字段转交断言。runtime JSONL/controlled resources 保留在证据注明的独立 TEMP 目录，便于审阅，没有复制到 Git。旧 evidence/SUMMARY、gates、native-version-block、negative-controls 保留为前轮历史，当前总结和门禁使用 **0992-** 前缀。
+
+复核 minor-2 保留为明确的可复现性限制：原 provider-live trace 的探针哈希为 `native-session.mjs:74b6780e…` / `native-support.mjs:316a7602…`，当前 `test/l3-pi-*.test.js` harness 无法逐字节复现该历史付费取证。运行绑定哈希不变只支持实现一致，不能消除探针差异；本轮补控及 memory control 使用当前 harness 并记录其实际哈希。历史 live trace 保留原貌，本次追加付费请求为零。
