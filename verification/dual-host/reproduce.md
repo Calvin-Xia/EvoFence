@@ -43,10 +43,12 @@ git status --porcelain                              # 期望仍是 5 个任务�
 
 ## 3. 复核者自己重算关键锚点（不跑脚本也能做）
 
+> 后记（2026-10-02，用户裁决）：`scenarios/**` 已退出 PR、仅本地保留。本节直接读 `scenarios/` 工作树文件的命令需本地存在该目录；`git rev-parse 4a250e4:…` 的冻结核对不依赖工作树文件，仍有效。
+
 ```bash
 # 冻结合同（LF 归一）
 node -e "const fs=require('fs');const b=fs.readFileSync('scenarios/TASK-CONTRACT.md');console.log(require('crypto').createHash('sha256').update(b.toString('utf8').replace(/\r\n/g,'\n'),'utf8').digest('hex'))"
-git rev-parse HEAD:scenarios/TASK-CONTRACT.md      # 应等于 9239ee1a…
+git rev-parse HEAD:scenarios/TASK-CONTRACT.md      # 仅精简前有效；2026-10-02 后 HEAD 已无该路径
 git rev-parse 4a250e4:scenarios/TASK-CONTRACT.md   # 应等于同一个 blob
 
 # 任务产物字节

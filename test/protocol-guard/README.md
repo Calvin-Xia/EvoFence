@@ -18,7 +18,7 @@ node scripts/check-core-imports.mjs --root protocol=src/protocol --project tscon
 & ./test/protocol-guard/verify-native-protocol.ps1
 ```
 
-最后一条在本目录 `.work/native-*` 中复制 protocol，使用项目已安装的 TS7 CLI 和继承自仓库的 tsconfig 编译，再将实际 JS 产物交给 guard。只写测试目录，不写原始 src、产品 dist 或 tsconfig；检查清理目标 realpath 后只移除本次创建的临时目录。**该脚本会再生成已跟踪的 [EVIDENCE-PROTOCOL.txt](EVIDENCE-PROTOCOL.txt)，失败时也会写入；它不是仓库只读验证。** 此文件是脚本的明确输出；源码、产品 dist 和产品配置保持只读。
+最后一条在本目录 `.work/native-*` 中复制 protocol，使用项目已安装的 TS7 CLI 和继承自仓库的 tsconfig 编译，再将实际 JS 产物交给 guard。只写测试目录，不写原始 src、产品 dist 或 tsconfig；检查清理目标 realpath 后只移除本次创建的临时目录。**该脚本会再生成 [EVIDENCE-PROTOCOL.txt](EVIDENCE-PROTOCOL.txt)（本地保留、未跟踪，见根 `.gitignore`），失败时也会写入；它不是仓库只读验证。** 此文件是脚本的明确输出；源码、产品 dist 和产品配置保持只读。
 
 guard 支持重复 `--root protocol|kernel|runtime=directory`；省略 root 时要求三个 `src/` 根全部存在。允许指定当前已实现的子集，JSON 总结会列出实际 `modules`，子集通过不能作为完整 core 结论。每个根必须有唯一 ESM index；缺失、重叠、语法无效、目标无法解析均失败。
 
@@ -50,7 +50,7 @@ I02 的检查对象限于 **import/export/引用 specifier**。`declare module "
 
 ## I01–I08 的反例及真实输出
 
-本轮最终测试输出为 [EVIDENCE-REVIEW.txt](EVIDENCE-REVIEW.txt)，初版历史输出为 [EVIDENCE.txt](EVIDENCE.txt)。本轮输出包括每个向量的退出码、诊断和 stdout。以下摘录保留真实 code/message，省略临时绝对路径。表中反例全部退出 **1**。
+本轮最终测试输出为 [EVIDENCE-REVIEW.txt](EVIDENCE-REVIEW.txt)，初版历史输出为 [EVIDENCE.txt](EVIDENCE.txt)（本目录 `EVIDENCE*.txt` 均为本地保留的运行产物，未跟踪、不进 PR）。本轮输出包括每个向量的退出码、诊断和 stdout。以下摘录保留真实 code/message，省略临时绝对路径。表中反例全部退出 **1**。
 
 | 判据 | 实现 | 对应最小反例 | 实测诊断 |
 |---|---|---|---|

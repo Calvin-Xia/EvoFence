@@ -29,6 +29,7 @@
 - 场景运行时的合同字节：**sha256 `9c6c5680b5bb5954f299617070e234230379a0014e01c88021202e051b00b979`**（LF 行尾）。两宿主的 `preflight.json` / `config.json` / `completion.json` 都记录此值。
 - 集成 worktree 的当前工作区文件因本机 `core.autocrlf=true` 是 **CRLF**，裸字节 sha256 为 `762c495c…`；**LF 归一后**仍为 `9c6c5680…`。
 - 冻结 commit `4a250e4` 的 git blob 与当前 `HEAD` 的 blob **同一个对象** `9239ee1a…`；`ccb4536..HEAD`（脱敏提交 `503eafa`）对 `scenarios/TASK-CONTRACT.md` 的 diff 为**空**。
+- **后记（2026-10-02，用户裁决）**：`scenarios/**` 已退出 PR、仅本地保留（根 `.gitignore`）。此后 `HEAD:scenarios/**` 核对不再适用；冻结合同以 commit `4a250e4` 的 blob `9239ee1a…` 为准。`scripts/independent-checks.mjs` 的 `contract.head-blob-equals-frozen` / `contract.not-touched-by-head-commit` 两条断言只适用于精简前的窗口（本包记录的是 gate 时点事实），对此后 HEAD 重跑会如实报失败而非静默通过。
 - 因此结论是"合同内容自冻结起未被改写"，而不是"字节在磁盘上任意时刻都等于 9c6c5680"。独立复算见 `evidence/independent-checks.json` 的 `contract.*`。
 
 ## 4. 证据等级（`scenarios/TASK-CONTRACT.md` §5）
