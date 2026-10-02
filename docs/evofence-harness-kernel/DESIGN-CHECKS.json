@@ -27,9 +27,9 @@
   },
   "quality": {
     "exitCode": 0,
-    "root": "C:\\Users\\Calvin-Xia\\.codex\\worktrees\\72a4\\EvoFence",
+    "root": "${USER_HOME}\\.codex\\worktrees\\72a4\\EvoFence",
     "graph": "evofence-harness-kernel",
-    "graph_dir": "C:\\Users\\Calvin-Xia\\.codex\\worktrees\\72a4\\EvoFence\\.graph\\evofence-harness-kernel",
+    "graph_dir": "${USER_HOME}\\.codex\\worktrees\\72a4\\EvoFence\\.graph\\evofence-harness-kernel",
     "nodes": 59,
     "edges": 130,
     "errors": [],
@@ -59,7 +59,7 @@
   },
   "snapshot": "✅ 已创建快照: 2026-10-01t06-29-29-342z-lrzj7f\n   190 个文件 | 2026-10-01 图设计交付；待人审，所有实施 pending，ADR proposed",
   "preservedIntermediateHistory": "history/dependency-normalization/ contains CLI soft-deleted intermediate dependency edges; active edges were recreated through graph CLI",
-  "reviewBundleStaging": "C:\\Users\\Calvin-Xia\\.codex\\worktrees\\72a4\\EvoFence\\.graph\\design-tools\\review-bundle",
+  "reviewBundleStaging": "${USER_HOME}\\.codex\\worktrees\\72a4\\EvoFence\\.graph\\design-tools\\review-bundle",
   "reviewArchive": {
     "sha256": "0dc6852c98cc08ade827fd83d7a09d9e09a11e920d81d3194da8a72d20302551",
     "path": "docs/evofence-harness-kernel/graph-review.zip",

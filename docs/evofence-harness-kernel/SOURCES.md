@@ -7,12 +7,12 @@
 - EvoFence checkout：`d47f88367564e65db026b43b4b1e4fd83f06a4b7`。
 - 本地package/CHANGELOG：0.4.2。未查询npm registry，未做远端发布状态断言。
 - 关键源码：`src/index.ts`，`src/lib/exec/runner-{preflight,baseline,iteration,run,evaluate,context}.ts`，`src/lib/gate/index.ts`，`src/lib/ledger/driver.ts`，`src/lib/exec/adapter-args.ts`，`src/lib/config/schema.ts`，`src/lib/gate/dead-keys.ts`，`integrations/deepseek-harness/index.js`，`integrations/pi/evofence.js`。
-- 旧图只读来源：`C:/Users/Calvin-Xia/EvoFence/.graph/{evofence-ts-refactor,evofence-ops-evidence,evofence-042-hardening}`；历史软删理由见REVIEW。
+- 旧图只读来源：`${USER_HOME}/EvoFence/.graph/{evofence-ts-refactor,evofence-ops-evidence,evofence-042-hardening}`；历史软删理由见REVIEW。
 
 ## Super Plumber
 
 - 本机安装：`@lukawi/super-plumber` 1.0.0；CLI来自全局npm。
-- 本机克隆：`C:/Users/Calvin-Xia/super-plumber`，commit `acdc506932d8a6d0d2a1c1ba4bb1ea63090f8844`。
+- 本机克隆：`${USER_HOME}/super-plumber`，commit `acdc506932d8a6d0d2a1c1ba4bb1ea63090f8844`。
 - 已核对CLI help、installed `integrations/src/manual.md`、`plumber-design`/相关attachments、类型/schema和设计doctor脚本；只读查看clone产品文档、paper中机制/局限与scheduler源文件。paper中的外部效果论述未作为EvoFence收益证据。
 - [官方仓库](https://github.com/LUKAWI/super-plumber)：工作/知识顶点、类型边、状态/门禁、领域context、ADR、跨域契约、图预览和导出。
 - Context7查询Super Plumber只返回同名但不相关项目，未引用这些匹配；采用本机包和官方仓库。

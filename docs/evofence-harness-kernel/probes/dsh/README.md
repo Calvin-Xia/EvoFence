@@ -43,7 +43,7 @@ VERSION-PIN 的 `drift.evidence` 为 []，`verificationStatus` 为 `unverified`�
 
 这些 exact pins 与本机 0.2.0-rc.2 不匹配。文件 SHA256 与真实字段已写入 VERSION-PIN 的 `integrationGap`；集成 runtime compatibility 标 unverified，未加载或修改旧 integration。此缺口应进入 `l1_api_freeze` / `l3_dsh_session` 的消费合同，不能因 native probe 通过而声称旧只读插件已经兼容。
 
-本机 home 用实际 `dsh-home-paths.resolveDshHome()` 只读调用核实为 `C:\Users\Calvin-Xia\.dsh`，来源为 OS home 默认值，当前没有有效 `DSH_HOME` 环境覆盖。结果保存在 manifest 的 `homeObservation`。这不证明用户当前 GUI/profile 启动时没有另传显式 home。
+本机 home 用实际 `dsh-home-paths.resolveDshHome()` 只读调用核实为 `${USER_HOME}\.dsh`，来源为 OS home 默认值，当前没有有效 `DSH_HOME` 环境覆盖。结果保存在 manifest 的 `homeObservation`。这不证明用户当前 GUI/profile 启动时没有另传显式 home。
 
 ## 共享比较口径
 

@@ -336,7 +336,7 @@
   "homeObservation": {
     "status": "observed",
     "packageVersion": "0.2.0-rc.2",
-    "resolvedHome": "C:\\Users\\Calvin-Xia\\.dsh",
+    "resolvedHome": "${USER_HOME}\\.dsh",
     "source": "OS-home/.dsh",
     "exists": true,
     "homeDirStatOnly": true,

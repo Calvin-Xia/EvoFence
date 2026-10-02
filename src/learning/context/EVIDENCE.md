@@ -1,6 +1,6 @@
 # l3-router lane 交付证据
 
-日期：2026-10-02。worktree：`C:/Users/Calvin-Xia/EvoFence-wt/harness-kernel/l3-router`；branch：`refactor/hk-l3-router`；base：`f74181d75c37450b1a4ccc7e0c134fdb0c48e74e`。未 commit、未 install、未操作 `.graph`、未修改 integration 或 `src/{protocol,kernel,runtime}/**`。运行环境 Node.js `v24.12.0`。
+日期：2026-10-02。worktree：`${USER_HOME}/EvoFence-wt/harness-kernel/l3-router`；branch：`refactor/hk-l3-router`；base：`f74181d75c37450b1a4ccc7e0c134fdb0c48e74e`。未 commit、未 install、未操作 `.graph`、未修改 integration 或 `src/{protocol,kernel,runtime}/**`。运行环境 Node.js `v24.12.0`。
 
 ## checkpoint 证据
 
