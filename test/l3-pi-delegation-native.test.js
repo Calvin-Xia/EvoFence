@@ -9,9 +9,12 @@ import { bindPiSharedRequests } from '../dist/hosts/pi/delegation-budget.js';
 import { PI_DELEGATION_ENTRY } from '../dist/hosts/pi/delegation-records.js';
 import { mapPiUsage } from '../dist/hosts/pi/usage.js';
 import { delegationFixture, value } from './l3-pi-delegation-fixtures.test.js';
-import { infrastructure } from './l3-pi-native-support.test.js';
+import { infrastructure, packageRoot } from './l3-pi-native-support.test.js';
+import { nativePackageSkipReason } from '../scripts/probes/native-test-support.mjs';
 
-test('native-fixture Pi 0.99.2 child execution, parent pool, SDK abort/shutdown and disk restore', { timeout: 30000 }, async () => {
+const nativeSkip = nativePackageSkipReason(packageRoot, '@earendil-works/pi-coding-agent', 'EVOFENCE_PI_PACKAGE_ROOT');
+
+test('native-fixture Pi 0.99.2 child execution, parent pool, SDK abort/shutdown and disk restore', { skip: nativeSkip, timeout: 30000 }, async () => {
   const i = await infrastructure(false); // Explicit false: placeholder auth, no stored credential read or vendor HTTP.
   const f = delegationFixture(), sessions = [], files = new Map(), wire = [], trace = [];
   let creates = 0, restores = 0, ordinaryOwner = 'ordinary-parent', parentApi;

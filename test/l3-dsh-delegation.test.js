@@ -3,8 +3,15 @@ import assert from 'node:assert/strict';
 import { delegationFixture, value, deadline } from './l3-dsh-delegation-fixtures.test.js';
 import { decode, fail } from '../dist/protocol/index.js';
 import { DSH_CAPABILITIES } from '../dist/runtime/host-port/index.js';
+import { packageRoot } from '../scripts/probes/dsh-probe-support.mjs';
+import { nativePackageSkipReason } from '../scripts/probes/native-test-support.mjs';
 
-test('DoD1 cp1/cp2: fresh native child returns bound products and usage through HostPort, kernel evaluates', async t => {
+// The delegation fixture mounts the pinned Cordis/AgentLoop/ToolRuntime host, so every
+// case except the frozen-manifest evidence check needs the native @deepseek-ai/dsh install.
+const nativeSkip = nativePackageSkipReason(packageRoot, '@deepseek-ai/dsh', 'EVOFENCE_DSH_PACKAGE_ROOT');
+const nativeTest = (name, fn) => test(name, { skip: nativeSkip }, fn);
+
+nativeTest('DoD1 cp1/cp2: fresh native child returns bound products and usage through HostPort, kernel evaluates', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const report = value(await deadline(f.runtime.step(f.h.seed.sessionId)));
   assert.equal(report.appliedReceipts.length, 1);
@@ -24,7 +31,7 @@ test('DoD1 cp1/cp2: fresh native child returns bound products and usage through 
   assert.equal(value(f.runtime.read(f.h.seed.sessionId)).nodeStates[0].state, 'succeeded');
 });
 
-test('cp1: same-id fake or stale host caller and invented grant cannot confer authority', async t => {
+nativeTest('cp1: same-id fake or stale host caller and invented grant cannot confer authority', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed(), original = f.authority;
   f.setAuthority({ ...original, caller: { ...original.caller } });
@@ -37,7 +44,7 @@ test('cp1: same-id fake or stale host caller and invented grant cannot confer au
   assert.equal((await f.delegated.host.execute(authorized)).error.code, 'EFK_AUTHORITY_DENIED');
 });
 
-test('cp1: child scope, depth, budget, expiry and revoked parent are refused before native spawn', async t => {
+nativeTest('cp1: child scope, depth, budget, expiry and revoked parent are refused before native spawn', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed(), originalPlan = f.ports.plan;
   const base = value(originalPlan());
@@ -52,7 +59,7 @@ test('cp1: child scope, depth, budget, expiry and revoked parent are refused bef
   assert.equal(f.counts.spawn, 0);
 });
 
-test('DoD1 cp2: handoff uses the actual existing child and enqueue stays distinct from consumption', async t => {
+nativeTest('DoD1 cp2: handoff uses the actual existing child and enqueue stays distinct from consumption', async t => {
   const f = await delegationFixture({ isolation: 'current' }); t.after(() => f.close());
   const spawned = await f.ctx.agentTeams.spawnTeammate(f.handle.agent, { name: 'existing', description: 'host child',
     prompt: [{ type: 'text', text: 'HOST_CREATED' }], context: 'fresh', provider: 'spawn', signal: new AbortController().signal });
@@ -70,7 +77,7 @@ test('DoD1 cp2: handoff uses the actual existing child and enqueue stays distinc
   assert.equal(f.counts.send, 1);
 });
 
-test('DoD1 cp2: native model failure feeds back failed and retains missing usage', async t => {
+nativeTest('DoD1 cp2: native model failure feeds back failed and retains missing usage', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'failure';
   value(await deadline(f.runtime.step(f.h.seed.sessionId)));
   const state = value(f.runtime.read(f.h.seed.sessionId)), receipt = Object.values(state.receipts)[0];
@@ -79,7 +86,7 @@ test('DoD1 cp2: native model failure feeds back failed and retains missing usage
   assert.equal(state.budget.reservations.length, 1); assert.equal(f.counts.collect, 0);
 });
 
-test('DoD2 cp2: native board is a projection of the unique kernel claim, concurrent dispatch is once', async t => {
+nativeTest('DoD2 cp2: native board is a projection of the unique kernel claim, concurrent dispatch is once', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed();
   const results = await deadline(Promise.all([f.delegated.host.execute(authorized), f.delegated.host.execute(authorized)]));
@@ -91,7 +98,7 @@ test('DoD2 cp2: native board is a projection of the unique kernel claim, concurr
   const replay = value(await f.delegated.host.execute(authorized)); assert.equal(replay.status, 'completed'); assert.equal(f.counts.spawn, 1);
 });
 
-test('DoD2 cp2: independent native board owner refuses dispatch, preserving kernel claim', async t => {
+nativeTest('DoD2 cp2: independent native board owner refuses dispatch, preserving kernel claim', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed(), before = value(f.runtime.read(f.h.seed.sessionId)).scheduler;
   const task = await f.ctx.agentTeams.createTask(f.handle.agent, { subject: 'rogue', description: 'independent scheduler' });
@@ -101,7 +108,7 @@ test('DoD2 cp2: independent native board owner refuses dispatch, preserving kern
   assert.deepEqual(value(f.runtime.read(f.h.seed.sessionId)).scheduler.claims, before.claims);
 });
 
-test('cp2: uncommitted and stale effects, reliable delivery demand and fork are refused', async t => {
+nativeTest('cp2: uncommitted and stale effects, reliable delivery demand and fork are refused', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   f.h.planOnly(); const effect = Object.values(f.h.read().effects)[0], grant = f.authority.grant;
   assert.equal((await f.delegated.host.execute({ effect, grant })).error.code, 'EFK_CLAIM_CONFLICT');
@@ -113,7 +120,7 @@ test('cp2: uncommitted and stale effects, reliable delivery demand and fork are 
   assert.equal(f.counts.spawn, 0);
 });
 
-test('DoD1 cp3: wait and interrupt stop only the named running child, missing usage remains unknown', async t => {
+nativeTest('DoD1 cp3: wait and interrupt stop only the named running child, missing usage remains unknown', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'hold';
   const authorized = await f.claimed(), started = f.started(), execution = f.delegated.host.execute(authorized);
   await deadline(started);
@@ -128,7 +135,7 @@ test('DoD1 cp3: wait and interrupt stop only the named running child, missing us
   assert(f.counts.wait > 0); await deadline(f.handle.agent.whenIdle()); assert.equal(f.handle.agent.status, 'idle');
 });
 
-test('cp3: takeover reconciles the same child without spawn or resend; duplicate and late receipt do not settle again', async t => {
+nativeTest('cp3: takeover reconciles the same child without spawn or resend; duplicate and late receipt do not settle again', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   value(await deadline(f.runtime.step(f.h.seed.sessionId)));
   const state = value(f.runtime.read(f.h.seed.sessionId)), receipt = Object.values(state.receipts)[0];
@@ -152,7 +159,7 @@ test('cp3: takeover reconciles the same child without spawn or resend; duplicate
   assert.equal(f.counts.spawn, 1); assert.equal(f.counts.send, 0);
 });
 
-test('cp3: prepared dispatch surviving interruption cannot be blindly replayed', async t => {
+nativeTest('cp3: prepared dispatch surviving interruption cannot be blindly replayed', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed();
   const original = f.context.agentTeams.spawnTeammate;
@@ -165,7 +172,7 @@ test('cp3: prepared dispatch surviving interruption cannot be blindly replayed',
   assert.equal(f.requests.length, 0);
 });
 
-test('cp2: child hooks preserve native denial and prevent unreserved extra model steps', async t => {
+nativeTest('cp2: child hooks preserve native denial and prevent unreserved extra model steps', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'tools';
   const authorized = await f.claimed(), receipt = value(await deadline(f.delegated.host.execute(authorized)));
   assert.equal(receipt.status, 'unknown'); assert.equal(f.requests.length, 1);
@@ -173,14 +180,14 @@ test('cp2: child hooks preserve native denial and prevent unreserved extra model
   assert(f.counts.gates.every(g => g.grant.grantId === 'child-grant'));
 });
 
-test('cp2: removed child pre-step hook cannot confirm a child outcome', async t => {
+nativeTest('cp2: removed child pre-step hook cannot confirm a child outcome', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   f.removers.get('agent/pre-step')();
   const authorized = await f.claimed(), receipt = value(await deadline(f.delegated.host.execute(authorized)));
   assert.equal(receipt.status, 'unknown'); assert.equal(f.requests.length, 1); assert.equal(f.counts.collect, 0);
 });
 
-test('cp3: kernel cancel dispatches HostPort cancel receipts and scopes the real child', async t => {
+nativeTest('cp3: kernel cancel dispatches HostPort cancel receipts and scopes the real child', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'hold';
   const started = f.started(), execution = f.runtime.step(f.h.seed.sessionId);
   await deadline(started);
@@ -195,7 +202,7 @@ test('cp3: kernel cancel dispatches HostPort cancel receipts and scopes the real
   f.mode.value = 'reply'; await f.ordinary(); assert.equal(f.requests.length, 2, 'ordinary host followup remains usable');
 });
 
-test('cp3: takeover of an in-flight child reads evidence without re-dispatch', async t => {
+nativeTest('cp3: takeover of an in-flight child reads evidence without re-dispatch', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'hold';
   const authorized = await f.claimed(), started = f.started(), execution = f.delegated.host.execute(authorized);
   await deadline(started);
@@ -211,7 +218,7 @@ test('cp3: takeover of an in-flight child reads evidence without re-dispatch', a
   assert.equal(f.counts.spawn, 1); assert.equal(f.counts.send, 0);
 });
 
-test('cp2: unknown counters are preserved and idempotency collisions are refused', async t => {
+nativeTest('cp2: unknown counters are preserved and idempotency collisions are refused', async t => {
   const f = await delegationFixture(); t.after(() => f.close()); f.mode.value = 'no-usage';
   const authorized = await f.claimed(), receipt = value(await f.delegated.host.execute(authorized));
   assert.equal(receipt.status, 'completed'); assert.equal(receipt.usage[0].total, null); assert.equal(receipt.usage[0].complete, false);
@@ -222,7 +229,7 @@ test('cp2: unknown counters are preserved and idempotency collisions are refused
   assert.equal(collision.error.code, 'EFK_IDEMPOTENCY_COLLISION'); assert.equal(f.requests.length, 1);
 });
 
-test('cp1/cp2: scoped tool refusal prevents child tool effects', async t => {
+nativeTest('cp1/cp2: scoped tool refusal prevents child tool effects', async t => {
   const f = await delegationFixture({ allowChild: async () => ({ ok: false, error: fail('EFK_AUTHORITY_DENIED', 'scoped tool denied') }) });
   t.after(() => f.close()); f.mode.value = 'tools';
   const authorized = await f.claimed(), receipt = value(await f.delegated.host.execute(authorized));
@@ -230,7 +237,7 @@ test('cp1/cp2: scoped tool refusal prevents child tool effects', async t => {
   assert.equal(f.executed.denied, 0); assert.equal(f.requests.length, 1);
 });
 
-test('cp1: host output limit above the scoped child budget is stopped before any model request', async t => {
+nativeTest('cp1: host output limit above the scoped child budget is stopped before any model request', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   const authorized = await f.claimed(), plan = value(f.ports.plan());
   f.ports.plan = () => ({ ok: true, value: { ...plan, child: { ...plan.child, budget: { ...plan.child.budget, maxOutputTokens: 64 } } } });
@@ -239,7 +246,7 @@ test('cp1: host output limit above the scoped child budget is stopped before any
   assert.equal(f.requests.length, 0); assert.equal(receipt.usage.length, 0);
 });
 
-test('cp3: named child cancel never interrupts an unrelated real sibling or a settled effect', async t => {
+nativeTest('cp3: named child cancel never interrupts an unrelated real sibling or a settled effect', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   f.mode.value = 'hold'; const siblingStarted = f.started();
   const created = await f.ctx.agentTeams.spawnTeammate(f.handle.agent, { name: 'sibling', description: 'ordinary sibling',
@@ -256,7 +263,7 @@ test('cp3: named child cancel never interrupts an unrelated real sibling or a se
   await deadline(sibling.whenIdle()); await deadline(f.handle.agent.whenIdle());
 });
 
-test('DoD2 cp3: changed native owner is refused instead of becoming a second scheduler', async t => {
+nativeTest('DoD2 cp3: changed native owner is refused instead of becoming a second scheduler', async t => {
   const f = await delegationFixture(); t.after(() => f.close());
   value(await f.runtime.step(f.h.seed.sessionId)); const record = [...f.records.values()][0];
   const task = f.ctx.agentTeams.getTask(f.handle.agent, record.taskId);
