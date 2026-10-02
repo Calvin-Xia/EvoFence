@@ -103,7 +103,7 @@ estimator or cost ledger is introduced. Fixture counts use one UTF-8 byte per fi
 
 ## Evidence and limits
 
-See `EVIDENCE.md` and `evidence/`. Tests obtain promoted/revoked states through real registry
+See `EVIDENCE.md` (kept locally, untracked; see `.gitignore`) and `evidence/`. Tests obtain promoted/revoked states through real registry
 operations, using synthetic evaluator receipts and a deterministic fixture tokenizer. They cover
 scope/provenance/unverified/held-out negatives, binding/declaration/hydration refusals, dependency
 revocation/expiry, empty fallback, complete-packet boundaries and feedback attribution.

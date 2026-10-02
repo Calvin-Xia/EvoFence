@@ -14,4 +14,4 @@ custom entry `evofence.kernel.pi.v1` 持久化 binding/dispatch/receipt 关联�
 
 卸载只注销自身 handlers/清空 packet，不调用宿主 abort/dispose，也不删 transcript/资源。宿主 switch/shutdown 后该 binding 失效，替换 AgentSession 需重新创建 binding。异常由 `options.fault` 显式上报并锁住 kernel 进展，宿主普通工作保留。
 
-本 lane 的 0.99.2 新证据、逐项版本重验、用量与真实负对照见 [VERSION-DIFFERENCES.md](VERSION-DIFFERENCES.md) 和 `evidence/0992-*.json`。真实持久会话内核 smoke、native boundary continuation、disk reopen 和 abort 已实跑；native reopen 不是 crash 恢复，历史 L1 0.87.1 轨迹原样保留。未重验的 child identity 和服务端 reasoning guarantee 在本 session capability view 中保持 unknown。
+本 lane 的 0.99.2 新证据、逐项版本重验、用量与真实负对照见 `VERSION-DIFFERENCES.md`（本地保留、未跟踪，见 `.gitignore`）和 `evidence/0992-*.json`。真实持久会话内核 smoke、native boundary continuation、disk reopen 和 abort 已实跑；native reopen 不是 crash 恢复，历史 L1 0.87.1 轨迹原样保留。未重验的 child identity 和服务端 reasoning guarantee 在本 session capability view 中保持 unknown。

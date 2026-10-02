@@ -55,7 +55,7 @@ or missing material/evaluation is never treated as qualification.
 Validated alone has `eligible=false, usable=false`. Revocation and asset/material/evaluation
 expiry invalidate every transitive dependent at query time. Original observations remain in
 history; propagation does not fabricate revocation decisions for dependents. Snapshot/activation
-evidence expiry prevents that scoped activation from being usable. `EXAMPLE.json` is extracted
+evidence expiry prevents that scoped activation from being usable. `EXAMPLE.json` (kept locally, untracked; see `.gitignore`) is extracted
 from the passing test run and shows validated/promoted/active and mismatching session/host views.
 
 ## Authority and actual project writes
@@ -81,7 +81,7 @@ not real host receipts or capability-benefit evidence.
 
 ## Verification
 
-See `EVIDENCE.md`, `evidence/results.json`, both complete test-run logs, and the static audit
+See `EVIDENCE.md` (kept locally, untracked; see `.gitignore`), `evidence/results.json`, both complete test-run logs, and the static audit
 output. `test/l4-assets-negative-controls.test.js` runs five genuine implementation mutations in
 isolated child module loaders: one target test passes, fails by assertion under the mutant, then
 passes without the loader. Each run checks the on-disk dist hash is unchanged and records exact

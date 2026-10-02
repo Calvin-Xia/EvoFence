@@ -71,4 +71,4 @@ packetLimit = min(
 
 测试 tokenizer 为固定 `fixture:utf8-byte/v1`，每个 UTF-8 byte 就是一个 fixture token，精确计数而非 provider token 估价。它证明窗口算法接受/拒绝与 injected tokenizer 的一致性；本 lane 没有证明 Pi/DSH tokenizer、宿主 retained resources 计数、原生 fresh child 接线、真实长任务收益或任意未标记内容中的 secret 检测。可信输入由已提交声明提供，router 无法单凭字符串发现外部已经把私有源码伪装成 public evidence 的污染；它自身不会从 hidden 数据生成摘要或 hash/名称通道。
 
-门禁与实测数字见 `EVIDENCE.md`。
+门禁与实测数字见 `EVIDENCE.md`（本地保留、未跟踪，见 `.gitignore`）。

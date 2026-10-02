@@ -39,9 +39,9 @@
 | l3_context_router | ctx_learning | 节点上下文与反馈路由 | l2_kernel_verification | packages/learning/context |
 | l3_workspace_txn | ctx_runtime | 代码与技能产物事务 | l2_kernel_verification | packages/runtime/workspace |
 | l3_task_evaluation | ctx_eval | 任务完成的唯一裁决入口 | l2_kernel_verification, l1_eval_protocol | packages/evaluation/task |
-| l3_dsh_scenario | ctx_eval | DSH 真实长程协作闭环 | l3_dsh_delegation, l3_context_router, l3_workspace_txn, l3_task_evaluation | scenarios/dsh |
-| l3_pi_scenario | ctx_eval | Pi 真实长程协作闭环 | l3_pi_delegation, l3_context_router, l3_workspace_txn, l3_task_evaluation | scenarios/pi |
-| l3_dual_host_gate | ctx_eval | 双宿主实用闭环验收 | l3_dsh_scenario, l3_pi_scenario | verification/dual-host |
+| l3_dsh_scenario | ctx_eval | DSH 真实长程协作闭环 | l3_dsh_delegation, l3_context_router, l3_workspace_txn, l3_task_evaluation | scenarios/dsh（本地保留、未跟踪，见 `.gitignore`） |
+| l3_pi_scenario | ctx_eval | Pi 真实长程协作闭环 | l3_pi_delegation, l3_context_router, l3_workspace_txn, l3_task_evaluation | scenarios/pi（本地保留、未跟踪，见 `.gitignore`） |
+| l3_dual_host_gate | ctx_eval | 双宿主实用闭环验收 | l3_dsh_scenario, l3_pi_scenario | verification/dual-host（本地保留、未跟踪，见 `.gitignore`） |
 
 ## L4 · 经过验证的长期演化
 
@@ -53,7 +53,7 @@
 | l4_evolution_eval | ctx_eval | 候选与长期能力独立评价 | l3_task_evaluation, l1_eval_protocol, l4_asset_registry | packages/evaluation/evolution |
 | l4_promotion | ctx_learning | 验证晋升与宿主激活事务 | l4_experience, l4_evolution_eval, l3_workspace_txn | packages/learning/promotion |
 | l4_regression_revocation | ctx_eval | 退化检测与撤销传播 | l4_promotion, l4_retrieval | packages/evaluation/revocation |
-| l4_learning_scenario | ctx_eval | 跨任务学习与可撤销演化场景 | l4_promotion, l4_retrieval, l4_regression_revocation, l3_dual_host_gate | scenarios/learning |
+| l4_learning_scenario | ctx_eval | 跨任务学习与可撤销演化场景 | l4_promotion, l4_retrieval, l4_regression_revocation, l3_dual_host_gate | scenarios/learning（本地保留、未跟踪，见 `.gitignore`） |
 | l4_capability_trial | ctx_eval | 受控能力收益与消融试验 | l4_learning_scenario, l1_eval_protocol | experiments/capability |
 
 ## L5 · SDK、观测、迁移与交付验收

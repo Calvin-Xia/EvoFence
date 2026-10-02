@@ -41,7 +41,7 @@ native-scoped表示指定原生值/文件证据能抽取，完整adapter关联�
 | P15 | osSandbox: absent | [probes/pi/HOST-MANIFEST.json](../../probes/pi/HOST-MANIFEST.json) `/capabilities/osSandbox` | not-run | 未添加/测试 OS sandbox；保持 raw absent 的探针范围 |
 | D16 | existingIntegrationCompatibility: unknown | [probes/dsh/VERSION-PIN.json](../../probes/dsh/VERSION-PIN.json) `/integrationGap` | static | 旧 peer/engines 0.1.7-rc.1 与0.2.0-rc.2不符 |
 | DV | nativeSessionBinding: verified | [probes/dsh/VERSION-PIN.json](../../probes/dsh/VERSION-PIN.json) `/observedVersion` | static | 当前 version0.2.0-rc.2 已固定；历史 drift 未核实 |
-| PV | nativeSessionBinding: verified | [probes/pi/VERSION-PIN.json](../../probes/pi/VERSION-PIN.json) `/version` | static | 固定0.99.2（用户裁决 A）；0.87.1 时代 P1–P17 为历史证据，需按 0.99.2 重验/补差，未重验项保留 unknown；新证据见 `src/hosts/pi/VERSION-DIFFERENCES.md` |
+| PV | nativeSessionBinding: verified | [probes/pi/VERSION-PIN.json](../../probes/pi/VERSION-PIN.json) `/version` | static | 固定0.99.2（用户裁决 A）；0.87.1 时代 P1–P17 为历史证据，需按 0.99.2 重验/补差，未重验项保留 unknown；新证据见 `src/hosts/pi/VERSION-DIFFERENCES.md`（本地保留、未跟踪，见 `.gitignore`） |
 | D17 | settledAndIdle: verified | [probes/dsh/offline-trace.json](../../probes/dsh/offline-trace.json) `/checks/providerFailureIdle` | native-fixture | whenIdle/status，任意 detached plugin 未测 |
 | P17 | settledAndIdle: verified | [probes/pi/live-trace.json](../../probes/pi/live-trace.json) `/checks/settledAfterAsyncEnd` | provider-live | awaited agent_end 后 agent_settled |
 | D18 | parentChildCancellation: unknown | [probes/dsh/HOST-MANIFEST.json](../../probes/dsh/HOST-MANIFEST.json) `/capabilities/parentChildCancellation` | not-run | 未证明父子取消级联 |

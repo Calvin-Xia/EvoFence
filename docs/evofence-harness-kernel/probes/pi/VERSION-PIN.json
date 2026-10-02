@@ -98,7 +98,7 @@
     "decision": "User A; SESSION-006-HANDOFF section 1 and L3-pi-session-repin-brief",
     "reason": "The only installed runnable Pi is 0.99.2; use exact approved installed version, do not install or silently accept other versions",
     "historicalEvidencePolicy": "L1 0.87.1 HOST-MANIFEST/live/offline are frozen historical artifacts. P1-P17 require 0.99.2 revalidation or unknown.",
-    "currentEvidence": "src/hosts/pi/VERSION-DIFFERENCES.md and src/hosts/pi/evidence/0992-*.json"
+    "currentEvidence": "src/hosts/pi/VERSION-DIFFERENCES.md (kept locally, untracked; see .gitignore) and src/hosts/pi/evidence/0992-*.json"
   },
   "history": [
     {

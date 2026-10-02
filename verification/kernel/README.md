@@ -1,6 +1,6 @@
 # kernel-verification lane 证据包
 
-**cp1 passed / cp2 passed / cp3 passed（S05 已修复 I01 drift）**。纯契约/纯判定上移到 kernel，冻结 allowlist 不变；原原因与修复记录见 [DRIFT.md](DRIFT.md)，完整清单见 [MIGRATION.md](MIGRATION.md)。
+**cp1 passed / cp2 passed / cp3 passed（S05 已修复 I01 drift）**。纯契约/纯判定上移到 kernel，冻结 allowlist 不变；原原因与修复记录见 `DRIFT.md`（本地保留、未跟踪，见 `.gitignore`），完整清单见 `MIGRATION.md`（本地保留、未跟踪，见 `.gitignore`）。
 基线 HEAD `aca28835110bf6717936d8e73f79dc7095a20711`；Node `v24.12.0`；使用既有依赖，没有 install/commit/graph 操作。
 
 ## 可运行入口

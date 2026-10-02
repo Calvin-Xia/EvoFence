@@ -109,4 +109,4 @@ console.log(result.value.disposition, result.value.file);
 
 测试位于 `test/l5-legacy-*.test.js`，只从本次 build 的 `dist/**` 导入。负控在子进程通过 loader 对真实构建模块做单点变异；未知版本被接受、回写临时源、历史标为 executable、breaking 清单缺项各执行 green → red → restored green。文件与 core 不被变异写回。
 
-门禁与原件 digest、负控退出码记录于同目录 `evidence/`；详见 `REPORT.md`。不 commit、不 install、不操作 `.graph`，由 orchestrator 记录节点状态。
+门禁与原件 digest、负控退出码记录于同目录 `evidence/`；详见 `REPORT.md`（本地保留、未跟踪，见 `.gitignore`）。不 commit、不 install、不操作 `.graph`，由 orchestrator 记录节点状态。
