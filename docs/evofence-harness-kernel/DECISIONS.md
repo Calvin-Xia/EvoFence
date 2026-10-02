@@ -27,6 +27,7 @@
 | task · passed | l2_scheduler | 租约、资源冲突与公平调度 | 2026-10-01T16:05:49.572Z |
 | task · passed | l2_state_store | 执行 journal、投影和 outbox | 2026-10-01T15:27:53.127Z |
 | task · passed | l3_context_router | 节点上下文与反馈路由 | 2026-10-01T17:58:33.111Z |
+| task · passed | l3_dsh_delegation | DSH 团队与子图执行 | 2026-10-02T06:24:56.335Z |
 | task · passed | l3_dsh_session | DSH 原生会话绑定 | 2026-10-02T05:20:27.601Z |
 | task · passed | l3_pi_delegation | Pi 子会话与子图执行 | 2026-10-02T06:17:38.123Z |
 | task · passed | l3_pi_session | Pi 原生扩展绑定 | 2026-10-02T05:34:30.294Z |
