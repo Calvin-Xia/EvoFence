@@ -6,7 +6,7 @@
 
 ## 0. 复核对象
 
-- 集成提交：**orchestrator 派单时填入**（lane `refactor/hk-l3-pi-b` 产物并入后的 commit）。
+- 集成提交：**`6f0ad16`**（lane `refactor/hk-l3-pi-b` 产物并入后的 commit；基线 `4ef6022`）。
 - 交付面（预期）：`src/hosts/pi/**`（演进既有绑定 + 新证据）、`test/l3-pi-*.test.js`、`docs/evofence-harness-kernel/probes/pi/VERSION-PIN.json`、`HOST-MAPPING.md` 的 Pi 版本行。
 - lane 作者工作区（仅 sha256 比对，不写）：`C:\Users\Calvin-Xia\EvoFence-wt\harness-kernel\l3-pi-b`。
 - 节点合同：plan = 把版本固定的 Pi extension events、context/tool hooks、appendEntry/session identity 与 usage 接到 runtime；保留宿主持久 session。

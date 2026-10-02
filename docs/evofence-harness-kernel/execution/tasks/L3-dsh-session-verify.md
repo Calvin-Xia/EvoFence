@@ -6,7 +6,7 @@
 
 ## 0. 复核对象
 
-- 集成提交：**orchestrator 派单时填入**（lane `refactor/hk-l3-dsh` 产物并入后的 commit）。
+- 集成提交：**`6f0ad16`**（lane `refactor/hk-l3-dsh` 产物并入后的 commit；基线 `4ef6022`）。
 - 交付面（预期）：`src/hosts/dsh/**`（新建）、`test/l3-dsh-*.test.js`、`integrations/deepseek-harness/**` 的版本声明与必要适配（单列 diff 说明）、`probes/dsh/VERSION-PIN.json`。
 - lane 作者工作区（仅 sha256 比对，不写）：`C:\Users\Calvin-Xia\EvoFence-wt\harness-kernel\l3-dsh`。
 - 节点合同：plan = 将已验证 Cordis lifecycle、tool policy/result、session projections、usage 和用户交互接到 runtime；注册原生 EvoFence 操作与状态视图，沿用现有 session/model/tools/context；**不以只读 ledger tool 或 `run` 子 CLI 为实现**。
