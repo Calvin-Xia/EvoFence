@@ -1,0 +1,207 @@
+{
+  "node": "l3_dual_host_gate",
+  "graph": "evofence-harness-kernel",
+  "type": "gate",
+  "generatedAt": "2026-10-02T00:00:00.000Z",
+  "paidModelRequests": 0,
+  "frozenContract": {
+    "path": "scenarios/TASK-CONTRACT.md",
+    "sha256Lf": "9c6c5680b5bb5954f299617070e234230379a0014e01c88021202e051b00b979",
+    "sha256WorkingTreeCrlf": "762c495c33794003bab7690c8f27b5d4efd9c69ff77c9b719377f237b77f1945",
+    "freezeCommit": "4a250e4",
+    "headBlob": "9239ee1a368aa962a47c76f04a7e537a9ab12629",
+    "note": "LF-normalized content is byte-identical to the freeze commit; the CRLF difference is core.autocrlf on this host."
+  },
+  "hosts": {
+    "pi": {
+      "version": "0.99.2",
+      "model": "deepseek/deepseek-flash",
+      "thinking": "high",
+      "baseline": "5ec65f13424da1105e8e19dd8ded78b7b77da6a0",
+      "evidenceLevel": "provider-live",
+      "productionHostPort": "src/hosts/pi/binding.ts:211-289",
+      "productionDelegation": "src/hosts/pi/delegation.ts:16,199",
+      "scenarioUsesProductionHost": true
+    },
+    "dsh": {
+      "version": "0.2.0-rc.2",
+      "model": "deepseek-official/deepseek-flash",
+      "thinking": "high",
+      "baseline": "b574b1c35b8cd4af31d22df51fe00270afffa4ad",
+      "evidenceLevel": "provider-live",
+      "productionHostPort": "src/hosts/dsh/port.ts:30-196",
+      "productionDelegation": "src/hosts/dsh/delegation.ts",
+      "scenarioUsesProductionHost": false,
+      "scenarioHostAdapter": "scenarios/dsh/host.mjs"
+    }
+  },
+  "dimensions": [
+    {
+      "id": "lifecycle",
+      "label": "生命周期",
+      "pi": {
+        "nativeLoop": "src/hosts/pi/binding.ts:183,129-136",
+        "parallelWorkers": [
+          "01a0fb70-66f0-7410-8561-928f98d4c3f1",
+          "01a0fb70-66f1-7410-8561-929074f683bb"
+        ],
+        "parallelOverlapMs": 58489,
+        "parallelOverlapMethod": "trace provider-dispatch/provider-settled",
+        "integrationWriter": "unique parent writer, integration-write x5",
+        "board": "none; boardOwners [] (binding.ts:213-217)",
+        "evidenceAnchors": [
+          "scenarios/pi/evidence/attempt-2/trace.jsonl:84-85",
+          "scenarios/pi/evidence/attempt-2/trace.jsonl (integration-write x5)"
+        ]
+      },
+      "dsh": {
+        "nativeLoop": "src/hosts/dsh/port.ts:59",
+        "parallelWorkers": [
+          "e4ef9bb5-771e-45c6-b200-e10ad5a0427b",
+          "239cd8e7-0654-425f-ab0f-40b635a779eb"
+        ],
+        "parallelOverlapMs": 49627,
+        "parallelOverlapMethod": "MODEL-BUDGET.json startedAt/endedAt",
+        "integrationWriter": "unique parent writer, integration-write x5",
+        "board": "native board, projection-only (verifyBoardAuthority)",
+        "evidenceAnchors": [
+          "scenarios/dsh/evidence/trace.jsonl",
+          "scenarios/dsh/evidence/final-board.json"
+        ]
+      },
+      "difference": "DSH has a native team graph board used as a read-only projection over kernel claims; Pi has no board and schedules via the kernel graph. Neither introduces a second scheduler or a second adjudicator. Asymmetry: Pi's scenario drives the production src/hosts/pi binding; DSH's scenario drives an adapter (scenarios/dsh/host.mjs), so the production DSH HostPort is conformance-checked statically, not E2E."
+    },
+    {
+      "id": "permissions",
+      "label": "权限",
+      "sharedKernel": [
+        "src/runtime/host-port/grant.ts:39 scopeWithin",
+        "src/runtime/host-port/grant.ts:56 budgetWithin",
+        "src/runtime/host-port/grant.ts:78 delegate (child depth strictly decreases)",
+        "src/runtime/host-port/grant.ts:112 revokeGrant (monotonic)",
+        "src/kernel/policy/authority.ts:136 deriveAuthority (single permission root)"
+      ],
+      "pi": {
+        "counterpart": "src/hosts/pi/delegation.ts:16",
+        "declaredWriteScopeEnforcement": "no probe -> unknown",
+        "secondAdjudicator": false
+      },
+      "dsh": {
+        "counterpart": "src/hosts/dsh/delegation.ts",
+        "declaredWriteScopeEnforcement": "grantWriteScopeEnforcement unknown (advisory writeScopes)",
+        "secondAdjudicator": false,
+        "projectionGuard": "scenarios/dsh/host.mjs:39 verifyBoardAuthority"
+      },
+      "difference": "Grant data rules are the same shared kernel module, so the semantics are identical; the difference is enforcement level only. Neither host enforces an OS-level write scope (osSandbox: Pi absent, DSH unknown). Do not read the tool allowlist plus claim ownership as enforced grants."
+    },
+    {
+      "id": "budget",
+      "label": "预算",
+      "sharedKernel": [
+        "src/runtime/host-port/grant.ts:56 budgetWithin",
+        "src/runtime/host-port/usage.ts:46 dedupeUsage",
+        "src/runtime/host-port/usage.ts:66 usageIsComplete"
+      ],
+      "pi": {
+        "requests": 84,
+        "tokens": 2047716,
+        "referenceUsd": 0.24026417999999994,
+        "unknownProviderUsageRequests": 0,
+        "missingUsagePolicy": "retain reservation; interrupted receipt stays unknown (EFK_USAGE_CONFLICT)",
+        "byRole": {
+          "parent": 30,
+          "logic": 13,
+          "tests": 15,
+          "verifier": 20,
+          "quality": 3,
+          "quality-verifier": 3
+        },
+        "evidenceAnchors": [
+          "scenarios/pi/MODEL-BUDGET.json",
+          "scenarios/pi/evidence/attempt-2/abort.json"
+        ]
+      },
+      "dsh": {
+        "requests": 75,
+        "tokens": 1684159,
+        "referenceUsd": 0.14603357999999994,
+        "rawProviderUnknownRequests": 4,
+        "reconciledViaNativeReceipt": ["dsh-http-1", "dsh-http-3", "dsh-http-5", "dsh-http-6"],
+        "missingUsagePolicy": "originalOutcome retained; never filled with zero",
+        "byRole": {
+          "parent": 20,
+          "logic": 5,
+          "tests": 17,
+          "verifier": 28,
+          "unregistered-role-parent-session": 5
+        },
+        "evidenceAnchors": [
+          "scenarios/dsh/MODEL-BUDGET.json",
+          "scenarios/dsh/evidence/cost-summary.json",
+          "scenarios/dsh/evidence/completion.json"
+        ]
+      },
+      "difference": "Accounting semantics and the missing-usage rule are identical. Request/token totals differ (84 vs 75) because of different failure/resume paths and different baselines (5ec65f1 vs b574b1c); do NOT read this as a capability or efficiency signal (adr_0008: no benefit claim this round)."
+    },
+    {
+      "id": "context",
+      "label": "上下文",
+      "pi": {
+        "injectionSeam": "src/hosts/pi/binding.ts:125-141 (current only; fresh refused)",
+        "fidelityProbe": "docs/evofence-harness-kernel/probes/pi/live-trace.json /checks/hostToolsAndSkillPreserved (provider-live)",
+        "sessionLaneOverride": {
+          "sdkChildSessionIsolation": "unknown",
+          "reasoningHighGuarantee": "unknown"
+        }
+      },
+      "dsh": {
+        "injectionSeam": "src/hosts/dsh/port.ts:12-24,51-58 (fresh refused; requires explicit delegation binding)",
+        "fidelityProbe": "docs/evofence-harness-kernel/probes/dsh/offline-trace.json /checks/additiveNodeContext (native-fixture)",
+        "sharedFileConflict": "scenarios/dsh/evidence/shared-file-conflict.json; trace.jsonl:721 conflict-resolved"
+      },
+      "difference": "Both inject only into the current context and both put fresh child transcripts behind a separate delegation binding. Difference: DSH declares sdkChildSessionIsolation verified (native-fixture), Pi's 0.99.2 session lane conservatively narrows it to unknown against the 0.87.1-era probe. Evidence grade asymmetry: Pi provider-live, DSH native-fixture."
+    },
+    {
+      "id": "recovery",
+      "label": "恢复",
+      "pi": {
+        "cancelPrimitive": "src/hosts/pi/binding.ts:221-239 (abort; native-ack only when settled+idle)",
+        "sameSession": "01a0fb70-04e7-7410-8561-928d781401af",
+        "prefixHash": "e7e3a14cfa47c5438e3a8a515a9333ef4b14d1771745b223cce84192d8a358f1",
+        "prefixBytes": 79067,
+        "fileBytesNow": 245403,
+        "nonce": "CONTINUITY_5832393e-25b0-4346-8c21-21350d064988",
+        "reconcileVerdicts": ["resolved", "not-executed", "unknown"],
+        "evidenceAnchors": [
+          "scenarios/pi/evidence/attempt-2/abort.json",
+          "scenarios/pi/evidence/attempt-2/trace.jsonl:63,78"
+        ]
+      },
+      "dsh": {
+        "cancelPrimitive": "src/hosts/dsh/port.ts:164-180 (Agent.cancel({kind:user}) + whenIdle)",
+        "sameSession": "dsh-scenario-9c1c6eb8-d95e-4b5c-9198-767660e0cf20",
+        "prefixHash": "d7d75e13b94e987d1edd69f29322b2c097de83ffa31ac6545ee993b560bf37ac",
+        "prefixEvents": 39,
+        "fileLinesNow": 177,
+        "nonce": "CONTINUITY_7e8cf4d4-5492-4a3a-850b-5d1473b70f77",
+        "reconcileVerdicts": ["resolved", "unknown"],
+        "evidenceAnchors": [
+          "scenarios/dsh/evidence/interruption.json",
+          "scenarios/dsh/evidence/trace.jsonl:233,258"
+        ]
+      },
+      "difference": "Same semantics (same session, no blind replay) with different native primitives. Functional difference: Pi's reconcile can return not-executed (provably never dispatched); DSH only resolved/unknown, so DSH expresses not-dispatched via its kill/reconcile records. Neither proves process-kill/disk-crash recovery."
+    }
+  ],
+  "verification": {
+    "independentChecks": "verification/dual-host/evidence/independent-checks.json",
+    "independentChecksResult": { "total": 26, "passed": 26, "failed": [] },
+    "localFocusedTestRerun": {
+      "pi": "node --test test/ledger-limit-scenario.test.js -> tests 7 / pass 7 / fail 0",
+      "dsh": "node --test test/ledger-limit-scenario.test.js -> tests 4 / pass 4 / fail 0",
+      "scratchStateUnchanged": true,
+      "paidRequests": 0
+    }
+  },
+  "claimScope": "Practical usability only. No capability benefit, promotion or activation is claimed (adr_0008)."
+}
