@@ -3,8 +3,13 @@ import assert from 'node:assert/strict';
 import { fixture, value, deadline } from './l3-dsh-fixtures.test.js';
 import { nativeUsage, invocationUsage } from '../dist/hosts/dsh/index.js';
 import { node, graph, PROTOCOL, digestPort, canonical, harness } from './l2-runtime-support.test.js';
+import { packageRoot } from '../scripts/probes/dsh-probe-support.mjs';
+import { nativePackageSkipReason } from '../scripts/probes/native-test-support.mjs';
 
-test('DoD1: same native session continues and resumes the same kernel journal without model replay', async t => {
+const nativeSkip = nativePackageSkipReason(packageRoot, '@deepseek-ai/dsh', 'EVOFENCE_DSH_PACKAGE_ROOT');
+const nativeTest = (name, fn) => test(name, { skip: nativeSkip }, fn);
+
+nativeTest('DoD1: same native session continues and resumes the same kernel journal without model replay', async t => {
   const f = await fixture(); t.after(() => f.close());
   await f.ordinary(); await f.ordinary();
   const status = value(f.binding.status(f.h.seed.sessionId));
@@ -27,7 +32,7 @@ test('DoD1: same native session continues and resumes the same kernel journal wi
   assert(f.requests.every(request => request.sessionId === status.sessionId));
 });
 
-test('cp1: native execution reaches verifying; only the independent evaluator can succeed', async t => {
+nativeTest('cp1: native execution reaches verifying; only the independent evaluator can succeed', async t => {
   const f = await fixture(); t.after(() => f.close());
   value(await f.binding.step(f.h.seed.sessionId));
   const s = value(f.binding.session(f.h.seed.sessionId));
@@ -45,7 +50,7 @@ test('cp1: native execution reaches verifying; only the independent evaluator ca
   assert(f.observations.some(o => o.type === 'user/message'));
 });
 
-test('cp2: additive bounded context preserves native model, tools and host instructions', async t => {
+nativeTest('cp2: additive bounded context preserves native model, tools and host instructions', async t => {
   const bytes = canonical({ text: 'NODE_PACKET' });
   const ref = { protocol: PROTOCOL, id: 'packet-1', digest: digestPort.digest(bytes),
     producer: { actorId: 'author', kind: 'host-adapter', identityRef: null }, binding: null,
@@ -65,7 +70,7 @@ test('cp2: additive bounded context preserves native model, tools and host instr
   assert.equal(value(s.runtime.read(h.seed.sessionId)).nodeStates[0].state, 'verifying');
 });
 
-test('cp2: actual tool gate retains the host denial and observes normal, denied and thrown results', async t => {
+nativeTest('cp2: actual tool gate retains the host denial and observes normal, denied and thrown results', async t => {
   const f = await fixture(); t.after(() => f.close()); f.mode.value = 'tools';
   await f.ordinary();
   assert.deepEqual(f.executed, { echo: 1, denied: 0, failure: 1 });
@@ -74,7 +79,7 @@ test('cp2: actual tool gate retains the host denial and observes normal, denied 
   assert(results.every(o => o.hostSessionId === f.h.seed.sessionId && o.callId !== null));
 });
 
-test('cp2: usage is deduplicated by native invocation; missing counters and USD stay unknown', async t => {
+nativeTest('cp2: usage is deduplicated by native invocation; missing counters and USD stay unknown', async t => {
   const f = await fixture(); t.after(() => f.close());
   value(await f.binding.step(f.h.seed.sessionId));
   const s = value(f.binding.session(f.h.seed.sessionId));
@@ -96,7 +101,7 @@ test('cp2: usage is deduplicated by native invocation; missing counters and USD 
   assert.equal(nativeUsage('bad', { inputTokens: 4, outputTokens: 2, cacheReadTokens: 1, cacheWriteTokens: 0, totalTokens: 8 }, 'synthetic').error.code, 'EFK_USAGE_CONFLICT');
 });
 
-test('cp2: failed native model request preserves unknown usage and outstanding reservation', async t => {
+nativeTest('cp2: failed native model request preserves unknown usage and outstanding reservation', async t => {
   const f = await fixture(); t.after(() => f.close()); f.mode.value = 'failure';
   value(await f.binding.step(f.h.seed.sessionId));
   const state = value(value(f.binding.session(f.h.seed.sessionId)).runtime.read(f.h.seed.sessionId));
@@ -106,7 +111,7 @@ test('cp2: failed native model request preserves unknown usage and outstanding r
   assert.equal(state.budget.reservations.length, 1); assert.equal(f.handle.agent.status, 'idle');
 });
 
-test('DoD2: observation hook failure durably pauses evolution and preserves ordinary host work', async t => {
+nativeTest('DoD2: observation hook failure durably pauses evolution and preserves ordinary host work', async t => {
   let throwHook = false;
   const f = await fixture({ onObservation: o => { if (throwHook && o.type === 'assistant/message') throw new Error('fixture fault with secret-like content must be redacted'); } });
   t.after(() => f.close()); throwHook = true;
@@ -121,7 +126,7 @@ test('DoD2: observation hook failure durably pauses evolution and preserves ordi
   assert.equal(f.requests.length, count + 1); assert.equal(f.handle.agent.status, 'idle');
 });
 
-test('DoD2: removed context hook cannot confirm an evolution turn; ordinary work continues', async t => {
+nativeTest('DoD2: removed context hook cannot confirm an evolution turn; ordinary work continues', async t => {
   const f = await fixture(); t.after(() => f.close());
   f.removers.get('agent/pre-step')();
   value(await f.binding.step(f.h.seed.sessionId));
@@ -131,7 +136,7 @@ test('DoD2: removed context hook cannot confirm an evolution turn; ordinary work
   await f.ordinary(); assert.equal(f.requests.length, 2);
 });
 
-test('DoD2: plugin uninstall preserves native loop and tools but denies pending evolution', async t => {
+nativeTest('DoD2: plugin uninstall preserves native loop and tools but denies pending evolution', async t => {
   const f = await fixture(); t.after(() => f.close());
   await deadline(f.fiber.dispose());
   assert.equal(value(f.binding.status(f.h.seed.sessionId)).dispatchMode, 'paused');
@@ -142,7 +147,7 @@ test('DoD2: plugin uninstall preserves native loop and tools but denies pending 
   assert(!f.ctx.tools.schemas().some(tool => tool.name === 'evofence_continue'));
 });
 
-test('cp3: runtime error is visible, journal is paused, normal followup still works', async t => {
+nativeTest('cp3: runtime error is visible, journal is paused, normal followup still works', async t => {
   const f = await fixture(); t.after(() => f.close());
   const s = value(f.binding.session(f.h.seed.sessionId));
   s.runtime.step = async () => { throw new Error('controlled runtime fault'); };
@@ -152,7 +157,7 @@ test('cp3: runtime error is visible, journal is paused, normal followup still wo
   await f.ordinary(); assert.equal(f.requests.length, 1);
 });
 
-test('DoD2: failed durable pause remains visible and locally refuses evolution without stopping native work', async t => {
+nativeTest('DoD2: failed durable pause remains visible and locally refuses evolution without stopping native work', async t => {
   const f = await fixture(); t.after(() => f.close());
   const s = value(f.binding.session(f.h.seed.sessionId));
   s.runtime.step = async () => { throw new Error('runtime port failure'); };
@@ -164,7 +169,7 @@ test('DoD2: failed durable pause remains visible and locally refuses evolution w
   await f.ordinary(); assert.equal(f.requests.length, 1);
 });
 
-test('cp3: native cancellation confirms only the bound active loop; missing usage is not free', async t => {
+nativeTest('cp3: native cancellation confirms only the bound active loop; missing usage is not free', async t => {
   const f = await fixture(); t.after(() => f.close()); f.mode.value = 'hold';
   const started = f.started(), stepping = f.binding.step(f.h.seed.sessionId);
   await deadline(started);
@@ -177,7 +182,7 @@ test('cp3: native cancellation confirms only the bound active loop; missing usag
   assert.equal(value(await s.host.usage({ effectId, requestIds: [] })).complete, false);
 });
 
-test('cp3: resume and reconcile never replay a claimed unknown native action', async t => {
+nativeTest('cp3: resume and reconcile never replay a claimed unknown native action', async t => {
   const f = await fixture(); t.after(() => f.close());
   f.removers.get('session/event')();
   value(await f.binding.step(f.h.seed.sessionId));
@@ -189,7 +194,7 @@ test('cp3: resume and reconcile never replay a claimed unknown native action', a
   assert.equal(value(s.runtime.read(resumed.id)).dispatchMode, 'paused');
 });
 
-test('cp2: native continue tool queues once and executes after the same caller turn settles', async t => {
+nativeTest('cp2: native continue tool queues once and executes after the same caller turn settles', async t => {
   const f = await fixture(); t.after(() => f.close());
   // Native ToolRuntime dispatch, while its ordinary loop is idle, is still the real pipeline.
   const result = await f.ctx.tools.execute({ callId: f.sdk['dsh-llm'].ToolCallId('continue-native'), name: 'evofence_continue', arguments: {}, agent: f.handle.agent, signal: new AbortController().signal });
@@ -199,7 +204,7 @@ test('cp2: native continue tool queues once and executes after the same caller t
   assert.equal(value(f.binding.status(f.h.seed.sessionId)).nodeStates[0].state, 'verifying');
 });
 
-test('cp2: model-issued native continuation returns before idle and reuses the same caller', async t => {
+nativeTest('cp2: model-issued native continuation returns before idle and reuses the same caller', async t => {
   const f = await fixture(); t.after(() => f.close()); f.mode.value = 'continue';
   await f.ordinary();
   value(await deadline(f.binding.settle(f.h.seed.sessionId)));
@@ -208,7 +213,7 @@ test('cp2: model-issued native continuation returns before idle and reuses the s
   assert.equal(value(f.binding.status(f.h.seed.sessionId)).nodeStates[0].state, 'verifying');
 });
 
-test('A15: an actual native board claim with no kernel mapping refuses advancement', async t => {
+nativeTest('A15: an actual native board claim with no kernel mapping refuses advancement', async t => {
   const f = await fixture({ team: true }); t.after(() => f.close());
   const task = await f.ctx.agentTeams.createTask(f.handle.agent, { subject: 'ordinary native task', description: 'no kernel owner' });
   await f.ctx.agentTeams.updateTask(f.handle.agent, { taskId: task.id, expectedRevision: task.revision, action: 'claim' });
@@ -218,7 +223,7 @@ test('A15: an actual native board claim with no kernel mapping refuses advanceme
   await f.ordinary(); assert.equal(f.requests.length, 1);
 });
 
-test('A15: board owner is accepted only as the projection of an actual current kernel claim', async t => {
+nativeTest('A15: board owner is accepted only as the projection of an actual current kernel claim', async t => {
   const f = await fixture({ team: true }); t.after(() => f.close());
   f.h.planOnly();
   const s = value(f.binding.session(f.h.seed.sessionId));
@@ -233,7 +238,7 @@ test('A15: board owner is accepted only as the projection of an actual current k
   assert.equal(f.requests.length, 0);
 });
 
-test('boundary: native operations reject an impersonated caller and wrong version', async t => {
+nativeTest('boundary: native operations reject an impersonated caller and wrong version', async t => {
   const f = await fixture(); t.after(() => f.close());
   const impostor = { ...f.handle.agent, id: f.handle.agent.id };
   const result = await f.ctx.tools.execute({ callId: f.sdk['dsh-llm'].ToolCallId('impostor'), name: 'evofence_status', arguments: {}, agent: impostor, signal: new AbortController().signal });
@@ -242,7 +247,7 @@ test('boundary: native operations reject an impersonated caller and wrong versio
   assert.throws(() => createDshBinding(f.ctx, { ...f.composition, version: '0.1.7-rc.1' }), /exact version/);
 });
 
-test('cp2: native multi-step evolution cannot spend an unreserved implicit model request', async t => {
+nativeTest('cp2: native multi-step evolution cannot spend an unreserved implicit model request', async t => {
   const f = await fixture(); t.after(() => f.close()); f.mode.value = 'tools';
   value(await f.binding.step(f.h.seed.sessionId));
   assert.equal(f.requests.length, 1, 'second implicit native request was stopped before the adapter');
@@ -257,7 +262,7 @@ function toolRequest(h) {
     operations: { nA: { kind: 'host.tool', inputRefs: [ref], payload: { context: null, toolName: 'host_echo', argumentsRef: ref,
       graphRef: null, targetIds: [], assetRef: null, previousSnapshot: null, deliveryGuarantee: 'none' } } } };
 }
-test('cp2: committed tool effect traverses the actual native policy and result pipeline', async t => {
+nativeTest('cp2: committed tool effect traverses the actual native policy and result pipeline', async t => {
   const h = harness(), f = await fixture({ harness: h, request: toolRequest(h), denyTool: 'host_echo' });
   t.after(() => f.close());
   value(await f.binding.step(h.seed.sessionId));
@@ -267,7 +272,7 @@ test('cp2: committed tool effect traverses the actual native policy and result p
   assert.equal(state.nodeStates[0].state, 'verifying');
   assert.equal(state.budget.reservations.length, 1, 'no tool meter is invented');
 });
-test('DoD2: missing tool-result hook leaves the actual tool outcome unconfirmed and pauses', async t => {
+nativeTest('DoD2: missing tool-result hook leaves the actual tool outcome unconfirmed and pauses', async t => {
   const h = harness(), f = await fixture({ harness: h, request: toolRequest(h) });
   t.after(() => f.close()); f.removers.get('tools/result')();
   value(await f.binding.step(h.seed.sessionId));
