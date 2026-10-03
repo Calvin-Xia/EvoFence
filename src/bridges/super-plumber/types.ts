@@ -75,6 +75,22 @@ function nonLinkChain(file: string): void {
   if (parent !== file) nonLinkChain(parent);
   if (lstatSync(file).isSymbolicLink()) reject('EFK_AUTHORITY_DENIED', 'symlink/junction paths are forbidden');
 }
+/** Real path of the deepest existing ancestor with the not-yet-existing tail re-appended.
+ *  Both sides of a containment check must be resolved: an 8.3 short name (`CALVIN~1`) or a
+ *  symlinked ancestor makes the requested path and the real root differ textually without the
+ *  path actually escaping the root. */
+function resolvedForm(target: string): string {
+  const tail: string[] = [];
+  for (let head = target; ;) {
+    try { return path.join(realpathSync.native(head), ...tail.reverse()); }
+    catch (error) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+      const parent = path.dirname(head);
+      if (parent === head) throw error;
+      tail.push(path.basename(head)); head = parent;
+    }
+  }
+}
 function ignored(relative: string, rule: string): boolean {
   // Conservative positive-rule matching: negations never authorize graph-state access.
   const clean = rule.replace(/^\//, '').replace(/\/$/, '');
@@ -100,15 +116,16 @@ export function checkedPath(file: string, scope: FileScope, output: boolean): st
   return external(() => {
     nonLinkChain(scope.root);
     const root = realpathSync.native(scope.root), logical = path.resolve(file);
-    const relative = path.relative(root, logical);
+    // Judge containment on resolved forms. Comparing the real root against an unresolved child
+    // path rejects every path under an 8.3 short name or a symlinked temp root, which is how the
+    // Windows CI runner spells its TEMP directory.
+    const resolved = resolvedForm(logical);
+    const relative = path.relative(root, resolved);
     if (relative === '' || relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {
       reject('EFK_AUTHORITY_DENIED', 'path escapes the explicitly authorized root');
     }
     nonLinkChain(output ? path.dirname(logical) : logical);
-    const resolved = output ? path.join(realpathSync.native(path.dirname(logical)), path.basename(logical)) : realpathSync.native(logical);
     denyGraphPath(resolved);
-    const rel = path.relative(root, resolved).split(path.sep).join('/');
-    if (rel === '..' || rel.startsWith('../') || path.isAbsolute(rel)) reject('EFK_AUTHORITY_DENIED', 'resolved path escapes root');
     // Read only ignore files within the explicit scope, never discover a graph/workspace.
     // Include ancestor policies so choosing an ignored subdirectory as root cannot bypass denial.
     let directory = path.parse(resolved).root;
