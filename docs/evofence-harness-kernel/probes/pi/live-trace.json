@@ -1,0 +1,278 @@
+{
+  "mode": "live",
+  "recordedAt": "2026-10-01T07:13:41.007Z",
+  "checks": {
+    "nativeSessionCreated": true,
+    "sameSessionPreserved": true,
+    "contextInjection": true,
+    "hostToolsAndSkillPreserved": true,
+    "toolExecutionAndHooks": true,
+    "blockedToolNeverExecutes": null,
+    "appendEntry": true,
+    "highPayload": true,
+    "reasoningPassThrough": true,
+    "usage": true,
+    "settledAfterAsyncEnd": true,
+    "diskRestore": true,
+    "independentChildSession": true,
+    "extensionErrorsEmpty": true
+  },
+  "trace": [
+    {
+      "index": 0,
+      "type": "extension_session_start",
+      "sessionId": "01a0f64f-b0b5-7181-8919-d261de753663"
+    },
+    {
+      "index": 1,
+      "type": "session_agent_start"
+    },
+    {
+      "index": 2,
+      "type": "session_turn_start"
+    },
+    {
+      "index": 3,
+      "type": "session_message_start"
+    },
+    {
+      "index": 4,
+      "type": "session_message_end",
+      "role": "system"
+    },
+    {
+      "index": 5,
+      "type": "session_message_start"
+    },
+    {
+      "index": 6,
+      "type": "session_message_end",
+      "role": "user"
+    },
+    {
+      "index": 7,
+      "type": "extension_context"
+    },
+    {
+      "index": 8,
+      "type": "request_reserved",
+      "id": "S01-pi-1790838813115-1"
+    },
+    {
+      "index": 9,
+      "type": "session_message_start"
+    },
+    {
+      "index": 10,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "toolUse"
+    },
+    {
+      "index": 11,
+      "type": "session_tool_execution_start"
+    },
+    {
+      "index": 12,
+      "type": "extension_tool_call",
+      "toolName": "evofence_probe_echo"
+    },
+    {
+      "index": 13,
+      "type": "extension_tool_result",
+      "toolName": "evofence_probe_echo",
+      "isError": false
+    },
+    {
+      "index": 14,
+      "type": "session_tool_execution_end"
+    },
+    {
+      "index": 15,
+      "type": "session_message_start"
+    },
+    {
+      "index": 16,
+      "type": "session_message_end",
+      "role": "toolResult"
+    },
+    {
+      "index": 17,
+      "type": "session_turn_end"
+    },
+    {
+      "index": 18,
+      "type": "session_turn_start"
+    },
+    {
+      "index": 19,
+      "type": "extension_context"
+    },
+    {
+      "index": 20,
+      "type": "request_reserved",
+      "id": "S01-pi-1790838818451-2"
+    },
+    {
+      "index": 21,
+      "type": "session_message_start"
+    },
+    {
+      "index": 22,
+      "type": "session_message_end",
+      "role": "assistant",
+      "stopReason": "stop"
+    },
+    {
+      "index": 23,
+      "type": "session_turn_end"
+    },
+    {
+      "index": 24,
+      "type": "extension_agent_end_begin"
+    },
+    {
+      "index": 25,
+      "type": "extension_agent_end_done"
+    },
+    {
+      "index": 26,
+      "type": "session_agent_end"
+    },
+    {
+      "index": 27,
+      "type": "extension_agent_settled"
+    },
+    {
+      "index": 28,
+      "type": "session_agent_settled"
+    },
+    {
+      "index": 29,
+      "type": "extension_session_start",
+      "sessionId": "01a0f64f-b0b5-7181-8919-d261de753663"
+    },
+    {
+      "index": 30,
+      "type": "extension_session_start",
+      "sessionId": "01a0f64f-d056-7181-8919-d263ba9dd37f"
+    }
+  ],
+  "payloads": [
+    {
+      "model": "mimo-v2.6-flash",
+      "thinking": {
+        "type": "enabled"
+      },
+      "reasoningEffort": "high",
+      "maxOutputTokens": 4096,
+      "hostContextPreserved": true,
+      "nodeContextInjected": true,
+      "toolNames": [
+        "read",
+        "evofence_probe_echo",
+        "evofence_probe_blocked"
+      ],
+      "reasoningHistoryPreserved": true
+    },
+    {
+      "model": "mimo-v2.6-flash",
+      "thinking": {
+        "type": "enabled"
+      },
+      "reasoningEffort": "high",
+      "maxOutputTokens": 4096,
+      "hostContextPreserved": true,
+      "nodeContextInjected": true,
+      "toolNames": [
+        "read",
+        "evofence_probe_echo",
+        "evofence_probe_blocked"
+      ],
+      "reasoningHistoryPreserved": true
+    }
+  ],
+  "rawRequests": [
+    {
+      "id": "S01-pi-1790838813115-1",
+      "httpStatus": 200,
+      "usage": {
+        "completion_tokens": 60,
+        "prompt_tokens": 13615,
+        "total_tokens": 13675,
+        "completion_tokens_details": {
+          "reasoning_tokens": 37
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "S01-pi-1790838818451-2",
+      "httpStatus": 200,
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 13684,
+        "total_tokens": 13702,
+        "completion_tokens_details": {
+          "reasoning_tokens": 14
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 13568
+        }
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "provider": "xiaomi",
+      "model": "mimo-v2.6-flash",
+      "stopReason": "toolUse",
+      "usage": {
+        "input": 13615,
+        "output": 60,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 37,
+        "totalTokens": 13675,
+        "cost": {
+          "input": 0.0019061000000000002,
+          "output": 0.000016800000000000002,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0019229000000000002
+        }
+      }
+    },
+    {
+      "provider": "xiaomi",
+      "model": "mimo-v2.6-flash",
+      "stopReason": "stop",
+      "usage": {
+        "input": 116,
+        "output": 18,
+        "cacheRead": 13568,
+        "cacheWrite": 0,
+        "reasoning": 14,
+        "totalTokens": 13702,
+        "cost": {
+          "input": 0.00001624,
+          "output": 0.00000504,
+          "cacheRead": 0.000037990399999999995,
+          "cacheWrite": 0,
+          "total": 0.000059270399999999994
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "evidence": "Real Pi SDK session calling the authorized Xiaomi API; USD-reference estimate from complete provider usage",
+  "limitations": [
+    "SDK child isolation is not an EvoFence delegated subgraph implementation",
+    "Restored transcript is not recovery/reconciliation of unknown external effects",
+    "MiMo high maps to enabled thinking; no API high tier",
+    "No capability uplift or long-running dual-host scenario proved"
+  ],
+  "piVersion": "0.87.1"
+}

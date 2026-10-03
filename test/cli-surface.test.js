@@ -21,6 +21,7 @@ import { diffHash } from '../dist/lib/git.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 import { sha256, stableStringify } from '../dist/lib/fs.js';
 import { repoRelativePath } from '../dist/lib/cli/output.js';
+import { makeReviewFixture } from './l5-cli-fixture.test.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const BASELINE_SCORE = 0.5;
@@ -121,6 +122,7 @@ async function makeRepo(prefix) {
 /** Healthy fixture: a real two-commit generation plus a fully consistent seeded ledger. */
 async function buildLedgerFixture() {
   const { directory, root } = await makeRepo('ledger');
+  await writeFile(path.join(root, SMOKE.sessionExport), JSON.stringify((await makeReviewFixture()).bundle));
   await writeFile(path.join(root, 'app.txt'), 'v1\n');
   runGit(root, ['add', '-A']);
   runGit(root, ['commit', '--quiet', '-m', 'baseline']);
@@ -240,13 +242,13 @@ test('the manifest and the handler registry describe exactly the same commands',
   assert.deepEqual(
     [...new Set(COMMANDS.map((spec) => spec.group))].sort(),
     [...COMMAND_GROUPS].sort(),
-    'the eleven ADR-0003 groups must all be covered',
+    'every manifest group must be covered',
   );
 });
 
 test('the manifest is internally consistent', () => {
   for (const spec of COMMANDS) {
-    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status|doctor|budget)\b/, spec.name);
+    assert.equal(spec.usage.split(' ')[0], spec.group, spec.name);
     assert.deepEqual(spec.flags.filter((flag) => flag.name === 'json').length, 1, `${spec.name} must declare --json`);
     assert.deepEqual(spec.exits.map((exit) => exit.code).sort(), [0, 1], `${spec.name} exit codes`);
     assert.equal([0, 1].includes(spec.smoke.code), true);
@@ -346,7 +348,7 @@ test('every write-file --json form prints a bare JSON envelope and really writes
 test('the envelope path survives a root spelled differently from the target (symlink / 8.3 alias)', async (t) => {
   // `path.relative` is purely lexical, so a root and a target that name the same directory
   // through different spellings cannot be related: it returns a `../..` chain. CI temp dirs
-  // carry 8.3 short names (`C:\Users\RUNNER~1\...`) while git reports the long spelling, which
+  // carry 8.3 short user-directory names while git reports the long spelling, which
   // is how windows-latest exposed this in `ledger export`. A link reproduces the same mismatch
   // deterministically on every platform instead of waiting for a short-named temp directory.
   const base = await mkdtemp(path.join(os.tmpdir(), 'evofence-repo-rel-'));
@@ -374,7 +376,7 @@ test('the envelope path survives a root spelled differently from the target (sym
 test('the write-file envelope reports an in-repo path when the cwd is spelled differently from the git root', async (t) => {
   // `git rev-parse --show-toplevel` resolves a directory link to its real path while
   // `process.cwd()` keeps the link spelling, so root and target disagree lexically — the same
-  // mismatch a CI temp directory causes through its 8.3 short name (`C:\Users\RUNNER~1\...`),
+  // mismatch a CI temp directory causes through its 8.3 short user-directory name,
   // which is how windows-latest caught the bare `path.relative` in `ledger export`.
   const { directory, root } = await makeRepo('envelope-link');
   try {

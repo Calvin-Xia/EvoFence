@@ -24,6 +24,69 @@ EvoFence 是一个用于管理代码智能体变更的实验性控制面。智�
 
 这是一个研究型 MVP，不提供形式化验证、企业级身份与访问管理，也不是通用安全沙箱。让智能体无人值守运行前，请先阅读[安全边界](#安全边界)。
 
+## 当前 checkout 的 SDK 与观测入口
+
+本节描述尚待发布验收的 lane 交付。据 2026-10-03 用户裁决，本 checkout 的 `package.json` / `package-lock.json` 版本已置为 `0.5.0`，为后续可能的 tag 做准备；`0.5.0` 尚未 tag/publish，registry latest 仍为 `0.4.2`。CLI bin 为 `dist/cli.js`（源 `src/cli.ts`）；已构建 checkout 的最小只读入口如下：
+
+```sh
+node dist/cli.js --help
+node dist/cli.js --version
+evofence session view review.json --json
+```
+
+`review.json` 必须是调用者提供的显式 review export；格式和可执行 fixture 见 [CLI 视图](docs/evofence-harness-kernel/L5-CLI-OBSERVABILITY-VIEWS.md)。嵌入生产会话服务使用公开 subpath，不启动旧 CLI：
+
+```js
+import { createSessionService } from 'evofence/core';
+import { createMemoryEventStore } from 'evofence/storage/memory';
+```
+
+`createSessionService` 要求显式注入 SessionPorts；Pi/DSH/fake 的完整可执行样例见 [SDK 交付文档](docs/evofence-harness-kernel/L5-SDK-DELIVERY-AND-EXAMPLES.md)。当前导出不是未来的 createKernel factory。所有 default/types 如下，逐条由 release tests 核对：
+
+```json release-entries
+{
+  "bin": {
+    "evofence": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol/index.d.ts",
+      "default": "./dist/protocol/index.js"
+    },
+    "./kernel": {
+      "types": "./dist/kernel/index.d.ts",
+      "default": "./dist/kernel/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./hosts/pi": {
+      "types": "./dist/hosts/pi/index.d.ts",
+      "default": "./dist/hosts/pi/index.js"
+    },
+    "./hosts/dsh": {
+      "types": "./dist/hosts/dsh/index.d.ts",
+      "default": "./dist/hosts/dsh/index.js"
+    },
+    "./storage/memory": {
+      "types": "./dist/storage/index.d.ts",
+      "default": "./dist/storage/index.js"
+    }
+  }
+}
+```
+
+旧 CLI quickstart 仍从 npm 安装的 `0.4.2` 启动；`0.5.0` 元数据、breaking 说明与升级边界见 [CHANGELOG](CHANGELOG.md)（Unreleased 与 0.5.0 段）及 [候选](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md)。
+
 ## 安装
 
 需要 Node.js 22.13 或更高版本。
@@ -239,10 +302,12 @@ ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希�
 npm ci
 npm run build        # tsc：把 src/**/*.ts 编译到 dist/，并生成 .d.ts / .d.ts.map / .js.map
 npm run typecheck    # tsc --noEmit
+npm run src:policy   # 源形态检查：`src/` 下不得有 `.js`，单文件不得超过 350 行
 npm run dep:check    # 检查 src/ 内部依赖图无环
 npm test             # 先 npm run build，再用 Node 内置测试运行器跑 test/**
 npm run test:e2e     # 先 npm run build，再跑 test-e2e/cli-flow.mjs
-npm run check        # typecheck + dep:check + test
+npm run config:doc   # 构建后校验 docs/config.md 与 src/lib/config/schema.ts 一致（不含在 check 内，CI 单列一步）
+npm run check        # typecheck + src:policy + dep:check + test
 npm pack --dry-run   # 查看发布内容
 ```
 
@@ -257,7 +322,7 @@ npm pack --dry-run   # 查看发布内容
 0.4.0 这次重构由 [Super Plumber](https://github.com/LUKAWI/super-plumber) 驱动：它把需求拆成带依赖、门禁与 ADR 管辖的拓扑图（19 个工作流节点、5 份 ADR）。
 
 - 图的运行态（节点、边、ADR、`events.jsonl` 审计日志）在 `.graph/`，**已被 Git 忽略**：它是驱动这次重构的过程状态，不是产品源码，也不进 npm 包。（它体积的大头是每次结构变更自动产生的快照副本。）
-- 根目录的 `CONTEXT-MAP.md`、`DECISIONS.md`，以及 `docs/adr/`、`docs/contexts/`、`docs/topology.mmd` 是它导出的**可读视图**，已入库：没有图的人靠它们读这份设计与决议，所以不要手改，改动走图再重新导出。
+- 根目录的 `CONTEXT-MAP.md`、`DECISIONS.md`，以及 `docs/adr/`、`docs/contexts/`、`docs/topology.mmd` 是它导出的**可读视图**，已入库：没有图的人靠它们读这份设计与决议，所以不要手改，改动走图再重新导出。`.graph/` 里后来还多了 `evofence-ops-evidence`、`evofence-042-hardening` 与 `evofence-harness-kernel` 三张图，它们的同名视图各自导出到 `docs/evofence-ops-evidence/`、`docs/evofence-042-hardening/`、`docs/evofence-harness-kernel/`，规则相同。
 - 导出与漂移检查：`graph export --docs --graph evofence-ts-refactor` / `graph export --docs --check --graph evofence-ts-refactor`。需要单独安装的 Super Plumber CLI（`npm install --global @lukawi/super-plumber`），它不是本仓库依赖，`npm run check` 与 CI 都不需要它。
 
 ## 发布

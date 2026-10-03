@@ -1,0 +1,184 @@
+{
+  "version": "0.99.2",
+  "providerModel": "deepseek/deepseek-flash",
+  "reasoningRequested": "high",
+  "selectedModel": {
+    "id": "deepseek-flash",
+    "name": "DeepSeek V4.1 Flash",
+    "api": "openai-completions",
+    "provider": "deepseek",
+    "baseUrl": "https://api.deepseek.com",
+    "compat": {
+      "supportsStore": false,
+      "supportsDeveloperRole": false,
+      "maxTokensField": "max_tokens",
+      "requiresReasoningContentOnAssistantMessages": true,
+      "thinkingFormat": "deepseek",
+      "supportsStrictMode": true
+    },
+    "reasoning": true,
+    "input": [
+      "text",
+      "image"
+    ],
+    "cost": {
+      "input": 0.3,
+      "output": 1.2,
+      "cacheRead": 0.006,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1000000,
+    "maxTokens": 384000,
+    "thinkingLevelMap": {
+      "minimal": null,
+      "low": "low",
+      "medium": null,
+      "high": "high",
+      "max": "max"
+    },
+    "inputLimits": {
+      "images": {
+        "resize": {
+          "maxWidth": 2000,
+          "maxHeight": 2000,
+          "maxBytes": 4718592,
+          "jpegQuality": 80
+        }
+      }
+    },
+    "type": "chat"
+  },
+  "catalogSource": "read-only local catalog; network refresh disabled",
+  "files": [
+    {
+      "file": "package.json",
+      "sha256": "066850c1badb43cf107c26e5b95262dbde84e3514c75348f363009d5ba9ce42d"
+    },
+    {
+      "file": "dist/core/sdk.js",
+      "sha256": "fe643170de3d259c7e06179d9e18270a009dfb54df915f6e3de515425b8d009b"
+    },
+    {
+      "file": "dist/core/agent-session.js",
+      "sha256": "4da636cea504ccec903c7b39f5eb1553f4f64469408f06e5b7938c7682b131d1"
+    },
+    {
+      "file": "dist/core/model-runtime.js",
+      "sha256": "da26f76339a031456f6d239a249159231776f760ab4ac538c6b54c417dea6f67"
+    },
+    {
+      "file": "dist/core/extensions/types.d.ts",
+      "sha256": "6c78c89ad1ffb421e81ff0ad11ceff1a635b21fd818a32aa3e87009392298d9f"
+    },
+    {
+      "file": "node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+      "sha256": "8167bfe47b0c9cc99a653d84f24ad055128e66888429f9f954e063918c074ea0"
+    },
+    {
+      "file": "dist/core/extensions/loader.js",
+      "sha256": "440c37c201d3c9ea78b5188482ea6aaf19e654266ccb8d6760d00ef360dcae3c"
+    },
+    {
+      "file": "dist/core/session-manager.js",
+      "sha256": "046b6a1109ac3f0ed893bb85bf0648709362fa926a5da75761216cf2fcf9d926"
+    }
+  ],
+  "pricingSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "price": {
+    "input": 0.3,
+    "output": 1.2,
+    "cacheRead": 0.006,
+    "cacheWrite": 0
+  },
+  "costBasis": "official peak USD reference; actual off-peak/invoice not queried",
+  "repin": {
+    "recordedAt": "2026-10-02T04:40:15.026Z",
+    "from": "0.87.1",
+    "to": "0.99.2",
+    "decision": "User A; SESSION-006-HANDOFF section 1 and L3-pi-session-repin-brief",
+    "reason": "The only installed runnable Pi is 0.99.2; use exact approved installed version, do not install or silently accept other versions",
+    "historicalEvidencePolicy": "L1 0.87.1 HOST-MANIFEST/live/offline are frozen historical artifacts. P1-P17 require 0.99.2 revalidation or unknown.",
+    "currentEvidence": "src/hosts/pi/VERSION-DIFFERENCES.md (kept locally, untracked; see .gitignore) and src/hosts/pi/evidence/0992-*.json"
+  },
+  "history": [
+    {
+      "version": "0.87.1",
+      "recordedAt": "2026-10-01",
+      "scope": "L1 native probe; preserved without upgrading evidence",
+      "pin": {
+        "version": "0.87.1",
+        "providerModel": "xiaomi/mimo-v2.6-flash",
+        "selectedModel": {
+          "id": "mimo-v2.6-flash",
+          "name": "MiMo-V2.6-Flash",
+          "api": "openai-completions",
+          "provider": "xiaomi",
+          "baseUrl": "https://api.xiaomimimo.com/v1",
+          "compat": {
+            "supportsStrictMode": true,
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek"
+          },
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "cost": {
+            "input": 0.14,
+            "output": 0.28,
+            "cacheRead": 0.0028,
+            "cacheWrite": 0
+          },
+          "contextWindow": 1048576,
+          "maxTokens": 131072,
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 2000,
+                "maxHeight": 2000,
+                "maxBytes": 4718592,
+                "jpegQuality": 80
+              }
+            }
+          }
+        },
+        "catalogSource": "read-only local catalog; network refresh disabled",
+        "files": [
+          {
+            "file": "package.json",
+            "sha256": "627631b613ba4ca29eba8df793f5280fd20b19f01d73826e9ffda14c15def5dc"
+          },
+          {
+            "file": "dist/core/sdk.js",
+            "sha256": "b49c2843197166bb84283edcb7702b91346d8fbaed2b0b8c70e5277dd78bcf5f"
+          },
+          {
+            "file": "dist/core/agent-session.js",
+            "sha256": "5ebfae51db5a900596145159428e7cb57d195af9d54a28f41d4ac8ff1bfd5729"
+          },
+          {
+            "file": "dist/core/model-runtime.js",
+            "sha256": "bae3c3feb7928c7702c3d98a3454660bee1647064dd449472fc6308c354fbc25"
+          },
+          {
+            "file": "dist/core/extensions/types.d.ts",
+            "sha256": "14d00e645b453f4361440da6fcda86ed6cef9a8fc36d483a621a0250e0d4a396"
+          },
+          {
+            "file": "node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+            "sha256": "a2397cb3114a3d1a05993f6f19671ecbcc85540d8f8c59a233808c717df2682c"
+          }
+        ],
+        "pricingSource": "https://mimo.mi.com/docs/en-US/price/pay-as-you-go",
+        "price": {
+          "input": 0.14,
+          "output": 0.28,
+          "cacheRead": 0.0028,
+          "cacheWrite": 0
+        },
+        "thinkingSource": "https://mimo.mi.com/docs/en-US/quick-start/usage-guide/text-generation/deep-thinking"
+      }
+    }
+  ]
+}

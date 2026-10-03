@@ -1,0 +1,548 @@
+{
+  "manifestKind": "L1 evidence-backed host capability draft; not frozen production schema",
+  "host": "dsh",
+  "version": "0.2.0-rc.2",
+  "status": "completed-with-limitations",
+  "model": null,
+  "reasoningRequested": "high",
+  "evidenceFiles": [
+    "VERSION-PIN.json",
+    "offline-trace.json",
+    "live-trace.json"
+  ],
+  "capabilities": {
+    "nativeSessionBinding": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "nativeSessionCreated",
+        "sameSessionPreserved",
+        "asyncCreatedBeforeReturn"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Controlled plugins, not current user GUI"
+    },
+    "contextAndResources": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "additiveNodeContext",
+        "hostToolPreserved"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Controlled instructions/tool retained; skill discovery unverified"
+    },
+    "agentPreStep": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "additiveNodeContext",
+        "rejectedStepNoModelCall"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Native admission/rejection/additive message fixture"
+    },
+    "toolRequestGate": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "toolGateAndResults"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "ToolRuntime path only; no OS isolation"
+    },
+    "toolResultObservation": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "deniedAndFailedResultsObserved",
+        "toolCallerIdentity"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Normal/denied/thrown-tool fixture results"
+    },
+    "settledAndIdle": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "asyncCreatedBeforeReturn",
+        "cancelSignalsAndIdle",
+        "providerFailureIdle"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "whenIdle/status tested; arbitrary detached plugins unverified"
+    },
+    "usageTokens": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "usagePreserved",
+        "failureUsageNotZeroInvented",
+        "parentChildUsageCoverage",
+        "failedCancelledUsageUnknown"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Synthetic usage only; no vendor/billing comparison"
+    },
+    "teamDelegation": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "nativeTeamDelegation",
+        "freshChildContextIsolation",
+        "teamMessageQueued"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Native fresh teammate and enqueue over memory storage; fork/cold delivery unverified"
+    },
+    "teamMessageDelivery": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "teamMessageDurable"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Durable target receipt/Lead acknowledgement must be observed; queued alone is not delivered"
+    },
+    "nativeTeamGraphBoard": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "teamTaskClaim",
+        "teamTaskComplete",
+        "teamBoardRestored"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Write scopes advisory; not kernel lease/fencing"
+    },
+    "teamTaskCas": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "teamStaleRevisionRejected"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Stale revision checked; multi-process race not tested"
+    },
+    "teamAuthorityIdentity": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "leadMembership",
+        "sameIdImpostorRejected",
+        "nonLeadSpawnRejected",
+        "staleAuthorityRejected",
+        "resumedLeadAuthority"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Exact-live same-process identity; no cross-process grant proof"
+    },
+    "sdkAbort": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "cancelSignalsAndIdle"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Memory stream abort; no vendor disconnect/refund proof"
+    },
+    "transcriptRecovery": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "nativeResumeWithMemoryPersistence",
+        "restoreWithoutModelReplay",
+        "teamBoardRestored",
+        "memoryPersistenceLogMatches"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Native resume with fixture storage; no disk/crash proof"
+    },
+    "projectionOrdering": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "contiguousSessionOrder",
+        "projectionOrderMatchesLog",
+        "projectionCheckpointRestore",
+        "projectionGapRejected",
+        "projectionVersionTailRejected"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Native pure projections; no durable kernel journal"
+    },
+    "parentChildCancellation": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "Not exercised; no automatic team cascade assumed"
+    },
+    "toolCancellation": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No long-running tool dispatch"
+    },
+    "diskCrashRecovery": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No native JSONL artifacts; writes limited to lane files"
+    },
+    "osSandbox": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No OS sandbox tested; hooks do not imply one; lack of testing does not establish absence"
+    },
+    "externalEffectReconciliation": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No external effects/journal/outbox"
+    },
+    "reasoningHighGuarantee": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [
+        "reasoningParameterFixture"
+      ],
+      "evidence": "offline-trace.json",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "limitation": "Fixture high parameter only; Xiaomi/provider guarantee not exercised"
+    },
+    "costInvoice": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No paid requests/invoice query"
+    },
+    "providerCancelBilling": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No vendor request/cancel"
+    },
+    "existingIntegrationCompatibility": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": {
+        "file": "integrations/deepseek-harness/package.json",
+        "sha256": "dccfbef95cf236aef219169e59416ff28e705b702f71d4afdb5cfb3f55578295",
+        "name": "@local/evofence-deepseek-harness",
+        "version": "0.1.1",
+        "engines": {
+          "node": "^22.19.0 || >=24.0.0",
+          "dsh": "0.1.7-rc.1"
+        },
+        "peerDependencies": {
+          "@deepseek-ai/dsh-tools": "0.1.7-rc.1"
+        },
+        "observedHostVersion": "0.2.0-rc.2",
+        "compatibleWithDeclaredExactVersions": false,
+        "runtimeCompatibility": "unverified",
+        "mutated": false
+      },
+      "evidenceLevel": "static-package-manifest",
+      "limitation": "Declared exact engines/peer versions mismatch; integration not loaded or modified"
+    },
+    "grantWriteScopeEnforcement": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [
+        "teamTaskClaim"
+      ],
+      "evidence": "offline-trace.json",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "limitation": "Advisory task writeScopes stored; file-write enforcement, kernel grants/leases and grant inheritance unverified"
+    },
+    "teamWaitAndInterrupt": {
+      "status": "partial",
+      "verificationStatus": "unverified",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "teamWaitCancellation",
+        "teamIdleStatusVocabulary"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Only wait signal cancellation and inactive-member interrupt result verified; running interrupt and propagation unverified",
+      "verifiedSubset": [
+        "waitForChange signal cancellation",
+        "inactive-member interrupt status"
+      ],
+      "unverifiedGuarantees": [
+        "running-member interrupt",
+        "parent-child cancellation propagation"
+      ]
+    },
+    "skillsPluginCoexistence": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "No real user skill discovery, GUI/profile or arbitrary third-party plugin coexistence exercised"
+    },
+    "sdkChildSessionIsolation": {
+      "status": "verified",
+      "verificationStatus": "verified-scoped-checks",
+      "evidenceLevel": "native-runtime-with-memory-fixtures",
+      "checks": [
+        "nativeTeamDelegation",
+        "freshChildContextIsolation"
+      ],
+      "evidence": "offline-trace.json",
+      "limitation": "Fresh native child session id/transcript separation only; no OS or cross-process isolation"
+    },
+    "sessionCustomEntries": {
+      "status": "unknown",
+      "verificationStatus": "unverified",
+      "checks": [],
+      "evidence": null,
+      "evidenceLevel": "not-run",
+      "limitation": "Pi appendEntry/custom-entry disk reopen semantics not exercised on DSH; no absence inferred"
+    }
+  },
+  "homeObservation": {
+    "status": "observed",
+    "packageVersion": "0.2.0-rc.2",
+    "resolvedHome": "${USER_HOME}\\.dsh",
+    "source": "OS-home/.dsh",
+    "exists": true,
+    "homeDirStatOnly": true,
+    "dshHomeFileContentsRead": false,
+    "accessScope": "Probe calls the installed home resolver and checks directory existence; dependency-internal credential access is not instrumented",
+    "targetVersionVerified": true
+  },
+  "hostSpecific": {
+    "fixtureModel": "offline-probe/deterministic-fixture",
+    "modelKind": "synthetic-fixture",
+    "modelNote": "Common model field means selected real provider/model; null here. Reasoning high was requested from the fixture only",
+    "evidenceLevels": {
+      "VERSION-PIN.json": "local-version-and-static-manifests; drift separately unverified",
+      "offline-trace.json": "native-runtime-with-synthetic-adapter-and-memory-storage",
+      "live-trace.json": "not-run"
+    },
+    "liveProviderRun": false
+  },
+  "capabilityStatusCounts": {
+    "absent": 0,
+    "partial": 1,
+    "unknown": 13,
+    "verified": 15
+  },
+  "limitations": [
+    {
+      "capability": "teamMessageDelivery",
+      "status": "unknown",
+      "limitation": "Durable target receipt/Lead acknowledgement must be observed; queued alone is not delivered"
+    },
+    {
+      "capability": "parentChildCancellation",
+      "status": "unknown",
+      "limitation": "Not exercised; no automatic team cascade assumed"
+    },
+    {
+      "capability": "toolCancellation",
+      "status": "unknown",
+      "limitation": "No long-running tool dispatch"
+    },
+    {
+      "capability": "diskCrashRecovery",
+      "status": "unknown",
+      "limitation": "No native JSONL artifacts; writes limited to lane files"
+    },
+    {
+      "capability": "osSandbox",
+      "status": "unknown",
+      "limitation": "No OS sandbox tested; hooks do not imply one; lack of testing does not establish absence"
+    },
+    {
+      "capability": "externalEffectReconciliation",
+      "status": "unknown",
+      "limitation": "No external effects/journal/outbox"
+    },
+    {
+      "capability": "reasoningHighGuarantee",
+      "status": "unknown",
+      "limitation": "Fixture high parameter only; Xiaomi/provider guarantee not exercised"
+    },
+    {
+      "capability": "costInvoice",
+      "status": "unknown",
+      "limitation": "No paid requests/invoice query"
+    },
+    {
+      "capability": "providerCancelBilling",
+      "status": "unknown",
+      "limitation": "No vendor request/cancel"
+    },
+    {
+      "capability": "existingIntegrationCompatibility",
+      "status": "unknown",
+      "limitation": "Declared exact engines/peer versions mismatch; integration not loaded or modified"
+    },
+    {
+      "capability": "grantWriteScopeEnforcement",
+      "status": "unknown",
+      "limitation": "Advisory task writeScopes stored; file-write enforcement, kernel grants/leases and grant inheritance unverified"
+    },
+    {
+      "capability": "teamWaitAndInterrupt",
+      "status": "partial",
+      "limitation": "Only wait signal cancellation and inactive-member interrupt result verified; running interrupt and propagation unverified"
+    },
+    {
+      "capability": "skillsPluginCoexistence",
+      "status": "unknown",
+      "limitation": "No real user skill discovery, GUI/profile or arbitrary third-party plugin coexistence exercised"
+    },
+    {
+      "capability": "sessionCustomEntries",
+      "status": "unknown",
+      "limitation": "Pi appendEntry/custom-entry disk reopen semantics not exercised on DSH; no absence inferred"
+    }
+  ],
+  "comparisonContract": {
+    "statusVocabulary": [
+      "absent",
+      "partial",
+      "unknown",
+      "verified"
+    ],
+    "statusMeaning": {
+      "absent": "Affirmatively unavailable in the probed composition; not inferred from lack of testing",
+      "partial": "Named subset verified; full guarantee unverified",
+      "unknown": "Unverified or insufficient evidence",
+      "verified": "Listed checks establish the explicitly scoped guarantee at the stated evidence level"
+    },
+    "status": "compared-read-only",
+    "sourceFiles": [
+      {
+        "file": "probes/pi/HOST-MANIFEST.json",
+        "sha256": "85718169933628bb2f4302b638ccc79497ee72eeff6dd89950142197b448d99f"
+      },
+      {
+        "file": "probes/pi/VERSION-PIN.json",
+        "sha256": "38c21638b9df54ae50a6d87b11705ae6cde8f24a79285a795f5d38c3f0c9c736"
+      }
+    ],
+    "hostCommonKeys": [
+      "manifestKind",
+      "host",
+      "version",
+      "model",
+      "reasoningRequested",
+      "evidenceFiles",
+      "capabilities",
+      "requiredAdapterResponsibilities",
+      "capabilityUpliftProved",
+      "dualHostLongTaskProved"
+    ],
+    "versionPinCommonKeys": [
+      "version",
+      "providerModel",
+      "selectedModel",
+      "catalogSource",
+      "files",
+      "pricingSource",
+      "price",
+      "thinkingSource"
+    ],
+    "dshMissingPiHostFields": [],
+    "dshMissingPiVersionFields": [],
+    "dshMissingPiCapabilities": [],
+    "piMissingDshHostFields": [
+      "status",
+      "homeObservation",
+      "hostSpecific",
+      "capabilityStatusCounts",
+      "limitations",
+      "comparisonContract",
+      "statusContract"
+    ],
+    "piMissingDshVersionFields": [
+      "modelSelectionNote",
+      "observedVersion",
+      "pinSatisfied",
+      "packageRoot",
+      "nodeVersion",
+      "platform",
+      "arch",
+      "cli",
+      "packages",
+      "drift",
+      "integrationGap",
+      "recordedAt"
+    ],
+    "piMissingDshCapabilities": [
+      "agentPreStep",
+      "toolResultObservation",
+      "teamDelegation",
+      "teamMessageDelivery",
+      "teamTaskCas",
+      "teamAuthorityIdentity",
+      "projectionOrdering",
+      "parentChildCancellation",
+      "toolCancellation",
+      "diskCrashRecovery",
+      "existingIntegrationCompatibility",
+      "grantWriteScopeEnforcement",
+      "teamWaitAndInterrupt",
+      "skillsPluginCoexistence"
+    ],
+    "integrationGap": "Pi lacks DSH-specific fields/capabilities; l1_api_freeze must define union keys and null/unknown handling. This probe does not modify the frozen Pi lane",
+    "evidenceDifference": "Pi has real provider/disk evidence; DSH has synthetic adapter/memory storage. Shared status does not equal shared evidence strength"
+  },
+  "requiredAdapterResponsibilities": [
+    "Bind current host session and preserve real instructions/skills/tools",
+    "Choose one authority for team board and kernel scheduler",
+    "Enforce scoped grants, shared budget and lease fencing across children",
+    "Complete required fan-in and reject stale receipts",
+    "Reconcile unknown effects and missing usage without replaying effects",
+    "Verify disk recovery/model mapping/child cancellation/isolation separately"
+  ],
+  "capabilityUpliftProved": false,
+  "dualHostLongTaskProved": false,
+  "statusContract": {
+    "vocabulary": [
+      "failed",
+      "completed-with-limitations"
+    ],
+    "meaning": {
+      "failed": "Probe error or failed checkpoint",
+      "completed-with-limitations": "Scoped offline probe completed; fixed unverified provider/disk/host guarantees remain"
+    },
+    "note": "Overall probe status only; checkpoint and capability status vocabularies are separate. This probe has no overall passed state"
+  }
+}

@@ -214,9 +214,13 @@ test('legacy acceptance keys remain compatibility-only and the dead shell shape 
   assert.ok(DEAD_CONTRACT_KEYS.every((entry) => entry.evidence.length > 0));
 
   // F10 — each `evidence` string must be falsifiable by grep and must survive the attempt.
-  const validationLayerHits = ['src/lib/config/schema.ts', 'src/lib/config/validate.ts', 'src/lib/gate/dead-keys.ts', 'src/types/config.ts'];
+  // The legacy migration checklist also names the keys, explicitly denying qualification.
+  const validationLayerHits = ['src/lib/config/schema.ts', 'src/lib/config/validate.ts', 'src/lib/gate/dead-keys.ts',
+    'src/storage/legacy/breaking.ts', 'src/types/config.ts'];
   assert.deepEqual(await grepSources('require_proposal'), validationLayerHits);
   assert.deepEqual(await grepSources('require_claims'), validationLayerHits);
+  const legacyChecklist = await readFile(path.join(projectRoot, 'src/storage/legacy/breaking.ts'), 'utf8');
+  assert.match(legacyChecklist, /require_proposal\/require_claims grant no qualification/);
   assert.deepEqual(await grepSources('capabilities.shell.mode'), []);
   assert.equal(DEAD_CONTRACT_KEYS.every((entry) => !entry.evidence.includes('no reference under src/')), true);
   const byPath = new Map(DEAD_CONTRACT_KEYS.map((entry) => [entry.path, entry.evidence]));

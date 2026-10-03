@@ -1,0 +1,35 @@
+{
+  "manifestKind": "L1 evidence-backed host capability draft; not the frozen production schema",
+  "host": "pi",
+  "version": "0.87.1",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "reasoningRequested": "high",
+  "evidenceFiles": ["VERSION-PIN.json", "offline-trace.json", "live-trace.json"],
+  "capabilities": {
+    "nativeSessionBinding": {"status": "verified", "evidence": "native SDK with extension hooks, stable sessionId across two real provider requests", "limitation": "Running user TUI/third-party extension coexistence not probed"},
+    "contextAndResources": {"status": "verified", "evidence": "Preserved controlled host AGENTS/skill/read tool; additive node context appears in provider payload"},
+    "toolRequestGate": {"status": "verified", "evidence": "Native tool_call block prevents fixture tool execution"},
+    "osSandbox": {"status": "absent", "evidence": "No OS sandbox was added or tested"},
+    "sessionCustomEntries": {"status": "verified", "evidence": "appendEntry retained after disk reopen"},
+    "settledAndIdle": {"status": "verified", "evidence": "Native agent_settled follows awaited async agent_end; waitForIdle completes"},
+    "usageTokens": {"status": "verified", "evidence": "Two provider SSE usage objects agree with native receipts, including cache/reasoning semantics"},
+    "costInvoice": {"status": "unknown", "evidence": "Official USD-reference estimates only; actual provider invoice not queried"},
+    "sdkChildSessionIsolation": {"status": "verified", "evidence": "Independent sessionId/transcript with shared modelRuntime; no paid child prompt"},
+    "nativeTeamGraphBoard": {"status": "absent", "evidence": "No built-in Pi board parity assumed; delegated graph requires EvoFence implementation"},
+    "sdkAbort": {"status": "verified", "evidence": "Real SDK abort/idle and HTTP disconnect against local deterministic fixture"},
+    "providerCancelBilling": {"status": "unknown", "evidence": "Paid provider requests completed normally; vendor abort billing not probed"},
+    "transcriptRecovery": {"status": "verified", "evidence": "JSONL reopen restores sessionId, messages and extension entry"},
+    "externalEffectReconciliation": {"status": "absent", "evidence": "Requires EvoFence journal/outbox, receipts and reconciliation"},
+    "reasoningHighGuarantee": {"status": "partial", "evidence": "Pi high emits thinking.enabled and reasoning_effort=high and receives HTTP 200; MiMo documents only on/off semantics"}
+  },
+  "requiredAdapterResponsibilities": [
+    "Bind current session rather than invoke a stateless CLI",
+    "Own delegated graph child sessions and shared authority/budget/claims",
+    "Join all required child results and reject late fenced receipts",
+    "Propagate cancellation, retain unknown usage and reconcile external effects",
+    "Keep task/evaluation/promotion/activation verdicts distinct",
+    "Link custom session entries to kernel journal and versioned asset bindings"
+  ],
+  "capabilityUpliftProved": false,
+  "dualHostLongTaskProved": false
+}

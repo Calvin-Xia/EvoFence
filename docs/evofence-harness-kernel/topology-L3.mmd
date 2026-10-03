@@ -1,0 +1,51 @@
+graph TD;
+%% entry: 将当前 Git/worktree/子 CLI 串行候选控制器重设为 Graph Engineering 驱动的能力演化内核：DSH 与 Pi 同等首发，宿主执行而内核决策，结合长程编码、多 agent 协作与经过验证的长期演化。2026-10-01设计交付后用户已授权完整实施，采用同目录串行新session继承与handoff接力。
+%% exit: 交付双宿主可用、可恢复、可解释的能力演化内核，并依据冻结协议提供真实受控收益证据与最终人审材料；未知、负结果和预算不足如实保留，不把实施或图完成当收益成立。发布另需明确授权。
+%% 验收标准:
+%% - DSH 与 Pi 各自在原生持续会话中完成一次包含动态子图、多 agent、验证、失败修复与恢复的真实编码任务；不得以调用 evofence run 或安装成功代替。
+%% - 同一任务合同下，所有必须分支均有可核验证据；共享文件写入、合并、资源预算和取消具有明确责任与可重放记录。
+%% - 在授权范围内自动调整与验证晋升；权限扩大、发布与破坏性操作由授权策略裁决；不宣称工具 hooks 等于 OS 沙箱。
+%% - 具备任务完成、候选验证、能力晋升、宿主激活四个独立语义；失败或证据缺失不被抹成成功。
+%% - 用冻结协议在未见任务上比较同模型与相同总预算下原 harness、图编排、图编排加长期演化；计入规划、委派、评测和学习的全部开销并提供消融与不确定性。
+%% - 能力资产可追溯来源、适用范围、版本与评测证据；可撤销退化资产并继续普通宿主任务。
+%% - 内核与协议可独立导入，无 CLI、Git、原生 SQLite 或 super-plumber 强制依赖；DSH/Pi 通过相同 host contract suite。
+%% - 允许 breaking change，但旧 ledger/config/graph 历史保持原样；新版数据独立命名与版本化，发布另需明确授权。
+%% 边样式图例:
+%% decides/fallback/iterates = 虚线箭头；relates = 点线；shares_context = 无箭头实线；其余 = 实线箭头
+  %% 节点定义 (按状态着色)
+  %% 知识顶点 (context/ADR 横切领域知识，不入分期带)
+  adr_0005{{"任务完成、评价、晋升与激活分离"}}:::adr_proposed;
+  adr_0006{{"双宿主同等准入与显式差异"}}:::adr_proposed;
+  %% 分期带 (按 level 分组；带内按 id 排序，Git diff 友好)
+  subgraph band_L3["L3 · 双宿主实用闭环"]
+    l3_context_router["节点上下文与反馈路由"]:::pending;
+    l3_dsh_delegation["DSH 团队与子图执行"]:::pending;
+    l3_dsh_scenario["DSH 真实长程协作闭环"]:::pending;
+    l3_dsh_session["DSH 原生会话绑定"]:::pending;
+    l3_dual_host_gate["双宿主实用闭环验收"]:::pending;
+    l3_pi_delegation["Pi 子会话与子图执行"]:::pending;
+    l3_pi_scenario["Pi 真实长程协作闭环"]:::pending;
+    l3_pi_session["Pi 原生扩展绑定"]:::pending;
+    l3_task_evaluation["任务完成的唯一裁决入口"]:::pending;
+    l3_workspace_txn["代码与技能产物事务"]:::pending;
+  end
+
+  %% 边
+  l3_dsh_session -->|"depends on"| l3_dsh_delegation;
+  l3_pi_session -->|"depends on"| l3_pi_delegation;
+  l3_dsh_delegation -->|"depends on"| l3_dsh_scenario;
+  l3_context_router -->|"depends on"| l3_dsh_scenario;
+  l3_workspace_txn -->|"depends on"| l3_dsh_scenario;
+  l3_task_evaluation -->|"depends on"| l3_dsh_scenario;
+  l3_pi_delegation -->|"depends on"| l3_pi_scenario;
+  l3_context_router -->|"depends on"| l3_pi_scenario;
+  l3_workspace_txn -->|"depends on"| l3_pi_scenario;
+  l3_task_evaluation -->|"depends on"| l3_pi_scenario;
+  l3_dsh_scenario -->|"depends on"| l3_dual_host_gate;
+  l3_pi_scenario -->|"depends on"| l3_dual_host_gate;
+  adr_0005 -.->|"decides"| l3_task_evaluation;
+  adr_0006 -.->|"decides"| l3_dual_host_gate;
+
+  %% 样式定义
+  classDef adr_proposed fill:#ffb74d,stroke:#ef6c00;
+  classDef pending fill:#8a8f98,stroke:#5b5f66;

@@ -25,6 +25,7 @@ export const COMMAND_GROUPS = [
   'budget',
   'status',
   'doctor',
+  'session',
 ] as const;
 
 export type CommandGroup = (typeof COMMAND_GROUPS)[number];
@@ -77,6 +78,8 @@ export interface SmokeSpec {
 
 /** The full specification of one subcommand. */
 export interface CommandSpec {
+  /** Present only for a native protocol surface; absent on the frozen legacy CLI. */
+  readonly namespace?: 'evofence.runtime/1';
   /** Canonical spelling: `group` or `group action` (e.g. `ledger verify`). */
   readonly name: string;
   readonly group: CommandGroup;

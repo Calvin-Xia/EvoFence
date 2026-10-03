@@ -1,6 +1,6 @@
 {
   "name": "evofence",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Evidence-carrying evolution gate for autonomous coding agents",
   "license": "MIT",
   "type": "module",
@@ -14,6 +14,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol/index.d.ts",
+      "default": "./dist/protocol/index.js"
+    },
+    "./kernel": {
+      "types": "./dist/kernel/index.d.ts",
+      "default": "./dist/kernel/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./hosts/pi": {
+      "types": "./dist/hosts/pi/index.d.ts",
+      "default": "./dist/hosts/pi/index.js"
+    },
+    "./hosts/dsh": {
+      "types": "./dist/hosts/dsh/index.d.ts",
+      "default": "./dist/hosts/dsh/index.js"
+    },
+    "./storage/memory": {
+      "types": "./dist/storage/index.d.ts",
+      "default": "./dist/storage/index.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -27,10 +55,11 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "build": "node node_modules/typescript/bin/tsc",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "src:policy": "node scripts/check-src-policy.mjs",
     "dep:check": "node scripts/check-deps.mjs",
+    "check:core-imports": "node scripts/check-core-imports.mjs",
     "config:doc": "npm run build && node scripts/check-config-doc.mjs",
     "check": "npm run typecheck && npm run src:policy && npm run dep:check && npm test",
     "test": "npm run build && node --test",
@@ -42,7 +71,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.4",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "typescript6": "npm:typescript@^6.0.3"
   },
   "repository": {
     "type": "git",
