@@ -2,44 +2,71 @@
 
 ## Unreleased
 
-The 2026-10-03 user decision authorized advancing the version metadata to 0.5.0
-in preparation for a possible tag. No release date is recorded, and there is still
-no authorization to tag, publish or merge: 0.4.2 is the registry's current latest
-and 0.5.0 has not been tagged or published. The same boundary is recorded in the
-[candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and
-[release checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md).
+Nothing yet. 0.5.0 closed the harness-kernel line, and whatever comes next — a 0.5.1
+or a 0.6.0 — needs its own authorization before it ships. That boundary did not relax
+when 0.5.0 went out: the guards that made this release a deliberate act rather than a
+side effect of merging are still inside `npm test`, and `npm test` still runs before
+any publish.
 
-## 0.5.0
+## 0.5.0 — 2026-10-03
 
-### Harness-kernel SDK and delivery candidate (breaking line)
+**Breaking.** The harness-kernel line: a host-independent core with typed ESM subpaths,
+dual-host surfaces, and an SDK / CLI / SP-bridge delivery surface. Released 2026-10-03
+under explicit user authorization — tag `v0.5.0` and its GitHub Release, which publishes
+to npm `latest` through OIDC Trusted Publishing (no stored token).
 
-- Added typed ESM subpaths for core/runtime, protocol, kernel, Pi/DSH hosts and
-  memory storage. `evofence/core` exposes the existing production
-  `createSessionService(ports): SessionService`; the proposed createKernel factory
-  is not implemented. The root export retains the legacy facade.
-- Added the manifest-routed `session view` command and shared host review views.
-  Reading a view does not convert unknown/inconclusive outcomes into success.
-- Added optional Super Plumber bridge and legacy archive implementations through
-  repository-built paths. Neither has a package subpath; neither launches a CLI.
-- New runtime/assets use `evofence.runtime/1@1.1.0` and
-  `evofence.assets/1@1.0.0`. Legacy exports/imports use separate
-  `evofence.legacy-export/1` and `evofence.legacy-source/1`, schemaVersion 1.0.0.
-  Old ledger/config/old graph remain unchanged: read-only export of a consistent
-  copy, explicit import into a separate archive, no in-place migration, chain
-  rewriting, replay, qualification or inherited execution authority. Old CLI
-  flags are not forwarded. SQLite marker 2/bundle marker 1 and YAML version 1
-  remain historical formats, not defaults for the new runtime. The complete
-  breaking-key comparison and both upgrade choices are in
-  [the legacy guide](src/storage/legacy/README.md).
-- Frozen pack paths, every typed export and CLI/document entry are checked by
-  release guards and real negative controls. Runtime dependencies remain only
-  better-sqlite3 and yaml. Private/generated evidence and process records are
-  excluded. Candidate and checklist are tracked review documents outside execution.
-- Capability benefit remains **inconclusive**; l4_capability_trial attempt 1
-  **failed** (blocker 1 / major 2). Historical 747 / 943 USD remain unresolved;
-  the preregistered design envelope is 938.470100 USD. adr_0001/adr_0004 remain
-  proposed; dual-host-runtime-and-uplift does not graduate. See
-  [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and
+### Breaking changes
+
+- **The published artifact is the built `dist/` tree, not the repository tree**
+  (adr_0002). `bin`, `exports["."]` and `types` all resolve under `dist/`, and `files`
+  ships it; the pack allowlist is frozen to `dist/`, `templates/`,
+  `docs/pi-tool-strategy.md`, `README.md`, `README.en.md`, `LICENSE` and `CHANGELOG.md`.
+  Runtime dependencies are still exactly `better-sqlite3` and `yaml`.
+- **No migration path.** Old ledger/config/old graph remain unchanged: a read-only
+  export of a consistent copy, an explicit import into a separate archive,
+  no in-place migration, no chain rewriting, no replay, no qualification and no
+  inherited execution authority. Old CLI flags are not forwarded. SQLite marker
+  2 / bundle marker 1 and YAML `version` / `contract_version` 1 stay historical
+  formats, not defaults for the new runtime. The complete breaking-key comparison and
+  both upgrade choices are in [the legacy guide](src/storage/legacy/README.md).
+
+### Added
+
+- Typed ESM subpaths for core/runtime, protocol, kernel, the Pi and DSH hosts, and
+  memory storage; the root export keeps the legacy facade.
+- `evofence/core` exposes the production `createSessionService(ports): SessionService`.
+  The proposed `createKernel` factory is **not** implemented: it stays a written
+  contract (INTERFACES.md §3) instead of shipping a stub.
+- The manifest-routed `session view` command and the shared host review views. Reading
+  a view does not convert an unknown or inconclusive outcome into success.
+- An optional Super Plumber bridge and the legacy-archive implementations, built from
+  repository paths. Neither has a package subpath; neither launches a CLI.
+- Wire namespaces: runtime/assets use `evofence.runtime/1@1.1.0` and
+  `evofence.assets/1@1.0.0`; legacy export/import use the separate
+  `evofence.legacy-export/1` and `evofence.legacy-source/1` at schemaVersion 1.0.0.
+
+### Guards
+
+- Frozen pack paths, every typed export and every documented CLI entry are checked by
+  release guards with real negative controls: a file-level mutation turns the same
+  suite red, the restore is byte-level, and the suite is green again afterwards.
+- `npm test` runs before any publish, and the release itself is a separate authorized
+  act. Private/generated evidence and process records are excluded from the package;
+  the candidate and checklist are tracked review documents, not execution records.
+
+### Not established
+
+- Capability benefit remains **inconclusive**; l4_capability_trial attempt 1 **failed**
+  (blocker 1 / major 2). attempt 2 passed as a bounded pilot (independent review 16/16),
+  which is not a benefit claim.
+- Historical 747 / 943 USD remain unresolved; the preregistered design envelope is
+  938.470100 USD. A capability-ledger request is still `unknownSpend` and is retained
+  rather than zeroed; `actualInvoiceUsd` is `null`.
+- adr_0001/adr_0004 remain proposed; dual-host-runtime-and-uplift does not graduate.
+- Known and unfixed: `src/runtime/session/plans.ts` can emit `changedIds=[id,id]` against
+  the protocol's `uniqueItems: true`, and the write side has no wire-codec gate;
+  `scripts/check-core-imports.mjs` is not wired into CI (39 pre-existing I08).
+- See [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and
   [release checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md).
 
 ## 0.4.2 — 2026-09-30

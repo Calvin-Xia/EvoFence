@@ -2,7 +2,7 @@
 
 本文件位于 tracked 文档目录，随源代码审查交付；`node --test` 只读取这里的候选与清单。它们不在 npm 包 `files` 面内。`execution/` 中的 brief、日志、交接和 dossier 保留为本地过程记录。
 
-lane：`l5-release`；基线：`24af884f34d4dcb3bb899856d91c7fca42011abc`。本节点不授权 tag/publish/merge；候选尚待验收。2026-10-03 用户裁决：为后续可能的 tag，把 `package.json` / `package-lock.json` 版本置为 `0.5.0`；`0.5.0` 尚未 tag/publish，`0.4.2` 仍是远端 registry latest，本 lane 变更未进入注册表。
+lane：`l5-release`；基线：`24af884f34d4dcb3bb899856d91c7fca42011abc`。本节点不授权 tag/publish/merge：节点只交付候选，发布由用户另行授权（2026-10-03 授权的原文、面向本文件的持久记录见[发布清单](L5-RELEASE-CHECKLIST.md)）。2026-10-03 用户裁决：把 `package.json` / `package-lock.json` 版本置为 `0.5.0`。该 lane 的改动经 PR #21 以 merge commit `74798e6` 落地 `main`，`main` 精确 SHA 的 CI 4/4 全绿。
 
 ## 分层与实际产物
 
@@ -99,7 +99,7 @@ evofence session view review.json --json
 
 [Unreleased](../../CHANGELOG.md) 与 [legacy 升级对照](../../src/storage/legacy/README.md)一致：旧 ledger/config/旧 graph 保持原样；只读导出一致副本，显式导入独立 archive，不能重写 hash chain、自动迁移或继承执行资格。新 runtime 使用 `evofence.runtime/1@1.1.0`，assets 使用 `evofence.assets/1@1.0.0`；历史导出/归档使用 `evofence.legacy-export/1` / `evofence.legacy-source/1`，schemaVersion `1.0.0`。
 
-版本裁决（2026-10-03）：`package.json` / `package-lock.json` 已置为 `0.5.0`，为后续可能的 tag 做准备；`0.5.0` 是 breaking 线，尚未 tag/publish，`0.4.2` 仍是远端 registry latest。发布清单、双语 README 与插件/集成的版本手同步点已按同一值对齐。发行段只写 `## Unreleased` 与 `## 0.5.0`，不预填发布日期、不写发布主张；tag/publish 仍需用户明确授权，merge 需用户审核。SQLite marker 2、bundle marker 1、YAML version/contract_version 1 和 validator-v2 无版本文档不被新协议默认解释。
+版本裁决（2026-10-03）：`package.json` / `package-lock.json` 置为 `0.5.0`，作为 breaking 线的版本号；发布清单、双语 README 与插件/集成的版本手同步点按同一值对齐。`0.5.0` 的 tag 与 GitHub Release 由用户在 2026-10-03 另行明确授权（原文见[发布清单](L5-RELEASE-CHECKLIST.md)），本节点 `nodeAuthorizesPublish` 仍为 `false`。本节点交付时 `0.4.2` 仍是远端 registry 上的 latest，`0.5.0` 未进注册表。SQLite marker 2、bundle marker 1、YAML version/contract_version 1 和 validator-v2 无版本文档不被新协议默认解释。
 
 ## 可复现验证与当前结果
 

@@ -2,21 +2,28 @@
 
 本文件位于 tracked 文档目录；`node --test` 不读取 execution 中的过程记录。可审查候选见 [L5-RELEASE-CANDIDATE.md](L5-RELEASE-CANDIDATE.md)。
 
-**本节点不授权 tag/publish**。本次仅本 lane 文档、发布核验脚本和测试改动；集成点只读。未执行 commit/push/merge/tag/publish/install；未改源码、exports、工作流、图或凭据。没有发布授权。
+**本节点不授权 tag/publish**。该 lane 提交其产物时只改 lane 文档、发布核验脚本和测试；集成点只读，未执行 commit/push/merge/tag/publish/install；未改源码、exports、工作流、图或凭据。
+
+tag 与 GitHub Release 由**用户**在 2026-10-03 **另外明确授权**，见下面「发布授权」一节。本节点的 `nodeAuthorizesPublish: false` 记录的是**节点**授权范围，不因用户授权而改写：节点没有授权过发布，用户授权了。
 
 ## 版本裁决（2026-10-03）
 
 用户裁决：允许为后续可能的 tag 做准备，把版本改到 `0.5.0`；tag/publish 仍需用户明确授权，merge 需用户审核，均未执行。本 lane 据此同步 `package.json`、`package-lock.json`、`CHANGELOG`（`## Unreleased` + `## 0.5.0`，无发布日期、无发布主张）、双语 README、插件/集成的版本手同步点与 `test/release.test.js`；`exports` 与 `src/**` 未动。`0.4.2` 是远端 registry 上一版本，`0.5.0` 尚未 tag/publish。
 
-## 发布前置与后续步骤（全部待授权/待核实）
+## 发布授权（2026-10-03）
 
-- [x] 2026-10-03 用户裁决：为后续可能的 tag 把 `package.json` / `package-lock.json` 置为 `0.5.0`；tag/publish 仍需用户明确授权、merge 需用户审核，均未执行。
-- [ ] orchestrator 接收候选、合并后复跑全部适用检查；本 lane 的新改动尚不在远端 CI 上。
-- [ ] PR 精确 head 的 Ubuntu/Windows × Node 22/24 CI 全绿；以当时的远端原始输出核实。
-- [ ] DoD 全绿并获最终真人 l5_accept；core guard 的39条 I08、未来 createKernel 合同及 L4 未决证据须在各自授权范围裁决。
-- [x] 版本化 breaking changelog（`## Unreleased` + `## 0.5.0`，无发布日期）、package/lock 一致（均 `0.5.0`）；旧 ledger/config/旧 graph 冻结不改，新 namespace 独立，核对 legacy 对照。
-- [ ] 再构建、运行项目 check/e2e/config-doc、static-audit、core-imports、pack 路径/文档/授权边界核验，保留真实负控证据。
-- [ ] 此后才可在另外明确授权下创建 tag / GitHub release，核验 release metadata/Trusted Publishing workflow，按 stable/latest 或 prerelease/beta 选择。
+用户于 2026-10-03 明确授权创建 tag 与 GitHub Release：`v0.5.0` 打在本 checkout 的 `main` 上，GitHub Release 触发 `publish.yml`，经 OIDC Trusted Publishing 发到 npm `latest`。`0.5.0` 不带 `-`，因此 Release 不得勾 prerelease，且发布工作流会先跑 `npm test`。这仍是**用户**的授权，不是本节点的；上文 `nodeAuthorizesPublish: false` 与本节并存，两者说的不是同一件事。
+
+## 发布前置与后续步骤
+
+- [x] 2026-10-03 用户裁决：为后续可能的 tag 把 `package.json` / `package-lock.json` 置为 `0.5.0`。
+- [x] orchestrator 接收候选、合并后复跑：PR #21（`refactor/harness-kernel`）经用户审核以 merge commit `74798e6` 落地 `main`；四张图随本地面一并保留，`evofence-harness-kernel` 终态 40/40 passed、`validate` 0 错误、`export --docs --check` 21 文件无漂移。
+- [x] `main` 精确 merge SHA 的 CI 4/4 全绿（run `37125978702`：ubuntu/windows × Node 22/24），e2e 24/24、fail 0。
+- [x] DoD 全绿并获最终真人 `l5_accept`（由用户裁决关闭，非执行方自签）。core guard 的 39 条 I08、未来 `createKernel` 合同及 L4 未决证据仍留在各自授权范围，未借发布放宽。
+- [x] 版本化 breaking changelog、package/lock 一致（均 `0.5.0`）；旧 ledger/config/旧 graph 冻结不改，新 namespace 独立。
+- [x] 合并后复跑：`npm run build` / `typecheck` / `src:policy` / `dep:check` / `config:doc` exit 0；`npm run test:e2e` 24/24；`node verification/kernel/static-audit.mjs` exit 0（status passed）；`node scripts/check-core-imports.mjs` exit 1（39 I08，上游既有，未修未放宽）。
+- [x] 发布核验：`RELEASE_TAG=v0.5.0 RELEASE_IS_PRERELEASE=false node scripts/verify-release-metadata.js` exit 0（`Release v0.5.0 matches package 0.5.0`、8 typed exports、1238 pack 条目、0 私有/generated 路径）；`node scripts/verify-publish-workflow.js` exit 0。
+- [x] 在另外的明确授权下创建 tag 与 GitHub Release（2026-10-03，见「发布授权」一节）；按 stable/latest 选择，未用 prerelease/beta。
 - [ ] 发布后另外核实 registry version、精确 tag/commit 与 publish workflow 的原始输出；不以命令 exit 0 代替状态证据。
 
 已有 [publish.yml](../../.github/workflows/publish.yml) 在 release.published 后执行 build/metadata/workflow guard/npm test；本节点没有触发它。新增逐 pack 路径检查进入已有 metadata guard；release tests 被 npm test 自动发现。config-doc/e2e/static-audit 未全进入 publish workflow，core-imports 仍为手动诊断，这是目前边界。
@@ -78,7 +85,11 @@ $ gh pr checks 21
 8 行全部 pass：ubuntu-latest 与 windows-latest × Node 22/24，两次 run（37114260007、37114262410）各 4 job。
 ```
 
-解读边界：本 checkout 的 `package.json` / `package-lock.json` / 清单 / 双语 README / 插件 manifest 已按 2026-10-03 裁决同步为 `0.5.0`，但注册表 historical latest 仍为 `0.4.2`，`0.5.0` 尚未 tag/publish、本 lane 变更未进入注册表；PR #21 为 `OPEN` 非 draft，但只证明其当时 head 的 CI，不证明本 lane 未提交改动已过 CI；`git log` 与空标签列表不证明 merge 或发布。HEAD 标签检查要求为空；有标签即阻塞，不删除标签。
+解读边界：本 checkout 的 `package.json` / `package-lock.json` / 清单 / 双语 README / 插件 manifest 已按 2026-10-03 裁决同步为 `0.5.0`，但注册表 historical latest 仍为 `0.4.2`，`0.5.0` 尚未 tag/publish、本 lane 变更未进入注册表；PR #21 为 `OPEN` 非 draft，但只证明其当时 head 的 CI，不证明本 lane 未提交改动已过 CI；`git log` 与空标签列表不证明 merge 或发布。HEAD 标签检查原为「必须为空」；2026-10-03 授权后改为「HEAD 上的 tag 必须恰好等于 `v<package version>`，且本清单留有那次用户授权的原文」——未记录授权的 tag 仍然阻塞，不删除标签。
+
+该改动做了真负控（临时 tag 只在本地建，不 push）：本地给 HEAD 打 `v0.5.0`、且本清单授权原文在位时，发布相关测试 24/24 绿；把授权原文从本清单删掉后，同一条 cp3 测试变红（`a tag on HEAD requires the recorded user release authorization`）；字节级复原后复绿；临时 tag 随即删除。
+
+2026-10-03 后续读数（同一命令口径）：`git log -1 --oneline` = `74798e6 Merge pull request #21 from Calvin-Xia/refactor/harness-kernel`；`gh pr view 21 --json state` = `{"state":"MERGED"}`；`gh run view 37125978702` = 4 job 全 success；打 tag 前 `npm view evofence version dist-tags` 仍为 `0.4.2` / `{ latest: '0.4.2' }`。这些读数只说明前置条件达成，不构成本次发布已经完成的证据；发布结果按最后一节单独核实。
 
 ## 必须保留的负结果与未决事项
 
