@@ -8,7 +8,7 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const documentPath = path.join(root, 'docs/evofence-harness-kernel/execution/L5-SDK-DELIVERY-AND-EXAMPLES.md');
+const documentPath = path.join(root, 'docs/evofence-harness-kernel/L5-SDK-DELIVERY-AND-EXAMPLES.md');
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 const ts = createRequire(import.meta.url)('typescript6');
 const doc = () => readFileSync(documentPath, 'utf8');
