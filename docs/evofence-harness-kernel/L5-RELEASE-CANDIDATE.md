@@ -99,7 +99,7 @@ evofence session view review.json --json
 
 [Unreleased](../../CHANGELOG.md) 与 [legacy 升级对照](../../src/storage/legacy/README.md)一致：旧 ledger/config/旧 graph 保持原样；只读导出一致副本，显式导入独立 archive，不能重写 hash chain、自动迁移或继承执行资格。新 runtime 使用 `evofence.runtime/1@1.1.0`，assets 使用 `evofence.assets/1@1.0.0`；历史导出/归档使用 `evofence.legacy-export/1` / `evofence.legacy-source/1`，schemaVersion `1.0.0`。
 
-版本裁决（2026-10-03）：`package.json` / `package-lock.json` 置为 `0.5.0`，作为 breaking 线的版本号；发布清单、双语 README 与插件/集成的版本手同步点按同一值对齐。`0.5.0` 的 tag 与 GitHub Release 由用户在 2026-10-03 另行明确授权（原文见[发布清单](L5-RELEASE-CHECKLIST.md)），本节点 `nodeAuthorizesPublish` 仍为 `false`。本节点交付时 `0.4.2` 仍是远端 registry 上的 latest，`0.5.0` 未进注册表。SQLite marker 2、bundle marker 1、YAML version/contract_version 1 和 validator-v2 无版本文档不被新协议默认解释。
+版本裁决（2026-10-03）：`package.json` / `package-lock.json` 置为 `0.5.0`，作为 breaking 线的版本号；发布清单、双语 README 与插件/集成的版本手同步点按同一值对齐。`0.5.0` 的 tag 与 GitHub Release 由用户在 2026-10-03 另行明确授权（原文见[发布清单](L5-RELEASE-CHECKLIST.md)），本节点 `nodeAuthorizesPublish` 仍为 `false`。本节点交付时 `0.4.2` 仍是远端 registry 上的 latest；2026-10-03 授权后从本提交（`387c248`）打 `v0.5.0` 并建 GitHub Release，registry 直查显示 `dist-tags.latest` 现为 `0.5.0`（`2026-10-03T14:16:02.266Z`）。SQLite marker 2、bundle marker 1、YAML version/contract_version 1 和 validator-v2 无版本文档不被新协议默认解释。
 
 ## 可复现验证与当前结果
 

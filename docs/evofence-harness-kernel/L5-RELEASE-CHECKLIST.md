@@ -24,7 +24,7 @@ tag 与 GitHub Release 由**用户**在 2026-10-03 **另外明确授权**，见�
 - [x] 合并后复跑：`npm run build` / `typecheck` / `src:policy` / `dep:check` / `config:doc` exit 0；`npm run test:e2e` 24/24；`node verification/kernel/static-audit.mjs` exit 0（status passed）；`node scripts/check-core-imports.mjs` exit 1（39 I08，上游既有，未修未放宽）。
 - [x] 发布核验：`RELEASE_TAG=v0.5.0 RELEASE_IS_PRERELEASE=false node scripts/verify-release-metadata.js` exit 0（`Release v0.5.0 matches package 0.5.0`、8 typed exports、1238 pack 条目、0 私有/generated 路径）；`node scripts/verify-publish-workflow.js` exit 0。
 - [x] 在另外的明确授权下创建 tag 与 GitHub Release（2026-10-03，见「发布授权」一节）；按 stable/latest 选择，未用 prerelease/beta。
-- [ ] 发布后另外核实 registry version、精确 tag/commit 与 publish workflow 的原始输出；不以命令 exit 0 代替状态证据。
+- [x] 发布后核实（不以 exit 0 代替状态证据）：tag `v0.5.0` = commit `387c248`；publish workflow run `37128739574` success，日志原文含 `npm notice Publishing to https://registry.npmjs.org/ with tag latest`、`Signed provenance statement`、`+ evofence@0.5.0`；registry 直查（带缓存击穿）显示 `dist-tags.latest = 0.5.0`、`time['0.5.0'] = 2026-10-03T14:16:02.266Z`，且 `dist.shasum` / `dist.integrity` 与工作流日志逐字符一致（`99d136ab…` / `sha512-iMN9jAPY…`）。消费者侧另装一份：`npm i evofence@0.5.0` 得 0.5.0，`evofence --version` 输出 0.5.0，8/8 export 子路径可解析，`fileCount` 1234、私有/generated 目录 0 命中，`dist.attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1`。
 
 已有 [publish.yml](../../.github/workflows/publish.yml) 在 release.published 后执行 build/metadata/workflow guard/npm test；本节点没有触发它。新增逐 pack 路径检查进入已有 metadata guard；release tests 被 npm test 自动发现。config-doc/e2e/static-audit 未全进入 publish workflow，core-imports 仍为手动诊断，这是目前边界。
 
