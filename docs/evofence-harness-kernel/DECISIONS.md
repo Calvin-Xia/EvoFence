@@ -44,3 +44,4 @@
 | task · passed | l4_regression_revocation | 退化检测与撤销传播 | 2026-10-02T14:07:21.509Z |
 | task · passed | l4_retrieval | 适用经验检索与注入 | 2026-10-01T22:26:51.375Z |
 | task · passed | l5_legacy_boundary | 旧格式只读边界与 breaking 指南 | 2026-10-01T22:32:40.347Z |
+| task · passed | l5_public_sdk | SDK 消费面与最小嵌入示例 | 2026-10-03T07:04:10.412Z |
