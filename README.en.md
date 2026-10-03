@@ -300,10 +300,12 @@ The ledger schema moved to v2 in 0.4.0 (a `schema_version` marker in the `state`
 npm ci
 npm run build        # tsc: compile src/**/*.ts into dist/ plus .d.ts / .d.ts.map / .js.map
 npm run typecheck    # tsc --noEmit
+npm run src:policy   # source shape: no `.js` under `src/`, no file over 350 lines
 npm run dep:check    # verify the src/ dependency graph is acyclic
 npm test             # runs npm run build first, then node --test over test/**
 npm run test:e2e     # runs npm run build first, then test-e2e/cli-flow.mjs
-npm run check        # typecheck + dep:check + test
+npm run config:doc   # after building, check docs/config.md against src/lib/config/schema.ts (outside `check`, its own CI step)
+npm run check        # typecheck + src:policy + dep:check + test
 npm pack --dry-run   # inspect the published tarball
 ```
 
@@ -318,7 +320,7 @@ The research source document `docs/deep-research-report.md` is not included in t
 The 0.4.0 rewrite was driven by [Super Plumber](https://github.com/LUKAWI/super-plumber), which turns a requirement into a topology graph with dependencies, gates and ADR jurisdiction (19 workflow nodes, 5 ADRs).
 
 - The graph's live state (nodes, edges, ADRs, the `events.jsonl` audit log) lives in `.graph/`, which is **gitignored on purpose**: it is the process state that drove the refactor, not product source, and most of its bulk is per-mutation snapshot copies. It never enters the npm package.
-- `CONTEXT-MAP.md`, `DECISIONS.md` at the repository root, plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd`, are **exported views** of that graph and are tracked: they are how everyone who does not hold the graph reads the design and its decisions, so do not hand-edit them — change the graph and re-export.
+- `CONTEXT-MAP.md`, `DECISIONS.md` at the repository root, plus `docs/adr/`, `docs/contexts/` and `docs/topology.mmd`, are **exported views** of that graph and are tracked: they are how everyone who does not hold the graph reads the design and its decisions, so do not hand-edit them — change the graph and re-export. Three further graphs now live in `.graph/` — `evofence-ops-evidence`, `evofence-042-hardening` and `evofence-harness-kernel` — and each exports the same kind of views into its own `docs/evofence-ops-evidence/`, `docs/evofence-042-hardening/` or `docs/evofence-harness-kernel/` directory under the same rule.
 - Export and drift-check with `graph export --docs --graph evofence-ts-refactor` / `graph export --docs --check --graph evofence-ts-refactor`. Those need the separately installed Super Plumber CLI (`npm install --global @lukawi/super-plumber`). It is not a dependency of this repository, and neither `npm run check` nor CI requires it.
 
 ## Publishing

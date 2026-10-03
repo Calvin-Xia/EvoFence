@@ -22,8 +22,8 @@
  * `Event.type` enum is therefore a caller obligation, not a store-side decode.
  *
  * Two store-internal concepts have no wire object on purpose (`SCHEMAS.md` §3): the dispatch claim
- * and the idempotency request index. Their whole lifetime is inside one `EventStore` CAS
- * transaction; only their ids cross a boundary.
+ * and the idempotency request index. The index is recovered from the original append requests
+ * retained by the local session export; this does not extend the frozen wire Event schema.
  */
 import { fail } from '../../protocol/index.js';
 import type { Decoded, ErrorCode, ErrorEnvelope } from '../../protocol/index.js';
@@ -176,6 +176,8 @@ export interface ExportedSession {
   readonly events: readonly Event[];
   readonly effects: readonly Effect[];
   readonly receipts: readonly Receipt[];
+  /** Complete original requests in commit order; required for idempotency across restore. */
+  readonly requests: readonly AppendRequest[];
 }
 
 export interface EventStore {

@@ -1,6 +1,6 @@
 # EvoFence 0.3.0 实现盘点（重构前基线）
 
-- 目标仓库：`${USER_HOME}\EvoFence`
+- 目标仓库：`C:\Users\Calvin-Xia\EvoFence`
 - 包版本：`package.json` → `"name": "evofence"`, `"version": "0.3.0"`, `"type": "module"`, `"engines": { "node": ">=22.13.0" }`
 - 入口：`"bin": { "evofence": "src/cli.js" }`，`"exports": { ".": "./src/index.js" }`
 - 运行时依赖仅两个：`better-sqlite3@^12.6.2`、`yaml@^2.8.1`

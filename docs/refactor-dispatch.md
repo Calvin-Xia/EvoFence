@@ -135,10 +135,10 @@ git worktree remove ../evofence-wt-<域>
 
 | pane | agent 名 | 模型（启动参数） | claim_by | 节点 | worktree / 分支 | 提交 |
 |---|---|---|---|---|---|---|
-| wA:p8 | wt-ledger | deepseek/deepseek-flash --thinking high | herdr-ledger | l2_ledger | `${USER_HOME}\evofence-wt-ledger` / refactor/ledger | `235020f` |
-| wA:p9 | wt-gate | deepseek/deepseek-flash --thinking high | herdr-gate | l2_gate | `${USER_HOME}\evofence-wt-gate` / refactor/gate | `a3392fc` |
-| wA:pA | wt-exec | deepseek/deepseek-flash --thinking high | herdr-exec | l2_exec | `${USER_HOME}\evofence-wt-exec` / refactor/exec | `31db3cf` |
-| wA:pB | wt-io | deepseek/deepseek-flash --thinking high | herdr-io | l2_config, l2_report, l2_cli | `${USER_HOME}\evofence-wt-io` / refactor/io | `03096f2`, `248ffc9`, `588a215` |
+| wA:p8 | wt-ledger | deepseek/deepseek-flash --thinking high | herdr-ledger | l2_ledger | `C:\Users\Calvin-Xia\evofence-wt-ledger` / refactor/ledger | `235020f` |
+| wA:p9 | wt-gate | deepseek/deepseek-flash --thinking high | herdr-gate | l2_gate | `C:\Users\Calvin-Xia\evofence-wt-gate` / refactor/gate | `a3392fc` |
+| wA:pA | wt-exec | deepseek/deepseek-flash --thinking high | herdr-exec | l2_exec | `C:\Users\Calvin-Xia\evofence-wt-exec` / refactor/exec | `31db3cf` |
+| wA:pB | wt-io | deepseek/deepseek-flash --thinking high | herdr-io | l2_config, l2_report, l2_cli | `C:\Users\Calvin-Xia\evofence-wt-io` / refactor/io | `03096f2`, `248ffc9`, `588a215` |
 
 峰值并发写者 = 4（≤4 上限）。主检出（`main`）在并行波期间只有编排会话在做状态流转，无执行 agent 直接写入。
 worktree 基线提交 = `34b193f`（L2 四域共同祖先，含 TS 基座与共享类型层）。**四域并发共用测试文件，已记违规（§7）。**

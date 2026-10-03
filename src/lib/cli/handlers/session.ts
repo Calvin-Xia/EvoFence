@@ -8,6 +8,7 @@ import { createSessionService, type SessionSeed } from '../../../runtime/session
 import { createMemoryEventStore, createMemoryArtifactStore } from '../../../storage/index.js';
 import { canonical, type ArtifactRef, type ExportedSession, type StoreResult } from '../../../kernel/store/index.js';
 import { validateCompatibility, validateContext } from '../../../learning/assets/compatibility.js';
+import { validateRegistryHistory } from '../../../learning/assets/history.js';
 import type { RegistrySnapshot, QualificationContext } from '../../../learning/assets/types.js';
 import { readKernelView, formatKernelView, type ReviewDecisionLink } from '../../report/kernel-view.js';
 import type { ReportFormat } from '../../report/formats.js';
@@ -45,7 +46,7 @@ export function openReviewExport(input: unknown) {
     || seed.graphRef.digest !== digest.digest(canonical(seed.graph.spec))) {
     throw new EvoFenceError('EFK_SOURCE_PIN_DRIFT', 'Session review graph differs from its source pin.');
   }
-  const session = object(bundle.session, ['sessionId', 'epoch', 'protocol', 'revision', 'events', 'effects', 'receipts']);
+  const session = object(bundle.session, ['sessionId', 'epoch', 'protocol', 'revision', 'events', 'effects', 'receipts', 'requests']);
   wire('Id', session.sessionId); wire('ProtocolVersion', session.protocol);
   if (session.sessionId !== seed.sessionId || !Number.isSafeInteger(session.epoch) || (session.epoch as number) < 1
     || !Number.isSafeInteger(session.revision) || (session.revision as number) < 0) invalid();
@@ -78,12 +79,7 @@ export function openReviewExport(input: unknown) {
     if (e.expiresAt !== null) wire('Instant', e.expiresAt);
     if (!registry.revisions.some(r => canonical(r.candidate.asset) === canonical(e.asset))) invalid();
   }
-  // qualification() assumes registered, earlier dependencies and an initial staged history row.
-  for (const [index, revision] of registry.revisions.entries()) {
-    if (!registry.history.some(e => e.state === 'staged' && canonical(e.asset) === canonical(revision.candidate.asset))) invalid();
-    if (!revision.candidate.dependencies.every(dep => registry.revisions.slice(0, index)
-      .some(r => canonical(r.candidate.asset) === canonical(dep)))) invalid();
-  }
+  checked(validateRegistryHistory(registry, { artifacts }));
   if (bundle.assetContext !== null) {
     checked(validateContext(bundle.assetContext as QualificationContext));
     if ((bundle.assetContext as QualificationContext).at !== bundle.at) invalid();

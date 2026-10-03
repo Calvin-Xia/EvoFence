@@ -10,7 +10,7 @@ import type { NodeState } from '../../kernel/graph/index.js';
 function index<T>(items: readonly T[], id: (item: T) => string): Record<string, T> {
   return Object.fromEntries([...items].sort((a, b) => id(a) < id(b) ? -1 : id(a) > id(b) ? 1 : 0).map(item => [id(item), item]));
 }
-export function initialState(session: ExportedSession, seed: SessionSeed): StoreResult<RuntimeState> {
+export function initialState(session: Omit<ExportedSession, 'requests'>, seed: SessionSeed): StoreResult<RuntimeState> {
   const budget = openBudgetLedger(seed.policy, seed.reservePerRequest);
   if (!budget.ok) return budget;
   const first = session.events[0];
@@ -105,7 +105,7 @@ export function reduce(state: RuntimeState, event: Event): StoreResult<RuntimeSt
     usageIssues, invocationEffects, appliedInvocations: [...invocations].sort(), intents, staleEffectIds, scheduler, cancellation,
     unknownEffectIds: reconcileIds(outbox.value), archivedReceiptIds: outbox.value.archivedReceiptIds });
 }
-export function project(session: ExportedSession, seed: SessionSeed): StoreResult<RuntimeState> {
+export function project(session: Omit<ExportedSession, 'requests'>, seed: SessionSeed): StoreResult<RuntimeState> {
   let state = initialState(session, seed);
   if (!state.ok) return state;
   for (const event of session.events) {

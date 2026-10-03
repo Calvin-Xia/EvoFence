@@ -35,7 +35,8 @@ import { storeFail, storeOk } from '../kernel/store/contracts.js';
 import { canonical, type DigestPort } from '../kernel/store/identity.js';
 import { intendedIds, projectOutbox, reconcileIds } from '../kernel/store/outbox.js';
 import { replay } from '../kernel/store/projection.js';
-import { commitBatch, newSessionRecord, reviveSession, type SessionRecord } from './store-session.js';
+import { commitBatch, newSessionRecord, type SessionRecord } from './store-session.js';
+import { reviveSession } from './store-recovery.js';
 
 /** A fully-populated `EventPayload`; omitted members are the explicit nulls/empties the schema requires. */
 function payloadOf(overrides: Partial<EventPayload>): EventPayload {
@@ -201,6 +202,7 @@ export function createMemoryEventStore(options: { readonly digest: DigestPort })
         events: [...session.events],
         effects: [...session.effects.values()],
         receipts: [...session.receipts.values()],
+        requests: [...session.requestIndex.values()].map(entry => JSON.parse(canonical(entry.request)) as AppendRequest),
       });
     },
 
@@ -268,7 +270,7 @@ export function createMemoryEventStore(options: { readonly digest: DigestPort })
       if (sessions.has(exported.sessionId)) {
         return storeFail('EFK_REVISION_CONFLICT', `session ${exported.sessionId} is already open`, [exported.sessionId]);
       }
-      const revived = reviveSession(exported);
+      const revived = reviveSession(exported, digest);
       if (!revived.ok) return revived;
       sessions.set(exported.sessionId, revived.value);
       return storeOk(handleOf(revived.value));

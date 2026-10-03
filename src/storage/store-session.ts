@@ -11,11 +11,12 @@
  * `effectId`); a journal that references content the store does not hold is a gap and is refused,
  * not guessed around.
  */
-import type { AppendOutcome, Effect, Event, EventDraft, ExportedSession, ProtocolEnvelope, Receipt, StoreResult } from '../kernel/store/contracts.js';
+import type { AppendOutcome, AppendRequest, Effect, Event, EventDraft, ProtocolEnvelope, Receipt, StoreResult } from '../kernel/store/contracts.js';
 import { storeFail, storeOk } from '../kernel/store/contracts.js';
 import { canonical, identityDigest, type DigestPort } from '../kernel/store/identity.js';
 import { projectOutbox } from '../kernel/store/outbox.js';
 import { emptyReplayState, replay } from '../kernel/store/projection.js';
+import { uniqueEffects, uniqueIdentities } from './store-identities.js';
 
 export interface SessionRecord {
   readonly sessionId: string;
@@ -29,7 +30,7 @@ export interface SessionRecord {
   /** `idempotencyKey -> effectId`: one delivery identity may not be bound to two different effects. */
   readonly idempotency: Map<string, string>;
   readonly eventIds: Set<string>;
-  readonly requestIndex: Map<string, { readonly digest: string; readonly outcome: AppendOutcome }>;
+  readonly requestIndex: Map<string, { readonly digest: string; readonly outcome: AppendOutcome; readonly request: AppendRequest }>;
 }
 
 export function newSessionRecord(sessionId: string, epoch: number, protocol: ProtocolEnvelope): SessionRecord {
@@ -48,25 +49,6 @@ export function newSessionRecord(sessionId: string, epoch: number, protocol: Pro
   };
 }
 
-/** Rebuild a session record from an exported journal; the same reducer that replay uses validates it. */
-export function reviveSession(exported: ExportedSession): StoreResult<SessionRecord> {
-  const replayed = replay(exported.events);
-  if (!replayed.ok) return replayed;
-  const record: SessionRecord = {
-    ...newSessionRecord(exported.sessionId, replayed.value.epoch, exported.protocol),
-    revision: replayed.value.revision,
-    lastSequence: replayed.value.lastSequence ?? -1,
-    events: [...exported.events],
-    effects: new Map(exported.effects.map((effect) => [effect.effectId, effect])),
-    receipts: new Map(exported.receipts.map((receipt) => [receipt.receiptId, receipt])),
-  };
-  for (const event of record.events) record.eventIds.add(event.eventId);
-  for (const effect of record.effects.values()) record.idempotency.set(effect.idempotencyKey, effect.effectId);
-  const outbox = projectOutbox(record.events, record.effects, record.receipts);
-  if (!outbox.ok) return outbox;
-  return storeOk(record);
-}
-
 /**
  * Validate and stage the effect content of a transaction. Nothing is mutated here; the additions are
  * applied by `commitBatch` only after every check has passed.
@@ -76,6 +58,7 @@ function planEffects(
   drafts: readonly EventDraft[],
   effects: readonly Effect[],
 ): StoreResult<{ readonly additions: readonly Effect[]; readonly ids: readonly string[] }> {
+  const identities = uniqueEffects(effects); if (!identities.ok) return identities;
   const intended = new Map<string, number>();
   for (const draft of drafts) {
     if (draft.type !== 'effect.intended') continue;
@@ -118,6 +101,7 @@ function planReceipts(
   drafts: readonly EventDraft[],
   receipts: readonly Receipt[],
 ): StoreResult<readonly Receipt[]> {
+  const identities = uniqueIdentities(receipts, row => row.receiptId); if (!identities.ok) return identities;
   const referenced = new Set<string>();
   for (const draft of drafts) {
     if (draft.type !== 'receipt.applied' && draft.type !== 'receipt.archived') continue;
@@ -274,6 +258,8 @@ export function commitBatch(
     eventIds: nextEvents.map((event) => event.eventId),
     effectIds: plannedEffects.value.ids,
   };
-  session.requestIndex.set(requestId, { digest: requestDigest, outcome });
+  const request: AppendRequest = JSON.parse(canonical({ sessionId: session.sessionId, requestId,
+    expectedRevision, epoch, events: drafts, effects, receipts }));
+  session.requestIndex.set(requestId, { digest: requestDigest, outcome, request });
   return storeOk(outcome);
 }

@@ -10,7 +10,7 @@ import { appendEvent } from './registry.js';
 import type { ActivationReceipt, AssetRef, AssetRevision, DecisionInput, EvaluationReceipt, RegistryPorts, RegistrySnapshot } from './types.js';
 
 /** Registry-internal evaluation reads never flow into the public qualification response. */
-function object<K extends DefName>(ref: ArtifactRef, name: K, at: number, ports: RegistryPorts): StoreResult<Decoded<K>> {
+export function readRegistryEvidence<K extends DefName>(ref: ArtifactRef, name: K, at: number, ports: Pick<RegistryPorts, 'artifacts'>): StoreResult<Decoded<K>> {
   if (ref.schema.name !== name || ref.schema.version !== '1.1.0') {
     return storeFail('EFK_ARTIFACT_BINDING_MISMATCH', 'qualification evidence schema differs from its expected contract');
   }
@@ -24,6 +24,19 @@ function object<K extends DefName>(ref: ArtifactRef, name: K, at: number, ports:
   }
   const decoded = decode(name, value);
   return decoded.ok ? decoded : storeFail(decoded.error.code, 'qualification evidence does not satisfy the frozen codec');
+}
+const object = readRegistryEvidence;
+/** Shared by the command path and external-history validation; no surface owns these rules. */
+export function validateDecisionTransition(snapshot: RegistrySnapshot, asset: AssetRef,
+  kind: string, outcome: string, evidenceRef: ArtifactRef | null): StoreResult<true> {
+  if (evidenceRef === null) return storeFail('EFK_ASSET_QUALIFICATION_INVALID', 'asset transition requires retained decision evidence');
+  const expected: Readonly<Record<string, string>> = { candidate: 'staged', promotion: 'validated', activation: 'promoted' };
+  const outcomes: Readonly<Record<string, string>> = { candidate: 'validated', promotion: 'promoted', activation: 'active' };
+  if (!Object.hasOwn(expected, kind) || !snapshot.history.some(e => sameRevision(e.asset, asset)) ||
+    globalState(snapshot, asset) !== expected[kind] || outcome !== outcomes[kind]) {
+    return storeFail('EFK_ASSET_QUALIFICATION_INVALID', 'illegal asset transition; evaluation, promotion and activation are separate');
+  }
+  return storeOk(true);
 }
 const setIdentity = (values: readonly unknown[]): string => canonical(values.map(v => canonical(v)).sort());
 function evaluation(revision: AssetRevision, ref: ArtifactRef, input: DecisionInput, ports: RegistryPorts): StoreResult<EvaluationReceipt> {
@@ -71,12 +84,8 @@ export function recordDecision(snapshot: RegistrySnapshot, input: DecisionInput,
     !d.inputs.some(r => revision.candidate.contentRefs.some(content => canonical(content) === canonical(r)))) {
     return storeFail('EFK_DECISION_AUTHORITY_DENIED', 'asset decision must come from its registered service and bind candidate material');
   }
-  const state = globalState(snapshot, input.asset);
-  const expected = { candidate: 'staged', promotion: 'validated', activation: 'promoted' } as const;
-  const outcomes = { candidate: 'validated', promotion: 'promoted', activation: 'active' } as const;
-  if (state !== expected[d.kind] || d.outcome !== outcomes[d.kind]) {
-    return storeFail('EFK_ASSET_QUALIFICATION_INVALID', 'illegal asset transition; evaluation, promotion and activation are separate');
-  }
+  const transition = validateDecisionTransition(snapshot, input.asset, d.kind, d.outcome, input.decisionRef);
+  if (!transition.ok) return transition;
   let expiresAt = input.decisionRef.expiresAt;
   if (d.kind === 'candidate' || d.kind === 'promotion') {
     const evidence = d.evaluationReceiptRef as ArtifactRef;
@@ -138,7 +147,7 @@ export function recordDecision(snapshot: RegistrySnapshot, input: DecisionInput,
     }
     const auth = ports.authorize('activate', input.asset, input.context, a.authorizationRef as string, input.at); if (!auth.ok) return auth;
   }
-  return storeOk(appendEvent(snapshot, { asset: revision.candidate.asset, at: input.at, state: outcomes[d.kind],
+  return storeOk(appendEvent(snapshot, { asset: revision.candidate.asset, at: input.at, state: d.outcome as 'validated' | 'promoted' | 'active',
     evidenceRef: input.decisionRef, context: d.kind === 'activation' ? input.context : null, expiresAt }));
 }
 export interface RevocationInput {

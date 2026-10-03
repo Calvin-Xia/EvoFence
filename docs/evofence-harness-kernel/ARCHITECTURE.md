@@ -1,6 +1,6 @@
 # EvoFence 重构架构提案：Graph Engineering 驱动的能力演化内核
 
-设计日期：2026-10-01。状态：**待人审，尚未实施**。图：`evofence-harness-kernel`，工作类 `program`。
+设计日期：2026-10-01；状态：本文保留设计期口径，其中列出的实施节点已于 2026-10-03 全部 passed（图 `evofence-harness-kernel` 40/40，`l5_accept` 由真人裁决收口）。图：`evofence-harness-kernel`，工作类 `program`。
 
 本轮授权是完整重构思考与图设计，止于交人审。本文是架构提案；图源、context 和 proposed ADR 由 super-plumber 管理。旧源码、配置、ledger、集成、Skills 和历史图未因此获得修改授权。
 
