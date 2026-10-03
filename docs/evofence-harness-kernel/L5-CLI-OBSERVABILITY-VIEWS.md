@@ -138,4 +138,6 @@ console.log(JSON.stringify(exported.events.flatMap((event, index) => {
 
 brief 指定的本文件及 evidence 目录在 Git ignore 下，须由 orchestrator 单独转交，不能仅靠常规 diff/commit 取得。基线 `6a0cc14` 的既有 SDK 测试还引用缺失的 ignored 文档；只读复制 `l5-sdk/docs/evofence-harness-kernel/execution/L5-SDK-DELIVERY-AND-EXAMPLES.md` 到 lane 同路径，两者 SHA256 均为 `9C6AEBEA5402FDC466263D90F831EF3F2D2BE7FD5D447464504554288A6EBE55`，未修改 SDK 测试或产品代码。集成后续 `42dddb2` / `a4971ac` 已由 owning lane 将该依赖迁到 tracked SDK product doc，本 lane 未 cherry-pick 或冒充已含这些提交。
 
+> **2026-10-03 orchestrator 修正（复核 F7）**：上面那句「本文件……在 Git ignore 下，須由 orchestrator 单独转交」**已过时**。本文件现已提升为 **tracked 产品文档** `docs/evofence-harness-kernel/L5-CLI-OBSERVABILITY-VIEWS.md`，随 PR / 发布交付，`test/l5-cli-views.test.js` 直接读取它；只有 `execution/l5-cli-observability-evidence/**` 仍是本地保留面。
+
 `VALIDATION.json` 保存 lane / integration HEAD、交付文件 SHA256、日志结果及未证明项，便于交接时核对。受控收益仍 inconclusive；宿主 UI、真实人机等待、provider-live 为 unknown；本节点不令雾区毕业。
