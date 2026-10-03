@@ -84,11 +84,13 @@ $ gh pr checks 21
 
 受控收益 **inconclusive**；l4_capability_trial attempt 1 **failed**（blocker 1 / major 2 / minor 2 / nit 1）。失败包括 CRLF/LF 冻结 manifest 不可移植、self-check 受祖先 AGENTS.md 影响、准入界限与预留包络失配而无任务级统计证据。**747 / 943 USD 并列未裁决**；预注册设计包络 **938.470100 USD**，与微美元请求预留、实际 settled 花费分别记账，不能混作本次消费。
 
-真相源为集成点本地 [L4 capability-trial 独立复核 dossier](execution/reviews/L4-capability-trial-verify-dossier.md)、[L4-L5 剩余评估 §6](execution/L4-L5-REMAINING-ASSESSMENT.md)、[SESSION-007-HANDOFF §4/§8/§9](execution/SESSION-007-HANDOFF.md)。这些是 process records，不随 PR/npm 包交付；测试只校验本文件承接的事实，不读取这些本地文件。attempt 2 未被本 lane 判定通过。
+真相源为集成点本地 process records：`execution/reviews/L4-capability-trial-verify-dossier.md`、`execution/reviews/L4-capability-trial-verify-b-dossier.md`、`execution/L4-L5-REMAINING-ASSESSMENT.md`、`execution/SESSION-007-HANDOFF.md`（**本地保留面，不随 PR / npm 包交付**）；测试只校验本文件承接的事实，不读取这些本地文件。attempt 2 于 2026-10-03 **passed**（独立复核 16/16），但其成立范围仅为 r2 的有界 pilot 标准，**不构成收益成立**。
+
+另记一条**上游真缺陷（major，非本节点、未修）**：`src/runtime/session/plans.ts` 在 join 未完成时产出 `changedIds=[id,id]`（`src/kernel/graph/readiness.ts` 的 `joinReadiness` 在 join 未完成时把 gap.node 设成 join 自身 id），违反 `src/protocol/objects/runtime.ts` 的 `uniqueItems: true`；**正常可达、确定性触发**，且写侧无 wire-codec 门禁（非法事件静默落盘，只有 `decode('Event')` 才报 `EFK_SCHEMA_INVALID`）。修法在产出侧，属 L2/L3 所有权。
 
 `adr_0001` / `adr_0004` 仍 proposed；雾区 `dual-host-runtime-and-uplift` 不毕业。收益未建立不能写成达成，也不能从失败推定收益为负。
 
-execution/MODEL-BUDGET.json 只读快照：settledUsd 0.00198217 / reservedUsd 0 / unknownSpend false，属 S01 旧账；SESSION-007 记录 capability 累计 0.0054597644 / limit 0.50 USD，是另一账目范围。任何后续 unknownSpend 必须保留，不按零回收。本节点 provider 调用 0，不修改任何账本。
+`execution/MODEL-BUDGET.json` 只读快照：settledUsd 0.00198217 / reservedUsd 0 / unknownSpend false，属 S01 旧账；capability 账本 `experiments/capability/MODEL-BUDGET.json` 现为 **settledUsd 0.0080161252 / limit 0.50 / reservedUsd 0.009547 / unknownSpend true**（27 行 = 4 继承 + 23 新，22 settled + 1 unknown），扣预留后余额 **0.4824368748**，`actualInvoiceUsd` 为 `null`（官方价表测算 ≠ 账单）。任何 unknownSpend 必须保留，不按零回收。本节点 provider 调用 0，不修改任何账本。
 
 ```json release-boundary
 {
@@ -119,4 +121,4 @@ execution/MODEL-BUDGET.json 只读快照：settledUsd 0.00198217 / reservedUsd 0
 
 初始 lane 干净；lane/integration HEAD = 24af884f34d4dcb3bb899856d91c7fca42011abc；集成点初始 git status 只有 `?? experiments/`，这些既有文件保留。集成点不运行 npm run build/check/test/config:doc 等构建封装，不安装、不 pack、不写日志到该处。仅运行已核实不会在集成目录写入的检查与使用 os.tmpdir fixture 的选定测试；新增 lane 产物在集成点未落盘，合并后复跑仍待 orchestrator。
 
-本地交接路径：execution/L5-RELEASE-HANDOFF.md。execution 下的 L5-RELEASE-CANDIDATE.md / L5-RELEASE-CHECKLIST.md 为指向 tracked 产物的索引，不参与 node --test。
+本地交接路径（**本地保留面，不随包交付**）：`execution/L5-RELEASE-HANDOFF.md`。`execution/` 下的同名 CANDIDATE / CHECKLIST 为指向 tracked 产物的索引，不参与 `node --test`。

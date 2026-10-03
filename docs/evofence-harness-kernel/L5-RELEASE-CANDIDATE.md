@@ -145,9 +145,9 @@ evofence session view review.json --json
 
 ## 双宿主与收益证据的限度
 
-SDK/CLI/包边界证据为 native-fixture；provider-live 本节点不适用，不发模型请求。历史双宿主 scenario 为 13 请求、38,743 tokens、参考 $0.01748496（非发票，首条 Pi raw usage unknown），来自本地 [SESSION-007-HANDOFF §5](execution/SESSION-007-HANDOFF.md)，本节点不重跑、不把它当统计收益。
+SDK/CLI/包边界证据为 native-fixture；provider-live 本节点不适用，不发模型请求。历史双宿主 scenario 为 13 请求、38,743 tokens、参考 $0.01748496（非发票，首条 Pi raw usage unknown），来自本地 process record `execution/SESSION-007-HANDOFF.md` §5（**本地保留面，不随 PR / npm 包交付**），本节点不重跑、不把它当统计收益。
 
-受控收益 **inconclusive**；l4_capability_trial attempt 1 **failed**（blocker 1 / major 2），历史 **747 / 943 USD 并列未裁决**，预注册设计包络 **938.470100 USD**。依据本地 [独立复核 dossier](execution/reviews/L4-capability-trial-verify-dossier.md)与 [剩余评估 §6](execution/L4-L5-REMAINING-ASSESSMENT.md)。attempt 2 正在重试的 brief 表述不构成 pass，本 lane 不裁决其节点状态。`adr_0001` / `adr_0004` 仍 proposed，雾区 `dual-host-runtime-and-uplift` 不毕业。
+受控收益 **inconclusive**；l4_capability_trial attempt 1 **failed**（blocker 1 / major 2）、attempt 2 **passed**（2026-10-03 独立复核 V1–V16 = 16/16；B1 行尾冻结、M1 hermetic、M2 准入/预留解耦三修均经独立复现；有界 pilot 23 请求 / 22 settled，`p-74d2` A/B 获 evaluator `completed`，**首次产生任务级证据**；另有 1 笔 9547 µUSD 请求缺 usage、按协议保留不归零）。历史 **747 / 943 USD 并列未裁决**，预注册设计包络 **938.470100 USD**。依据本地 process records（**本地保留面，不随包交付**）：`execution/reviews/L4-capability-trial-verify-dossier.md`、`execution/reviews/L4-capability-trial-verify-b-dossier.md`、`execution/L4-L5-REMAINING-ASSESSMENT.md`。**「attempt 2 passed」只表示 r2 的有界 pilot 标准成立，不等于收益成立**：held-out 三臂、C 长期演化、五消融、final 语料与独立判分均未派发，BCa 区间为 `null`。`adr_0001` / `adr_0004` 仍 proposed，雾区 `dual-host-runtime-and-uplift` 不毕业。
 
 ```json release-boundary
 {
