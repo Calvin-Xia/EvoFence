@@ -1,5 +1,47 @@
 # Changelog
 
+## Unreleased
+
+The 2026-10-03 user decision authorized advancing the version metadata to 0.5.0
+in preparation for a possible tag. No release date is recorded, and there is still
+no authorization to tag, publish or merge: 0.4.2 is the registry's current latest
+and 0.5.0 has not been tagged or published. The same boundary is recorded in the
+[candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and
+[release checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md).
+
+## 0.5.0
+
+### Harness-kernel SDK and delivery candidate (breaking line)
+
+- Added typed ESM subpaths for core/runtime, protocol, kernel, Pi/DSH hosts and
+  memory storage. `evofence/core` exposes the existing production
+  `createSessionService(ports): SessionService`; the proposed createKernel factory
+  is not implemented. The root export retains the legacy facade.
+- Added the manifest-routed `session view` command and shared host review views.
+  Reading a view does not convert unknown/inconclusive outcomes into success.
+- Added optional Super Plumber bridge and legacy archive implementations through
+  repository-built paths. Neither has a package subpath; neither launches a CLI.
+- New runtime/assets use `evofence.runtime/1@1.1.0` and
+  `evofence.assets/1@1.0.0`. Legacy exports/imports use separate
+  `evofence.legacy-export/1` and `evofence.legacy-source/1`, schemaVersion 1.0.0.
+  Old ledger/config/old graph remain unchanged: read-only export of a consistent
+  copy, explicit import into a separate archive, no in-place migration, chain
+  rewriting, replay, qualification or inherited execution authority. Old CLI
+  flags are not forwarded. SQLite marker 2/bundle marker 1 and YAML version 1
+  remain historical formats, not defaults for the new runtime. The complete
+  breaking-key comparison and both upgrade choices are in
+  [the legacy guide](src/storage/legacy/README.md).
+- Frozen pack paths, every typed export and CLI/document entry are checked by
+  release guards and real negative controls. Runtime dependencies remain only
+  better-sqlite3 and yaml. Private/generated evidence and process records are
+  excluded. Candidate and checklist are tracked review documents outside execution.
+- Capability benefit remains **inconclusive**; l4_capability_trial attempt 1
+  **failed** (blocker 1 / major 2). Historical 747 / 943 USD remain unresolved;
+  the preregistered design envelope is 938.470100 USD. adr_0001/adr_0004 remain
+  proposed; dual-host-runtime-and-uplift does not graduate. See
+  [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and
+  [release checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md).
+
 ## 0.4.2 — 2026-09-30
 
 **Non-breaking.** Extends the 0.4.1 command, configuration and host-integration surfaces without

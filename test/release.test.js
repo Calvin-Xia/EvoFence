@@ -75,7 +75,7 @@ test('release metadata accepts a stable tag the release gate ships, and still re
 
 test('the shipped package.json is the version the release gate publishes', () => {
   const pkg = readRootJson('package.json');
-  assert.equal(pkg.version, '0.4.2');
+  assert.equal(pkg.version, '0.5.0');
   assert.doesNotThrow(() => verifyReleaseMetadata({
     version: pkg.version,
     releaseTag: `v${pkg.version}`,
@@ -121,9 +121,30 @@ test('publish surface fails closed when a promised dist artifact is missing', ()
   );
   assert.throws(
     () => verifyPublishSurface({ pkg, exists: () => false }),
-    /incomplete, missing: dist\/cli\.js, dist\/index\.d\.ts, dist\/index\.js/,
+    error => {
+      const promised = [...new Set([
+        ...Object.values(pkg.bin), pkg.types,
+        ...Object.values(pkg.exports).flatMap(entry => [entry.default, entry.types]),
+      ].map(p => p.replace(/^\.\//, '')))].sort();
+      assert.ok(error.message.includes(`incomplete, missing: ${promised.join(', ')}`));
+      return true;
+    },
   );
   assert.throws(() => verifyPublishSurface({ pkg: { ...pkg, bin: {} }, exists: () => true }), /at least one command/);
+});
+
+test('publish surface checks every subpath artifact and rejects escaping exports', () => {
+  const pkg = readRootJson('package.json');
+  for (const [subpath, entry] of Object.entries(pkg.exports)) {
+    for (const condition of ['types', 'default']) {
+      const target = entry[condition].replace(/^\.\//, '');
+      assert.throws(() => verifyPublishSurface({ pkg, exists: p => p !== target }),
+        error => error.message.includes(`missing: ${target}`), `${subpath}.${condition}`);
+    }
+  }
+  const bad = structuredClone(pkg);
+  bad.exports['./core'].default = './dist/../src/index.js';
+  assert.throws(() => verifyPublishSurface({ pkg: bad, exists: () => true }), /escapes dist/);
 });
 
 // --- OIDC Trusted Publishing static gate (DoD 4) ---

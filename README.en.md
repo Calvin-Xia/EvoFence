@@ -26,6 +26,69 @@ EvoFence is an experimental control plane for coding-agent changes. An agent pro
 
 This is a research MVP. It does not provide formal verification, enterprise IAM, or a universal security sandbox. Read [Security boundaries](#security-boundaries) before running an unattended agent.
 
+## SDK and review entry points in this checkout
+
+This section describes the lane candidate awaiting release review. Per the 2026-10-03 decision this checkout's `package.json` / `package-lock.json` are set to `0.5.0` in preparation for a possible tag; `0.5.0` is not yet tagged or published and the registry latest remains `0.4.2`. The CLI bin is `dist/cli.js`, built from `src/cli.ts`: 
+
+```sh
+node dist/cli.js --help
+node dist/cli.js --version
+evofence session view review.json --json
+```
+
+Supply an explicit review export; see the [CLI view recipes](docs/evofence-harness-kernel/L5-CLI-OBSERVABILITY-VIEWS.md). Embed the existing production service through public subpaths:
+
+```js
+import { createSessionService } from 'evofence/core';
+import { createMemoryEventStore } from 'evofence/storage/memory';
+```
+
+Inject all SessionPorts explicitly. The [SDK document](docs/evofence-harness-kernel/L5-SDK-DELIVERY-AND-EXAMPLES.md) contains executable Pi/DSH/fake fixtures. This is the existing SessionService API; the proposed createKernel factory is not implemented. Release tests compare every default/types entry below with package.json:
+
+```json release-entries
+{
+  "bin": {
+    "evofence": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol/index.d.ts",
+      "default": "./dist/protocol/index.js"
+    },
+    "./kernel": {
+      "types": "./dist/kernel/index.d.ts",
+      "default": "./dist/kernel/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./hosts/pi": {
+      "types": "./dist/hosts/pi/index.d.ts",
+      "default": "./dist/hosts/pi/index.js"
+    },
+    "./hosts/dsh": {
+      "types": "./dist/hosts/dsh/index.d.ts",
+      "default": "./dist/hosts/dsh/index.js"
+    },
+    "./storage/memory": {
+      "types": "./dist/storage/index.d.ts",
+      "default": "./dist/storage/index.js"
+    }
+  }
+}
+```
+
+The npm installation quickstart below uses the registry's `0.4.2`. See [CHANGELOG.md](CHANGELOG.md) (Unreleased plus the 0.5.0 section) and the [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) for the `0.5.0` metadata and upgrade boundaries.
+
 ## Install
 
 Requires Node.js 22.13 or newer.
