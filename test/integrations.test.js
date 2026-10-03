@@ -111,6 +111,7 @@ const COMMAND_COVERAGE_ALLOWLIST = new Map([
   ['report', 'Cross-run report serialization is CLI-only; host integrations expose only their minimal sanitized ledger/run surfaces.'],
   ['budget', 'Historical budget forecasting is CLI-only and must not be presented as host-side enforcement.'],
   ['status', 'The operational status view is CLI-only; host integrations expose targeted read-only checks instead.'],
+  ['session view', 'The native review uses src/hosts/pi/index.ts and src/hosts/dsh/index.ts readSessionReview, with deep parity in test/l5-cli-views.test.js; legacy plugins do not spawn this CLI and native UI rendering remains unproved.'],
 ]);
 
 const REQUIRED_NEW_SURFACES = ['report --format', 'doctor --fix', 'budget'];

@@ -6,12 +6,6 @@
  * so it can be reviewed, diffed and consumed by docs, integration adapters and the smoke test.
  * `src/lib/cli/commands.ts` exposes the lookup/help API over it; `src/cli.ts` is the entry.
  *
- * GROUPING (ADR-0003 keeps the 0.3.0 eleven-group skeleton, with the flag/JSON/exit conventions
- * unified inside it): `init`, `run`, `proposal`, `evidence`, `gate`, `ledger`, `diff`,
- * `rollback`, `experiment`, `report`, `budget`, `status`. Groups with more than one operation carry an
- * explicit action (`proposal inspect`, `evidence run`, `ledger show|verify|recent|export`,
- * `experiment run|export`).
- *
  * BREAKING CHANGES vs 0.3.0 (authorized by ADR-0003; recorded here because `docs/` belongs to
  * l4_docs):
  *   1. `--json` is accepted by EVERY subcommand (0.3.0 only honoured it on run/diff/report/status)
@@ -19,10 +13,6 @@
  *      `[CODE] message` text.
  *   2. Unknown flags are rejected everywhere. 0.3.0 silently ignored an unknown value flag on
  *      `run` (`--foo bar`) and treated stray arguments on `init`/`proposal` as positional noise.
- *   3. `--flag=value` is accepted in addition to `--flag value`.
- *   4. `init`, `rollback`, `ledger export` and `experiment export` gained a `--json` view.
- *   5. Exit codes are frozen at 0/1 (0.3.0 already behaved that way; the convention is now
- *      declared instead of emergent) and `supports`/`flags`/`exits` are machine-readable.
  */
 import type { CommandSpec, FlagSpec, SmokeFixture, SmokeSpec } from './spec.js';
 
@@ -45,6 +35,7 @@ export const SMOKE = {
   ledgerExport: 'export-ledger.json',
   experimentExport: 'export-experiment.json',
   reportFile: 'smoke-report.md',
+  sessionExport: 'session-review.json',
   /** `--json` output paths used by the manifest's own `jsonSmoke` invocations. */
   ledgerExportJson: 'export-ledger-json.json',
   experimentExportJson: 'export-experiment-json.json',
@@ -81,7 +72,6 @@ const FIX_FLAG: FlagSpec = { name: 'fix', key: 'fix', kind: 'boolean', descripti
 const LEDGER = 'ledger' as const;
 const AGENTLESS = 'agentless' as const;
 
-/** `ledger` fixture: a healthy, fully consistent seeded ledger. */
 function inLedger(args: readonly string[], code: number, note?: string): SmokeSpec {
   return { args, code, fixture: LEDGER, ...(note === undefined ? {} : { note }) };
 }
@@ -92,6 +82,17 @@ function agentless(args: readonly string[], code: number, note: string): SmokeSp
 }
 
 export const COMMANDS: readonly CommandSpec[] = [
+  {
+    name: 'session view', group: 'session', action: 'view', namespace: 'evofence.runtime/1',
+    summary: 'Read an explicit runtime export through the shared session review projection.',
+    usage: 'session view <export> [--format <text|json|sarif|junit>] [--include-private] [--json]',
+    positionals: [{ name: 'export', required: true }],
+    flags: [REPORT_FORMAT_FLAG, JSON_FLAG, { name: 'include-private', key: 'include_private', kind: 'boolean',
+      description: 'Opt in to evidence reference metadata; secret content is never emitted.' }], json: 'flag',
+    exits: exits('the read-only projection was rendered, independently of its recorded outcomes', 'usage error or invalid/unavailable session export'),
+    smoke: inLedger(['session', 'view', SMOKE.sessionExport], 0),
+    jsonSmoke: inLedger(['session', 'view', SMOKE.sessionExport, '--json'], 0),
+  },
   {
     name: 'init',
     group: 'init',

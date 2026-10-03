@@ -8,7 +8,10 @@ import { documentSchema } from '../dist/lib/config/schema.js';
 test('DoD2 breaking checklist covers every legacy command and every config group', () => {
   const keys = BREAKING_CHANGES.map(([key]) => key);
   assert.equal(new Set(keys).size, keys.length);
-  for (const command of COMMANDS) assert.ok(keys.includes(`cli:${command.name}`), `missing breaking command: ${command.name}`);
+  const legacyCommands = COMMANDS.filter(command => command.namespace === undefined);
+  for (const command of legacyCommands) assert.ok(keys.includes(`cli:${command.name}`), `missing breaking command: ${command.name}`);
+  assert.deepEqual(keys.filter(key => key.startsWith('cli:') && key !== 'cli:flags').sort(),
+    legacyCommands.map(command => `cli:${command.name}`).sort(), 'frozen legacy checklist must match exactly; native runtime surfaces are not legacy commands');
   for (const kind of ['contract', 'config', 'holdout', 'experiment']) {
     for (const field of Object.keys(documentSchema(kind).fields)) {
       assert.ok(keys.includes(`${kind}:${field}`), `missing breaking field group: ${kind}.${field}`);

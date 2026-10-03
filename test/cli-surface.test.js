@@ -21,6 +21,7 @@ import { diffHash } from '../dist/lib/git.js';
 import { Ledger, ledgerPath } from '../dist/lib/ledger.js';
 import { sha256, stableStringify } from '../dist/lib/fs.js';
 import { repoRelativePath } from '../dist/lib/cli/output.js';
+import { makeReviewFixture } from './l5-cli-fixture.test.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const BASELINE_SCORE = 0.5;
@@ -121,6 +122,7 @@ async function makeRepo(prefix) {
 /** Healthy fixture: a real two-commit generation plus a fully consistent seeded ledger. */
 async function buildLedgerFixture() {
   const { directory, root } = await makeRepo('ledger');
+  await writeFile(path.join(root, SMOKE.sessionExport), JSON.stringify((await makeReviewFixture()).bundle));
   await writeFile(path.join(root, 'app.txt'), 'v1\n');
   runGit(root, ['add', '-A']);
   runGit(root, ['commit', '--quiet', '-m', 'baseline']);
@@ -240,13 +242,13 @@ test('the manifest and the handler registry describe exactly the same commands',
   assert.deepEqual(
     [...new Set(COMMANDS.map((spec) => spec.group))].sort(),
     [...COMMAND_GROUPS].sort(),
-    'the eleven ADR-0003 groups must all be covered',
+    'every manifest group must be covered',
   );
 });
 
 test('the manifest is internally consistent', () => {
   for (const spec of COMMANDS) {
-    assert.match(spec.usage, /^(init|run|proposal|evidence|gate|ledger|diff|rollback|experiment|report|status|doctor|budget)\b/, spec.name);
+    assert.equal(spec.usage.split(' ')[0], spec.group, spec.name);
     assert.deepEqual(spec.flags.filter((flag) => flag.name === 'json').length, 1, `${spec.name} must declare --json`);
     assert.deepEqual(spec.exits.map((exit) => exit.code).sort(), [0, 1], `${spec.name} exit codes`);
     assert.equal([0, 1].includes(spec.smoke.code), true);

@@ -2,7 +2,7 @@
 
 > **本文件是 tracked 产品文档**（用户裁决 2026-10-03，方案 C）：从 `docs/evofence-harness-kernel/execution/` 移出，随 PR / 发布交付。`test/l5-sdk-surface.test.js` 直接读取并校验本文件，所以它**必须在干净检出中存在**——**不得**再移回 gitignore 的 `execution/**`，也不得让任何 CI 会跑到的测试依赖被 gitignore 的路径（该缺陷曾让 6a0cc14 在 CI 上 8/8 全红：干净检出里文档不存在，`readFileSync` ENOENT）。
 >
-> **先例声明**：这开了一个先例——若还有其它 `execution/**` 过程记录要进产品面，须逐份经用户裁决，不得默认搬入。
+> **口径**：L5 的**产品面文档**（本文档、`L5-CLI-OBSERVABILITY-VIEWS.md`）tracked；其余过程记录（brief、dossier、evidence、日志）保持本地于 `execution/**`。新增任何要进产品面的文档需单独裁决，不得默认搬入。
 
 lane: `l5-sdk`；分支 `refactor/hk-l5-sdk`；基线 `6283ca3330b279f080b3c7c8412b4b8728eb07dc`；证据级别 `native-fixture`。
 
