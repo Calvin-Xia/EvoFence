@@ -11,9 +11,11 @@ dist/
 docs/deep-research-report.md
 
 # graph CLI transient locks
-# Super Plumber topology state: process state that drove the 0.4.0 refactor, not product
-# source. It travels with this developer's workspace and is not part of the package; the
-# readable exports of it (CONTEXT-MAP.md, DECISIONS.md, docs/adr, docs/contexts) are tracked.
+# Super Plumber topology state: process state for this workspace's graphs, not product source. It
+# travels with this developer's workspace and is not part of the package. The tracked readable
+# exports are the root set (CONTEXT-MAP.md, DECISIONS.md, docs/adr, docs/contexts — the
+# evofence-ts-refactor, i.e. 0.4.0, layout) plus docs/<graph-name>/{CONTEXT-MAP.md,DECISIONS.md,adr,contexts}
+# for evofence-ops-evidence, evofence-042-hardening and evofence-harness-kernel.
 .graph/
 
 # pi goal-tracking state (machine-local)
