@@ -11,7 +11,9 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const documentPath = path.join(root, 'docs/evofence-harness-kernel/L5-SDK-DELIVERY-AND-EXAMPLES.md');
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 const ts = createRequire(import.meta.url)('typescript6');
-const doc = () => readFileSync(documentPath, 'utf8');
+// The product document is checked out with the host's line endings (core.autocrlf); normalise CRLF
+// so the fenced-block regexes below match on every platform instead of only on LF checkouts.
+const doc = () => readFileSync(documentPath, 'utf8').replace(/\r\n/g, '\n');
 export function exampleSource() {
   const matches = [...doc().matchAll(/```js sdk-example\n([\s\S]*?)```/g)];
   assert.equal(matches.length, 1, 'exactly one executable example');
