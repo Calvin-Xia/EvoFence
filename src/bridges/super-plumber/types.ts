@@ -76,9 +76,9 @@ function nonLinkChain(file: string): void {
   if (lstatSync(file).isSymbolicLink()) reject('EFK_AUTHORITY_DENIED', 'symlink/junction paths are forbidden');
 }
 /** Real path of the deepest existing ancestor with the not-yet-existing tail re-appended.
- *  Both sides of a containment check must be resolved: an 8.3 short name (`CALVIN~1`) or a
- *  symlinked ancestor makes the requested path and the real root differ textually without the
- *  path actually escaping the root. */
+ *  Both sides of a containment check must be resolved: an 8.3 short name (`CALVIN~1`) makes the
+ *  requested path and the real root differ textually without the path actually escaping the root.
+ *  Symlinked or junction ancestors never reach here — nonLinkChain refuses them first. */
 function resolvedForm(target: string): string {
   const tail: string[] = [];
   for (let head = target; ;) {
@@ -117,8 +117,8 @@ export function checkedPath(file: string, scope: FileScope, output: boolean): st
     nonLinkChain(scope.root);
     const root = realpathSync.native(scope.root), logical = path.resolve(file);
     // Judge containment on resolved forms. Comparing the real root against an unresolved child
-    // path rejects every path under an 8.3 short name or a symlinked temp root, which is how the
-    // Windows CI runner spells its TEMP directory.
+    // path rejects every path under an 8.3 short name — which is how the Windows CI runner spells
+    // its TEMP directory.
     const resolved = resolvedForm(logical);
     const relative = path.relative(root, resolved);
     if (relative === '' || relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {

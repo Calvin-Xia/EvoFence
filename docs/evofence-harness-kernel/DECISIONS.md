@@ -46,3 +46,4 @@
 | task · passed | l5_cli_observability | 薄 CLI 与原生观测视图 | 2026-10-03T08:22:09.997Z |
 | task · passed | l5_legacy_boundary | 旧格式只读边界与 breaking 指南 | 2026-10-01T22:32:40.347Z |
 | task · passed | l5_public_sdk | SDK 消费面与最小嵌入示例 | 2026-10-03T07:04:10.412Z |
+| task · passed | l5_sp_bridge | super-plumber 可选互操作 | 2026-10-03T09:47:50.081Z |
