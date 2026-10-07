@@ -19,6 +19,9 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
   - `npm test` — build, then `node --test` over `test/**`.
   - `npm run test:e2e` — build, then `test-e2e/cli-flow.mjs`.
   - `npm run check` — `typecheck` + `src:policy` + `dep:check` + `test`. This is the project gate.
+- `npm test` runs bare `node --test`, so a local run also discovers `experiments/capability/check.test.mjs` (about 20 extra cases) that CI never sees. Local and CI case counts are not comparable, and only CI is the shared reference.
+- `npm run check:core-imports` is a **manual** I01–I08 guard: it is deliberately not part of `check` or any workflow because 39 pre-existing I08 diagnostics make it red, and that exclusion is itself pinned by a test. A green build therefore does not mean those kernel/runtime invariants hold.
+- `scripts/verify-ci-environment.mjs` is the skip-sensitive CI check: it asserts which tests skipped, because the real Pi/DSH suites skip everywhere CI runs (the native packages are not installed there). Run it before claiming host coverage.
 - Keep generated state, local ledgers, private holdouts, and credentials out of Git.
 
 ## Structure and boundaries
@@ -48,7 +51,15 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
 - **Config v2**: `.evofence/contract.yaml`, `.evofence/config.yaml`, `.evofence/private/holdout.yaml` and the experiment manifest go through `src/lib/config/`. Unknown fields and missing required fields are rejected. Exactly two fields have code defaults (`evidence.per_command_timeout_ms`, `evidence.max_output_bytes`); never add another `??` fallback. The YAML `version` / `contract_version` values are still `1` — "v2" names the validator layer. `init` and `status` validate policy files and fail closed.
 - **Ledger schema v2**: `src/lib/ledger/schema.ts`. A 0.3.0 ledger is refused with `LEDGER_SCHEMA_INCOMPATIBLE` before any pragma or DDL, with no migration; `status` reports it as `LEDGER_UNAVAILABLE` with the same explanation. The hash-chain recipe, DDL, triggers and write order must not change silently.
 - **Non-gates and capability semantics**: `acceptance.require_proposal` and `acceptance.require_claims` are retained for compatibility and no judgement consumes them (`src/lib/gate/dead-keys.ts`); `capabilities.shell.mode` is a removed template-only key with no runtime effect. `capabilities.authority_ceiling` is validated only; `capabilities.network` / `dependency_install` / `credentials` are request-path capability gates checked by capability name, but undeclared actual use has no detection signal. `capabilities.external_api` is a live capability gate. Document them as such — never as effective gates.
+- **The gate domain is a reference implementation**: the six `evaluate*Gate` entry points and the three verdict mappings in `src/lib/gate/` are unit-tested but **not wired** into the shipped run path. Production judgements are inline in `src/lib/exec/runner-preflight.ts`, `runner-iteration.ts` and `runner-evaluate.ts` (the same inventory is in the `src/lib/gate/index.ts` header). Changing `src/lib/gate/**` alone changes no runtime behaviour; wiring it in is a separate, cross-file change.
 
 ## Current status and next step
 
-The package is a research MVP. `0.4.2` is the registry's current `latest` (verified 2026-10-03 with `npm view evofence version dist-tags`). Pull request #21 (`refactor/harness-kernel`) raises `package.json` / `package-lock.json` to the breaking `0.5.0` line for a possible future tag: `0.5.0` is **not** tagged and **not** published, the PR is OPEN and not a draft, and merging it still needs human review. Its `evofence-harness-kernel` graph (40 workflow nodes) reached 40/40 passed on 2026-10-03 and the human `l5_accept` gate closed by user adjudication, while the controlled-benefit conclusion stays **inconclusive**; the release [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and [checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md) carry that evidence. Check `CHANGELOG.md`, the active pull requests and their CI before describing current release status. Do not create a release tag or publish to npm without explicit user authorization.
+The package is a research MVP. **Do not restate the current version, tag or publish state in this
+file.** Read `package.json` for the version and `CHANGELOG.md` plus the GitHub Releases page for the
+release history and its breaking-change notes. This paragraph used to carry a hand-maintained status
+sentence; it went stale at the 0.5.0 release and told every agent session the opposite of the truth,
+so the claim is now a pointer. `test/l5-release-docs.test.js` pins that this section keeps pointing
+at the manifest instead of naming a version.
+
+The `evofence-harness-kernel` graph (40 workflow nodes) reached 40/40 passed on 2026-10-03 and the human `l5_accept` gate closed by user adjudication, while the controlled-benefit conclusion stays **inconclusive**; the release [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) and [checklist](docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md) carry that evidence. Check `CHANGELOG.md`, the active pull requests and their CI before describing current release status. Do not create a release tag or publish to npm without explicit user authorization.

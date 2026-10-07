@@ -85,6 +85,10 @@ $ gh pr checks 21
 8 行全部 pass：ubuntu-latest 与 windows-latest × Node 22/24，两次 run（37114260007、37114262410）各 4 job。
 ```
 
+> **历史读数（已被后文取代）**：下面这段记录的是 PR 合并前、发布前的判断。其中的「`0.5.0`
+> 尚未 tag/publish」与「PR #21 为 `OPEN`」已被紧随其后的 2026-10-03 后续读数（PR 为
+> `MERGED`）以及文末的发布后核实推翻。原文保留以便追溯，**不要**把它当作当前状态。
+
 解读边界：本 checkout 的 `package.json` / `package-lock.json` / 清单 / 双语 README / 插件 manifest 已按 2026-10-03 裁决同步为 `0.5.0`，但注册表 historical latest 仍为 `0.4.2`，`0.5.0` 尚未 tag/publish、本 lane 变更未进入注册表；PR #21 为 `OPEN` 非 draft，但只证明其当时 head 的 CI，不证明本 lane 未提交改动已过 CI；`git log` 与空标签列表不证明 merge 或发布。HEAD 标签检查原为「必须为空」；2026-10-03 授权后改为「HEAD 上的 tag 必须恰好等于 `v<package version>`，且本清单留有那次用户授权的原文」——未记录授权的 tag 仍然阻塞，不删除标签。
 
 该改动做了真负控（临时 tag 只在本地建，不 push）：本地给 HEAD 打 `v0.5.0`、且本清单授权原文在位时，发布相关测试 24/24 绿；把授权原文从本清单删掉后，同一条 cp3 测试变红（`a tag on HEAD requires the recorded user release authorization`）；字节级复原后复绿；临时 tag 随即删除。

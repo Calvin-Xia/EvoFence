@@ -4,7 +4,9 @@ import { createHash } from 'node:crypto';
 import { DEFS } from '../dist/protocol/index.js';
 import { createMemoryEventStore, createMemoryArtifactStore, canonical } from '../dist/storage/index.js';
 import { deriveAuthority } from '../dist/kernel/policy/index.js';
-import { createFakeHost, PI_CAPABILITIES } from '../dist/runtime/host-port/index.js';
+import { PI_CAPABILITIES } from '../dist/runtime/host-port/index.js';
+// Deep import on purpose (audit G07): the barrel no longer exposes the fabricating fake host.
+import { createFakeHost } from '../dist/runtime/host-port/host-fake.js';
 import { createSessionService, planRound, bindingFor } from '../dist/runtime/session/index.js';
 import { idFor } from '../dist/runtime/session/journal.js';
 import { node, graph, compiled, budgetPolicy, PROTOCOL } from './l2-scheduler-fixtures.mjs';

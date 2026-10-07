@@ -2,7 +2,19 @@
 
 ## Unreleased
 
-Nothing yet. 0.5.0 closed the harness-kernel line, and whatever comes next — a 0.5.1
+Documentation-only corrections from a read-only audit (2026-10-07). No runtime behaviour, CLI
+surface, config surface or on-disk format changes:
+
+- `AGENTS.md`, `README.md` and `README.en.md` no longer restate a version, tag or publish state.
+  The old paragraphs were a pre-release snapshot that 0.5.0 falsified — they told every reader the
+  opposite of the truth — so they now point at `package.json`, `CHANGELOG.md` and Releases, and a
+  test pins that pointer instead of a version literal.
+- Errata for the capability-gate semantics of `capabilities.network` / `dependency_install` /
+  `credentials` in the 0.4.0 and 0.4.2 entries below: those keys are live request-path gates.
+- The DeepSeek Harness integration README no longer promises that its evidence JSON is reproducible
+  from the repository; the scripts write to `.evofence/out/` and the stored copies are historical.
+
+0.5.0 closed the harness-kernel line, and whatever comes next — a 0.5.1
 or a 0.6.0 — needs its own authorization before it ships. That boundary did not relax
 when 0.5.0 went out: the guards that made this release a deliberate act rather than a
 side effect of merging are still inside `npm test`, and `npm test` still runs before
@@ -87,6 +99,12 @@ changing the existing command contracts or on-disk formats.
 - Corrected the documented status of `capabilities.network`, `capabilities.dependency_install`
   and `capabilities.credentials`: they are echoed into the task context rather than enforced as
   runtime gates.
+  - **Erratum (2026-10-07):** that correction went the wrong way. Those three keys **are** live
+    request-path capability gates: `assessCapabilities` indexes `contract.capabilities[capability]`
+    (`src/lib/gate/capability.ts`) and a denied request escalates in
+    `src/lib/exec/runner-iteration.ts`. They are *also* echoed into the task file
+    (`src/lib/exec/runner-task.ts`). The narrower statement in `AGENTS.md` remains the accurate
+    one: undeclared actual use has no detection signal.
 - Added shape validation for values in the open capability map.
 - Removed the three template-only dead keys (`acceptance.require_proposal`,
   `acceptance.require_claims` and `capabilities.shell.mode`) from the template without weakening
@@ -234,6 +252,12 @@ feature work beyond what is listed below.
   but consulted by no decision, and `capabilities.network` / `dependency_install` / `credentials`
   are only echoed into `.evofence-task.md`. `capabilities.external_api` **is** a live capability
   gate, resolved through the dynamic capability table.
+  - **Erratum (2026-10-07):** the sentence above understates `capabilities.network` /
+    `dependency_install` / `credentials`. Being echoed into `.evofence-task.md` is not their only
+    effect — they are enforced on the request path by the same dynamic table that makes
+    `external_api` live (see the 0.4.2 erratum above). Only `acceptance.require_proposal`,
+    `acceptance.require_claims`, `capabilities.shell.mode` and `capabilities.authority_ceiling` are
+    non-gates.
 
 ### ④ Ledger schema v2 — BREAKING, no migration
 

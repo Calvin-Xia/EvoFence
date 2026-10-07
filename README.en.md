@@ -28,7 +28,7 @@ This is a research MVP. It does not provide formal verification, enterprise IAM,
 
 ## SDK and review entry points in this checkout
 
-This section describes the lane candidate awaiting release review. Per the 2026-10-03 decision this checkout's `package.json` / `package-lock.json` are set to `0.5.0` in preparation for a possible tag; `0.5.0` is not yet tagged or published and the registry latest remains `0.4.2`. The CLI bin is `dist/cli.js`, built from `src/cli.ts`: 
+This section describes the SDK and review entry points this checkout exposes. **Version and publish state are not restated here:** read `version` from `package.json`, and `CHANGELOG.md` plus the GitHub Releases page for the release history and its breaking notes. The CLI bin is `dist/cli.js`, built from `src/cli.ts`: 
 
 ```sh
 node dist/cli.js --help
@@ -87,7 +87,7 @@ Inject all SessionPorts explicitly. The [SDK document](docs/evofence-harness-ker
 }
 ```
 
-The npm installation quickstart below uses the registry's `0.4.2`. See [CHANGELOG.md](CHANGELOG.md) (Unreleased plus the 0.5.0 section) and the [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) for the `0.5.0` metadata and upgrade boundaries.
+The npm installation quickstart below installs whatever the registry currently serves. Version, breaking notes and upgrade boundaries live in [CHANGELOG.md](CHANGELOG.md) and the [candidate](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md); this README does not restate a version number.
 
 ## Install
 
@@ -285,6 +285,8 @@ Run it with `evofence experiment run experiment.yaml`.
 
 The ledger is a local SQLite database with append-only triggers and a SHA-256 hash chain. This detects accidental or partial edits, but a process with the same OS account can still replace the database file. Back it up or store exported evidence in a separately controlled system if the local host is outside your trust boundary.
 
+Implementation note: the six `evaluate*Gate` entry points and the three verdict mappings in `src/lib/gate/` are a **reference implementation**. They are unit-tested but not wired into the shipped run path — the production judgements are inline in `src/lib/exec/runner-preflight.ts`, `runner-iteration.ts` and `runner-evaluate.ts`, so changing `src/lib/gate/**` alone changes no runtime behaviour.
+
 The ledger schema moved to v2 in 0.4.0 (a `schema_version` marker in the `state` table). The hash-chain recipe, DDL, triggers and write order are unchanged. **A 0.3.0 ledger is not readable and is never converted**: opening it fails with `LEDGER_SCHEMA_INCOMPATIBLE`, before any pragma or DDL runs, so the old database is left untouched. `ledger show|verify|recent`, `diff`, `rollback` and `run` exit 1 with that code; `status` reports `LEDGER_UNAVAILABLE` and names the observed 0.3.0 (v1) format in its message. See [CHANGELOG.md](CHANGELOG.md) for the upgrade steps.
 
 ## Current limits
@@ -311,7 +313,9 @@ npm pack --dry-run   # inspect the published tarball
 
 The source is TypeScript (`src/**/*.ts`) and the runtime and published artifact is `dist/` only: `package.json` points `bin.evofence` at `dist/cli.js`, and `exports["."]` / `types` at `dist/index.js` / `dist/index.d.ts`. `files` publishes `dist/`, `templates/`, `README.md`, `README.en.md`, `CHANGELOG.md`, `LICENSE` and `docs/pi-tool-strategy.md`. Tests import `dist/**` directly (ADR-0004), so `npm test` always builds first; re-run `npm run build` after editing source and never read a stale `dist/` as a test result.
 
-Consumers get types through `exports["."].types`, which resolves to `dist/index.d.ts`; the public API is the 18 symbols re-exported from `src/index.ts`. `npm pack --dry-run` confirms the tarball is the dist-only shape.
+Two local-versus-CI differences are worth knowing: `npm test` runs bare `node --test`, so a local run also discovers `experiments/capability/check.test.mjs` (about 20 extra cases) that CI never sees, and the case counts are not comparable; `npm run check:core-imports` is a **manual** I01–I08 guard that is deliberately kept out of `check` and CI because of 39 pre-existing I08 diagnostics, so a green build does not mean those kernel/runtime invariants hold. The real Pi/DSH suites skip on every CI leg by design (the native packages are not installed there); `scripts/verify-ci-environment.mjs` is the check that audits that skip list.
+
+Consumers get types through `exports["."].types`, which resolves to `dist/index.d.ts`; the public API is whatever `src/index.ts` re-exports (no count is written down here, so an additive export does not make this line wrong). `npm pack --dry-run` confirms the tarball is the dist-only shape.
 
 The research source document `docs/deep-research-report.md` is not included in the npm package.
 

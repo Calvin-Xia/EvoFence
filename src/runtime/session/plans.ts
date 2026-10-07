@@ -72,8 +72,10 @@ export function planRound(state: RuntimeState, seed: SessionSeed, plan: RoundPla
     if (entry.state === 'waiting' && entry.readiness.state === 'ready') {
       events.push(transition(state, commandId, `wake:${slot}`, binding, 'waiting', 'pending'));
     } else if ((entry.state === null || entry.state === 'pending' || entry.state === 'ready') && entry.readiness.state !== 'ready') {
-      events.push(transition(state, commandId, `gap:${slot}`, binding, entry.state, entry.readiness.state,
-        { changedIds: [entry.nodeId, ...(entry.readiness.state === 'waiting' ? [entry.readiness.gap.node] : [])] }));
+      // Audit G06: the gap target of a join node is the node itself, and `changedIds` is declared
+      // `uniqueItems: true` on the wire, so the id list has to be de-duplicated here.
+      const changedIds = [...new Set([entry.nodeId, ...(entry.readiness.state === 'waiting' ? [entry.readiness.gap.node] : [])])];
+      events.push(transition(state, commandId, `gap:${slot}`, binding, entry.state, entry.readiness.state, { changedIds }));
     }
   }
   for (const decision of round.decisions) {

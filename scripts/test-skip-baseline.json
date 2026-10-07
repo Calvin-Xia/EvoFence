@@ -1,0 +1,13 @@
+{
+  "note": "Known skip declarations; shrink-only. Regenerate with --update.",
+  "sites": [
+    "test/cli-surface.test.js|2",
+    "test/l3-dsh-delegation.test.js|1",
+    "test/l3-dsh-session.test.js|1",
+    "test/l3-pi-delegation-native.test.js|1",
+    "test/l3-pi-native.test.js|2",
+    "test/l4-experience-real-traces.test.js|1",
+    "test/l5-sp-bridge-windows-path.test.js|2",
+    "test/spec-f2.test.mjs|3"
+  ]
+}

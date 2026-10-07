@@ -12,14 +12,21 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const controls = [
   { id: 'mapping-row-omitted', module: 'mapping', testFile: 'semantics', title: 'cp1 mapping inventory covers every known SP enum and field',
     edit: ['"IMPOSSIBLE"', ''], filter: 'edge.type.depends_on' },
-  { id: 'journal-write', module: 'index', testFile: 'semantics', title: 'cp2 all conversion and imported pending execution paths have zero port calls',
-    edit: ['return importDelivery(value, bindings);', 'ports.journal.append({ type: "mutant" }); return importDelivery(value, bindings);'] },
+  // Audit G20 removed the never-read `ports` parameter, so the two controls that used to inject
+  // `ports.journal.append(...)` / `ports.grants.issue(...)` inside the bridge can no longer be
+  // expressed that way (they would raise a ReferenceError instead of the required AssertionError).
+  // They now attack the structural guard that replaced the witness: the factory's arity and the
+  // fail-closed execution stubs.
+  { id: 'ports-parameter-returns', module: 'index', testFile: 'semantics',
+    title: 'cp1 bridge factory takes no ports and its execution surface is fail-closed G20',
+    edit: ['export function createSPBridge() {', 'export function createSPBridge(ports) {'] },
   { id: 'sp-cli-dependency', module: 'index', testFile: 'boundary', title: 'cp3 bridge module graph contains no process CLI or new bare dependencies',
     prepend: 'import { spawnSync } from "node:child_process";\n', copy: true },
   { id: 'graph-path-allowed', module: 'types', testFile: 'files', title: 'cp3 graph truth paths are denied before any source read',
     edit: ["if (file.replace(/\\\\/g, '/').split('/').some(part => part.toLowerCase() === '.graph'))", 'if (false)'] },
-  { id: 'review-as-grant', module: 'index', testFile: 'semantics', title: 'cp3 review remains annotation with zero grants or decisions and unchanged frontier',
-    edit: ['return importDelivery(value, bindings);', 'if (value.graph.design_approved) ports.grants.issue({ source: "review" }); return importDelivery(value, bindings);'] },
+  { id: 'execute-stub-opens', module: 'index', testFile: 'semantics',
+    title: 'cp1 bridge factory takes no ports and its execution surface is fail-closed G20',
+    edit: ['const denied = () => ({ ok: false, error: fail(', 'const denied = () => ({ ok: true, error: fail('] },
 ];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 function run(control, loader, auditCopy) {

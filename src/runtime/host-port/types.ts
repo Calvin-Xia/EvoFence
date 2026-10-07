@@ -135,6 +135,23 @@ export interface CapabilityEntry {
 /** The probe manifests as a status map. A key that is absent is `unknown`, never `verified`. */
 export type CapabilityMatrix = Readonly<Record<string, CapabilityEntry>>;
 
+/**
+ * Wire `GuaranteeStrength` refined with the audit-G18 constraint: a `verified` guarantee must carry
+ * at least one evidence reference, so "verified" can never be asserted without pointing at
+ * something. The frozen protocol table keeps `minItems: 0` for the general shape, so the stronger
+ * rule lives here — at the one place host observations are produced and read — instead of changing
+ * the wire contract.
+ */
+export type HostGuarantee =
+  | (Omit<GuaranteeStrength, 'status' | 'evidenceRefs'> & {
+    readonly status: 'verified';
+    readonly evidenceRefs: readonly [Decoded<'EvidenceRef'>, ...Decoded<'EvidenceRef'>[]];
+  })
+  | (Omit<GuaranteeStrength, 'status' | 'evidenceRefs'> & {
+    readonly status: Exclude<CapabilityStatus, 'verified'>;
+    readonly evidenceRefs: readonly Decoded<'EvidenceRef'>[];
+  });
+
 /** A native board task owner, read back through `observe` for the A15 check. */
 export interface BoardOwner {
   readonly nodeId: string;
@@ -147,9 +164,9 @@ export interface HostObservation {
   readonly host: string;
   readonly idle: boolean;
   readonly capabilities: CapabilityMatrix;
-  readonly cancellation: GuaranteeStrength;
-  readonly recovery: GuaranteeStrength;
-  readonly isolation: GuaranteeStrength;
+  readonly cancellation: HostGuarantee;
+  readonly recovery: HostGuarantee;
+  readonly isolation: HostGuarantee;
   readonly boardOwners: readonly BoardOwner[];
 }
 

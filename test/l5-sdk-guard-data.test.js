@@ -24,11 +24,18 @@ test('cp1: SDK barrels contain only relative re-exports in the permitted domains
   }
 });
 
-test('cp1: diagnostic core guard is excluded from check and CI', () => {
+test('cp1: the diagnostic core guard runs inside check and CI behind a shrink-only baseline', () => {
   const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.scripts.check, 'npm run typecheck && npm run src:policy && npm run dep:check && npm test');
+  // Audit G25 replaced the old "deliberately excluded" contract: the 39 pre-existing I08
+  // diagnostics are pinned in scripts/core-imports-baseline.json, a *new* diagnostic fails, and a
+  // baseline entry that stopped occurring fails too. That is why the guard can be part of `check`
+  // without pretending the backlog is clean.
+  assert.match(pkg.scripts.check, /npm run check:core-imports/);
+  assert.match(pkg.scripts['check:core-imports'], /check-core-imports-baseline\.mjs/);
+  const baseline = JSON.parse(readFileSync(path.join(root, 'scripts/core-imports-baseline.json'), 'utf8'));
+  assert.equal(baseline.diagnostics.length, 39, 'the recorded backlog is 39 diagnostics');
+  assert.equal(new Set(baseline.diagnostics).size > 1, true);
   const directory = path.join(root, '.github/workflows');
-  for (const name of readdirSync(directory).filter(name => /\.ya?ml$/.test(name))) {
-    assert.doesNotMatch(readFileSync(path.join(directory, name), 'utf8'), /check:core-imports|check-core-imports\.mjs/);
-  }
+  const ci = readFileSync(path.join(directory, 'ci.yml'), 'utf8');
+  assert.match(ci, /npm run check:core-imports/, 'CI must execute the guard the gate now depends on');
 });

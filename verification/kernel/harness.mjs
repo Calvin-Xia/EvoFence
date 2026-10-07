@@ -3,7 +3,9 @@ import { DEFS, ERROR_CODES } from '../../dist/protocol/index.js';
 import { canonical, createMemoryEventStore, createMemorySnapshotStore, createMemoryArtifactStore } from '../../dist/storage/index.js';
 import { compileGraph } from '../../dist/kernel/graph/index.js';
 import { deriveAuthority } from '../../dist/kernel/policy/index.js';
-import { createFakeHost, PI_CAPABILITIES } from '../../dist/runtime/host-port/index.js';
+import { PI_CAPABILITIES } from '../../dist/runtime/host-port/index.js';
+// Deep import on purpose (audit G07): the barrel no longer exposes the fabricating fake host.
+import { createFakeHost } from '../../dist/runtime/host-port/host-fake.js';
 import { createSessionService } from '../../dist/runtime/session/index.js';
 import { actor, digest, graph, policy, PROTOCOL, usage } from './fixtures.mjs';
 export { canonical, usage };

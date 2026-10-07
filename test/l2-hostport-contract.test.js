@@ -14,7 +14,6 @@ import {
   DSH_CAPABILITIES,
   PI_CAPABILITIES,
   capabilityStatus,
-  createFakeHost,
   dedupeUsage,
   delegate,
   replayView,
@@ -24,6 +23,9 @@ import {
   verifyEffect,
   verifyReceipt,
 } from '../dist/runtime/host-port/index.js';
+// `createFakeHost` is intentionally absent from the barrel (audit G07): importing it is an explicit
+// deep import so the published `evofence/core` surface cannot fabricate observations.
+import { createFakeHost } from '../dist/runtime/host-port/host-fake.js';
 import { decode } from '../dist/protocol/index.js';
 
 const PROTOCOL = { namespace: 'evofence.runtime/1', schemaVersion: '1.1.0' };

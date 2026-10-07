@@ -33,7 +33,7 @@ core 闭包只含 protocol/kernel/runtime；memory stores 与 host binding 从�
 
 复制下面完整片段到安装本包的项目，保存为 `sdk-example.mjs`。PowerShell 分别运行 `$env:SDK_HOST='pi'; node sdk-example.mjs`、`$env:SDK_HOST='dsh'; node sdk-example.mjs`、`$env:SDK_HOST='fake'; node sdk-example.mjs`。
 
-Pi/DSH 使用显式注入的 fixture HostPort；generic fake 消费实际 `hostPort.createFakeHost` 实现。三者通过 `evofence/core` 的 `createSessionService` 调用真实生产 create/step/read/evaluate 路径，runtime 对权限、预算、回执与评价绑定做实际判断并写 journal。没有复制 SessionService 或替换其实现。EvaluatorPort 是本非代码任务的 byte-comparison fixture，宿主与评测观测不属于 provider-live。
+Pi/DSH 与 generic 三种宿主在样例里都用同一段自建 `fixturePort`：它实现显式注入的 HostPort 契约，不依赖 SDK 提供的任何伪造实现（`hostPort.createFakeHost` 已因审计 G07 从公共 barrel 移除）。三者通过 `evofence/core` 的 `createSessionService` 调用真实生产 create/step/read/evaluate 路径，runtime 对权限、预算、回执与评价绑定做实际判断并写 journal。没有复制 SessionService 或替换其实现。EvaluatorPort 是本非代码任务的 byte-comparison fixture，宿主与评测观测不属于 provider-live。
 
 输入是生成内存 Note 工件的单节点图；workspaceRef/actualDiffRef 均 null，代码任务无需进入此路径。相同 seed/ports 字段/服务方法适用于三种 HostPort。SHA-256 在应用层显式注入；fixture usage 是已知 synthetic 0，缺失用量不补零。返回实际 `CommandOutcome`，`DecisionRecord` 从 journal 的 decision.recorded 工件引用读取；不宣称具有未来 CommandResult 返回面。
 
@@ -117,11 +117,8 @@ function fixturePort(host) {
     }, cancel: unsupported, reconcile: unsupported, context: unsupported, usage: unsupported,
   };
 }
-const fake = hostPort.createFakeHost({ host: 'generic-fake', clock, capabilities: hostPort.PI_CAPABILITIES,
-  cancellation: strength, recovery: strength, isolation: strength, script });
-const suppliedHost = hostKind === 'fake' ? { ...fake, execute: async authorized => {
-  prepare(authorized.effect); return fake.execute(authorized);
-} } : fixturePort(`${hostKind}-fixture`);
+// The SDK ships no fake host any more (audit G07): every example builds its own HostPort below.
+const suppliedHost = fixturePort(`${hostKind}-fixture`);
 let hostCalls = 0;
 const host = { ...suppliedHost, execute: async authorized => { hostCalls++; return suppliedHost.execute(authorized); } };
 const evaluator = { issuer, evaluateTask: async (_seed, state, receipt) => {
@@ -178,7 +175,7 @@ console.log(JSON.stringify({ hostKind, evidenceKind: 'native-fixture', returnTyp
 | SQLite 隔离、构造零 I/O | `node --test --test-name-pattern='public core import leaves SQLite' test/l5-sdk-surface.test.js` | exit 0；SQLite module graph/cache/native load 全0；portCalls=0；实际生产 service 在加载记录中。 |
 | Pi fixture | `node --test --test-name-pattern='cp2: pi fixture' test/l5-sdk-surface.test.js` | exit 0；revision=6；decision=completed；nodeState=succeeded；hostCalls=1；CLI调用0；前后目录为空。 |
 | DSH fixture | `node --test --test-name-pattern='cp2: dsh fixture' test/l5-sdk-surface.test.js` | 同上，host=dsh。 |
-| generic fake | `node --test --test-name-pattern='cp2: fake fixture' test/l5-sdk-surface.test.js` | 同上，host=fake；真实 createFakeHost.execute。 |
+| generic fake | `node --test --test-name-pattern='cp2: fake fixture' test/l5-sdk-surface.test.js` | 同上，host=fake；样例自建 fixturePort.execute。 |
 | build | `npm run build` | exit 0；dist/kernel/index.js、dist/runtime/index.js 及全部声明存在。 |
 | typecheck | `npm run typecheck` | exit 0。 |
 | source policy | `npm run src:policy` | exit 0；295 TypeScript files；最大350行；0 JavaScript。 |

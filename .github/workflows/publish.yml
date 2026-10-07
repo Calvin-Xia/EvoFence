@@ -10,6 +10,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Audit G10: the publish path had no timeout either; a hung `npm test` must not hold the job
+    # until GitHub's six-hour default while a release is pending.
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write

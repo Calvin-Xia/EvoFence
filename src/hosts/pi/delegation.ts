@@ -25,7 +25,13 @@ export function bindPiDelegation(options: PiDelegationOptions): HostResult<PiDel
   const keys = new Map<string, string>(), runs = new Map<string, ChildRun>();
   const pending = new Map<string, Promise<HostResult<Receipt>>>();
   const capabilities = { ...PI_SESSION_CAPABILITIES,
-    sdkChildSessionIsolation: { status: 'verified' as const, limitation: 'explicit SDK factory; same-user, no board' },
+    // Audit G04: this used to claim `verified` with no evidence while `capabilities.ts` said
+    // `unknown` for the same key. Neither has evidence, and the limitation is "same-user, no board",
+    // so the delegation path reports a bounded `partial` with its verified and unverified subsets.
+    sdkChildSessionIsolation: { status: 'partial' as const,
+      verifiedSubset: ['explicit SDK factory selected by the caller'],
+      unverified: ['cross-session isolation (same user, no OS boundary)', 'board/ownership boundary'],
+      limitation: 'explicit SDK factory; same-user, no board' },
     parentChildCancellation: { status: 'partial' as const, verifiedSubset: ['owned-child abort/idle; parent shutdown'],
       unverified: ['provider cancel billing', 'process-kill acknowledgement'] } };
   for (const r of restored.value) {

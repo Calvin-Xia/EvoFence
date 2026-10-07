@@ -1,5 +1,5 @@
 /** Pure identities and the one application CAS write path. */
-import { DEFS } from '../../protocol/index.js';
+import { DEFS, decode } from '../../protocol/index.js';
 import { canonical, storeFail, storeOk } from '../../kernel/store/index.js';
 import type { Decoded } from '../../protocol/index.js';
 import type { ArtifactRef, Binding, CommandOutcome, EventDraft, PlannedBatch, RuntimeState, SessionCommand, SessionPorts, StoreResult } from './types.js';
@@ -33,6 +33,16 @@ export function putObject(ports: SessionPorts, state: RuntimeState, id: string, 
   return stored.ok ? storeOk(ref) : stored;
 }
 export function commit(ports: SessionPorts, state: RuntimeState, command: SessionCommand, batch: PlannedBatch, epoch = state.epoch): StoreResult<CommandOutcome> {
+  // Audit G06: the write path had no wire-codec gate, so a draft that violated the frozen `Event`
+  // schema — for example duplicate `changedIds`, which `uniqueItems: true` forbids — was persisted
+  // and only an external reader noticed. `sequence` and `revision` are store-assigned, so they are
+  // supplied as placeholders and the rest of the draft is validated as it will be written.
+  for (const draft of batch.events) {
+    const decoded = decode('Event', { ...draft, sequence: 0, revision: Math.max(1, state.revision + 1) });
+    if (!decoded.ok) {
+      return storeFail('EFK_SCHEMA_INVALID', `journal event ${draft.eventId} violates the Event schema: ${decoded.error.message}`);
+    }
+  }
   const committed = ports.store.append({ sessionId: state.sessionId, requestId: command.commandId,
     expectedRevision: command.expectedRevision, epoch, ...batch });
   return committed.ok ? storeOk({ sessionId: committed.value.sessionId, revision: committed.value.revision,

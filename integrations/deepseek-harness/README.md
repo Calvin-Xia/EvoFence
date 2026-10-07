@@ -38,7 +38,7 @@ Invocation identity uses the durable native settlement sequence. Token counters 
 
 This lane implements `host.agent`, `host.tool` and scoped native-loop cancellation. Delegation, fresh child context and activation effects return explicit unsupported results. Cancellation does not establish long-running tool, parent/child or provider billing guarantees. Restart reconciliation does not infer an external side effect from a transcript.
 
-## Reproducible evidence
+## Evidence scripts (local generation, not shipped)
 
 From the repository root:
 
@@ -48,6 +48,12 @@ node integrations/deepseek-harness/evidence/negative-controls.mjs
 node integrations/deepseek-harness/evidence/verify-lane.mjs
 ```
 
-The first script re-executes the existing native probe and redirects only its output into this integration directory. Its provenance records the original source hashes. The second temporarily mutates two owned source files, requires red tests, restores their exact bytes and requires green tests. The third records every required gate and two consecutive lane test runs.
+The scripts write their output under `.evofence/out/dsh-evidence/` — **not** into this integration
+directory. The JSON copies kept under `evidence/` are historical snapshots: they are gitignored, and
+their recorded `sourceSha256` values no longer match the current working tree, so treat them as a
+record of an earlier run rather than as evidence you can reproduce from this checkout. Re-running a
+script refreshes local output; it does not update those copies.
+
+The first script re-executes the existing native probe. The second temporarily mutates two owned source files, requires red tests, restores their exact bytes and requires green tests. The third records every required gate and two consecutive lane test runs.
 
 The evidence uses real Cordis, AgentLoop, ToolRuntime, projections and native resume, with synthetic LLM and memory persistence fixtures. Provider-live, native disk/crash and installed Profile compatibility remain unverified. See [L3-DSH-REPORT.md](L3-DSH-REPORT.md) for checkpoint evidence, the version decision, all 13 retained unknowns and integration diff scope.

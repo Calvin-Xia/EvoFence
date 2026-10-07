@@ -200,7 +200,7 @@ export function verifyReleaseBoundary(text) {
   }
 }
 
-function run() {
+async function run() {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   const releaseTag = process.env.RELEASE_TAG;
   const releaseFlag = process.env.RELEASE_IS_PRERELEASE;
@@ -212,16 +212,32 @@ function run() {
     pkg,
     exists: (target) => existsSync(path.join(REPO_ROOT, toRepoRelative(target))),
   });
+  // Audit G11: `verifyDocumentedEntrypoints` and `verifyReleaseBoundary` were exported and exercised
+  // only by tests, so the publish path — the one place a half-finished release reaches users — never
+  // ran them. They are part of this gate now; dist/ is built by an earlier publish step.
+  const { routeCommand } = await import('../dist/lib/cli/commands.js');
+  const { parseCommandArgs } = await import('../dist/lib/cli/options.js');
+  const parseCli = (argv) => {
+    if (argv.length === 1 && ['--help', '--version'].includes(argv[0])) return;
+    const { spec, rest } = routeCommand(argv);
+    parseCommandArgs(spec, rest);
+  };
+  const documented = ['README.md', 'README.en.md', 'docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md']
+    .map((name) => ({ name, text: readFileSync(path.join(REPO_ROOT, name), 'utf8').replace(/\r\n/g, '\n') }));
+  let imports = 0;
+  for (const doc of documented) imports += verifyDocumentedEntrypoints({ pkg, text: doc.text, parseCli }).imports;
+  verifyReleaseBoundary(documented[2].text);
   const inventory = readPackInventory();
   const packed = verifyPackedFiles({ pkg, files: inventory.files });
   process.stdout.write(`Release ${releaseTag} matches package ${pkg.version}.\n`);
   process.stdout.write(`Publish surface verified: ${Object.values(pkg.bin).join(', ')}, ${Object.keys(pkg.exports).length} typed exports.\n`);
+  process.stdout.write(`Documented entrypoints verified: ${imports} import(s) across ${documented.length} documents; release boundary intact.\n`);
   process.stdout.write(`Pack boundary verified: ${packed.entries} entries, ${packed.exports} exports, zero private entries.\n`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    run();
+    await run();
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     process.exitCode = 1;

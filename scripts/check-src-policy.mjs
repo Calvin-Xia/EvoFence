@@ -45,8 +45,10 @@ function collectFiles(directory) {
     let entries;
     try {
       entries = readdirSync(current, { withFileTypes: true });
-    } catch {
-      return;
+    } catch (error) {
+      // Audit G22: an unreadable directory used to be skipped silently, so the guard could pass
+      // while never having inspected the tree. It is a failure now.
+      throw new Error(`cannot read directory ${repoPath(current)}: ${error.message}`);
     }
     for (const entry of entries) {
       const full = path.join(current, entry.name);
@@ -87,7 +89,14 @@ function main() {
   let maxLines = 0;
   let maxFile = null;
   for (const file of typescriptFiles) {
-    const lines = countLines(readFileSync(file, 'utf8'));
+    let text;
+    try {
+      text = readFileSync(file, 'utf8');
+    } catch (error) {
+      // Audit G22: a file the guard cannot read must fail the check, not shrink the measured set.
+      throw new Error(`cannot read ${repoPath(file)}: ${error.message}`);
+    }
+    const lines = countLines(text);
     if (lines > maxLines) {
       maxLines = lines;
       maxFile = file;
@@ -113,4 +122,9 @@ function main() {
   process.stdout.write(`${summary}\nsrc policy check passed.\n`);
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  process.stderr.write(`src policy check failed: ${error.message}\n`);
+  process.exit(1);
+}
