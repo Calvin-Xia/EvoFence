@@ -61,7 +61,7 @@
     "dep:check": "node scripts/check-deps.mjs",
     "check:core-imports": "node scripts/check-core-imports-baseline.mjs",
     "check:gate-parity": "node scripts/check-gate-parity.mjs",
-    "check:skips": "node scripts/verify-ci-environment.mjs --skips",
+    "check:skips": "npm run build && node scripts/verify-ci-environment.mjs --skips",
     "config:doc": "npm run build && node scripts/check-config-doc.mjs",
     "check": "npm run typecheck && npm run src:policy && npm run dep:check && npm run check:core-imports && npm test",
     "test": "npm run build && node --test",

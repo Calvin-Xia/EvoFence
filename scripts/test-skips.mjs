@@ -24,7 +24,7 @@
  * It is wired into CI as `npm run check:skips` through the documented
  * `scripts/verify-ci-environment.mjs` entry point (audit G23).
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -91,6 +91,13 @@ export function tapSkippedTitles(tapText) {
 
 /** Run the deterministic native-host files with the native packages absent, and collect skips. */
 function runNativeSkipRun(root) {
+  // Review N1: the probe executes test files that import `dist/**`. `npm run check:skips` builds
+  // first (like `npm test`), and this guard makes a direct invocation fail with a clear message
+  // instead of reporting a confusing skip-set mismatch against a missing or stale build.
+  const distEntry = path.join(root, 'dist', 'runtime', 'host-port', 'index.js');
+  if (!existsSync(distEntry)) {
+    return { failure: 'dist/ is missing or incomplete — the native skip probe imports dist/**; run `npm run build` first (npm run check:skips does it for you)', titles: [] };
+  }
   const env = { ...process.env, EVOFENCE_PI_PACKAGE_ROOT: NOT_INSTALLED, EVOFENCE_DSH_PACKAGE_ROOT: NOT_INSTALLED };
   delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', ...NATIVE_FILES],

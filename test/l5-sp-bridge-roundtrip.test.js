@@ -15,7 +15,7 @@ test('cp2 documented round trip runs verbatim with empty difference and zero por
   assert.equal(run.error, undefined); assert.equal(run.status, 0, run.stdout + run.stderr);
   const result = JSON.parse(run.stdout);
   assert.deepEqual(result.difference, []); assert.deepEqual(result.losses, []);
-  assert.deepEqual(result.calls, { hostPort: 0, journal: 0, decisions: 0, grants: 0, claims: 0 });
+  assert.equal(result.portsParameter, 0, 'the documented example must prove the factory takes no ports');
   assert.deepEqual(result.edges, ['dependency']); assert.equal(result.executable, false);
   t.diagnostic(run.stdout.trim());
 });

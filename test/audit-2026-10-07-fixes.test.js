@@ -178,6 +178,18 @@ test('G09/R1: the skip gate covers declarations and the titles the runner actual
   assert.match(verifyCi, /runSkipGate/, 'the previously dead CI-environment script carries the check');
 });
 
+test('N1/N2: the skip gate builds first, and the executable bridge example asserts the structural boundary', () => {
+  const pkg = JSON.parse(read('package.json'));
+  assert.match(pkg.scripts['check:skips'], /npm run build &&/, 'the gate must not validate a missing or stale dist');
+  assert.match(read('scripts/test-skips.mjs'), /dist\/ is missing or incomplete/);
+  const roundtrip = read('docs/evofence-harness-kernel/L5-SP-BRIDGE-ROUNDTRIP.md');
+  assert.doesNotMatch(roundtrip, /createSPBridge\(\{/, 'the executable example must not pass a ports object');
+  assert.match(roundtrip, /assert\.equal\(createSPBridge\.length, 0/, 'it must assert the arity instead');
+  assert.doesNotMatch(roundtrip, /Object\.values\(calls\)/, 'the tautological counter assertion is gone');
+  assert.doesNotMatch(roundtrip, /"calls":\{/, 'the recorded JSON sample no longer claims counters');
+  assert.match(read('test/l5-sp-bridge-roundtrip.test.js'), /result\.portsParameter/);
+});
+
 test('G22: the source-shape guards fail instead of skipping what they cannot read', () => {
   for (const file of ['scripts/check-src-policy.mjs', 'scripts/check-deps.mjs']) {
     const source = read(file);
