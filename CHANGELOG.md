@@ -2,23 +2,63 @@
 
 ## Unreleased
 
-Documentation-only corrections from a read-only audit (2026-10-07). No runtime behaviour, CLI
-surface, config surface or on-disk format changes:
+**Breaking.** Closes the 2026-10-07 read-only audit: 23 accepted fixes across documentation, the
+session write path, the wire codec and the CI gates. Because this section carries a breaking change,
+the next release must be a breaking line (`0.6.0`), not a `0.5.x` patch.
 
-- `AGENTS.md`, `README.md` and `README.en.md` no longer restate a version, tag or publish state.
-  The old paragraphs were a pre-release snapshot that 0.5.0 falsified — they told every reader the
-  opposite of the truth — so they now point at `package.json`, `CHANGELOG.md` and Releases, and a
-  test pins that pointer instead of a version literal.
+### Breaking changes
+
+- **`createFakeHost` is no longer exported by `evofence/core` or `evofence/runtime`.** The host-port
+  barrel stopped re-exporting it because it fabricates receipts and observations, which is the one
+  thing an evidence-gated control plane must not hand out on its published surface. Consumers that
+  called `hostPort.createFakeHost(...)` must build their own `HostPort` fixture: there is no
+  replacement package subpath. The repository's own tests and the kernel verification harness use the
+  internal deep path `dist/runtime/host-port/host-fake.js`, which is not part of the package contract.
+
+### Security and correctness
+
+- `src/runtime/session/journal.ts` runs the protocol codec over every `EventDraft` before appending it
+  (the store-assigned `sequence`/`revision` are supplied as placeholders) and returns
+  `EFK_SCHEMA_INVALID` instead of persisting a schema-invalid event; `plans.ts` de-duplicates the join
+  gap id list that violated `changedIds`'s `uniqueItems: true`. This is the write-side codec gate this
+  changelog previously listed as missing.
+- `src/protocol/codec.ts` returns an error envelope for a dangling `$ref` instead of throwing a
+  `TypeError`, and bounds recursion (`MAX_VALIDATION_DEPTH`). The frozen field table is unchanged.
+- Host plugins no longer resolve and execute an `evofence` binary out of the inspected repository, and
+  git children receive an allow-listed environment instead of the whole `process.env`.
+- pi's `sdkChildSessionIsolation` is reported as a bounded `partial` — it claimed `verified` with no
+  evidence while another module said `unknown` — and `HostGuarantee` only admits `verified` with a
+  non-empty evidence tuple.
+
+### Gates
+
+- `check` now includes the I01–I08 core-imports guard through a shrink-only baseline
+  (`scripts/core-imports-baseline.json`): a new diagnostic fails, and a baseline entry that stopped
+  occurring fails too.
+- New `check:skips` asserts the skip declarations **and** the test identities the runner actually
+  skips, because every CI leg skips the real Pi/DSH suites; it is carried by
+  `scripts/verify-ci-environment.mjs`, which until now was referenced by nothing.
+- New `check:gate-parity` keeps CI's hand-written step list in parity with `npm run check`, and both
+  workflows declare `timeout-minutes`.
+- `verify-release-metadata.js` now actually calls `verifyDocumentedEntrypoints` and
+  `verifyReleaseBoundary`, and the source-shape guards fail instead of silently passing on unreadable
+  trees.
+
+### Documentation
+
+- `AGENTS.md`, `README.md` and `README.en.md` no longer restate a version, tag or publish state: the
+  old paragraphs were a pre-release snapshot that 0.5.0 falsified, and a test now pins the pointer
+  instead of a version literal.
 - Errata for the capability-gate semantics of `capabilities.network` / `dependency_install` /
   `credentials` in the 0.4.0 and 0.4.2 entries below: those keys are live request-path gates.
-- The DeepSeek Harness integration README no longer promises that its evidence JSON is reproducible
-  from the repository; the scripts write to `.evofence/out/` and the stored copies are historical.
+- The gate domain is documented as a reference implementation (the shipped judgements are inline in
+  `src/lib/exec/runner-*.ts`), `capabilities.shell.mode` as a removed non-gate, and the DeepSeek
+  Harness evidence as locally generated with the stored copies marked historical.
 
-0.5.0 closed the harness-kernel line, and whatever comes next — a 0.5.1
-or a 0.6.0 — needs its own authorization before it ships. That boundary did not relax
-when 0.5.0 went out: the guards that made this release a deliberate act rather than a
-side effect of merging are still inside `npm test`, and `npm test` still runs before
-any publish.
+0.5.0 closed the harness-kernel line. Whatever comes next still needs its own authorization before it
+ships, and this section makes that next release a breaking one: the guards that made 0.5.0 a
+deliberate act rather than a side effect of merging are still inside `npm test`, and `npm test` still
+runs before any publish.
 
 ## 0.5.0 — 2026-10-03
 

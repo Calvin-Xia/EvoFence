@@ -67,14 +67,55 @@ export function parseBaseline(json) {
   return counts;
 }
 
+/**
+ * The guard's structured completion line — the only proof that it ran to the end. A crash (missing
+ * parser dependency, `[INPUT/ERROR]`, a stack trace) prints diagnostics-free output, and reading that
+ * as "zero violations" is how a broken gate turns into a green one (review R4).
+ */
+export function guardSummary(output) {
+  let summary = null;
+  for (const line of output.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) continue;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed !== null && typeof parsed === 'object' && typeof parsed.status === 'string' && typeof parsed.violations === 'number') summary = parsed;
+    } catch {
+      // Not the summary line; keep looking.
+    }
+  }
+  return summary;
+}
+
 function runGuard() {
   const result = spawnSync(process.execPath, [GUARD], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-  if (result.error) throw result.error;
-  return `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  if (result.error) return { failure: `guard could not start: ${result.error.message}` };
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  const summary = guardSummary(output);
+  if (summary === null) {
+    return { failure: `guard produced no completion summary (exit ${result.status}); treating it as an operational failure, not as zero diagnostics` };
+  }
+  const expectedExit = summary.violations === 0 ? 0 : 1;
+  if (result.status !== expectedExit) {
+    return { failure: `guard exited ${result.status} while reporting ${summary.violations} violation(s)` };
+  }
+  return { output, summary };
 }
 
 function main() {
-  const observed = observedDiagnostics(runGuard());
+  const guard = runGuard();
+  if (guard.failure !== undefined) {
+    process.stderr.write(`core-imports gate is broken: ${guard.failure}\n`);
+    process.exitCode = 2;
+    return;
+  }
+  const observed = observedDiagnostics(guard.output);
+  const total = [...observed.values()].reduce((sum, count) => sum + count, 0);
+  if (total !== guard.summary.violations) {
+    process.stderr.write(`core-imports gate is broken: the guard reported ${guard.summary.violations} violation(s) but only ${total} diagnostic line(s) were parsed\n`);
+    process.exitCode = 2;
+    return;
+  }
   if (process.argv.includes('--update')) {
     // The baseline is a multiset: `parseBaseline` counts duplicates, so a diagnostic that occurs
     // five times is listed five times.

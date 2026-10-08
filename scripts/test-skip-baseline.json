@@ -1,5 +1,5 @@
 {
-  "note": "Known skip declarations; shrink-only. Regenerate with --update.",
+  "note": "Known skip declarations and the deterministic native-skip titles; shrink-only. Regenerate with --update.",
   "sites": [
     "test/cli-surface.test.js|2",
     "test/l3-dsh-delegation.test.js|1",
@@ -9,5 +9,59 @@
     "test/l4-experience-real-traces.test.js|1",
     "test/l5-sp-bridge-windows-path.test.js|2",
     "test/spec-f2.test.mjs|3"
-  ]
+  ],
+  "nativeSkips": {
+    "files": [
+      "test/l3-pi-native.test.js",
+      "test/l3-pi-delegation-native.test.js",
+      "test/l3-dsh-session.test.js",
+      "test/l3-dsh-delegation.test.js"
+    ],
+    "titles": [
+      "A15: an actual native board claim with no kernel mapping refuses advancement",
+      "A15: board owner is accepted only as the projection of an actual current kernel claim",
+      "DoD1 cp1/cp2: fresh native child returns bound products and usage through HostPort, kernel evaluates",
+      "DoD1 cp2: handoff uses the actual existing child and enqueue stays distinct from consumption",
+      "DoD1 cp2: native model failure feeds back failed and retains missing usage",
+      "DoD1 cp3: wait and interrupt stop only the named running child, missing usage remains unknown",
+      "DoD1 real Pi 0.99.2 memory session is refused without a provider call",
+      "DoD1: same native session continues and resumes the same kernel journal without model replay",
+      "DoD2 cp2: independent native board owner refuses dispatch, preserving kernel claim",
+      "DoD2 cp2: native board is a projection of the unique kernel claim, concurrent dispatch is once",
+      "DoD2 cp3: changed native owner is refused instead of becoming a second scheduler",
+      "DoD2 real Pi 0.99.2 persistent kernel smoke, boundary continuation, reopen and abort",
+      "DoD2: failed durable pause remains visible and locally refuses evolution without stopping native work",
+      "DoD2: missing tool-result hook leaves the actual tool outcome unconfirmed and pauses",
+      "DoD2: observation hook failure durably pauses evolution and preserves ordinary host work",
+      "DoD2: plugin uninstall preserves native loop and tools but denies pending evolution",
+      "DoD2: removed context hook cannot confirm an evolution turn; ordinary work continues",
+      "boundary: native operations reject an impersonated caller and wrong version",
+      "cp1/cp2: scoped tool refusal prevents child tool effects",
+      "cp1: child scope, depth, budget, expiry and revoked parent are refused before native spawn",
+      "cp1: host output limit above the scoped child budget is stopped before any model request",
+      "cp1: native execution reaches verifying; only the independent evaluator can succeed",
+      "cp1: same-id fake or stale host caller and invented grant cannot confer authority",
+      "cp2: actual tool gate retains the host denial and observes normal, denied and thrown results",
+      "cp2: additive bounded context preserves native model, tools and host instructions",
+      "cp2: child hooks preserve native denial and prevent unreserved extra model steps",
+      "cp2: committed tool effect traverses the actual native policy and result pipeline",
+      "cp2: failed native model request preserves unknown usage and outstanding reservation",
+      "cp2: model-issued native continuation returns before idle and reuses the same caller",
+      "cp2: native continue tool queues once and executes after the same caller turn settles",
+      "cp2: native multi-step evolution cannot spend an unreserved implicit model request",
+      "cp2: removed child pre-step hook cannot confirm a child outcome",
+      "cp2: uncommitted and stale effects, reliable delivery demand and fork are refused",
+      "cp2: unknown counters are preserved and idempotency collisions are refused",
+      "cp2: usage is deduplicated by native invocation; missing counters and USD stay unknown",
+      "cp3: kernel cancel dispatches HostPort cancel receipts and scopes the real child",
+      "cp3: named child cancel never interrupts an unrelated real sibling or a settled effect",
+      "cp3: native cancellation confirms only the bound active loop; missing usage is not free",
+      "cp3: prepared dispatch surviving interruption cannot be blindly replayed",
+      "cp3: resume and reconcile never replay a claimed unknown native action",
+      "cp3: runtime error is visible, journal is paused, normal followup still works",
+      "cp3: takeover of an in-flight child reads evidence without re-dispatch",
+      "cp3: takeover reconciles the same child without spawn or resend; duplicate and late receipt do not settle again",
+      "native-fixture Pi 0.99.2 child execution, parent pool, SDK abort/shutdown and disk restore"
+    ]
+  }
 }

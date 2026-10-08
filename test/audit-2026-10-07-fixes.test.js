@@ -140,10 +140,9 @@ test('G10: the gate-parity guard refuses a dropped gate and a missing timeout', 
   assert.match(gateParityProblems({ pkg, ci: withoutTimeout, publish }).join('\n'), /timeout-minutes/);
 });
 
-test('G25: the core-imports baseline is a shrink-only multiset', async () => {
-  const { compareToBaseline, parseBaseline, diagnosticKey } = await import('../scripts/check-core-imports-baseline.mjs');
+test('G25/R4: the core-imports baseline is a shrink-only multiset and a crash is not "zero diagnostics"', async () => {
+  const { compareToBaseline, parseBaseline, diagnosticKey, guardSummary } = await import('../scripts/check-core-imports-baseline.mjs');
   const known = 'I08|PORT_FALLBACK|src/a.ts|injected capability cannot fall back to a default backend';
-  const line = '[I08/PORT_FALLBACK] C:\\repo\\src\\a.ts: injected capability cannot fall back to a default backend';
   const baseline = parseBaseline({ diagnostics: [known] });
   const observed = parseBaseline({ diagnostics: [known, known] });
   assert.deepEqual(compareToBaseline(baseline, observed).added.length, 1, 'a new duplicate is a new occurrence');
@@ -151,17 +150,32 @@ test('G25: the core-imports baseline is a shrink-only multiset', async () => {
   const parsed = diagnosticKey(`[I08/PORT_FALLBACK] ${fileURLToPath(new URL('../src/protocol/codec.ts', import.meta.url)).replaceAll('/', '\\')}: injected capability cannot fall back to a default backend`);
   assert.equal(parsed, 'I08|PORT_FALLBACK|src/protocol/codec.ts|injected capability cannot fall back to a default backend',
     'paths under the repository root are normalised to repo-relative forward slashes');
+  // Review R4: the completion summary is what separates "the guard ran and found N violations" from
+  // "the guard crashed", and only the former may ever be compared against or written to the baseline.
+  const summary = '{"status":"failed","modules":["kernel"],"violations":39}';
+  assert.deepEqual(guardSummary(`[I08/X] a.ts: something\n${summary}\n`), { status: 'failed', modules: ['kernel'], violations: 39 });
+  assert.equal(guardSummary('[INPUT/ERROR] Error: Cannot find module typescript\n    at ...'), null);
+  assert.equal(guardSummary('{"status":"failed","violations":"many"}'), null);
+  assert.equal(guardSummary(''), null);
 });
 
-test('G09: the skip baseline reports both new and stale skip declarations', async () => {
-  const { compareSkipBaseline, scanSkipSites } = await import('../scripts/test-skips.mjs');
-  const baseline = JSON.parse(read('scripts/test-skip-baseline.json')).sites;
-  assert.deepEqual(scanSkipSites().length, baseline.length, 'the scanned set matches the recorded baseline');
-  assert.deepEqual(compareSkipBaseline(baseline, baseline), { added: [], stale: [] });
-  assert.deepEqual(compareSkipBaseline(baseline, [...baseline, 'test/new.test.js|1']).added, ['test/new.test.js|1']);
-  assert.deepEqual(compareSkipBaseline(baseline, baseline.slice(1)).stale, [baseline[0]]);
+test('G09/R1: the skip gate covers declarations and the titles the runner actually skips', async () => {
+  const { compareSkipBaseline, scanSkipSites, tapSkippedTitles, runSkipGate } = await import('../scripts/test-skips.mjs');
+  const baseline = JSON.parse(read('scripts/test-skip-baseline.json'));
+  assert.deepEqual(scanSkipSites().length, baseline.sites.length, 'the scanned declarations match the recorded baseline');
+  assert.deepEqual(compareSkipBaseline(baseline.sites, baseline.sites), { added: [], stale: [] });
+  assert.deepEqual(compareSkipBaseline(baseline.sites, [...baseline.sites, 'test/new.test.js|1']).added, ['test/new.test.js|1']);
+  assert.deepEqual(compareSkipBaseline(baseline.sites, baseline.sites.slice(1)).stale, [baseline.sites[0]]);
+  // Review R1: real skip identities, not just declaration counts.
+  const tap = 'ok 1 - DoD1 real Pi memory session # SKIP @earendil-works/pi-coding-agent native package is not installed\n'
+    + 'ok 2 - a test that ran\nok 3 - another # SKIP reason\nnot ok 4 - a failure\n';
+  assert.deepEqual(tapSkippedTitles(tap), ['DoD1 real Pi memory session', 'another']);
+  assert.deepEqual(tapSkippedTitles(''), []);
+  assert.equal(baseline.nativeSkips.titles.length > 0, true, 'the recorded native skip set is non-empty');
+  assert.deepEqual([...new Set(baseline.nativeSkips.titles)].length, baseline.nativeSkips.titles.length, 'skip titles are unique');
+  assert.equal(typeof runSkipGate, 'function');
   const verifyCi = read('scripts/verify-ci-environment.mjs');
-  assert.match(verifyCi, /runSkipReport/, 'the previously dead CI-environment script carries the check');
+  assert.match(verifyCi, /runSkipGate/, 'the previously dead CI-environment script carries the check');
 });
 
 test('G22: the source-shape guards fail instead of skipping what they cannot read', () => {

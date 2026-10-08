@@ -20,8 +20,9 @@ EvoFence is an experimental Node.js control plane for evidence-gated coding-agen
   - `npm run test:e2e` — build, then `test-e2e/cli-flow.mjs`.
   - `npm run check` — `typecheck` + `src:policy` + `dep:check` + `test`. This is the project gate.
 - `npm test` runs bare `node --test`, so a local run also discovers `experiments/capability/check.test.mjs` (about 20 extra cases) that CI never sees. Local and CI case counts are not comparable, and only CI is the shared reference.
-- `npm run check:core-imports` is a **manual** I01–I08 guard: it is deliberately not part of `check` or any workflow because 39 pre-existing I08 diagnostics make it red, and that exclusion is itself pinned by a test. A green build therefore does not mean those kernel/runtime invariants hold.
-- `scripts/verify-ci-environment.mjs` is the skip-sensitive CI check: it asserts which tests skipped, because the real Pi/DSH suites skip everywhere CI runs (the native packages are not installed there). Run it before claiming host coverage.
+- `npm run check:core-imports` is part of `check` and of CI. It runs the I01–I08 guard behind a **shrink-only baseline** (`scripts/core-imports-baseline.json`): the 39 pre-existing I08 diagnostics are recorded, a new diagnostic fails the gate, and a baseline entry that stopped occurring fails too. Do not add to the baseline to make a build green — fix the diagnostic or remove the allowance.
+- `npm run check:skips` is the skip-visibility gate: it asserts the skip declarations (baseline) **and** the test identities the runner actually skips. Every CI leg skips the real Pi/DSH suites because the native packages are absent there, so a green CI run is not host coverage. `scripts/verify-ci-environment.mjs --skips` carries it.
+- `npm run check:gate-parity` asserts that CI still executes every script inside `check` and that both workflows keep a `timeout-minutes`.
 - Keep generated state, local ledgers, private holdouts, and credentials out of Git.
 
 ## Structure and boundaries

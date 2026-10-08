@@ -12,10 +12,10 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { runSkipReport } from './test-skips.mjs';
+import { runSkipGate } from './test-skips.mjs';
 
 if (process.argv.includes('--skips')) {
-  process.exit(runSkipReport({ update: process.argv.includes('--update') }));
+  process.exit(runSkipGate({ update: process.argv.includes('--update') }));
 }
 
 const root = fileURLToPath(new URL('../', import.meta.url));

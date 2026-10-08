@@ -316,7 +316,7 @@ npm pack --dry-run   # 查看发布内容
 
 源码是 TypeScript（`src/**/*.ts`）。运行时入口与发布产物只有 `dist/`：`package.json` 的 `bin.evofence` 指向 `dist/cli.js`，`exports["."]` 与 `types` 指向 `dist/index.js` / `dist/index.d.ts`。`files` 只发布 `dist/`、`templates/`、`README.md`、`README.en.md`、`CHANGELOG.md`、`LICENSE` 和 `docs/pi-tool-strategy.md`。测试直接从 `dist/**` import（ADR-0004），所以 `npm test` 一定先构建；改完源码请重新 `npm run build`，不要把过期的 `dist/` 结果当成测试结论。
 
-本地与 CI 有两处已知差异：`npm test` 用裸 `node --test`，本地会额外发现 `experiments/capability/check.test.mjs`（约 20 条用例），CI 不会跑，两边用例数不可直接比较；`npm run check:core-imports` 是**手动**的 I01–I08 守卫，因为存在 39 条既有 I08 诊断而刻意不进 `check` 与 CI，绿色构建不代表这些 kernel/runtime 不变量成立。真实 Pi/DSH 用例在 CI 上按设计跳过（原生包未安装），`scripts/verify-ci-environment.mjs` 是用来核对跳过名单的那道检查。
+本地与 CI 有一处已知差异：`npm test` 用裸 `node --test`，本地会额外发现 `experiments/capability/check.test.mjs`（约 20 条用例），CI 不会跑，两边用例数不可直接比较。`npm run check:core-imports` 现在是 `check` 与 CI 的一部分：39 条既有 I08 诊断记在 shrink-only 基线里，新增诊断即失败、基线项消失也失败。`npm run check:skips` 断言跳过声明与 runner 实际跳过的用例身份——真实 Pi/DSH 用例在所有 CI 腿上都跳过（原生包未安装），所以绿 CI 不代表宿主覆盖；该检查由 `scripts/verify-ci-environment.mjs --skips` 承载。`npm run check:gate-parity` 保证 CI 步骤与 `npm run check` 不脱钩，并要求两个 workflow 声明超时。
 
 消费者拿到类型的方式：`import { runEvolution, Ledger } from 'evofence'` 由 `exports["."].types` 解析到 `dist/index.d.ts`；公共 API 就是 `src/index.ts` 重新导出的那些符号（这里不写死数量，避免每次新增导出都漂一次）。`npm pack --dry-run` 可确认 tarball 内只有 dist 形态。
 
