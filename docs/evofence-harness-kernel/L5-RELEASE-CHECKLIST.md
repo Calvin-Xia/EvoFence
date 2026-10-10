@@ -14,6 +14,12 @@ tag 与 GitHub Release 由**用户**在 2026-10-03 **另外明确授权**，见�
 
 用户于 2026-10-03 明确授权创建 tag 与 GitHub Release：`v0.5.0` 打在本 checkout 的 `main` 上，GitHub Release 触发 `publish.yml`，经 OIDC Trusted Publishing 发到 npm `latest`。`0.5.0` 不带 `-`，因此 Release 不得勾 prerelease，且发布工作流会先跑 `npm test`。这仍是**用户**的授权，不是本节点的；上文 `nodeAuthorizesPublish: false` 与本节并存，两者说的不是同一件事。
 
+## 发布授权（2026-10-10）
+
+用户于 2026-10-10 明确授权：创建 tag 与 GitHub Release，把 2026-10-07 只读审计的修复（PR #22）发到 npm `latest`。版本号以 `package.json` 为准（本次 `0.5.1`）；Release 不得勾 prerelease，发布工作流会先跑 `npm test`。
+
+本次发布**含一处公共导出移除**：`createFakeHost` 不再由 `evofence/core`、`evofence/runtime` 导出。用户知晓该移除属于破坏性接口变更，并明确裁定把本次修复发布在 0.5.x 线上（semver 例外），而不是推迟到下一个 breaking 线；该裁定、理由与替代方案由本节与 `CHANGELOG.md` 的 0.5.1 条目共同记录。上文 `nodeAuthorizesPublish: false` 依旧只描述**节点**授权范围。
+
 ## 发布前置与后续步骤
 
 - [x] 2026-10-03 用户裁决：为后续可能的 tag 把 `package.json` / `package-lock.json` 置为 `0.5.0`。

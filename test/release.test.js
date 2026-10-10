@@ -75,7 +75,7 @@ test('release metadata accepts a stable tag the release gate ships, and still re
 
 test('the shipped package.json is the version the release gate publishes', () => {
   const pkg = readRootJson('package.json');
-  assert.equal(pkg.version, '0.5.0');
+  assert.equal(pkg.version, '0.5.1');
   assert.doesNotThrow(() => verifyReleaseMetadata({
     version: pkg.version,
     releaseTag: `v${pkg.version}`,

@@ -6,7 +6,7 @@ The user selected version decision A: follow the locally exercised DSH **0.2.0-r
 
 ## Composition
 
-Build the repository with `npm run build`. The private checkout entry imports `../../dist/hosts/dsh/index.js`; it is not a standalone published package entry. The retained `evofence@0.5.0` dependency does not supply this new implementation. Distribution/export work belongs to the later packaging lane, and this task did not install a DSH Profile.
+Build the repository with `npm run build`. The private checkout entry imports `../../dist/hosts/dsh/index.js`; it is not a standalone published package entry. The retained `evofence@0.5.1` dependency does not supply this new implementation. Distribution/export work belongs to the later packaging lane, and this task did not install a DSH Profile.
 
 The Cordis plugin exports `evofence-cordis-runtime` and injects `tools`, `agents`, `sessionProjections` and an explicit `evofenceRuntime` service. The composition owner must provide the `DshComposition` contract in [types.ts](../../src/hosts/dsh/types.ts):
 

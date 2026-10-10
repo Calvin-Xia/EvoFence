@@ -1,6 +1,6 @@
 {
   "name": "evofence",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Inspect EvoFence's audit ledger and invoke evidence-gated evolution runs.",
   "author": {
     "name": "Calvin Xia",

@@ -2,9 +2,20 @@
 
 ## Unreleased
 
-**Breaking.** Closes the 2026-10-07 read-only audit: 23 accepted fixes across documentation, the
-session write path, the wire codec and the CI gates. Because this section carries a breaking change,
-the next release must be a breaking line (`0.6.0`), not a `0.5.x` patch.
+Nothing yet. 0.5.1 shipped the 2026-10-07 audit fixes and the six review findings raised on PR #22.
+Whatever comes next needs its own authorization before it ships: the guards that make a release a
+deliberate act rather than a side effect of merging are still inside `npm test`, and `npm test` still
+runs before any publish.
+
+## 0.5.1 — 2026-10-10
+
+**Contains one breaking API removal, published on the 0.5.x line by an explicit user decision.**
+Closes the 2026-10-07 read-only audit: 23 accepted fixes across documentation, the session write
+path, the wire codec and the CI gates, plus the six review findings raised on PR #22. The removal in
+the section below is not a semver patch change; it ships here because the user adjudicated that the
+exported fake host must leave the published surface now rather than wait for the next breaking line,
+and that adjudication is recorded in `docs/evofence-harness-kernel/L5-RELEASE-CHECKLIST.md` under the
+2026-10-10 authorization. Consumers pinned to `0.5.0` should treat this release as breaking.
 
 ### Breaking changes
 
@@ -34,15 +45,24 @@ the next release must be a breaking line (`0.6.0`), not a `0.5.x` patch.
 
 - `check` now includes the I01–I08 core-imports guard through a shrink-only baseline
   (`scripts/core-imports-baseline.json`): a new diagnostic fails, and a baseline entry that stopped
-  occurring fails too.
-- New `check:skips` asserts the skip declarations **and** the test identities the runner actually
-  skips, because every CI leg skips the real Pi/DSH suites; it is carried by
-  `scripts/verify-ci-environment.mjs`, which until now was referenced by nothing.
+  occurring fails too. The wrapper also requires the guard's structured completion summary before it
+  compares or writes anything, so a crashed guard is an operational failure (exit 2) rather than an
+  empty, green baseline.
+- New `check:skips` asserts the skip declarations **and** the titles the runner actually skips (the
+  native-host files run with the native package roots pointed at a nonexistent path), and it builds
+  first like the other test commands. Every CI leg skips the real Pi/DSH suites, so a green CI run is
+  not host coverage; the check is carried by `scripts/verify-ci-environment.mjs`, which until now was
+  referenced by nothing.
 - New `check:gate-parity` keeps CI's hand-written step list in parity with `npm run check`, and both
   workflows declare `timeout-minutes`.
 - `verify-release-metadata.js` now actually calls `verifyDocumentedEntrypoints` and
   `verifyReleaseBoundary`, and the source-shape guards fail instead of silently passing on unreadable
   trees.
+- Review fixes after the first PR round: the skip gate gained its behavioural layer instead of
+  counting declarations, and the executable bridge example in
+  `docs/evofence-harness-kernel/L5-SP-BRIDGE-ROUNDTRIP.md` asserts the structural boundary (factory
+  arity plus fail-closed stubs) instead of a port counter that the removed parameter could no longer
+  increment.
 
 ### Documentation
 
@@ -54,11 +74,6 @@ the next release must be a breaking line (`0.6.0`), not a `0.5.x` patch.
 - The gate domain is documented as a reference implementation (the shipped judgements are inline in
   `src/lib/exec/runner-*.ts`), `capabilities.shell.mode` as a removed non-gate, and the DeepSeek
   Harness evidence as locally generated with the stored copies marked historical.
-
-0.5.0 closed the harness-kernel line. Whatever comes next still needs its own authorization before it
-ships, and this section makes that next release a breaking one: the guards that made 0.5.0 a
-deliberate act rather than a side effect of merging are still inside `npm test`, and `npm test` still
-runs before any publish.
 
 ## 0.5.0 — 2026-10-03
 
