@@ -58,8 +58,10 @@ function collectSourceFiles(directory) {
     let entries;
     try {
       entries = readdirSync(current, { withFileTypes: true });
-    } catch {
-      return;
+    } catch (error) {
+      // Audit G22: skipping an unreadable directory could hide an entire subtree from the cycle
+      // check, so the guard now refuses instead of reporting "acyclic" over an unseen tree.
+      throw new Error(`cannot read directory ${moduleId(current)}: ${error.message}`);
     }
     for (const entry of entries) {
       const full = path.join(current, entry.name);
@@ -220,8 +222,10 @@ function buildGraph() {
     let source;
     try {
       source = readFileSync(file, 'utf8');
-    } catch {
-      continue;
+    } catch (error) {
+      // Audit G22: a module that cannot be read contributes no edges, which would understate the
+      // graph; fail instead of silently shrinking it.
+      throw new Error(`cannot read ${moduleId(file)}: ${error.message}`);
     }
 
     for (const specifier of extractSpecifiers(source)) {
@@ -300,6 +304,9 @@ function main() {
     lines.push(`cycle ${index + 1}: ${[...cycle, cycle[0]].join(' -> ')}`);
   });
   lines.push(`acyclic: ${cycles.length === 0 ? 'true' : 'false'}`);
+  // Audit G22: unresolved relative imports stay warnings (a legitimately dynamic specifier must not
+  // fail the build), but the count is part of the summary so a silent increase is visible.
+  lines.push(`unresolved relative imports: ${unresolved.length}`);
   process.stdout.write(`${lines.join('\n')}\n`);
 
   for (const unresolvedEdge of unresolved) {
@@ -315,4 +322,9 @@ function main() {
   return 0;
 }
 
-process.exitCode = main();
+try {
+  process.exitCode = main();
+} catch (error) {
+  process.stderr.write(`dependency check failed: ${error.message}\n`);
+  process.exit(1);
+}

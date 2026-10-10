@@ -1,7 +1,7 @@
 import { fail, type ErrorEnvelope } from '../../protocol/index.js';
 import { err, ok, stableStringify, judgeRequirements, requiredCapabilities,
   capabilityGapError, usageIsComplete, type AuthorizedEffect, type ContextPlan, type HostResult,
-  type Receipt, type Usage, type HostPort } from '../../runtime/host-port/index.js';
+  type Receipt, type Usage, type HostPort, type HostGuarantee } from '../../runtime/host-port/index.js';
 import { appendPiRecord, readPiRecords, type PiRecord } from './entries.js';
 import { addPiUsage, mapPiUsage, invocationUsage } from './usage.js';
 import type { PiBinding, PiEvents, PiEventResults, PiExtensionAPI, PiOptions } from './types.js';
@@ -212,7 +212,9 @@ export function bindPiSession(api: PiExtensionAPI, options: PiOptions): HostResu
     execute, context,
     async observe(id) {
       const gate = sessionGate(id); if (!gate.ok) return gate;
-      const guarantee = (status: 'partial' | 'verified', coverage: string[]) => ({ status, coverage, evidenceRefs: [] });
+      // Audit G18: `HostGuarantee` only lets `verified` through with a non-empty evidence tuple, so
+      // this helper builds the statuses it can actually support and nothing here can overclaim.
+      const guarantee = (status: 'absent' | 'partial' | 'unknown', coverage: string[]): HostGuarantee => ({ status, coverage, evidenceRefs: [] });
       return ok({ host: 'pi', idle: isIdle(), capabilities: PI_SESSION_CAPABILITIES,
         cancellation: guarantee('partial', ['native-session-abort; provider billing unknown']),
         recovery: guarantee('partial', ['transcript/custom-entry readback; not kernel journal']),

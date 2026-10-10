@@ -1,12 +1,22 @@
 // Build first, then run mutations and newline conversion only in an owned snapshot.
 // Example: node scripts/verify-ci-environment.mjs --node <node.exe> --snapshot-root <D: temp>
 //   --temp-root <C: short-name temp> --line-endings crlf --output .evofence/out/ci-probe
+//
+// Audit G09/G23: this script used to be referenced by nothing while being the only skip-sensitive
+// check in the repository. `--skips` is the mode CI runs (through `npm run check:skips`): it asserts
+// the test-skip baseline still matches, so a newly hidden skip fails the gate instead of passing
+// silently as "skipped".
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { runSkipGate } from './test-skips.mjs';
+
+if (process.argv.includes('--skips')) {
+  process.exit(runSkipGate({ update: process.argv.includes('--update') }));
+}
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const options = { node: process.execPath, 'snapshot-root': os.tmpdir(), 'temp-root': os.tmpdir(),

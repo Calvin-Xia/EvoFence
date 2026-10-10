@@ -1,15 +1,21 @@
 import { fail } from '../../protocol/index.js';
 import { importDelivery, importDeliveryFile } from './import.js';
 import { exportDelivery, exportDeliveryFile } from './export.js';
-import type { BridgePorts, FileScope, ImportedDelivery, RuntimeBindings } from './types.js';
+import type { FileScope, ImportedDelivery, RuntimeBindings } from './types.js';
 
 export { MAPPINGS } from './mapping.js';
 export { difference, mappingReport, renderLossReport } from './loss.js';
 export type { Difference } from './loss.js';
-export type { BridgePorts, BridgeResult, DeliverySnapshot, FileScope, ImportedDelivery, Json, LossEntry, RuntimeBindings } from './types.js';
+export type { BridgeResult, DeliverySnapshot, FileScope, ImportedDelivery, Json, LossEntry, RuntimeBindings } from './types.js';
 
-/** Optional data bridge. Ports are explicitly injected to witness zero execution/authority I/O. */
-export function createSPBridge(ports: BridgePorts) {
+/**
+ * Optional data bridge. The boundary against execution is structural, not witnessed: the factory
+ * takes no ports (audit finding G20 removed a `ports` parameter that no method ever read, which
+ * made "ports witness zero authority I/O" look like a guarantee while nothing consulted them).
+ * `claim` / `dispatchEffect` / `execute` are fail-closed stubs, and that is what
+ * `test/l5-sp-bridge-semantics.test.js` pins.
+ */
+export function createSPBridge() {
   const denied = () => ({ ok: false as const, error: fail('EFK_LEGACY_NOT_EXECUTABLE', 'imported delivery data is inert; author a new authorized runtime task') });
   return {
     importData(value: unknown, bindings: RuntimeBindings) {

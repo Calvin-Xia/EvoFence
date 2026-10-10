@@ -13,9 +13,36 @@ import type { WorkspaceDriver, WorkspaceOptions } from './types.js';
 
 const run = promisify(execFile);
 const hash = (bytes: string) => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+
+/**
+ * Environment for every git child: an explicit allow-list, never the whole `process.env`.
+ *
+ * The driver only runs local plumbing (`rev-parse`, `ls-tree`, `cat-file`, `hash-object`,
+ * `update-index`, `write-tree`, `commit-tree`, `update-ref`, `worktree`), sets the commit identity
+ * with `-c user.name` / `-c user.email`, disables hooks and signing, and hashes blobs with
+ * `--no-filters`. It therefore needs no tokens, no credential helper and no CI secrets — passing
+ * the parent environment through handed all of them to the child for no benefit (audit finding
+ * G19). `HOME` / `USERPROFILE` stay because Git reads its global config from there (line-ending,
+ * long-path and fsmonitor settings are behaviour, not credentials); `PATH` stays because the
+ * executable is resolved through it.
+ */
+const GIT_ENV_ALLOW = [
+  'PATH', 'PATHEXT', 'HOME', 'USERPROFILE', 'SystemRoot', 'SystemDrive', 'TEMP', 'TMP',
+] as const;
+
+/** The allow-listed environment described above, with interactive prompting always disabled. */
+export function gitEnvironment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  const env: Record<string, string> = { GIT_TERMINAL_PROMPT: '0' };
+  for (const key of GIT_ENV_ALLOW) {
+    const value = source[key];
+    if (typeof value === 'string' && value.length > 0) env[key] = value;
+  }
+  return env;
+}
+
 export async function git(repository: string, args: readonly string[]): Promise<string> {
   const result = await run('git', ['-C', repository, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+    env: gitEnvironment() });
   return result.stdout;
 }
 export interface GitWorkspaceOptions {
@@ -47,7 +74,7 @@ export async function createGitWorkspaceDriver(options: GitWorkspaceOptions): Pr
       if (!validPath(name) || kind !== 'blob' || !['100644', '100755'].includes(mode)) {
         throw new WorkspaceIOError('EFK_CAPABILITY_UNSUPPORTED', `Git snapshot contains unsupported path/mode ${name}`);
       }
-      const blob = await run('git', ['-C', repository, 'cat-file', 'blob', oid], { encoding: 'buffer', maxBuffer: 32 * 1024 * 1024 });
+      const blob = await run('git', ['-C', repository, 'cat-file', 'blob', oid], { encoding: 'buffer', maxBuffer: 32 * 1024 * 1024, env: gitEnvironment() });
       const content = blob.stdout.toString('utf8');
       if (!Buffer.from(content).equals(blob.stdout) || content.includes('\0')) throw new WorkspaceIOError('EFK_CAPABILITY_UNSUPPORTED', 'Git workspace supports UTF-8 text only');
       result[name] = { content, executable: mode === '100755' };

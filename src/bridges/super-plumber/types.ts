@@ -36,14 +36,6 @@ export interface ImportedDelivery {
 }
 export type BridgeResult<T> = { readonly ok: true; readonly value: T } |
   { readonly ok: false; readonly error: ErrorEnvelope };
-/** These ports are witnesses of the forbidden boundary; no bridge method calls them. */
-export interface BridgePorts {
-  readonly hostPort: { dispatchEffect(value: unknown): unknown };
-  readonly journal: { append(value: unknown): unknown };
-  readonly decisions: { write(value: unknown): unknown };
-  readonly grants: { issue(value: unknown): unknown };
-  readonly claims: { claim(value: unknown): unknown };
-}
 export interface FileScope { readonly root: string }
 export class BridgeRejection extends Error {
   constructor(readonly envelope: ErrorEnvelope) { super(envelope.message); }

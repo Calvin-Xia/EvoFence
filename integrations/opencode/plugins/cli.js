@@ -15,17 +15,19 @@ function packageCli(packageRoot) {
 }
 
 /**
- * Resolution order: explicit JS entry, this checkout or nearby local package, then PATH.
+ * Resolution order: explicit `EVOFENCE_CLI_PATH`, this checkout's build, then PATH.
+ *
+ * Audit finding G13: the inspected repository's `node_modules/evofence` is deliberately **not**
+ * consulted any more. Resolving a binary out of the repository under inspection meant that loading
+ * this plugin executed code from that repository.
  */
-function resolveCliInvocation(cwd) {
+function resolveCliInvocation() {
   const override = process.env.EVOFENCE_CLI_PATH;
   if (override) return { command: process.execPath, prefix: [path.resolve(override)] };
 
   const localCli = [
     existsSync(LOCAL_CLI) ? LOCAL_CLI : null,
     packageCli(LOCAL_PACKAGE_ROOT),
-    packageCli(path.resolve(cwd, 'node_modules', 'evofence')),
-    packageCli(path.resolve(cwd, '..', 'node_modules', 'evofence')),
   ].find(Boolean);
   if (localCli) return { command: process.execPath, prefix: [localCli] };
   if (process.platform !== 'win32') return { command: 'evofence', prefix: [] };
@@ -93,7 +95,7 @@ export function parseCliResult(result, messages, expectsBundleVerification) {
 
 export function runEvoFence(args, cwd, messages) {
   const cliArgs = args.includes('--json') ? args : [...args, '--json'];
-  const invocation = resolveCliInvocation(cwd);
+  const invocation = resolveCliInvocation();
   const result = spawnSync(invocation.command, [...invocation.prefix, ...cliArgs], {
     cwd,
     encoding: 'utf8',

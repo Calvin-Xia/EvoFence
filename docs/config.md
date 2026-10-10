@@ -82,6 +82,7 @@ registry and a test pins that a permissive value changes no judgement.
 | `capabilities.dependency_install` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `dependency_install`. An actual use not declared in `requested_capabilities` has no detection signal. |
 | `capabilities.credentials` | request-path capability gate | `assessCapabilities` checks this value when a proposal requests `credentials`. An actual use not declared in `requested_capabilities` has no detection signal. |
 | `capabilities.external_api` | **live gate** | Read through the dynamic capability table (`contract.capabilities[capability]`), so a proposal that requests `external_api` is judged by this value. The template sets it to `deny`, which denies the request. |
+| `capabilities.shell.mode` | **removed template key** | The template stopped emitting it in 0.4.2 and no judgement reads it. It survives only in `KNOWN_CAPABILITY_KEYS` (`src/types/gate.ts`) so an old contract carrying it can still be diagnosed — do not treat it as a capability gate. |
 
 `assessCapabilities` treats a capability as granted only when the configured value is `true`,
 `'allow'`, or an object with `mode: 'allow'`; other non-empty object modes are denied. An

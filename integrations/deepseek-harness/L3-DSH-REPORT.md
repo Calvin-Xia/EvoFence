@@ -88,7 +88,7 @@ hook/卸载/异常会留下可见 fault；若真实 store 异常阻止 durable p
 
 ## integrations 独立 diff 说明与交接
 
-- `package.json`：description 改为 native checkout composition；`engines.dsh` 与 tools peer 两处精确升级。包版本、Node 声明、现有 `evofence@0.4.2` dependency 和 private 状态保留。
+- `package.json`：description 改为 native checkout composition；`engines.dsh` 与 tools peer 两处精确升级。包版本、Node 声明、现有 `evofence@0.5.0` dependency 和 private 状态保留。
 - `index.js`：原 read-only SQLite ledger 工具入口改为 native binding，显式注入 runtime composition；不启子 CLI、不查凭据。
 - `README.md`：改为新入口 composition、六个原生操作、usage/恢复边界与证据说明；旧 0.1.7 安装结论归为历史。
 - `cordis.patch.yml`：无 diff，既有 bundle/row 标识保留。

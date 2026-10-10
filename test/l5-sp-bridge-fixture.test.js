@@ -40,11 +40,13 @@ export function fixture() {
     nodes: [node('n1', 'deterministic'), node('n2', 'deterministic', { terminal: true })], fallbacks: [] };
   return { delivery, bindings };
 }
+// The factory takes no ports any more (audit finding G20 removed a parameter nothing read). The
+// counters stay so existing call sites keep asserting that no authority I/O happened, but the real
+// guard is structural: `createSPBridge.length === 0` plus the fail-closed execution stubs, pinned in
+// test/l5-sp-bridge-semantics.test.js.
 export function witnesses() {
   const calls = { hostPort: 0, journal: 0, decisions: 0, grants: 0, claims: 0 };
-  const ports = { hostPort: { dispatchEffect: () => calls.hostPort++ }, journal: { append: () => calls.journal++ },
-    decisions: { write: () => calls.decisions++ }, grants: { issue: () => calls.grants++ }, claims: { claim: () => calls.claims++ } };
-  return { calls, ports, bridge: createSPBridge(ports) };
+  return { calls, bridge: createSPBridge() };
 }
 export function value(result) { if (!result.ok) throw Error(JSON.stringify(result.error)); return result.value; }
 export function fallbackFixture() {

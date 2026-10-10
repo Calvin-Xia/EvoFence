@@ -4,7 +4,7 @@ import { readArtifact, type ArtifactRef as ConsumerArtifact } from '../../kernel
 import { canonical } from '../../kernel/store/index.js';
 import { DSH_CAPABILITIES, capabilityGapError, contextRequirements, err, judgeRequirements, ok,
   requiredCapabilities, usageIsComplete, type ContextPlan, type Effect, type HostPort, type HostResult,
-  type Receipt, type ReconcileOutcome } from '../../runtime/host-port/index.js';
+  type HostGuarantee, type Receipt, type ReconcileOutcome } from '../../runtime/host-port/index.js';
 import { healthy, stopEvolution, unexpected } from './health.js';
 import { identity, invocationUsage, nativeBoard, reservedUsage } from './mapping.js';
 import type { DshComposition, DshSession, NativeContext, RunningEffect } from './types.js';
@@ -43,7 +43,8 @@ export function createDshHost(ctx: NativeContext, composition: DshComposition, g
       const session = admitted.value;
       const board = nativeBoard(session);
       if (!board.ok) { stopEvolution(session, composition, board.error); return board; }
-      const guarantee = (status: 'partial' | 'unknown', coverage: string[]) => ({ status, coverage, evidenceRefs: [] });
+      // Audit G18: `verified` would need a non-empty evidence tuple, and nothing below has evidence.
+      const guarantee = (status: 'absent' | 'partial' | 'unknown', coverage: string[]): HostGuarantee => ({ status, coverage, evidenceRefs: [] });
       return ok({ host: 'dsh', idle: session.agent.status === 'idle', capabilities: DSH_CAPABILITIES,
         cancellation: guarantee('partial', ['native-loop-signal-and-idle']),
         recovery: guarantee('partial', ['native-transcript-reopen']), isolation: guarantee('unknown', []), boardOwners: board.value });

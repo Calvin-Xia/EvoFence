@@ -54,7 +54,18 @@ function refName(ref: string): DefName {
   return ref.slice('#/$defs/'.length) as DefName;
 }
 
-function validateObject(spec: Def, value: unknown, at: string): Failure | null {
+/** The `$defs` lookup with the type telling the truth about a name that is not in the table. */
+function resolveRef(ref: string): Def | undefined {
+  return (DEFS as Readonly<Record<string, Def | undefined>>)[refName(ref)];
+}
+
+/**
+ * Audit G21: recursion is bounded so a deeply nested value cannot exhaust the stack. The frozen
+ * table has no recursive definition today, so this is a guard rail rather than a live limit.
+ */
+const MAX_VALIDATION_DEPTH = 64;
+
+function validateObject(spec: Def, value: unknown, at: string, depth: number): Failure | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return { keyword: 'type', message: `${at}: expected object, got ${show(value)}` };
   }
@@ -67,14 +78,14 @@ function validateObject(spec: Def, value: unknown, at: string): Failure | null {
   }
   if (spec.propertyNames !== undefined) {
     for (const key of Object.keys(record)) {
-      const failure = validate(spec.propertyNames, key, `${at} property name "${key}"`);
+      const failure = validate(spec.propertyNames, key, `${at} property name "${key}"`, depth + 1);
       if (failure !== null) return failure;
     }
   }
   if (spec.properties !== undefined) {
     for (const [key, sub] of Object.entries(spec.properties)) {
       if (!Object.hasOwn(record, key)) continue;
-      const failure = validate(sub, record[key], `${at}.${key}`);
+      const failure = validate(sub, record[key], `${at}.${key}`, depth + 1);
       if (failure !== null) return failure;
     }
   }
@@ -85,21 +96,21 @@ function validateObject(spec: Def, value: unknown, at: string): Failure | null {
     }
   } else if (spec.additionalProperties !== undefined) {
     for (const [key, item] of Object.entries(record)) {
-      const failure = validate(spec.additionalProperties, item, `${at}.${key}`);
+      const failure = validate(spec.additionalProperties, item, `${at}.${key}`, depth + 1);
       if (failure !== null) return failure;
     }
   }
   return null;
 }
 
-function validateArray(spec: Def, value: unknown, at: string): Failure | null {
+function validateArray(spec: Def, value: unknown, at: string, depth: number): Failure | null {
   if (!Array.isArray(value)) return { keyword: 'type', message: `${at}: expected array, got ${show(value)}` };
   if (spec.minItems !== undefined && value.length < spec.minItems) {
     return { keyword: 'minItems', message: `${at}: needs at least ${spec.minItems} item(s), got ${value.length}` };
   }
   if (spec.items !== undefined) {
     for (let index = 0; index < value.length; index += 1) {
-      const failure = validate(spec.items, value[index], `${at}[${index}]`);
+      const failure = validate(spec.items, value[index], `${at}[${index}]`, depth + 1);
       if (failure !== null) return failure;
     }
   }
@@ -157,9 +168,18 @@ function validateBounds(spec: Def, value: unknown, at: string): Failure | null {
 }
 
 /** Validate `value` against one schema node. Returns the first failure, or `null`. */
-function validate(spec: Def, value: unknown, at: string): Failure | null {
+function validate(spec: Def, value: unknown, at: string, depth = 0): Failure | null {
+  if (depth > MAX_VALIDATION_DEPTH) {
+    return { keyword: 'maxDepth', message: `${at}: nesting deeper than ${MAX_VALIDATION_DEPTH}` };
+  }
   if (spec.$ref !== undefined) {
-    const failure = validate(DEFS[refName(spec.$ref)], value, at);
+    const target = resolveRef(spec.$ref);
+    if (target === undefined) {
+      // Audit G21: a dangling `$ref` is a codec failure — and therefore an `ErrorEnvelope` — never a
+      // TypeError from indexing a definition that is not in the frozen table.
+      return { keyword: '$ref', message: `${at}: unknown definition ${JSON.stringify(refName(spec.$ref))}` };
+    }
+    const failure = validate(target, value, at, depth + 1);
     if (failure !== null) return failure;
   }
   if (spec.enum !== undefined && !spec.enum.includes(value as string | number | boolean)) {
@@ -180,10 +200,10 @@ function validate(spec: Def, value: unknown, at: string): Failure | null {
     spec.additionalProperties !== undefined ||
     spec.propertyNames !== undefined;
   if (objectShaped) {
-    const failure = validateObject(spec, value, at);
+    const failure = validateObject(spec, value, at, depth);
     if (failure !== null) return failure;
   } else if (spec.type === 'array') {
-    const failure = validateArray(spec, value, at);
+    const failure = validateArray(spec, value, at, depth);
     if (failure !== null) return failure;
   } else {
     const failure = validateDeclaredType(spec, value, at);
@@ -191,7 +211,7 @@ function validate(spec: Def, value: unknown, at: string): Failure | null {
   }
 
   if (spec.anyOf !== undefined) {
-    const failures = spec.anyOf.map((branch) => validate(branch, value, at));
+    const failures = spec.anyOf.map((branch) => validate(branch, value, at, depth + 1));
     const first = failures[0];
     if (first !== undefined && first !== null && failures.every((failure) => failure !== null)) {
       return { keyword: 'anyOf', message: `${at}: no anyOf branch matched (${first.message})` };
@@ -199,17 +219,17 @@ function validate(spec: Def, value: unknown, at: string): Failure | null {
   }
   if (spec.allOf !== undefined) {
     for (const branch of spec.allOf) {
-      const failure = validate(branch, value, at);
+      const failure = validate(branch, value, at, depth + 1);
       if (failure !== null) return failure;
     }
   }
   if (spec.if !== undefined) {
-    if (validate(spec.if, value, at) === null && spec.then !== undefined) {
-      const failure = validate(spec.then, value, at);
+    if (validate(spec.if, value, at, depth + 1) === null && spec.then !== undefined) {
+      const failure = validate(spec.then, value, at, depth + 1);
       if (failure !== null) return failure;
     }
   }
-  if (spec.not !== undefined && validate(spec.not, value, at) === null) {
+  if (spec.not !== undefined && validate(spec.not, value, at, depth + 1) === null) {
     return { keyword: 'not', message: `${at}: value matches a forbidden shape` };
   }
   return null;

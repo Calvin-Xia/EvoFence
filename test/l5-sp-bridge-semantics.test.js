@@ -1,10 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { MAPPINGS, mappingReport, renderLossReport, difference } from '../dist/bridges/super-plumber/index.js';
+import { createSPBridge, MAPPINGS, mappingReport, renderLossReport, difference } from '../dist/bridges/super-plumber/index.js';
 import { compileGraph } from '../dist/kernel/graph/index.js';
 import { computeFrontier } from '../dist/kernel/scheduler/index.js';
 import { fixture, fallbackFixture, witnesses, value } from './l5-sp-bridge-fixture.test.js';
+
+// The title is used as a `--test-name-pattern` regex by the bridge negative controls, so it must
+// stay free of regex metacharacters (parentheses would be parsed as a capture group).
+test('cp1 bridge factory takes no ports and its execution surface is fail-closed G20', () => {
+  assert.equal(createSPBridge.length, 0, 'the removed ports parameter must not come back');
+  const bridge = createSPBridge();
+  for (const method of ['claim', 'dispatchEffect', 'execute']) {
+    const result = bridge[method]();
+    assert.equal(result.ok, false, method);
+    assert.equal(result.error.code, 'EFK_LEGACY_NOT_EXECUTABLE', method);
+  }
+});
 
 const expectedEnums = {
   'node.type': ['task', 'checkpoint', 'decision', 'gate', 'context', 'adr'],

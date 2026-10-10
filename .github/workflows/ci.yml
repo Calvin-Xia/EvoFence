@@ -11,6 +11,9 @@ jobs:
   test:
     name: test (${{ matrix.os }}, Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
+    # `node --test` has no default timeout, so a hung test would otherwise hold a runner until
+    # GitHub's six-hour default. Audit G10.
+    timeout-minutes: 45
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -42,6 +45,18 @@ jobs:
       # so without this step the acyclicity gate never runs in CI. Static and fast.
       - name: dep:check
         run: npm run dep:check
+      # Audit G25: the I01–I08 core-imports guard is part of `check` now, through the shrink-only
+      # baseline wrapper (39 pre-existing I08 diagnostics must not grow, and must not be parked).
+      - name: core-imports
+        run: npm run check:core-imports
+      # Audit G09/G23: every CI leg skips the real Pi/DSH suites (the native packages are absent), so
+      # the skip list is asserted instead of being invisible. New hidden skips fail this step.
+      - name: skips
+        run: npm run check:skips
+      # Audit G10: CI hand-replicates `npm run check`; this asserts the composition still matches and
+      # that both workflows keep a timeout. Static and fast.
+      - name: gate parity
+        run: npm run check:gate-parity
       - name: test
         run: npm test
       # `test-e2e/` sits outside the tree `node --test` discovers, so this suite only

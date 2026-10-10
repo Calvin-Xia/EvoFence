@@ -37,6 +37,7 @@ import {
   type Effect,
   type EffectKind,
   type GuaranteeStrength,
+  type HostGuarantee,
   type HostObservation,
   type HostPort,
   type HostResult,
@@ -72,9 +73,9 @@ export interface FakeHostConfig {
   readonly host: string;
   readonly clock: Clock;
   readonly capabilities: CapabilityMatrix;
-  readonly cancellation: GuaranteeStrength;
-  readonly recovery: GuaranteeStrength;
-  readonly isolation: GuaranteeStrength;
+  readonly cancellation: HostGuarantee;
+  readonly recovery: HostGuarantee;
+  readonly isolation: HostGuarantee;
   readonly idle?: boolean;
   readonly boardOwners?: readonly BoardOwner[];
   readonly script?: HostScript;

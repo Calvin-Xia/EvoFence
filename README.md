@@ -26,7 +26,7 @@ EvoFence 是一个用于管理代码智能体变更的实验性控制面。智�
 
 ## 当前 checkout 的 SDK 与观测入口
 
-本节描述尚待发布验收的 lane 交付。据 2026-10-03 用户裁决，本 checkout 的 `package.json` / `package-lock.json` 版本已置为 `0.5.0`，为后续可能的 tag 做准备；`0.5.0` 尚未 tag/publish，registry latest 仍为 `0.4.2`。CLI bin 为 `dist/cli.js`（源 `src/cli.ts`）；已构建 checkout 的最小只读入口如下：
+本节描述本 checkout 可用的 SDK 与观测入口。**版本与发布状态不在文档里复述**：以 `package.json` 的 `version` 为准，发布记录与 breaking 说明见 [CHANGELOG](CHANGELOG.md) 与 GitHub Releases。CLI bin 为 `dist/cli.js`（源 `src/cli.ts`）；已构建 checkout 的最小只读入口如下：
 
 ```sh
 node dist/cli.js --help
@@ -85,7 +85,7 @@ import { createMemoryEventStore } from 'evofence/storage/memory';
 }
 ```
 
-旧 CLI quickstart 仍从 npm 安装的 `0.4.2` 启动；`0.5.0` 元数据、breaking 说明与升级边界见 [CHANGELOG](CHANGELOG.md)（Unreleased 与 0.5.0 段）及 [候选](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md)。
+npm 安装的 CLI 与本节描述的 SDK 入口同源。版本、breaking 说明与升级边界一律以 [CHANGELOG](CHANGELOG.md) 与 [候选文档](docs/evofence-harness-kernel/L5-RELEASE-CANDIDATE.md) 为准，本文不再复述具体版本号。
 
 ## 安装
 
@@ -149,6 +149,7 @@ regressions:
 | `acceptance.require_claims` | 兼容保留：接受 0.4.x 合同，但不参与决策；claims 校验始终执行 |
 | `capabilities.authority_ceiling` | 仅校验 A0–A3（A4 被拒），不参与任何决策 |
 | `capabilities.network` / `dependency_install` / `credentials` | 请求路径上按能力名参与门禁；`test/runner.test.js` 请求 `network`，所以夹具将其设为 `allow`；未声明的实际使用没有检测信号 |
+| `capabilities.shell.mode` | **已移除的模板键**：0.4.2 起模板不再生成它，代码里没有任何运行效果；只保留在 `KNOWN_CAPABILITY_KEYS`（`src/types/gate.ts`）中，便于诊断旧合同 |
 
 与此相对，`capabilities.external_api` 是**真实生效**的能力门：proposal 通过 `requested_capabilities` 请求它时，控制器按 contract 中该键的值裁决（模板为 `deny`，即请求被拒）。未配置的能力一律拒绝。
 
@@ -287,6 +288,8 @@ evofence experiment run experiment.yaml
 
 ledger 是本地 SQLite 数据库，使用仅追加触发器和 SHA-256 哈希链。它能发现意外或不完整的修改，但同一操作系统账户下的进程仍可替换数据库文件。如果本地主机不在你的信任边界内，请备份数据库，或将导出的证据存放在单独受控的系统中。
 
+实现说明：`src/lib/gate/` 里的六个 `evaluate*Gate` 与三个 verdict 映射是**参考实现**——它们有单元测试，但**没有接入**实际运行路径。生产判据内联在 `src/lib/exec/runner-preflight.ts`、`runner-iteration.ts` 与 `runner-evaluate.ts`；只改 `src/lib/gate/**` 不会改变任何运行时行为。
+
 账本 schema 在 0.4.0 升到 v2（在 `state` 表写入 `schema_version` 标记），哈希链算法、DDL、触发器与写入顺序不变。**读取 0.3.0 的账本会显式失败：不提供迁移，也不会就地升级或降级。** 拒绝发生在任何 pragma / DDL 之前，旧数据库不会被改动。`ledger show|verify|recent`、`diff`、`rollback`、`run` 以 `LEDGER_SCHEMA_INCOMPATIBLE` 退出 1；`status` 报 `LEDGER_UNAVAILABLE`，消息里说明观测到的是 0.3.0（v1）格式。升级步骤见 [CHANGELOG](CHANGELOG.md)。
 
 ## 已知限制
@@ -313,7 +316,9 @@ npm pack --dry-run   # 查看发布内容
 
 源码是 TypeScript（`src/**/*.ts`）。运行时入口与发布产物只有 `dist/`：`package.json` 的 `bin.evofence` 指向 `dist/cli.js`，`exports["."]` 与 `types` 指向 `dist/index.js` / `dist/index.d.ts`。`files` 只发布 `dist/`、`templates/`、`README.md`、`README.en.md`、`CHANGELOG.md`、`LICENSE` 和 `docs/pi-tool-strategy.md`。测试直接从 `dist/**` import（ADR-0004），所以 `npm test` 一定先构建；改完源码请重新 `npm run build`，不要把过期的 `dist/` 结果当成测试结论。
 
-消费者拿到类型的方式：`import { runEvolution, Ledger } from 'evofence'` 由 `exports["."].types` 解析到 `dist/index.d.ts`；公共 API 就是 `src/index.ts` 重新导出的 18 个符号。`npm pack --dry-run` 可确认 tarball 内只有 dist 形态。
+本地与 CI 有一处已知差异：`npm test` 用裸 `node --test`，本地会额外发现 `experiments/capability/check.test.mjs`（约 20 条用例），CI 不会跑，两边用例数不可直接比较。`npm run check:core-imports` 现在是 `check` 与 CI 的一部分：39 条既有 I08 诊断记在 shrink-only 基线里，新增诊断即失败、基线项消失也失败。`npm run check:skips` 断言跳过声明与 runner 实际跳过的用例身份——真实 Pi/DSH 用例在所有 CI 腿上都跳过（原生包未安装），所以绿 CI 不代表宿主覆盖；该检查由 `scripts/verify-ci-environment.mjs --skips` 承载。`npm run check:gate-parity` 保证 CI 步骤与 `npm run check` 不脱钩，并要求两个 workflow 声明超时。
+
+消费者拿到类型的方式：`import { runEvolution, Ledger } from 'evofence'` 由 `exports["."].types` 解析到 `dist/index.d.ts`；公共 API 就是 `src/index.ts` 重新导出的那些符号（这里不写死数量，避免每次新增导出都漂一次）。`npm pack --dry-run` 可确认 tarball 内只有 dist 形态。
 
 研究报告源文件 `docs/deep-research-report.md` 不会包含在 npm 包中。
 
